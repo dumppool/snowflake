@@ -50,6 +50,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
+
+		Tick(0.0f);
     }
 
     return (int) msg.wParam;
@@ -155,6 +157,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             EndPaint(hWnd, &ps);
         }
         break;
+	case WM_KEYUP:
+	{
+		int vkey = LOWORD(wParam); 
+		switch (vkey)
+		{
+		case VK_ESCAPE:
+			PostQuitMessage(0);
+			break;
+		default:
+			break;
+		}
+		break;
+	}
     case WM_DESTROY:
         PostQuitMessage(0);
         break;

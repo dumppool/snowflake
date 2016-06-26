@@ -14,7 +14,18 @@ public:
 
 	static RenderContext_D3D11* Get();
 
+public:
+	bool CompileShader(LPCWSTR file, LPCSTR entry, LPCSTR target, ID3DBlob** blob);
+
 private:
+	void DrawRect();
+
+private:
+	static const uint32 SConstFrameCount = 2;
+
+	uint32						FrameIndex;
+	bool						bInited;
+
 	ID3D11Device*				Device;
 	ID3D11DeviceContext*		Context;
 	ID3D11RenderTargetView*		BackBuffer;
@@ -37,6 +48,6 @@ private:
 	ID3D11PixelShader*			PS;
 
 	ID3D11SamplerState*			Sampler;
-	ID3D11Texture2D*			Tex[2];
-	ID3D11ShaderResourceView*	SRV[2];
+	ID3D11Texture2D*			Tex[SConstFrameCount];
+	ID3D11ShaderResourceView*	SRV[SConstFrameCount];
 };

@@ -14,7 +14,9 @@ RenderContext_D3D11* RenderContext_D3D11::Get()
 	return &Inst;
 }
 
-RenderContext_D3D11::RenderContext_D3D11() : Device(nullptr)
+RenderContext_D3D11::RenderContext_D3D11() : FrameIndex(0)
+, bInited(false)
+, Device(nullptr)
 , Context(nullptr)
 , BackBuffer(nullptr)
 , DepthStencil(nullptr)
@@ -33,6 +35,7 @@ RenderContext_D3D11::~RenderContext_D3D11()
 
 bool RenderContext_D3D11::Initialize(HINSTANCE hInst, HWND hWnd)
 {
+	//assert(!bInited && "...");
 
 	// Select most powerful adapter
 	{
@@ -192,11 +195,40 @@ bool RenderContext_D3D11::InitializeRHI()
 
 	// Create shader
 	{
-		Res = Device->CreateVertexShader(RGB_VertexShader, sizeof(RGB_VertexShader), nullptr, &VS);
-		VERIFY_HRESULT(Res, return false, "failed to create vertex shader.");
+		// VS
+		ID3DBlob* VSBlob = nullptr;
+		if (!CompileShader(L"vrplayer.hlsl", "vs_main", "vs_5_0", &VSBlob) || !VSBlob)
+		{
+			return false;
+		}
+		else
+		{
+			Res = Device->CreateVertexShader(VSBlob->GetBufferPointer(), VSBlob->GetBufferSize(), nullptr, &VS);
+			VERIFY_HRESULT(Res, return false, "failed to create vertex shader.");
 
-		Res = Device->CreatePixelShader(RGB_PixelShader, sizeof(RGB_PixelShader), nullptr, &PS);
-		VERIFY_HRESULT(Res, return false, "failed to create pixel shader.");
+		}
+
+		// PS
+		ID3DBlob* PSBlob = nullptr;
+		if (!CompileShader(L"vrplayer.hlsl", "ps_main", "ps_5_0", &PSBlob) || !PSBlob)
+		{
+			return false;
+		}
+		else
+		{
+			Res = Device->CreatePixelShader(PSBlob->GetBufferPointer(), PSBlob->GetBufferSize(), nullptr, &PS);
+			VERIFY_HRESULT(Res, return false, "failed to create pixel shader.");
+		}
+
+		// Vertex Layout
+		D3D11_INPUT_ELEMENT_DESC Desc[]
+		{
+			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(MeshVertex, Position), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT   , 0, offsetof(MeshVertex, Texcoord), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		};
+
+		Res = Device->CreateInputLayout(Desc, ARRAYSIZE(Desc), VSBlob->GetBufferPointer(), VSBlob->GetBufferSize(), &VertexLayout);
+		VERIFY_HRESULT(Res, return false, "failed to create vertex layout.");
 	}
 
 	// Create texture 2D & shader resource view
@@ -256,9 +288,82 @@ bool RenderContext_D3D11::InitializeRHI()
 
 void RenderContext_D3D11::Draw(float DeltaSeconds)
 {
+	assert(Context && "Ptr to render context is null!");
+
+	FrameIndex = (FrameIndex + 1) % SConstFrameCount;
+
+	D3D11_VIEWPORT Viewport{ 0.0f, 0.0f, (float)SViewportWidth, (float)SViewportHeight, 0.0f, 1.0f };
+
+	Context->RSSetState(Rasterizer);
+	Context->OMSetRenderTargets(1, &BackBuffer, nullptr);
+	Context->RSSetViewports(1, &Viewport);
+
+	Context->ClearRenderTargetView(BackBuffer, DirectX::Colors::Gray);
+	Context->ClearDepthStencilView(DepthStencil, D3D11_CLEAR_DEPTH, 1, 0);
+
+	DrawRect();
+
+	SwapChain->Present(0, 0);
+}
+
+void RenderContext_D3D11::DrawRect()
+{
 	LVMatrix ModelView;
 	uint32 Stride = sizeof(MeshVertex);
 	uint32 Offset = 0;
-	D3D11_VIEWPORT Viewport{ 0.0f, 0.0f, (float)SViewportWidth, (float)SViewportHeight, 0.0f, 1.0f };
+
+	// Setup input assembler
+	Context->IASetIndexBuffer(RectIB, DXGI_FORMAT_R16_UINT, 0);
+	Context->IASetVertexBuffers(0, 1, &RectVB, &Stride, &Offset);
+	Context->IASetInputLayout(VertexLayout);
+	Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	// Setup vs shader & parameters
+	Context->VSSetShader(VS, nullptr, 0);
+	Context->VSSetConstantBuffers(0, 1, &FrameBuffer_WVP);
+
+	// Setup ps shader & parameters
+	Context->PSSetShader(PS, nullptr, 0);
+	Context->PSSetSamplers(0, 1, &Sampler);
+	Context->PSSetShaderResources(0, 1, &SRV[FrameIndex]);
+
+	// Update parameter
 	FrameBufferWVP WVP;
+	WVP.texmat = DirectX::XMMatrixIdentity();
+	WVP.modelview = DirectX::XMMatrixTranslation(0.0f, 0.0f, 1.0f);
+	WVP.Projection = DirectX::XMMatrixPerspectiveLH((float)SViewportWidth, (float)SViewportHeight, 0.1f, 1000.0f);
+	Context->UpdateSubresource(FrameBuffer_WVP, 0, nullptr, &WVP, 0, 0);
+
+	// Draw call
+	Context->DrawIndexed(6, 0, 0);
+}
+
+bool RenderContext_D3D11::CompileShader(LPCWSTR file, LPCSTR entry, LPCSTR target, ID3DBlob** blob)
+{
+	if (!file || !entry || !target || !blob)
+		return false;
+
+	ID3DBlob* ShaderBlob = nullptr;
+	ID3DBlob* ErrorBlob = nullptr;
+	HRESULT Res = D3DCompileFromFile(file, NULL, NULL, entry, target, 0, 0, &ShaderBlob, &ErrorBlob);
+	if (FAILED(Res))
+	{
+		if (ErrorBlob)
+		{
+			OutputDebugStringA((char*)ErrorBlob->GetBufferPointer());
+			ErrorBlob->Release();
+		}
+
+		if (ShaderBlob)
+		{
+			ShaderBlob->Release();
+		}
+
+		return false;
+	}
+	else
+	{
+		*blob = ShaderBlob;
+		return true;
+	}
 }
