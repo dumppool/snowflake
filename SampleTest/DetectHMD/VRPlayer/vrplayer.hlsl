@@ -24,8 +24,9 @@ VertexOut vs_main(VertexIn in_v)
 {
     VertexOut out_v;
 
-    float4x4 mvp = mul(projection, modelview);
-    out_v.pos = mul(mvp, float4(in_v.pos, 1.0f));
+    //float4x4 mvp = mul(projection, modelview);
+    //out_v.pos = mul(mvp, float4(in_v.pos, 1.0f));
+	out_v.pos = float4(in_v.pos, 1.0f);
 
 	//out_v.tco[0] = mul(texmat, float4(in_v.tco, 0, 1));
     return out_v;
@@ -33,6 +34,6 @@ VertexOut vs_main(VertexIn in_v)
 
 float4 ps_main(VertexOut in_data) : SV_TARGET
 {
-	return float4(0.5f, 0.5f, 0.0f, 1.0f);
+	return float4(0.5f, 0.8f, 0.20f, 1.0f);
 //return Texture.Sample(Sampler, in_data.tco[0]);
 }

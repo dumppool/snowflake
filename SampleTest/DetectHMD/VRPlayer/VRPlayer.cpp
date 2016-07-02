@@ -50,8 +50,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
-
-		Tick(0.0f);
+		{
+			Tick(0.0f);
+		}
     }
 
     return (int) msg.wParam;

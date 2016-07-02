@@ -12,6 +12,9 @@ public:
 	bool InitializeRHI();
 	void Draw(float DeltaSeconds);
 
+	bool Initialize_Test(HINSTANCE hInst, HWND hWnd);
+	void Draw_Test(float DeltaSeconds);
+
 	static RenderContext_D3D11* Get();
 
 public:
@@ -34,6 +37,7 @@ private:
 	ID3D11RasterizerState*		Rasterizer;
 
 	IDXGIAdapter*				Adapter;
+	IDXGIAdapter1*				Adapter1;
 	IDXGISwapChain*				SwapChain;
 
 	ID3D11Buffer*				FrameBuffer_WVP;

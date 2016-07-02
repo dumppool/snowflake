@@ -1,1 +1,13 @@
 *.suo
+*.db
+*.ipch
+SampleTest/DetectHMD/DetectHMD.VC.VC.opendb
+*.pdb
+*.tlog
+*.log
+*.pch
+*.obj
+*.idb
+*.lib
+*.suo
+*.ilk
