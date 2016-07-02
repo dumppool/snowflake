@@ -17,16 +17,21 @@ struct VertexOut
     float4 pos : SV_POSITION;
 };
 
+struct VertexOut2
+{
+	float4 pos : SV_POSITION;
+};
+
 Texture2D Texture : register(t0);
 sampler   Sampler : register(s0);
 
 VertexOut vs_main(VertexIn in_v)
 {
-    VertexOut out_v;
+	VertexOut out_v;
 
-    //float4x4 mvp = mul(projection, modelview);
-    //out_v.pos = mul(mvp, float4(in_v.pos, 1.0f));
-	out_v.pos = float4(in_v.pos, 1.0f);
+    float4x4 mvp = mul(projection, modelview);
+    out_v.pos = mul(mvp, float4(in_v.pos, 1.0f));
+	//out_v.pos = float4(in_v.pos, 1.0f);
 
 	//out_v.tco[0] = mul(texmat, float4(in_v.tco, 0, 1));
     return out_v;

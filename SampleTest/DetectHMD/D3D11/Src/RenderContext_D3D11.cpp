@@ -423,6 +423,9 @@ bool RenderContext_D3D11::Initialize_Test(HINSTANCE hInst, HWND hWnd)
 			ARRAYSIZE(FeatureLevels), D3D11_SDK_VERSION, &Device, &FeatureLevel, &Context);
 		VERIFY_HRESULT(Res, return false, "failed to create device & context.");
 
+		D3D11_VIEWPORT Viewport{ 0.0f, 0.0f, (float)SViewportWidth, (float)SViewportHeight, 0.0f, 1.0f };
+		Context->RSSetViewports(1, &Viewport);
+
 		DXGI_SWAP_CHAIN_DESC Desc{ 0 };
 		Desc.BufferCount = 2;
 		Desc.BufferDesc.Width = SViewportWidth;
@@ -450,6 +453,7 @@ bool RenderContext_D3D11::Initialize_Test(HINSTANCE hInst, HWND hWnd)
 		Res = Device->CreateRenderTargetView(ColorBuffer, nullptr, &BackBuffer);
 		VERIFY_HRESULT(Res, return false, "failed to create render target view from swap chain color buffer.");
 		ColorBuffer->Release();
+		Context->OMSetRenderTargets(1, &BackBuffer, nullptr);
 	}
 
 	// Create depth
@@ -496,6 +500,7 @@ bool RenderContext_D3D11::Initialize_Test(HINSTANCE hInst, HWND hWnd)
 		Desc.MultisampleEnable = FALSE;
 		Desc.AntialiasedLineEnable = FALSE;
 		HRESULT Res = Device->CreateRasterizerState(&Desc, &Rasterizer);
+		Context->RSSetState(Rasterizer);
 		VERIFY_HRESULT(Res, return false, "failed to create rasterizer.");
 	}
 
@@ -503,10 +508,10 @@ bool RenderContext_D3D11::Initialize_Test(HINSTANCE hInst, HWND hWnd)
 	{
 		const MeshVertex RectVertices[4] =
 		{
-			{ LVVec3(-0.5f, -0.9f, 10.0f), LVVec2(0.0f, 1.0f) },			// bottom left
-			{ LVVec3(-0.5f, 0.9f, 10.0f), LVVec2(0.0f, 0.0f) },			// top left
-			{ LVVec3(0.9f, 0.5f, 10.0f), LVVec2(1.0f, 0.0f) },			// top right
-			{ LVVec3(0.5f, -0.5f, 10.0f), LVVec2(1.0f, 1.0f) },			// bottom right
+			{ LVVec3(-1.f, -1.f, 0.10f), LVVec2(0.0f, 1.0f) },			// bottom left
+			{ LVVec3(-1.f, 1.f, 0.10f), LVVec2(0.0f, 0.0f) },			// top left
+			{ LVVec3(1.f, 1.f, 0.10f), LVVec2(1.0f, 0.0f) },			// top right
+			{ LVVec3(1.f, -1.f, 0.10f), LVVec2(1.0f, 1.0f) },			// bottom right
 		};
 		const uint16 RectIndices[6] = { 0, 1, 2, 3, 2, 0 };
 
@@ -635,11 +640,6 @@ bool RenderContext_D3D11::Initialize_Test(HINSTANCE hInst, HWND hWnd)
 
 void RenderContext_D3D11::Draw_Test(float dtime)
 {
-	D3D11_VIEWPORT Viewport{ 0.0f, 0.0f, (float)SViewportWidth, (float)SViewportHeight, 0.0f, 1.0f };
-
-	Context->RSSetState(Rasterizer);
-	Context->OMSetRenderTargets(1, &BackBuffer, nullptr);
-	Context->RSSetViewports(1, &Viewport);
 
 	Context->ClearRenderTargetView(BackBuffer, DirectX::Colors::Gray);
 	Context->ClearDepthStencilView(DepthStencil, D3D11_CLEAR_DEPTH, 1.0f, 0);
@@ -667,7 +667,7 @@ void RenderContext_D3D11::Draw_Test(float dtime)
 	FrameBufferWVP WVP;
 	WVP.texmat = DirectX::XMMatrixIdentity();
 	WVP.modelview = DirectX::XMMatrixTranslation(0.0f, 0.0f, 1.0f);
-	WVP.Projection = DirectX::XMMatrixPerspectiveLH((float)SViewportWidth, (float)SViewportHeight, 0.1f, 1000.0f);
+	WVP.Projection = DirectX::XMMatrixPerspectiveLH((float)SViewportWidth, (float)SViewportHeight, 0.01f, 1000.0f);
 	Context->UpdateSubresource(FrameBuffer_WVP, 0, nullptr, &WVP, 0, 0);
 
 	// Draw call
