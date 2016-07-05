@@ -82,6 +82,12 @@
     <TargetName>D3D11_LostVR</TargetName>
     <IntDir>Useless\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IntDir>Useless\$(Platform)\$(Configuration)\</IntDir>
+    <TargetName>D3D11_LostVR</TargetName>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);Inc\;Pch\;</IncludePath>
+    <OutDir>$(SolutionDir)\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -155,6 +161,7 @@
   <ItemGroup>
     <ClCompile Include="Pch\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Src\RenderContext_D3D11.cpp" />
     <ClCompile Include="Src\VRPlayer_D3D11.cpp" />

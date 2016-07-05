@@ -10,6 +10,7 @@ public:
 
 	bool Initialize(HINSTANCE hInst, HWND hWnd);
 	bool InitializeRHI();
+	bool InitializeVideo();
 	void Draw(float DeltaSeconds);
 
 	static RenderContext_D3D11* Get();
@@ -25,6 +26,7 @@ private:
 
 	uint32						FrameIndex;
 	bool						bInited;
+	uint8*						FrameBuffer;
 
 	ID3D11Device*				Device;
 	ID3D11DeviceContext*		Context;
@@ -37,7 +39,7 @@ private:
 	IDXGIAdapter1*				Adapter1;
 	IDXGISwapChain*				SwapChain;
 
-	ID3D11Buffer*				FrameBuffer_WVP;
+	ID3D11Buffer*				ConstantBuffer_WVP;
 
 	//ID3D11Buffer*				MeshVB;
 	//ID3D11Buffer*				MeshIB;

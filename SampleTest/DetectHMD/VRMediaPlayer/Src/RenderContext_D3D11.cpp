@@ -1,12 +1,14 @@
 #include "stdafx.h"
 #include "RenderContext_D3D11.h"
-
-#include "Shader\RGB_PixelShader.h"
-#include "Shader\RGB_VertexShader.h"
+#include "MpegDecoder.h"
 
 // Temporarily use this hard coded size.
 const uint32 SViewportWidth = 1920;
 const uint32 SViewportHeight = 1080;
+
+static void DecodeThread()
+{
+}
 
 RenderContext_D3D11* RenderContext_D3D11::Get()
 {
@@ -16,6 +18,7 @@ RenderContext_D3D11* RenderContext_D3D11::Get()
 
 RenderContext_D3D11::RenderContext_D3D11() : FrameIndex(0)
 , bInited(false)
+, FrameBuffer(nullptr)
 , Device(nullptr)
 , Context(nullptr)
 , BackBuffer(nullptr)
@@ -189,7 +192,7 @@ bool RenderContext_D3D11::InitializeRHI()
 		Desc.Usage = D3D11_USAGE_DEFAULT;
 		Desc.ByteWidth = sizeof(FrameBufferWVP);
 		Desc.CPUAccessFlags = 0;
-		Res = Device->CreateBuffer(&Desc, nullptr, &FrameBuffer_WVP);
+		Res = Device->CreateBuffer(&Desc, nullptr, &ConstantBuffer_WVP);
 		VERIFY_HRESULT(Res, return false, "failed to create frame buffer wvp.");
 	}
 
@@ -231,11 +234,39 @@ bool RenderContext_D3D11::InitializeRHI()
 		VERIFY_HRESULT(Res, return false, "failed to create vertex layout.");
 	}
 
+	// Create sampler
+	{
+		D3D11_SAMPLER_DESC Desc;
+		ZeroMemory(&Desc, sizeof(Desc));
+		Desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+		Desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+		Desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+		Desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+		Desc.MipLODBias = 0.0f;
+		Desc.MaxAnisotropy = 1;
+		Desc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+		Desc.BorderColor[0] = 0.0f;
+		Desc.BorderColor[1] = 0.0f;
+		Desc.BorderColor[2] = 0.0f;
+		Desc.BorderColor[3] = 0.0f;
+		Desc.MinLOD = -FLT_MAX;
+		Desc.MaxLOD = FLT_MAX;
+		Res = Device->CreateSamplerState(&Desc, &Sampler);
+		VERIFY_HRESULT(Res, return false, "failed to create sampler.");
+	}
+
+	return true;
+}
+
+bool RenderContext_D3D11::InitializeVideo()
+{
+	HRESULT Res;
+
 	// Create texture 2D & shader resource view
 	{
 		D3D11_TEXTURE2D_DESC Desc{ 0 };
-		Desc.Width = SViewportWidth;
-		Desc.Height = SViewportHeight;
+		Desc.Width = VideoPlayer::Get()->width;
+		Desc.Height = VideoPlayer::Get()->height + VideoPlayer::Get()->height2;
 		Desc.ArraySize = 1;
 		Desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 		Desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
@@ -262,25 +293,21 @@ bool RenderContext_D3D11::InitializeRHI()
 		}
 	}
 
-	// Create sampler
 	{
-		D3D11_SAMPLER_DESC Desc;
-		ZeroMemory(&Desc, sizeof(Desc));
-		Desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-		Desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-		Desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-		Desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-		Desc.MipLODBias = 0.0f;
-		Desc.MaxAnisotropy = 1;
-		Desc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
-		Desc.BorderColor[0] = 0.0f;
-		Desc.BorderColor[1] = 0.0f;
-		Desc.BorderColor[2] = 0.0f;
-		Desc.BorderColor[3] = 0.0f;
-		Desc.MinLOD = -FLT_MAX;
-		Desc.MaxLOD = FLT_MAX;
-		Res = Device->CreateSamplerState(&Desc, &Sampler);
-		VERIFY_HRESULT(Res, return false, "failed to create sampler.");
+		VideoPlayer& Player = *VideoPlayer::Get();
+		//Player.audio_play = false;
+		Player.load("F:\\files\\hlh\\showcase.mp4");
+		Player.InitDecodeThread(Device, Context);
+
+		D3D11_MAPPED_SUBRESOURCE TexSubResource;
+		HRESULT res = Context->Map(Tex[VideoPlayer::Get()->FrameIndex % SConstFrameCount], 0, D3D11_MAP_WRITE_DISCARD, 0, &TexSubResource);
+		assert(res == S_OK);
+
+		char Buf[256];
+		sprintf_s(&Buf[0], 256, "Initial mapped buff adress: %I64x.\n", (uint64)TexSubResource.pData);
+		OutputDebugStringA(&Buf[0]);
+
+		VideoPlayer::Get()->ImageData = (uint8*)TexSubResource.pData;
 	}
 
 	return true;
@@ -320,7 +347,25 @@ void RenderContext_D3D11::DrawRect()
 
 	// Setup vs shader & parameters
 	Context->VSSetShader(VS, nullptr, 0);
-	Context->VSSetConstantBuffers(0, 1, &FrameBuffer_WVP);
+	Context->VSSetConstantBuffers(0, 1, &ConstantBuffer_WVP);
+
+	// Update SRV
+	if (VideoPlayer::Get()->bFrameReady)
+	{
+		Context->Unmap(Tex[(VideoPlayer::Get()->FrameIndex) % SConstFrameCount], 0);
+
+		VideoPlayer::Get()->FrameIndex++;
+		D3D11_MAPPED_SUBRESOURCE TexSubResource;
+		HRESULT res = Context->Map(Tex[VideoPlayer::Get()->FrameIndex % SConstFrameCount], 0, D3D11_MAP_WRITE_DISCARD, 0, &TexSubResource);
+		assert(res == S_OK);
+
+		char Buf[256];
+		sprintf_s(&Buf[0], 256, "request frame index: %Id, mapped buff adress: %I64x.\n", VideoPlayer::Get()->FrameIndex, (uint64)TexSubResource.pData);
+		OutputDebugStringA(&Buf[0]);
+
+		VideoPlayer::Get()->ImageData = (uint8*)TexSubResource.pData;
+		VideoPlayer::Get()->bFrameReady = false;
+	}
 
 	// Setup ps shader & parameters
 	Context->PSSetShader(PS, nullptr, 0);
@@ -330,9 +375,12 @@ void RenderContext_D3D11::DrawRect()
 	// Update parameter
 	FrameBufferWVP WVP;
 	WVP.texmat = DirectX::XMMatrixIdentity();
+	if (VideoPlayer::Get()->bBottomUp)
+		WVP.texmat = DirectX::XMMatrixScaling(1, .5f, 1) * DirectX::XMMatrixTranslation(0, (0 ? 0 : 0.5f), 0);
+
 	WVP.modelview = DirectX::XMMatrixTranslation(0.0f, 0.0f, 1.0f);
 	WVP.Projection = DirectX::XMMatrixPerspectiveLH((float)SViewportWidth, (float)SViewportHeight, 0.1f, 1000.0f);
-	Context->UpdateSubresource(FrameBuffer_WVP, 0, nullptr, &WVP, 0, 0);
+	Context->UpdateSubresource(ConstantBuffer_WVP, 0, nullptr, &WVP, 0, 0);
 
 	// Draw call
 	Context->DrawIndexed(6, 0, 0);
