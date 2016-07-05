@@ -46,11 +46,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     MSG msg;
 
     // 主消息循环: 
+	VideoPlayer& Player = *VideoPlayer::Get();
 	char title[256];
 	auto start = std::chrono::steady_clock::now();
 	int count = 0;
 	float elapsed = 0.0f;
-	float minFrameTime = VideoPlayer::Get()->frameTime;
+	float minFrameTime = Player.frameTime;
     while (true)
     {
         //if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
@@ -70,20 +71,21 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		{
 			auto now = std::chrono::steady_clock::now();
 			auto dt = std::chrono::duration<float>(now - start).count();
-			//Sleep(floor((minFrameTime - dt) * 1000));
 
 			start = now;
 			elapsed -= dt;
 			++count;
 			if (elapsed < 0.0f)
 			{
+				//Player.video_context->;
+				sprintf_s(title, "render fps: %d, bitrate: %d mb/s, video fps: %0.2f, decoder: %s, width: %d, height: %d, pixel size: %d bit.", count,
+					Player.format->bit_rate >> 20, (float)1/ minFrameTime, Player.video_decoder->long_name, Player.width, Player.height,
+					Player.rgb_size / (Player.width * Player.height * 1.5));
+				SetWindowTextA(hWnd, &title[0]);
+
 				elapsed = 1.0f;
 				count = 0;
 			}
-
-			sprintf_s(title, "Playing at %f fps", dt);
-			printf("%s\n", title);
-			SetWindowTextA(hWnd, &title[0]);
 
 			RenderContext_D3D11::Get()->Draw(0.0f);
 		}

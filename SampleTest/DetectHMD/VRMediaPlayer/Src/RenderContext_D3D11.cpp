@@ -261,6 +261,11 @@ bool RenderContext_D3D11::InitializeRHI()
 bool RenderContext_D3D11::InitializeVideo()
 {
 	HRESULT Res;
+	VideoPlayer& Player = *VideoPlayer::Get();
+	//Player.audio_play = false;
+	//Player.load("F:\\files\\hlh\\showcase.mp4");
+	Player.load("F:\\User\\VRMp4\\1463544661_37_3840HD.mp4");
+	Player.InitDecodeThread(Device, Context);
 
 	// Create texture 2D & shader resource view
 	{
@@ -294,18 +299,14 @@ bool RenderContext_D3D11::InitializeVideo()
 	}
 
 	{
-		VideoPlayer& Player = *VideoPlayer::Get();
-		//Player.audio_play = false;
-		Player.load("F:\\files\\hlh\\showcase.mp4");
-		Player.InitDecodeThread(Device, Context);
 
 		D3D11_MAPPED_SUBRESOURCE TexSubResource;
 		HRESULT res = Context->Map(Tex[VideoPlayer::Get()->FrameIndex % SConstFrameCount], 0, D3D11_MAP_WRITE_DISCARD, 0, &TexSubResource);
 		assert(res == S_OK);
 
-		char Buf[256];
-		sprintf_s(&Buf[0], 256, "Initial mapped buff adress: %I64x.\n", (uint64)TexSubResource.pData);
-		OutputDebugStringA(&Buf[0]);
+		//char Buf[256];
+		//sprintf_s(&Buf[0], 256, "Initial mapped buff adress: %I64x.\n", (uint64)TexSubResource.pData);
+		//OutputDebugStringA(&Buf[0]);
 
 		VideoPlayer::Get()->ImageData = (uint8*)TexSubResource.pData;
 	}
@@ -359,9 +360,9 @@ void RenderContext_D3D11::DrawRect()
 		HRESULT res = Context->Map(Tex[VideoPlayer::Get()->FrameIndex % SConstFrameCount], 0, D3D11_MAP_WRITE_DISCARD, 0, &TexSubResource);
 		assert(res == S_OK);
 
-		char Buf[256];
-		sprintf_s(&Buf[0], 256, "request frame index: %Id, mapped buff adress: %I64x.\n", VideoPlayer::Get()->FrameIndex, (uint64)TexSubResource.pData);
-		OutputDebugStringA(&Buf[0]);
+		//char Buf[256];
+		//sprintf_s(&Buf[0], 256, "request frame index: %Id, mapped buff adress: %I64x.\n", VideoPlayer::Get()->FrameIndex, (uint64)TexSubResource.pData);
+		//OutputDebugStringA(&Buf[0]);
 
 		VideoPlayer::Get()->ImageData = (uint8*)TexSubResource.pData;
 		VideoPlayer::Get()->bFrameReady = false;

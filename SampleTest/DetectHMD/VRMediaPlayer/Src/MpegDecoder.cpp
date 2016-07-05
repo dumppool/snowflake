@@ -33,12 +33,7 @@ VideoPlayer::VideoPlayer()
 
 VideoPlayer::~VideoPlayer()
 {
-	if (DecodeThreadHandle.joinable())
-	{
-		DecodeThreadHandle.join();
-	}
-
-	bActive = false;
+	close();
 }
 
 
@@ -50,7 +45,7 @@ bool VideoPlayer::load(const char* filename, bool ignore_audio)
 	// Open file and read streams info
 	if (avformat_open_input(&format, filename, nullptr, nullptr) < 0)
 		return false;
-	if (avformat_find_stream_info(format, nullptr) >= 0)
+	if (!avformat_find_stream_info(format, nullptr) < 0)
 		return false;
 
 	// Open video stream
@@ -297,6 +292,12 @@ FrameTexture VideoPlayer::decodeFrame(ID3D11Device* d3d_device, uint8_t* texture
 
 void VideoPlayer::close()
 {
+	bActive = false;
+	if (DecodeThreadHandle.joinable())
+	{
+		DecodeThreadHandle.join();
+	}
+
 	if (format)
 	{
 		if (video_stream_index >= 0)
@@ -392,9 +393,9 @@ void VideoPlayer::RunDecode()
 
 			if (!bFrameReady && ImageData)
 			{
-				char Buf[256];
-				sprintf_s(&Buf[0], 256, "frame: %Id, decode buff adress: %I64x.\n", FrameIndex, (unsigned long long)ImageData);
-				OutputDebugStringA(&Buf[0]);
+				//char Buf[256];
+				//sprintf_s(&Buf[0], 256, "frame: %Id, decode buff adress: %I64x.\n", FrameIndex, (unsigned long long)ImageData);
+				//OutputDebugStringA(&Buf[0]);
 
 				decodeFrame(nullptr, ImageData);
 				//ImageData = nullptr;
