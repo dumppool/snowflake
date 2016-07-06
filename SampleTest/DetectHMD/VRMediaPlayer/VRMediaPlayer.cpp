@@ -69,6 +69,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		}
 		else
 		{
+			RenderContext_D3D11::Get()->Draw(0.0f);
+
 			auto now = std::chrono::steady_clock::now();
 			auto dt = std::chrono::duration<float>(now - start).count();
 
@@ -87,7 +89,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 				count = 0;
 			}
 
-			RenderContext_D3D11::Get()->Draw(0.0f);
+			int milli = max(0, (minFrameTime - dt) * 1000);
+			std::this_thread::sleep_for(std::chrono::milliseconds(milli));
 		}
     }
 

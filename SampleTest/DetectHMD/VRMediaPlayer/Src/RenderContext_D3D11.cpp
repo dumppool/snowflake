@@ -262,9 +262,10 @@ bool RenderContext_D3D11::InitializeVideo()
 {
 	HRESULT Res;
 	VideoPlayer& Player = *VideoPlayer::Get();
-	//Player.audio_play = false;
+	Player.audio_play = false;
+	Player.load("showcase.mp4");
 	//Player.load("F:\\files\\hlh\\showcase.mp4");
-	Player.load("F:\\User\\VRMp4\\1463544661_37_3840HD.mp4");
+	//Player.load("F:\\User\\VRMp4\\1442400753_SD.mp4");
 	Player.InitDecodeThread(Device, Context);
 
 	// Create texture 2D & shader resource view

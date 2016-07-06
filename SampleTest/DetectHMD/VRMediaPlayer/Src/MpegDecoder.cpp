@@ -33,6 +33,12 @@ VideoPlayer::VideoPlayer()
 
 VideoPlayer::~VideoPlayer()
 {
+	bActive = false;
+	if (DecodeThreadHandle.joinable())
+	{
+		DecodeThreadHandle.join();
+	}
+
 	close();
 }
 
@@ -292,12 +298,6 @@ FrameTexture VideoPlayer::decodeFrame(ID3D11Device* d3d_device, uint8_t* texture
 
 void VideoPlayer::close()
 {
-	bActive = false;
-	if (DecodeThreadHandle.joinable())
-	{
-		DecodeThreadHandle.join();
-	}
-
 	if (format)
 	{
 		if (video_stream_index >= 0)
@@ -365,6 +365,7 @@ void VideoPlayer::RunDecode()
 
 	while (bActive)
 	{
+		Sleep(0);
 		auto stop = std::chrono::steady_clock::now();
 		auto dt = std::chrono::duration<float>(stop - start).count();
 		start = stop;
@@ -406,12 +407,11 @@ void VideoPlayer::RunDecode()
 			firstFrame = false;
 
 		}
-		//else
-		//{
-		//    int milli = (frameTime - elapsed) * 1000;
-		//    std::this_thread::sleep_for(std::chrono::milliseconds(milli));
-		//    printf("sleep %d milli\n", milli);
-		//}
+		else
+		{
+		    int milli = (frameTime - elapsed) * 1000;
+		    std::this_thread::sleep_for(std::chrono::milliseconds(milli));
+		}
 
 	}
 }
