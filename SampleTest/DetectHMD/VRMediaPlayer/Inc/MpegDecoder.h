@@ -63,6 +63,10 @@ public:
 	std::function<void(void)> onLoad;
 	std::function<void(AVFrame*)> onFrameDecoded;
 
+	double					Now;
+	double					DestFrameUS;
+	bool					bNewDestFrame;
+
 	bool					bActive;
 	bool					bBottomUp;
 	uint64					FrameIndex;
@@ -75,6 +79,33 @@ public:
 	double					frameTime;
 	void InitDecodeThread(ID3D11Device* InDevice, ID3D11DeviceContext* InContext);
 	void RunDecode();
+	float GetPlayTime() const
+	{
+		return Now;
+	}
+
+	float GetTotalTime() const
+	{
+		float Ret = -1.0f;
+		if (video_stream)
+		{
+			Ret = video_stream->duration * frameTime;
+		}
+
+		return Ret;
+	}
+
+	float GetDestTime() const
+	{
+		return DestFrameUS * 0.000001;
+	}
+
+	void SetDestTime(float InTime)
+	{
+		Now = min(GetTotalTime(), max(0.0f, InTime));
+		DestFrameUS = Now * 1000000;
+		bNewDestFrame = true;
+	}
 
 	static VideoPlayer* Get()
 	{

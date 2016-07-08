@@ -69,23 +69,21 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		}
 		else
 		{
-			RenderContext_D3D11::Get()->Draw(0.0f);
-
 			auto now = std::chrono::steady_clock::now();
 			auto dt = std::chrono::duration<float>(now - start).count();
+			RenderContext_D3D11::Get()->Draw(dt);
 
 			start = now;
-			elapsed -= dt;
+			elapsed += dt;
 			++count;
-			if (elapsed < 0.0f)
+			if (elapsed > 1.0f)
 			{
-				//Player.video_context->;
-				sprintf_s(title, "render fps: %d, bitrate: %d mb/s, video fps: %0.2f, decoder: %s, width: %d, height: %d, pixel size: %d bit.", count,
-					Player.format->bit_rate >> 20, (float)1/ minFrameTime, Player.video_decoder->long_name, Player.width, Player.height,
-					Player.rgb_size / (Player.width * Player.height * 1.5));
+				sprintf_s(title, "render fps: %d, bitrate: %d mb/s, video fps: %0.1f, decoder: %s, width: %d, height: %d, pixel format: %d, time(current, to be, total): %0.1f, %0.1f, %0.1f", count,
+					Player.format->bit_rate >> 20, (float)1 / minFrameTime, Player.video_decoder->long_name, Player.width, Player.height,
+					Player.video_context->pix_fmt, Player.GetPlayTime(), Player.GetDestTime(), Player.GetTotalTime());
 				SetWindowTextA(hWnd, &title[0]);
 
-				elapsed = 1.0f;
+				elapsed = 0.0f;
 				count = 0;
 			}
 
@@ -211,6 +209,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case VK_ESCAPE:
 			PostQuitMessage(0);
 			break;
+		case VK_LEFT:
+			VideoPlayer::Get()->SetDestTime(VideoPlayer::Get()->GetPlayTime() - 10.f);
+			break;
+		case VK_RIGHT:
+			VideoPlayer::Get()->SetDestTime(VideoPlayer::Get()->GetPlayTime() + 10.f);
+			break;
+		case VK_SPACE:
+			VideoPlayer::Get()->bPlaying = !VideoPlayer::Get()->bPlaying;
 		default:
 			break;
 		}

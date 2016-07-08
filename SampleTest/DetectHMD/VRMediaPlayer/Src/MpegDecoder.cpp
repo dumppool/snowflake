@@ -51,7 +51,9 @@ bool VideoPlayer::load(const char* filename, bool ignore_audio)
 	// Open file and read streams info
 	if (avformat_open_input(&format, filename, nullptr, nullptr) < 0)
 		return false;
-	if (!avformat_find_stream_info(format, nullptr) < 0)
+
+	int ret = avformat_find_stream_info(format, nullptr);
+	if (ret <= 0)
 		return false;
 
 	// Open video stream
@@ -198,98 +200,8 @@ FrameTexture VideoPlayer::decodeFrame(ID3D11Device* d3d_device, uint8_t* texture
 						}
 					}
 				}
-
-				if (d3d_device)
-				{
-					uint8_t* ptr = buffer;
-					if (ptr)
-					{
-						// Copy Y plane
-						for (int i = 0; i < height; i++)
-							memcpy(ptr + i*width, video_frame->data[0] + i * video_frame->linesize[0], width);
-						// Copy U and V plane
-						for (int i = 0; i < height2; i++)
-						{
-							memcpy(ptr + (i + height) * width, video_frame->data[1] + i * video_frame->linesize[1], width2);
-							memcpy(ptr + (i + height) * width + width2, video_frame->data[2] + i * video_frame->linesize[2], width2);
-						}
-					}
-
-					D3D11_TEXTURE2D_DESC tdesc{ 0 };
-					tdesc.Width = width;
-					tdesc.Height = height * 1.5f;
-					tdesc.ArraySize = 1;
-					tdesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-					tdesc.CPUAccessFlags = 0;
-					tdesc.Format = DXGI_FORMAT_R8_UNORM;
-					tdesc.MipLevels = 1;
-					tdesc.MiscFlags = 0;
-					tdesc.SampleDesc.Count = 1;
-					tdesc.SampleDesc.Quality = 0;
-					tdesc.Usage = D3D11_USAGE_DEFAULT;
-					D3D11_SUBRESOURCE_DATA tsrd{ 0 };
-					tsrd.pSysMem = buffer;
-					tsrd.SysMemPitch = width;
-					HRESULT res = d3d_device->CreateTexture2D(&tdesc, &tsrd, &texture.tex);
-					assert(res == S_OK);
-
-					D3D11_SHADER_RESOURCE_VIEW_DESC srvd;
-					ZeroMemory(&srvd, sizeof(srvd));
-					srvd.Format = tdesc.Format;
-					srvd.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-					srvd.Texture2D.MipLevels = 1;
-					res = d3d_device->CreateShaderResourceView(texture.tex, &srvd, &texture.view);
-					assert(res == S_OK);
-				}
 			}
 		}
-		//else if (packet.stream_index == audio_stream_index)
-		//{
-		//	avcodec_decode_audio4(audio_context, audio_frame, &decoded_audio, &packet);
-		//	if (decoded_audio)
-		//	{
-		//		last_audio_dst = audio_frame->pkt_dts;
-
-		//		int lineSize = 0;
-		//		int dataSize = av_samples_get_buffer_size(&lineSize, audio_context->channels,
-		//			audio_frame->nb_samples, AV_SAMPLE_FMT_S16, 1);
-
-		//		uint8_t* buffer = (uint8_t*)av_mallocz(dataSize);
-		//		int samples = avresample_convert(audio_resample, &buffer, lineSize, audio_frame->nb_samples,
-		//			audio_frame->data, audio_frame->linesize[8], audio_frame->nb_samples);
-
-
-		//		ALuint albuffer;
-		//		alGenBuffers(1, &albuffer);
-
-		//		alBufferData(albuffer, AL_FORMAT_STEREO16, buffer, dataSize, audio_frame->sample_rate);
-		//		alSourceQueueBuffers(audio_source, 1, &albuffer);
-
-		//		audio_buffer_queue.push_front(albuffer);
-
-		//		//printf("Decoded audio %d buffer %d samples, queue size %d\n",
-		//		//    dataSize, samples, audio_buffer_queue.size());
-		//	}
-		//}
-
-		int val = 0;
-
-		alGetSourcei(audio_source, AL_BUFFERS_PROCESSED, &val);
-		while (val--)
-		{
-			alSourceUnqueueBuffers(audio_source, 1, &audio_buffer_queue.back());
-			alDeleteBuffers(1, &audio_buffer_queue.back());
-			audio_buffer_queue.pop_back();
-		}
-
-		alGetSourcei(audio_source, AL_BUFFERS_QUEUED, &val);
-		audio_queue_size = val;
-		//++audio_queue_size;
-
-		alGetSourcei(audio_source, AL_SOURCE_STATE, &val);
-		if (audio_play && val != AL_PLAYING)
-			alSourcePlay(audio_source);
-
 
 		av_free_packet(&packet);
 	}
@@ -315,6 +227,7 @@ void VideoPlayer::close()
 		avformat_close_input(&format);
 	}
 	format = nullptr;
+	Now = 0.0f;
 }
 
 void VideoPlayer::rewind()
@@ -365,25 +278,35 @@ void VideoPlayer::RunDecode()
 
 	while (bActive)
 	{
-		Sleep(0);
 		auto stop = std::chrono::steady_clock::now();
 		auto dt = std::chrono::duration<float>(stop - start).count();
 		start = stop;
 
 		if (bPlaying)
+		{
 			elapsed += dt;
-
-		audio_play = bPlaying;
+			Now += dt;
+		}
 
 		if (firstFrame || (bPlaying && elapsed > frameTime))
 		{
-			// drop frames
+			if (bNewDestFrame)
+			{
+				av_seek_frame(format, -1, DestFrameUS, AVSEEK_FLAG_BACKWARD | AVSEEK_FLAG_ANY);
+				avcodec_flush_buffers(video_context);
+				OutputDebugStringA("avcodec flush buffers.\n");
+				bNewDestFrame = false;
+			}
+
 			while (elapsed > frameTime * 1.5f)
 			{
 				decodeFrame(nullptr);
 				elapsed -= frameTime;
+				OutputDebugStringA("frame discarded.\n");
 				//printf("frame discarded\n");
 			}
+
+			//while (DestFrame >video_context->frame_number)
 
 			// wait GPU idle
 			BOOL gpu_done = FALSE;
