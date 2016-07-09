@@ -33,7 +33,8 @@ VertexOut vs_main(VertexIn in_v)
     //out_v.pos = mul(mvp, float4(in_v.pos, 1.0f));
 	out_v.pos = float4(in_v.pos, 1.0f);
 
-	float4 coord = mul(texmat, float4(in_v.tco, 0, 1));
+	float2 coord = in_v.tco * float2(1.f, 1.f) + float2(0.f, 0.f);
+	//float4 coord = mul(texmat, float4(in_v.tco, 0, 1));
 	float y = (coord.y / 3.0f) * 2.0f;
 	float y2 = (coord.y + 2) / 3.0f;
 	out_v.tco[0] = float2(coord.x, y);

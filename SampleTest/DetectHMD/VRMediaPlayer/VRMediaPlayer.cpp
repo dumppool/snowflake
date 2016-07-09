@@ -78,8 +78,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			++count;
 			if (elapsed > 1.0f)
 			{
-				sprintf_s(title, "render fps: %d, bitrate: %d mb/s, video fps: %0.1f, decoder: %s, width: %d, height: %d, pixel format: %d, time(current, to be, total): %0.1f, %0.1f, %0.1f", count,
-					Player.format->bit_rate >> 20, (float)1 / minFrameTime, Player.video_decoder->long_name, Player.width, Player.height,
+				sprintf_s(title, "render fps: %d, bitrate: %0.3f mb/s, video fps: %0.1f, decoder: %s, width: %d, height: %d, pixel format: %d, time(current, to be, total): %0.1f, %0.1f, %0.1f", count,
+					float(Player.format->bit_rate) / (float)(1024.f*1024.f), (float)1 / minFrameTime, Player.video_decoder->long_name, Player.width, Player.height,
 					Player.video_context->pix_fmt, Player.GetPlayTime(), Player.GetDestTime(), Player.GetTotalTime());
 				SetWindowTextA(hWnd, &title[0]);
 

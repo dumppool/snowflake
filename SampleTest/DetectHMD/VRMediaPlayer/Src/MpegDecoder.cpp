@@ -174,6 +174,7 @@ FrameTexture VideoPlayer::decodeFrame(ID3D11Device* d3d_device, uint8_t* texture
 					onComplete();
 				rewind();
 				rewinded = 1;
+				av_free_packet(&packet);
 				break;
 			}
 			if (decoded_video)
