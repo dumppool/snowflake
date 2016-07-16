@@ -13,7 +13,7 @@ struct VertexIn
 
 struct VertexOut
 {
-    float2 tco[3] : TEXCOORD;
+    float2 tco[4] : TEXCOORD;
     float4 pos : SV_POSITION;
 };
 
@@ -33,13 +33,14 @@ VertexOut vs_main(VertexIn in_v)
     //out_v.pos = mul(mvp, float4(in_v.pos, 1.0f));
 	out_v.pos = float4(in_v.pos, 1.0f);
 
-	float2 coord = in_v.tco * float2(1.f, 1.f) + float2(0.f, 0.f);
+	float2 coord = in_v.tco;
 	//float4 coord = mul(texmat, float4(in_v.tco, 0, 1));
 	float y = (coord.y / 3.0f) * 2.0f;
 	float y2 = (coord.y + 2) / 3.0f;
 	out_v.tco[0] = float2(coord.x, y);
 	out_v.tco[1] = float2(coord.x * 0.5, y2);
 	out_v.tco[2] = float2(coord.x * 0.5 + 0.5, y2);
+	out_v.tco[3] = coord.xy;
 
 	//out_v.tco[0] = mul(texmat, float4(in_v.tco, 0, 1));
     return out_v;
@@ -56,5 +57,7 @@ float4 ps_main(VertexOut in_data) : SV_TARGET
 		1.000, -0.344, -0.714, 0.529,
 		1.000, 1.772, 0.000, -0.886,
 		0.000, 0.000, 0.000, 0.000);
+	//return in_data.tco[3].x;
+	//return Texture.Sample(Sampler, in_data.tco[3]);
 	return mul(conversion, float4(y, u, v, 1.0));
 }
