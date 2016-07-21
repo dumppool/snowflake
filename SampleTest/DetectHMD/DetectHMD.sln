@@ -7,6 +7,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VRPlayer", "VRPlayer\VRPlay
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "D3D11", "D3D11\D3D11.vcxproj", "{17098784-51CF-44ED-ACE0-C6C92C43EF41}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MpegDecoder", "MpegDecoder\MpegDecoder.vcxproj", "{EACCBEC5-F5E3-4C78-8041-B6800450D426}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VRMediaPlayer", "VRMediaPlayer\VRMediaPlayer.vcxproj", "{EB9DB5D0-15AC-4AD2-976B-D54CBC6413AA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -31,6 +35,22 @@ Global
 		{17098784-51CF-44ED-ACE0-C6C92C43EF41}.Release|x64.Build.0 = Release|x64
 		{17098784-51CF-44ED-ACE0-C6C92C43EF41}.Release|x86.ActiveCfg = Release|Win32
 		{17098784-51CF-44ED-ACE0-C6C92C43EF41}.Release|x86.Build.0 = Release|Win32
+		{EACCBEC5-F5E3-4C78-8041-B6800450D426}.Debug|x64.ActiveCfg = Debug|x64
+		{EACCBEC5-F5E3-4C78-8041-B6800450D426}.Debug|x64.Build.0 = Debug|x64
+		{EACCBEC5-F5E3-4C78-8041-B6800450D426}.Debug|x86.ActiveCfg = Debug|Win32
+		{EACCBEC5-F5E3-4C78-8041-B6800450D426}.Debug|x86.Build.0 = Debug|Win32
+		{EACCBEC5-F5E3-4C78-8041-B6800450D426}.Release|x64.ActiveCfg = Release|x64
+		{EACCBEC5-F5E3-4C78-8041-B6800450D426}.Release|x64.Build.0 = Release|x64
+		{EACCBEC5-F5E3-4C78-8041-B6800450D426}.Release|x86.ActiveCfg = Release|Win32
+		{EACCBEC5-F5E3-4C78-8041-B6800450D426}.Release|x86.Build.0 = Release|Win32
+		{EB9DB5D0-15AC-4AD2-976B-D54CBC6413AA}.Debug|x64.ActiveCfg = Debug|x64
+		{EB9DB5D0-15AC-4AD2-976B-D54CBC6413AA}.Debug|x64.Build.0 = Debug|x64
+		{EB9DB5D0-15AC-4AD2-976B-D54CBC6413AA}.Debug|x86.ActiveCfg = Debug|Win32
+		{EB9DB5D0-15AC-4AD2-976B-D54CBC6413AA}.Debug|x86.Build.0 = Debug|Win32
+		{EB9DB5D0-15AC-4AD2-976B-D54CBC6413AA}.Release|x64.ActiveCfg = Release|x64
+		{EB9DB5D0-15AC-4AD2-976B-D54CBC6413AA}.Release|x64.Build.0 = Release|x64
+		{EB9DB5D0-15AC-4AD2-976B-D54CBC6413AA}.Release|x86.ActiveCfg = Release|Win32
+		{EB9DB5D0-15AC-4AD2-976B-D54CBC6413AA}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
