@@ -53,4 +53,7 @@ private:
 	ID3D11SamplerState*			Sampler;
 	ID3D11Texture2D*			Tex[SConstFrameCount];
 	ID3D11ShaderResourceView*	SRV[SConstFrameCount];
+
+public:
+	void InitializeHMD();
 };

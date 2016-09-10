@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="ThirdParty">
+      <UniqueIdentifier>{00145324-f870-455a-b824-858d794f4698}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThirdParty\Src">
+      <UniqueIdentifier>{c4f4c63b-7ed6-42f1-bdd9-51f13b580b00}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThirdParty\Include">
+      <UniqueIdentifier>{b53971a9-40cc-435c-9867-4c63926de99c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThirdParty\Include\Extras">
+      <UniqueIdentifier>{f5a8569a-425b-4543-bf09-5cbb4dd6028d}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ThirdParty\Src\OVR_CAPI_Prototypes.h">
+      <Filter>ThirdParty\Src</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\Include\OVR_CAPI.h">
+      <Filter>ThirdParty\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\Include\OVR_CAPI_Audio.h">
+      <Filter>ThirdParty\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\Include\OVR_CAPI_D3D.h">
+      <Filter>ThirdParty\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\Include\OVR_CAPI_GL.h">
+      <Filter>ThirdParty\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\Include\OVR_CAPI_Keys.h">
+      <Filter>ThirdParty\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\Include\OVR_ErrorCode.h">
+      <Filter>ThirdParty\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\Include\OVR_Version.h">
+      <Filter>ThirdParty\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\Include\Extras\OVR_CAPI_Util.h">
+      <Filter>ThirdParty\Include\Extras</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\Include\Extras\OVR_Math.h">
+      <Filter>ThirdParty\Include\Extras</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\Include\Extras\OVR_StereoProjection.h">
+      <Filter>ThirdParty\Include\Extras</Filter>
+    </ClInclude>
+    <ClInclude Include="OculusPch.h" />
+    <ClInclude Include="Win32_BasicVR.h" />
+    <ClInclude Include="Win32_DirectXAppUtil.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="ThirdParty\Src\OVR_CAPI_Util.cpp">
+      <Filter>ThirdParty\Src</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\Src\OVR_CAPIShim.c">
+      <Filter>ThirdParty\Src</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\Src\OVR_StereoProjection.cpp">
+      <Filter>ThirdParty\Src</Filter>
+    </ClCompile>
+    <ClCompile Include="HMDOculus.cpp" />
+    <ClCompile Include="OculusPch.cpp" />
+  </ItemGroup>
+</Project>

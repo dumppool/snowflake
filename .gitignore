@@ -13,3 +13,7 @@ SampleTest/DetectHMD/DetectHMD.VC.VC.opendb
 *.ilk
 *.suo
 *.suo
+*.suo
+*.dll
+*.exe
+*.suo
