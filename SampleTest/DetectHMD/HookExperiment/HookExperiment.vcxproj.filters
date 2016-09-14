@@ -11,5 +11,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="HookExperiment.cpp" />
+    <ClCompile Include="HookInstaller.cpp" />
+    <ClCompile Include="string_utils.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="HookInstaller.h" />
+    <ClInclude Include="string_utils.h" />
   </ItemGroup>
 </Project>
