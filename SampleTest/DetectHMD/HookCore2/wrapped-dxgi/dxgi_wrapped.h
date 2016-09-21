@@ -149,6 +149,11 @@ public:
 
 class WrappedIDXGISwapChain3;
 
+#ifndef USE_FULLRDC
+#define USE_FULLRDC 0
+#endif
+
+#if USE_FULLRDC
 struct ID3DDevice
 {
 	// re-use IUnknown
@@ -172,6 +177,9 @@ struct ID3DDevice
 
 	virtual HRESULT Present(WrappedIDXGISwapChain3 *swapChain, UINT SyncInterval, UINT Flags) = 0;
 };
+#else
+typedef ID3D11Device ID3DDevice;
+#endif
 
 typedef ID3DDevice *(*D3DDeviceCallback)(IUnknown *dev);
 

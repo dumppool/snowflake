@@ -20,7 +20,38 @@
 #include <vector>
 #include <string>
 
-#define LVMSG(Cnt, Cap) {::MessageBoxA(NULL, Cnt, Cap, 0);}
+//#define LVMSG(Cnt, Cap) {::MessageBoxA(NULL, Cnt, Cap, 0);}
+#define LVMSG(Cap, ...) {\
+log_cap_cnt(Cap, __VA_ARGS__);}
+
+#include <time.h>
+#include <fstream>
+using namespace std;
+inline static void log_cap_cnt(const char* cap, const char* fmt, ...)
+{
+	char msg[1024];
+
+	va_list args;
+	va_start(args, fmt);
+	int sz = vsnprintf(msg, 1023, fmt, args);
+	//msg[sz] = '\0';
+	va_end(args);
+
+	ofstream logfile("d:\\lv.log", ios::app|ios::out);
+	if (!logfile)
+	{
+		::MessageBoxA(0, "failed to open log file", "LOG", 0);
+		return;
+	}
+
+	time_t t = ::time(0);
+	tm curr;
+	::localtime_s(&curr, &t);
+	logfile << 1900 + curr.tm_year << "/" << curr.tm_mon + 1 << "/" << curr.tm_mday << " " << curr.tm_hour << ":" << curr.tm_min << ":" << curr.tm_sec << "     ";
+	logfile << cap << ": " << string(msg).c_str() << endl;
+	logfile.flush();
+}
+
 #define RDCDEBUG printf
 #define RDCWARN printf
 #define RDCERR printf

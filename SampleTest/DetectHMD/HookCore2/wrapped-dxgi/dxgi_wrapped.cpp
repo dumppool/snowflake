@@ -80,7 +80,9 @@ HRESULT WrappedIDXGIFactory::staticCreateSwapChain(IDXGIFactory *factory, IUnkno
 	IDXGISwapChain **ppSwapChain)
 {
 	ID3DDevice *wrapDevice = GetD3DDevice(pDevice);
+	LVMSG("staticCreateSwapChain", "IDXGIFactory(%16x)", factory);
 
+#if USE_FULLRDC
 	if (wrapDevice)
 	{
 		if (!ALLOWFULLSCREEN && pDesc)
@@ -100,8 +102,24 @@ HRESULT WrappedIDXGIFactory::staticCreateSwapChain(IDXGIFactory *factory, IUnkno
 
 		return ret;
 	}
+	else
+	{
+		LVMSG("staticCreateSwapChain", "no wrap device");
+	}
+#else
+	LostVR::OculusVR::Get()->Init((ID3D11Device*)pDevice);
+	HRESULT ret = factory->CreateSwapChain(pDevice, pDesc, ppSwapChain);
 
-	RDCERR("Creating swap chain with non-hooked device!");
+	if (SUCCEEDED(ret))
+	{
+		*ppSwapChain =
+			new WrappedIDXGISwapChain3(*ppSwapChain, pDesc ? pDesc->OutputWindow : NULL, (ID3D11Device*)pDevice);
+	}
+
+	return ret;
+#endif //USE_FULLRDC
+
+	LVMSG("staticCreateSwapChain", "Creating swap chain with non-hooked device!");
 
 	return factory->CreateSwapChain(pDevice, pDesc, ppSwapChain);
 }
@@ -120,7 +138,13 @@ HRESULT WrappedIDXGIFactory2::staticCreateSwapChainForHwnd(
 			pFullscreenDesc = NULL;
 		}
 
-		HRESULT ret = factory->CreateSwapChainForHwnd(wrapDevice->GetRealIUnknown(), hWnd, pDesc,
+		HRESULT ret = factory->CreateSwapChainForHwnd(
+#if USE_FULLRDC
+			wrapDevice->GetRealIUnknown(), 
+#else
+			pDevice,
+#endif //USE_FULLRDC
+			hWnd, pDesc,
 			pFullscreenDesc, pRestrictToOutput, ppSwapChain);
 
 		if (SUCCEEDED(ret))
@@ -154,7 +178,13 @@ HRESULT WrappedIDXGIFactory2::staticCreateSwapChainForCoreWindow(IDXGIFactory2 *
 
 	if (wrapDevice)
 	{
-		HRESULT ret = factory->CreateSwapChainForCoreWindow(wrapDevice->GetRealIUnknown(), pWindow,
+		HRESULT ret = factory->CreateSwapChainForCoreWindow(
+#if USE_FULLRDC
+			wrapDevice->GetRealIUnknown(),
+#else
+			pDevice,
+#endif
+			pWindow,
 			pDesc, pRestrictToOutput, ppSwapChain);
 
 		if (SUCCEEDED(ret))
@@ -190,7 +220,13 @@ HRESULT WrappedIDXGIFactory2::staticCreateSwapChainForComposition(IDXGIFactory2 
 
 	if (wrapDevice)
 	{
-		HRESULT ret = factory->CreateSwapChainForComposition(wrapDevice->GetRealIUnknown(), pDesc,
+		HRESULT ret = factory->CreateSwapChainForComposition(
+#if USE_FULLRDC
+			wrapDevice->GetRealIUnknown(), 
+#else
+			pDevice,
+#endif //USE_FULLRDC
+			pDesc,
 			pRestrictToOutput, ppSwapChain);
 
 		if (SUCCEEDED(ret))
@@ -229,12 +265,16 @@ WrappedIDXGISwapChain3::WrappedIDXGISwapChain3(IDXGISwapChain *real, HWND wnd, I
 
 	// we do a 'fake' present right at the start, so that we can capture frame 1, by
 	// going from this fake present to the first present.
+#if USE_FULLRDC
 	m_pDevice->FirstFrame(this);
+#endif
 }
 
 WrappedIDXGISwapChain3::~WrappedIDXGISwapChain3()
 {
+#if USE_FULLRDC
 	m_pDevice->ReleaseSwapchainResources(this);
+#endif // USE_FULLRDC
 
 	SAFE_RELEASE(m_pDevice);
 
@@ -246,7 +286,10 @@ WrappedIDXGISwapChain3::~WrappedIDXGISwapChain3()
 
 void WrappedIDXGISwapChain3::ReleaseBuffersForResize()
 {
+#if USE_FULLRDC
 	m_pDevice->ReleaseSwapchainResources(this);
+#endif // USE_FULLRDC
+
 }
 
 void WrappedIDXGISwapChain3::WrapBuffersAfterResize()
@@ -267,8 +310,17 @@ void WrappedIDXGISwapChain3::WrapBuffersAfterResize()
 
 		if (i < bufCount)
 		{
-			GetBuffer(i, m_pDevice->GetBackbufferUUID(), (void **)&m_pBackBuffers[i]);
+			GetBuffer(i, 
+#if USE_FULLRDC
+				m_pDevice->GetBackbufferUUID()
+#else
+				__uuidof(ID3D11Texture2D)
+#endif // USE_FULLRDC
+				, (void **)&m_pBackBuffers[i]);
+
+#if USE_FULLRDC
 			m_pDevice->NewSwapchainBuffer(m_pBackBuffers[i]);
+#endif
 		}
 	}
 }
@@ -371,10 +423,16 @@ HRESULT WrappedIDXGISwapChain3::GetBuffer(
 		{
 			DXGI_SWAP_CHAIN_DESC desc;
 			GetDesc(&desc);
+#if USE_FULLRDC
 			tex = m_pDevice->WrapSwapchainBuffer(this, &desc, Buffer, realSurface);
 		}
 
 		*ppSurface = tex;
+#else
+		}
+
+#endif // USE_FULLRDC
+
 	}
 
 	return ret;
@@ -389,12 +447,20 @@ HRESULT WrappedIDXGISwapChain3::GetDevice(
 	if (SUCCEEDED(ret))
 	{
 		// try one of the trivial wraps, we don't mind making a new one of those
+#if USE_FULLRDC
 		if (riid == m_pDevice->GetDeviceUUID())
 		{
 			// probably they're asking for the device device.
 			*ppDevice = m_pDevice->GetDeviceInterface();
 			m_pDevice->AddRef();
 		}
+#else
+		if (riid == __uuidof(ID3D11Device))
+		{
+			*ppDevice = m_pDevice;
+			m_pDevice->AddRef();
+		}
+#endif
 		else if (riid == __uuidof(IDXGISwapChain))
 		{
 			// don't think anyone would try this, but what the hell.
@@ -426,14 +492,17 @@ HRESULT WrappedIDXGISwapChain3::Present(
 	if (SUCCEEDED(m_pReal->GetBuffer(0, __uuidof(ID3D11Texture2D*), (void**)&Tex)) &&
 		SUCCEEDED(m_pReal->GetDevice(__uuidof(ID3D11Device), (void**)&Dev)))
 	{
+		//LVMSG("succeed", "WrappedIDXGISwapChain3::Present");
 		LostVR::OculusVR::Get()->Update(Dev, Tex);
 	}
 	else
 	{
-		LVMSG("failed", "OculuseVR::Update");
+		//LVMSG("failed", "WrappedIDXGISwapChain3::Present");
 	}
 
+#if USE_FULLRDC
 	m_pDevice->Present(this, SyncInterval, Flags);
+#endif // USE_FULLRDC
 
 	return m_pReal->Present(SyncInterval, Flags);
 }
@@ -446,7 +515,9 @@ HRESULT WrappedIDXGISwapChain3::Present1(UINT SyncInterval, UINT Flags,
 		SyncInterval = 0;
 	}
 
+#if USE_FULLRDC
 	m_pDevice->Present(this, SyncInterval, Flags);
+#endif // USE_FULLRDC
 
 	return m_pReal1->Present1(SyncInterval, Flags, pPresentParameters);
 }
@@ -620,12 +691,21 @@ HRESULT STDMETHODCALLTYPE WrappedIDXGISwapChain3::QueryInterface(REFIID riid, vo
 
 HRESULT STDMETHODCALLTYPE WrappedIDXGIDevice::QueryInterface(REFIID riid, void **ppvObject)
 {
+#if USE_FULLRDC
 	if (riid == m_pD3DDevice->GetDeviceUUID())
 	{
 		m_pD3DDevice->AddRef();
 		*ppvObject = m_pD3DDevice->GetDeviceInterface();
 		return S_OK;
 	}
+#else
+	if (riid == _uuidof(ID3D11Device))
+	{
+		m_pD3DDevice->AddRef();
+		*ppvObject = m_pD3DDevice;
+		return S_OK;
+	}
+#endif //USE_FULLRDC
 	else
 	{
 		string guid = ToStrHelperGet(riid);
@@ -639,12 +719,21 @@ HRESULT STDMETHODCALLTYPE WrappedIDXGIDevice1::QueryInterface(REFIID riid, void 
 {
 	HRESULT hr = S_OK;
 
+#if USE_FULLRDC
 	if (riid == m_pD3DDevice->GetDeviceUUID())
 	{
 		m_pD3DDevice->AddRef();
 		*ppvObject = m_pD3DDevice->GetDeviceInterface();
 		return S_OK;
 	}
+#else
+	if (riid == _uuidof(ID3D11Device))
+	{
+		m_pD3DDevice->AddRef();
+		*ppvObject = m_pD3DDevice;
+		return S_OK;
+	}
+#endif //USE_FULLRDC
 	else if (riid == __uuidof(IDXGIDevice1))
 	{
 		AddRef();
@@ -692,12 +781,21 @@ HRESULT STDMETHODCALLTYPE WrappedIDXGIDevice1::QueryInterface(REFIID riid, void 
 
 HRESULT STDMETHODCALLTYPE WrappedIDXGIDevice2::QueryInterface(REFIID riid, void **ppvObject)
 {
+#if USE_FULLRDC
 	if (riid == m_pD3DDevice->GetDeviceUUID())
 	{
 		m_pD3DDevice->AddRef();
 		*ppvObject = m_pD3DDevice->GetDeviceInterface();
 		return S_OK;
 	}
+#else
+	if (riid == _uuidof(ID3D11Device))
+	{
+		m_pD3DDevice->AddRef();
+		*ppvObject = m_pD3DDevice;
+		return S_OK;
+	}
+#endif //USE_FULLRDC
 	else if (riid == __uuidof(IDXGIDevice1))
 	{
 		AddRef();
@@ -736,12 +834,21 @@ HRESULT STDMETHODCALLTYPE WrappedIDXGIDevice2::QueryInterface(REFIID riid, void 
 
 HRESULT STDMETHODCALLTYPE WrappedIDXGIDevice3::QueryInterface(REFIID riid, void **ppvObject)
 {
+#if USE_FULLRDC
 	if (riid == m_pD3DDevice->GetDeviceUUID())
 	{
 		m_pD3DDevice->AddRef();
 		*ppvObject = m_pD3DDevice->GetDeviceInterface();
 		return S_OK;
 	}
+#else
+	if (riid == _uuidof(ID3D11Device))
+	{
+		m_pD3DDevice->AddRef();
+		*ppvObject = m_pD3DDevice;
+		return S_OK;
+	}
+#endif //USE_FULLRDC
 	else if (riid == __uuidof(IDXGIDevice1))
 	{
 		AddRef();

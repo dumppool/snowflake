@@ -48,7 +48,10 @@ namespace LostVR
 
 			ovrResult result = ovr_CreateTextureSwapChainDX(Session, dev, &desc, &TextureChain);
 			if (!OVR_SUCCESS(result))
+			{
+				LVMSG("OculusTexture::Init", "ovr_CreateTextureSwapChainDX failed");
 				return false;
+			}
 
 			int textureCount = 0;
 			ovr_GetTextureSwapChainLength(Session, TextureChain, &textureCount);
@@ -56,6 +59,11 @@ namespace LostVR
 			{
 				ID3D11Texture2D* tex = nullptr;
 				ovr_GetTextureSwapChainBufferDX(Session, TextureChain, i, IID_PPV_ARGS(&tex));
+				if (tex == nullptr)
+				{
+					LVMSG("OculusTexture::Init", "ovr_GetTextureSwapChainBufferDX failed");
+				}
+
 				SwapChainBuffer.push_back(tex);
 				//D3D11_RENDER_TARGET_VIEW_DESC rtvd = {};
 				//rtvd.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -66,6 +74,7 @@ namespace LostVR
 				//tex->Release();
 			}
 
+			LVMSG("OculusTexture::Init", "sucess, width(%d), height(%d)", sizeW, sizeH);
 			return true;
 		}
 
@@ -103,6 +112,7 @@ namespace LostVR
 			{
 				int currentIndex = 0;
 				ovr_GetTextureSwapChainCurrentIndex(Session, TextureChain, &currentIndex);
+				LVMSG("GetBuffer", "curr index: %d", currentIndex);
 				return SwapChainBuffer[currentIndex];
 			}
 			return nullptr;
@@ -240,7 +250,10 @@ namespace LostVR
 			ovrGraphicsLuid luid;
 			ovrResult result = ovr_Create(&Session, &luid);
 			if (!OVR_SUCCESS(result))
+			{
+				LVMSG("OculusVR Init", "fail");
 				return false;
+			}
 
 			HmdDesc = ovr_GetHmdDesc(Session);
 
@@ -251,12 +264,16 @@ namespace LostVR
 			{
 				Layer[0] = new VRLayer(dev, Session);
 			}
+
+			LVMSG("OculusVR Init", "sucess");
+			return true;
 		}    
 
 		void Update(ID3D11Device* dev, ID3D11Texture2D* bb)
 		{
 			if (bb == nullptr || dev == nullptr)
 			{
+				LVMSG("OculusVR::Update", "failed, dev(%x), buffer(%x).", dev, bb);
 				return;
 			}
 
@@ -266,7 +283,16 @@ namespace LostVR
 			{
 				Context->CopyResource(Layer[0]->pEyeRenderTexture[0]->GetBuffer(), bb);
 				Layer[0]->Commit(0);
-				DistortAndPresent(0);
+				ovrResult ret = DistortAndPresent(0);
+				if (!OVR_SUCCESS(ret))
+				{
+					Release();
+					Init(dev);
+				}
+			}
+			else
+			{
+				LVMSG("OculusVR::Update", "failed to get context.", dev, bb);
 			}
 		}
 		
@@ -301,7 +327,10 @@ namespace LostVR
 
 			presentResult = ovr_SubmitFrame(Session, 0, nullptr, layerHeaders, numLayersToRender);
 			if (!OVR_SUCCESS(presentResult))
-				return (presentResult);
+			{
+				LVMSG("ovr_SubmitFrame", "layers(%d), result(%d)", (int)ovrMaxLayerCount, presentResult);
+				return(presentResult);
+			}
 
 			return(presentResult);
 		}

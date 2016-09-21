@@ -95,7 +95,7 @@ int main()
 	LaunchAndInjectIntoProcess(
 		"D:/GitUnreal/UnrealEngine-4.11/Engine/Binaries/Win64/UE4Editor.exe", 
 		nullptr, 
-		"E:/UnrealProjects/LostVR411/XYVR410.uproject -game", 
+		"E:/UnrealProjects/LostVR411/XYVR410.uproject -game -log", 
 		nullptr, 
 		false);
 

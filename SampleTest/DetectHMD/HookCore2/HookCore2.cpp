@@ -33,13 +33,13 @@ static HRESULT WINAPI D3D11CreateDevice_Hook(
 
 	if (nullptr != D3D11CreateDevice_OriginalPtr)
 	{
-		LVMSG("Hooked call", "D3D11CreateDevice");
 		ret = D3D11CreateDevice_OriginalPtr(pAdapter, DriverType, Software, Flags, pFeatureLevels,
 			FeatureLevels, SDKVersion, ppDevice, pFeatureLevel, ppImmediateContext);
+		LVMSG("D3D11CreateDevice", "Hooked, device(%16x)", *ppDevice);
 	}
 	else
 	{
-		LVMSG("Original call", "D3D11CreateDevice");
+		LVMSG("D3D11CreateDevice", "Original");
 		ret = D3D11CreateDevice(pAdapter, DriverType, Software, Flags, pFeatureLevels,
 			FeatureLevels, SDKVersion, ppDevice, pFeatureLevel, ppImmediateContext);
 	}
@@ -57,18 +57,17 @@ static HRESULT WINAPI D3D11CreateDeviceAndSwapChain_Hook(__in_opt IDXGIAdapter *
 	__out_opt D3D_FEATURE_LEVEL *pFeatureLevel,
 	__out_opt ID3D11DeviceContext **ppImmediateContext)
 {
-	//printf("D3D11CreateDeviceAndSwapChain_Hook get called.\n");
-	//::MessageBoxA(NULL, "D3D11CreateDeviceAndSwapChain_Hook", "", 0);
+	HRESULT ret = S_FALSE;
 	if (D3D11CreateDeviceAndSwapChain_OriginalPtr)
 	{
-		LVMSG("Hooked call", "D3D11CreateDeviceAndSwapChain");
-		return D3D11CreateDeviceAndSwapChain_OriginalPtr(pAdapter, DriverType, Software, Flags, pFeatureLevels, FeatureLevels,
+		ret = D3D11CreateDeviceAndSwapChain_OriginalPtr(pAdapter, DriverType, Software, Flags, pFeatureLevels, FeatureLevels,
 			SDKVersion, pSwapChainDesc, ppSwapChain, ppDevice, pFeatureLevel, ppImmediateContext);
+		LVMSG("D3D11CreateDeviceAndSwapChain", "Hooked, device(%16x)", *ppDevice);
 	}
 	else
 	{
-		LVMSG("Original call", "D3D11CreateDeviceAndSwapChain");
-		return D3D11CreateDeviceAndSwapChain(pAdapter, DriverType, Software, Flags, pFeatureLevels, FeatureLevels,
+		LVMSG("D3D11CreateDeviceAndSwapChain", "Original");
+		ret = D3D11CreateDeviceAndSwapChain(pAdapter, DriverType, Software, Flags, pFeatureLevels, FeatureLevels,
 			SDKVersion, pSwapChainDesc, ppSwapChain, ppDevice, pFeatureLevel, ppImmediateContext);
 	}
 }
@@ -80,8 +79,8 @@ static HRESULT WINAPI CreateDXGIFactory_Hook(__in REFIID riid, __out void **ppFa
 {
 	if (nullptr != CreateDXGIFactory_OriginalPtr)
 	{
-		LVMSG("Hooked call", "CreateDXGIFactory");
 		HRESULT hr = CreateDXGIFactory_OriginalPtr(riid, ppFactory);
+		LVMSG("CreateDXGIFactory", "Hooked, factory(%16x)", *ppFactory);
 		if (SUCCEEDED(hr))
 		{
 			RefCountDXGIObject::HandleWrap(riid, ppFactory);
@@ -91,7 +90,7 @@ static HRESULT WINAPI CreateDXGIFactory_Hook(__in REFIID riid, __out void **ppFa
 	}
 	else
 	{
-		LVMSG("Original call", "CreateDXGIFactory");
+		LVMSG("CreateDXGIFactory", "Original");
 		return CreateDXGIFactory(riid, ppFactory);
 	}
 }
@@ -101,12 +100,18 @@ static HRESULT WINAPI CreateDXGIFactory1_Hook(__in REFIID riid, __out void **ppF
 {
 	if (nullptr != CreateDXGIFactory1_OriginalPtr)
 	{
-		LVMSG("Hooked call", "CreateDXGIFactory1");
-		return CreateDXGIFactory1_OriginalPtr(riid, ppFactory);
+		HRESULT hr = CreateDXGIFactory1_OriginalPtr(riid, ppFactory);
+		LVMSG("CreateDXGIFactory1", "Hooked, factory(%x)", *ppFactory);
+		if (SUCCEEDED(hr))
+		{
+			RefCountDXGIObject::HandleWrap(riid, ppFactory);
+		}
+
+		return hr;
 	}
 	else
 	{
-		LVMSG("Original call", "CreateDXGIFactory1");
+		LVMSG("CreateDXGIFactory1", "Original");
 		return CreateDXGIFactory1(riid, ppFactory);
 	}
 }
@@ -124,11 +129,11 @@ static HRESULT WINAPI CreateDXGIFactory2_Hook(UINT Flags, __in REFIID riid, __ou
 	FuncVarOrig = (FuncType)::GetProcAddress(::GetModuleHandle(TEXT(Module)), FuncName);\
 	if (Mhook_SetHook((PVOID*)&FuncVarOrig, FuncVarHook))\
 	{\
-		LVMSG("Hook"##" "##FuncName##" successfully!", FuncName);\
+		LVMSG("FuncName", "Hook"##" "##FuncName##" successfully!");\
 	}\
 	else\
 	{\
-		LVMSG("Hook"##" "##FuncName##" failed...", FuncName);\
+		LVMSG(FuncName, "Hook"##" "##FuncName##" failed...");\
 		ErrVar = ErrCode;\
 		return;\
 	}\
