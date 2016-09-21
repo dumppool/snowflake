@@ -25,6 +25,21 @@
     <Filter Include="wrapped-d3d11">
       <UniqueIdentifier>{9992f363-4293-4456-9ae2-10c4d2516aeb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="dx">
+      <UniqueIdentifier>{a76ac3cf-8aa1-4490-a4f8-2ec721ee580d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="oculus-lib">
+      <UniqueIdentifier>{ff818802-6295-45c4-8fab-d58ad26ce000}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="oculus-lib\Include">
+      <UniqueIdentifier>{b2ca07a7-d99b-4f44-82a8-a120639094f1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="oculus-lib\Src">
+      <UniqueIdentifier>{941c5042-9f61-41ed-9238-a744c11e043d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="oculus-lib\Include\Extras">
+      <UniqueIdentifier>{f5873ae1-be6f-4cae-9c52-4586eef739e4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -54,8 +69,104 @@
     <ClInclude Include="mhook-lib\mhook.h">
       <Filter>mhook-lib</Filter>
     </ClInclude>
+    <ClInclude Include="dx\official\d3d11.h">
+      <Filter>dx</Filter>
+    </ClInclude>
+    <ClInclude Include="dx\official\d3d11_1.h">
+      <Filter>dx</Filter>
+    </ClInclude>
+    <ClInclude Include="dx\official\d3d11_2.h">
+      <Filter>dx</Filter>
+    </ClInclude>
+    <ClInclude Include="dx\official\d3d11_3.h">
+      <Filter>dx</Filter>
+    </ClInclude>
+    <ClInclude Include="dx\official\d3d11_4.h">
+      <Filter>dx</Filter>
+    </ClInclude>
+    <ClInclude Include="dx\official\d3d11sdklayers.h">
+      <Filter>dx</Filter>
+    </ClInclude>
+    <ClInclude Include="dx\official\d3d12.h">
+      <Filter>dx</Filter>
+    </ClInclude>
+    <ClInclude Include="dx\official\d3d12sdklayers.h">
+      <Filter>dx</Filter>
+    </ClInclude>
+    <ClInclude Include="dx\official\d3dcommon.h">
+      <Filter>dx</Filter>
+    </ClInclude>
+    <ClInclude Include="dx\official\d3dcompiler.h">
+      <Filter>dx</Filter>
+    </ClInclude>
+    <ClInclude Include="dx\official\dxgi.h">
+      <Filter>dx</Filter>
+    </ClInclude>
+    <ClInclude Include="dx\official\dxgi1_2.h">
+      <Filter>dx</Filter>
+    </ClInclude>
+    <ClInclude Include="dx\official\dxgi1_3.h">
+      <Filter>dx</Filter>
+    </ClInclude>
+    <ClInclude Include="dx\official\dxgi1_4.h">
+      <Filter>dx</Filter>
+    </ClInclude>
+    <ClInclude Include="dx\official\dxgi1_5.h">
+      <Filter>dx</Filter>
+    </ClInclude>
+    <ClInclude Include="dx\official\dxgiformat.h">
+      <Filter>dx</Filter>
+    </ClInclude>
+    <ClInclude Include="dx\official\dxgitype.h">
+      <Filter>dx</Filter>
+    </ClInclude>
+    <ClInclude Include="dx\official\winapifamily.h">
+      <Filter>dx</Filter>
+    </ClInclude>
     <ClInclude Include="wrapped-dxgi\dxgi_wrapped.h">
       <Filter>wrapped-dxgi</Filter>
+    </ClInclude>
+    <ClInclude Include="wrapped-d3d11\d3d11_context.h">
+      <Filter>wrapped-d3d11</Filter>
+    </ClInclude>
+    <ClInclude Include="wrapped-d3d11\d3d11_device.h">
+      <Filter>wrapped-d3d11</Filter>
+    </ClInclude>
+    <ClInclude Include="OculusVR.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="oculus-lib\Include\OVR_CAPI.h">
+      <Filter>oculus-lib\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="oculus-lib\Include\OVR_CAPI_Audio.h">
+      <Filter>oculus-lib\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="oculus-lib\Include\OVR_CAPI_D3D.h">
+      <Filter>oculus-lib\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="oculus-lib\Include\OVR_CAPI_GL.h">
+      <Filter>oculus-lib\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="oculus-lib\Include\OVR_CAPI_Keys.h">
+      <Filter>oculus-lib\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="oculus-lib\Include\OVR_ErrorCode.h">
+      <Filter>oculus-lib\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="oculus-lib\Include\OVR_Version.h">
+      <Filter>oculus-lib\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="oculus-lib\Include\Extras\OVR_CAPI_Util.h">
+      <Filter>oculus-lib\Include\Extras</Filter>
+    </ClInclude>
+    <ClInclude Include="oculus-lib\Include\Extras\OVR_Math.h">
+      <Filter>oculus-lib\Include\Extras</Filter>
+    </ClInclude>
+    <ClInclude Include="oculus-lib\Include\Extras\OVR_StereoProjection.h">
+      <Filter>oculus-lib\Include\Extras</Filter>
+    </ClInclude>
+    <ClInclude Include="oculus-lib\Src\OVR_CAPI_Prototypes.h">
+      <Filter>oculus-lib\Src</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -83,6 +194,9 @@
     <ClCompile Include="mhook-lib\mhook.cpp">
       <Filter>mhook-lib</Filter>
     </ClCompile>
+    <ClCompile Include="wrapped-dxgi\dxgi_wrapped.cpp">
+      <Filter>wrapped-dxgi</Filter>
+    </ClCompile>
     <ClCompile Include="wrapped-d3d11\d3d11_context_wrap.cpp">
       <Filter>wrapped-d3d11</Filter>
     </ClCompile>
@@ -107,8 +221,17 @@
     <ClCompile Include="wrapped-d3d11\d3d11_device3_wrap.cpp">
       <Filter>wrapped-d3d11</Filter>
     </ClCompile>
-    <ClCompile Include="wrapped-dxgi\dxgi_wrapped.cpp">
-      <Filter>wrapped-dxgi</Filter>
+    <ClCompile Include="OculusVR.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="oculus-lib\Src\OVR_CAPI_Util.cpp">
+      <Filter>oculus-lib\Src</Filter>
+    </ClCompile>
+    <ClCompile Include="oculus-lib\Src\OVR_CAPIShim.c">
+      <Filter>oculus-lib\Src</Filter>
+    </ClCompile>
+    <ClCompile Include="oculus-lib\Src\OVR_StereoProjection.cpp">
+      <Filter>oculus-lib\Src</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

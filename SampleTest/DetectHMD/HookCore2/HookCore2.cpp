@@ -11,18 +11,10 @@
 #pragma comment(lib, "dxgi.lib")
 
 #include "mhook-lib/mhook.h"
+#include "wrapped-dxgi/dxgi_wrapped.h"
 
-//#include <TlHelp32.h>
-//#include <stdint.h>
-//#include <algorithm>
-//#include <vector>
-//#include <map>
-//
-//#include "string_utils.h"
-
-//using namespace std;
-
-#define LVMSG(Cnt, Cap) {::MessageBoxA(NULL, Cnt, Cap, 0);}
+//#include "wrapped-d3d11\d3d11_context.h"
+//#include "wrapped-d3d11\d3d11_device.h"
 
 PFN_D3D11_CREATE_DEVICE D3D11CreateDevice_OriginalPtr = nullptr;
 static HRESULT WINAPI D3D11CreateDevice_Hook(
@@ -89,7 +81,13 @@ static HRESULT WINAPI CreateDXGIFactory_Hook(__in REFIID riid, __out void **ppFa
 	if (nullptr != CreateDXGIFactory_OriginalPtr)
 	{
 		LVMSG("Hooked call", "CreateDXGIFactory");
-		return CreateDXGIFactory_OriginalPtr(riid, ppFactory);
+		HRESULT hr = CreateDXGIFactory_OriginalPtr(riid, ppFactory);
+		if (SUCCEEDED(hr))
+		{
+			RefCountDXGIObject::HandleWrap(riid, ppFactory);
+		}
+
+		return hr;
 	}
 	else
 	{

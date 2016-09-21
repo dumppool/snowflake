@@ -23,11 +23,8 @@
  * THE SOFTWARE.
  ******************************************************************************/
 
-#include "driver/d3d11/d3d11_context.h"
-#include "driver/d3d11/d3d11_renderstate.h"
-#include "driver/d3d11/d3d11_resources.h"
-#include "driver/dx/official/dxgi1_3.h"
-#include "serialise/string_utils.h"
+#include "stdafx.h"
+#include "d3d11_context.h"
 
 #ifndef DXGI_ERROR_INVALID_CALL
 #define DXGI_ERROR_INVALID_CALL MAKE_DXGI_HRESULT(1)
