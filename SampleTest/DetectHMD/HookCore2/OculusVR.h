@@ -10,6 +10,53 @@
 
 namespace LostVR
 {
+	static inline void PrintSwapChainDesc(DXGI_SWAP_CHAIN_DESC desc)
+	{
+		LVMSG("DXGI_SWAP_CHAIN_DESC", "BufferCount(%d), BufferDesc.Width(%d), BufferDesc.Height(%d), BufferDesc.Format(%d), BufferDesc.RefreshRate.Numerator(%d), ", desc.BufferCount, desc.BufferDesc.Width, desc.BufferDesc.Height, desc.BufferDesc.Format, desc.BufferDesc.RefreshRate.Numerator);
+		LVMSG("DXGI_SWAP_CHAIN_DESC", "BufferDesc.RefreshRate.Denominator(%d), BufferUsage(%d), OutputWindow(%x), SampleDesc.Count(%d), SampleDesc.Quality(%d), SwapEffect(%d), Flags(%d)", desc.BufferDesc.RefreshRate.Denominator, (int)desc.BufferUsage, desc.OutputWindow, (int)desc.SampleDesc.Count, (int)desc.SampleDesc.Quality, (int)desc.SwapEffect, (int)desc.Flags);
+	}
+
+	static inline void PrintOvrSwapChainDesc(ovrTextureSwapChainDesc desc)
+	{
+		LVMSG("ovrTextureSwapChainDesc", "Type(%d), ArraySize(%d), Format(%d), Width(%d), Height(%d), ", desc.Type, desc.ArraySize, desc.Format, desc.Width, desc.Height);
+		LVMSG("ovrTextureSwapChainDesc", "MipLevels(%d), SampleCount(%d), StaticImage(%x), MiscFlags(%d), BindFlags(%d)", desc.MipLevels, (int)desc.SampleCount, (int)desc.StaticImage, (int)desc.MiscFlags, (int)desc.BindFlags);
+	}
+
+	static inline void PrintOvrLayerEyeFov(ovrLayerEyeFov layer)
+	{
+		//typedef struct OVR_ALIGNAS(OVR_PTR_SIZE) ovrLayerHeader_
+		//{
+		//	ovrLayerType    Type;   ///< Described by ovrLayerType.
+		//	unsigned        Flags;  ///< Described by ovrLayerFlags.
+		//} ovrLayerHeader;    /// Header.Type must be ovrLayerType_EyeFov.
+		//ovrLayerHeader      Header;
+
+		///// ovrTextureSwapChains for the left and right eye respectively.
+		///// The second one of which can be NULL for cases described above.
+		//ovrTextureSwapChain  ColorTexture[ovrEye_Count];
+
+		///// Specifies the ColorTexture sub-rect UV coordinates.
+		///// Both Viewport[0] and Viewport[1] must be valid.
+		//ovrRecti            Viewport[ovrEye_Count];
+
+		///// The viewport field of view.
+		//ovrFovPort          Fov[ovrEye_Count];
+
+		///// Specifies the position and orientation of each eye view, with the position specified in meters.
+		///// RenderPose will typically be the value returned from ovr_CalcEyePoses,
+		///// but can be different in special cases if a different head pose is used for rendering.
+		//ovrPosef            RenderPose[ovrEye_Count];
+
+		///// Specifies the timestamp when the source ovrPosef (used in calculating RenderPose)
+		///// was sampled from the SDK. Typically retrieved by calling ovr_GetTimeInSeconds
+		///// around the instant the application calls ovr_GetTrackingState
+		///// The main purpose for this is to accurately track app tracking latency.
+		//double              SensorSampleTime;
+		LVMSG("ovrLayerEyeFov", "Header.Type(%d), Header.Flags(%d), ColorTexture0(%x), ColorTexture1(%x)", layer.Header.Type, layer.Header.Flags, layer.ColorTexture[0], layer.ColorTexture[1]);
+		LVMSG("ovrLayerEyeFov", "Viewport[0](%d, %d, %d, %d)", layer.Viewport[0].Pos.x, layer.Viewport[0].Pos.y, layer.Viewport[0].Size.w, layer.Viewport[0].Size.h);
+		LVMSG("ovrLayerEyeFov", "RenderPose[0](%f, %f, %f, %f)", layer.RenderPose[0].Orientation.x, layer.RenderPose[0].Orientation.y, layer.RenderPose[0].Orientation.z, layer.RenderPose[0].Orientation.w);
+	}
+
 	//------------------------------------------------------------
 	struct OculusTexture
 	{
@@ -46,10 +93,11 @@ namespace LostVR
 			if (isItProtectedContent) desc.MiscFlags |= ovrTextureMisc_ProtectedContent;
 			desc.BindFlags = ovrTextureBind_DX_RenderTarget;
 
+			PrintOvrSwapChainDesc(desc);
 			ovrResult result = ovr_CreateTextureSwapChainDX(Session, dev, &desc, &TextureChain);
 			if (!OVR_SUCCESS(result))
 			{
-				LVMSG("OculusTexture::Init", "ovr_CreateTextureSwapChainDX failed");
+				LVMSG("OculusTexture::Init", "ovr_CreateTextureSwapChainDX failed(%d)", (int)result);
 				return false;
 			}
 
@@ -74,7 +122,7 @@ namespace LostVR
 				//tex->Release();
 			}
 
-			LVMSG("OculusTexture::Init", "sucess, width(%d), height(%d)", sizeW, sizeH);
+			LVMSG("OculusTexture::Init", "sucess, width(%d), height(%d), dev(%x)", sizeW, sizeH, dev);
 			return true;
 		}
 
@@ -112,7 +160,7 @@ namespace LostVR
 			{
 				int currentIndex = 0;
 				ovr_GetTextureSwapChainCurrentIndex(Session, TextureChain, &currentIndex);
-				LVMSG("GetBuffer", "curr index: %d", currentIndex);
+				//LVMSG("GetBuffer", "curr index: %d", currentIndex);
 				return SwapChainBuffer[currentIndex];
 			}
 			return nullptr;
@@ -155,8 +203,11 @@ namespace LostVR
 		{
 			for (int eye = 0; eye < NUMEYES; ++eye)
 			{
-				ovrSizei idealSize = ovr_GetFovTextureSize(Session, (ovrEyeType)eye, ovr_GetHmdDesc(Session).DefaultEyeFov[eye], pixelsPerDisplayPixel);
+				ovrFovPort fp = ovr_GetHmdDesc(Session).DefaultEyeFov[eye];
+				ovrSizei idealSize = ovr_GetFovTextureSize(Session, (ovrEyeType)eye, fp, pixelsPerDisplayPixel);
 				pEyeRenderTexture[eye] = new OculusTexture();
+				LVMSG("MakeEyeBuffers*****************", "w(%d), h(%d), fov(%f, %f, %f, %f), Session(%x), pixelsPerdisplayPixel(%f)", 
+					idealSize.w, idealSize.h, fp.DownTan, fp.LeftTan, fp.RightTan,fp.UpTan, Session, pixelsPerDisplayPixel);
 				if (!pEyeRenderTexture[eye]->Init(dev, Session, idealSize.w, idealSize.h, isItProtectedContent))
 					return;
 				EyeRenderViewport[eye].Pos.x = 0;
@@ -187,18 +238,27 @@ namespace LostVR
 			if (scaleIPD)
 			{
 				useHmdToEyeOffset[0].x *= *scaleIPD;
-				useHmdToEyeOffset[1].x *= *scaleIPD;
 			}
 			if (newIPD)
 			{
 				useHmdToEyeOffset[0].x = -(*newIPD * 0.5f);
-				useHmdToEyeOffset[1].x = +(*newIPD * 0.5f);
 			}
 
 			double ftiming = ovr_GetPredictedDisplayTime(Session, 0);
 			ovrTrackingState trackingState = ovr_GetTrackingState(Session, ftiming, ovrTrue);
 
 			ovr_CalcEyePoses(trackingState.HeadPose.ThePose, useHmdToEyeOffset, useEyeRenderPose);
+			
+			ovrLayer.Header.Type = ovrLayerType_EyeFov;
+			ovrLayer.Header.Flags = 0;
+			ovrLayer.ColorTexture[0] = pEyeRenderTexture[0]->TextureChain;
+			ovrLayer.ColorTexture[1] = pEyeRenderTexture[0]->TextureChain;
+			ovrLayer.RenderPose[0] = EyeRenderPose[0];
+			ovrLayer.RenderPose[1] = EyeRenderPose[0];
+			ovrLayer.Fov[0] = EyeRenderDesc[0].Fov;
+			ovrLayer.Fov[1] = EyeRenderDesc[0].Fov;
+			ovrLayer.Viewport[0] = EyeRenderViewport[0];
+			ovrLayer.Viewport[1] = EyeRenderViewport[0];
 
 			return(trackingState);
 		}
@@ -237,6 +297,25 @@ namespace LostVR
 
 			// Initializes LibOVR, and the Rift
 			ovrResult result = ovr_Initialize(nullptr);
+			if (!OVR_SUCCESS(result))
+			{
+				LVMSG("OculusVR Init", "ovr_Initialize failed");
+			}
+			else
+			{
+				LVMSG("OculusVR Init", "ovr_Initialize succeeded");
+			}
+
+			ovrGraphicsLuid luid;
+			result = ovr_Create(&Session, &luid);
+			if (!OVR_SUCCESS(result))
+			{
+				LVMSG("OculusVR Init", "ovr_Create failed");
+			}
+			else
+			{
+				LVMSG("OculusVR Init", "ovr_Create succeeded");
+			}
 		}
 
 		~OculusVR()
@@ -245,16 +324,17 @@ namespace LostVR
 			ovr_Shutdown();
 		}
 
+		void GetSwapChainData(DXGI_FORMAT& outFormat, int& sizeW, int& sizeH)
+		{
+			ovrSizei idealSize = ovr_GetFovTextureSize(Session, (ovrEyeType)0, ovr_GetHmdDesc(Session).DefaultEyeFov[0], 1.f);
+			outFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
+			sizeW = idealSize.w;
+			sizeH = idealSize.h;
+			LVMSG("OculusVR::GetSwapChainData ***************************", "session(%x), format(%d), w(%d), h(%d)", Session, outFormat, sizeW, sizeH);
+		}
+
 		bool Init(ID3D11Device* dev)
 		{
-			ovrGraphicsLuid luid;
-			ovrResult result = ovr_Create(&Session, &luid);
-			if (!OVR_SUCCESS(result))
-			{
-				LVMSG("OculusVR Init", "fail");
-				return false;
-			}
-
 			HmdDesc = ovr_GetHmdDesc(Session);
 
 			unsigned int trackerCount = ovr_GetTrackerCount(Session) < 1 ? 1 : ovr_GetTrackerCount(Session); // Make sure there's always at least one.
@@ -271,6 +351,7 @@ namespace LostVR
 
 		void Update(ID3D11Device* dev, ID3D11Texture2D* bb)
 		{
+			LVMSG("OculusVR::Update", "dev(%x), buffer(%x).", dev, bb);
 			if (bb == nullptr || dev == nullptr)
 			{
 				LVMSG("OculusVR::Update", "failed, dev(%x), buffer(%x).", dev, bb);
@@ -281,19 +362,32 @@ namespace LostVR
 			dev->GetImmediateContext(&Context);
 			if (Context != nullptr)
 			{
-				Context->CopyResource(Layer[0]->pEyeRenderTexture[0]->GetBuffer(), bb);
+				Layer[0]->GetEyePoses();
+				ID3D11Texture2D* dst = Layer[0]->pEyeRenderTexture[0]->GetBuffer();
+				LVMSG("OculusVR::Update", "ready to copy from src(%x) to dst(%x)", bb, dst);
+				Context->CopyResource(dst, bb);
 				Layer[0]->Commit(0);
-				ovrResult ret = DistortAndPresent(0);
+				ovrResult ret = DistortAndPresent(1);
 				if (!OVR_SUCCESS(ret))
 				{
+					LVMSG("OculusVR::Update", "failed, reinitializing...");
 					Release();
-					Init(dev);
+					if (Init(dev))
+					{
+						LVMSG("OculusVR::Update", "reinitialize sucess");
+					}
+					else
+					{
+						LVMSG("OculusVR::Update", "reinitialize fail");
+					}
 				}
 			}
 			else
 			{
 				LVMSG("OculusVR::Update", "failed to get context.", dev, bb);
 			}
+
+			Context->Release();
 		}
 		
 		int Release()
@@ -306,11 +400,11 @@ namespace LostVR
 				Layer[i] = nullptr;
 			}
 
-			if (Session)
-			{
-				ovr_Destroy(Session);
-				Session = nullptr;
-			}
+			//if (Session)
+			//{
+			//	ovr_Destroy(Session);
+			//	Session = nullptr;
+			//}
 
 			return(0);
 		}
@@ -322,7 +416,10 @@ namespace LostVR
 			for (int i = 0; i < ovrMaxLayerCount; i++)
 			{
 				if (Layer[i])
-					layerHeaders[i] = &Layer[i]->ovrLayer.Header;
+				{
+					PrintOvrLayerEyeFov(Layer[i]->ovrLayer);
+					layerHeaders[i] = &(Layer[i]->ovrLayer.Header);
+				}
 			}
 
 			presentResult = ovr_SubmitFrame(Session, 0, nullptr, layerHeaders, numLayersToRender);

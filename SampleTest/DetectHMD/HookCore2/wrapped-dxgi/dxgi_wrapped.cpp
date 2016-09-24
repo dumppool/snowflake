@@ -107,8 +107,22 @@ HRESULT WrappedIDXGIFactory::staticCreateSwapChain(IDXGIFactory *factory, IUnkno
 		LVMSG("staticCreateSwapChain", "no wrap device");
 	}
 #else
-	LostVR::OculusVR::Get()->Init((ID3D11Device*)pDevice);
+	DXGI_FORMAT format;
+	int w, h;
+	LostVR::OculusVR::Get()->GetSwapChainData(format, w, h);
+	pDesc->BufferDesc.Format = format;
+	pDesc->BufferDesc.Width = w;
+	pDesc->BufferDesc.Height = h;
+	//pDesc->Flags = 0;
+	pDesc->BufferCount = 1;
+	//pDesc->BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	HRESULT ret = factory->CreateSwapChain(pDevice, pDesc, ppSwapChain);
+	LostVR::PrintSwapChainDesc(*pDesc);
+	ID3D11Device* Dev = nullptr;
+	if (SUCCEEDED((*ppSwapChain)->GetDevice(__uuidof(ID3D11Device), (void**)&Dev)))
+	{
+		LostVR::OculusVR::Get()->Init(Dev);
+	}
 
 	if (SUCCEEDED(ret))
 	{
@@ -499,6 +513,9 @@ HRESULT WrappedIDXGISwapChain3::Present(
 	{
 		//LVMSG("failed", "WrappedIDXGISwapChain3::Present");
 	}
+
+	Tex->Release();
+	Dev->Release();
 
 #if USE_FULLRDC
 	m_pDevice->Present(this, SyncInterval, Flags);

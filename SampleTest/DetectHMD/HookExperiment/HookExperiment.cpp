@@ -91,11 +91,14 @@ ProcessLoader::ProcessLoader(const char* Url, const char* Params, bool bLaunchDe
 int main()
 {
 	//ProcessLoader Loader("D:/GitUnreal/UnrealEngine-4.11/Engine/Binaries/Win64/UE4Editor.exe", "E:/UnrealProjects/LostVR411/XYVR410.uproject -game");
+	//::system("PAUSE");
 	HANDLE hModule = ::LoadLibrary(TEXT(HookCoreModule));
 	LaunchAndInjectIntoProcess(
 		"D:/GitUnreal/UnrealEngine-4.11/Engine/Binaries/Win64/UE4Editor.exe", 
+		//"D:/Heroes of the Storm/Support64/HeroesSwitcher_x64.exe",
 		nullptr, 
-		"E:/UnrealProjects/LostVR411/XYVR410.uproject -game -log", 
+		"E:/UnrealProjects/LostVR411/XYVR410.uproject -game -cameratarget=1 -log", 
+		//"-d3d11",
 		nullptr, 
 		false);
 

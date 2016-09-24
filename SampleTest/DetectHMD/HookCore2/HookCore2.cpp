@@ -70,6 +70,8 @@ static HRESULT WINAPI D3D11CreateDeviceAndSwapChain_Hook(__in_opt IDXGIAdapter *
 		ret = D3D11CreateDeviceAndSwapChain(pAdapter, DriverType, Software, Flags, pFeatureLevels, FeatureLevels,
 			SDKVersion, pSwapChainDesc, ppSwapChain, ppDevice, pFeatureLevel, ppImmediateContext);
 	}
+
+	return ret;
 }
 
 typedef HRESULT(WINAPI *PFN_CREATE_DXGI_FACTORY)(REFIID, void **);
@@ -145,6 +147,7 @@ extern "C" _declspec(dllexport) void _cdecl InstallHook(int* Result)
 	printf("SetHook_D3D11...\n");
 
 	LVSETHOOK("d3d11.dll", "D3D11CreateDevice", PFN_D3D11_CREATE_DEVICE, D3D11CreateDevice_OriginalPtr, D3D11CreateDevice_Hook, *Result, 1);
+	LVSETHOOK("d3d11.dll", "D3D11CreateDeviceAndSwapChain", PFN_D3D11_CREATE_DEVICE_AND_SWAP_CHAIN, D3D11CreateDeviceAndSwapChain_OriginalPtr, D3D11CreateDeviceAndSwapChain_Hook, *Result, 1);
 	LVSETHOOK("dxgi.dll", "CreateDXGIFactory", PFN_CREATE_DXGI_FACTORY, CreateDXGIFactory_OriginalPtr, CreateDXGIFactory_Hook, *Result, 2);
 	LVSETHOOK("dxgi.dll", "CreateDXGIFactory1", PFN_CREATE_DXGI_FACTORY, CreateDXGIFactory1_OriginalPtr, CreateDXGIFactory1_Hook, *Result, 4);
 	//D3D11CreateDevice_OriginalPtr = (PFN_D3D11_CREATE_DEVICE)::GetProcAddress(::GetModuleHandle(TEXT("d3d11.dll")), "D3D11CreateDevice");
