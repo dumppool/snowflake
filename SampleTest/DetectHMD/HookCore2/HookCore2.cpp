@@ -144,7 +144,7 @@ static HRESULT WINAPI CreateDXGIFactory2_Hook(UINT Flags, __in REFIID riid, __ou
 extern "C" _declspec(dllexport) void _cdecl InstallHook(int* Result)
 {
 	//int Result[1] = { 0 };
-	printf("SetHook_D3D11...\n");
+	LVMSG("InstallHook", "SetHook_D3D11...\n");
 
 	LVSETHOOK("d3d11.dll", "D3D11CreateDevice", PFN_D3D11_CREATE_DEVICE, D3D11CreateDevice_OriginalPtr, D3D11CreateDevice_Hook, *Result, 1);
 	LVSETHOOK("d3d11.dll", "D3D11CreateDeviceAndSwapChain", PFN_D3D11_CREATE_DEVICE_AND_SWAP_CHAIN, D3D11CreateDeviceAndSwapChain_OriginalPtr, D3D11CreateDeviceAndSwapChain_Hook, *Result, 1);

@@ -1,0 +1,138 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="mhook-lib">
+      <UniqueIdentifier>{c96c02d0-61d3-4f44-a439-4e5908d7d4f4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="disasm-lib">
+      <UniqueIdentifier>{669f7034-899d-49c3-b0ad-b6963a91e474}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="oculus-lib">
+      <UniqueIdentifier>{288cb4eb-0187-4ccd-898c-7670afa41dca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="oculus-lib\Include">
+      <UniqueIdentifier>{b4bcca2e-da7a-4404-9a8a-b431e89fa591}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="oculus-lib\Src">
+      <UniqueIdentifier>{a4f5adcb-210c-4e02-99a4-2574c84e7dd3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="oculus-lib\Include\Extras">
+      <UniqueIdentifier>{e74eea36-64fa-4a6b-b38d-d4109a7b27de}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="mhook-lib\mhook.h">
+      <Filter>mhook-lib</Filter>
+    </ClInclude>
+    <ClInclude Include="disasm-lib\cpu.h">
+      <Filter>disasm-lib</Filter>
+    </ClInclude>
+    <ClInclude Include="disasm-lib\disasm.h">
+      <Filter>disasm-lib</Filter>
+    </ClInclude>
+    <ClInclude Include="disasm-lib\disasm_x86.h">
+      <Filter>disasm-lib</Filter>
+    </ClInclude>
+    <ClInclude Include="disasm-lib\disasm_x86_tables.h">
+      <Filter>disasm-lib</Filter>
+    </ClInclude>
+    <ClInclude Include="disasm-lib\misc.h">
+      <Filter>disasm-lib</Filter>
+    </ClInclude>
+    <ClInclude Include="oculus-lib\Include\OVR_CAPI.h">
+      <Filter>oculus-lib\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="oculus-lib\Include\OVR_CAPI_Audio.h">
+      <Filter>oculus-lib\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="oculus-lib\Include\OVR_CAPI_D3D.h">
+      <Filter>oculus-lib\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="oculus-lib\Include\OVR_CAPI_GL.h">
+      <Filter>oculus-lib\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="oculus-lib\Include\OVR_CAPI_Keys.h">
+      <Filter>oculus-lib\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="oculus-lib\Include\OVR_ErrorCode.h">
+      <Filter>oculus-lib\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="oculus-lib\Include\OVR_Version.h">
+      <Filter>oculus-lib\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="oculus-lib\Include\Extras\OVR_CAPI_Util.h">
+      <Filter>oculus-lib\Include\Extras</Filter>
+    </ClInclude>
+    <ClInclude Include="oculus-lib\Include\Extras\OVR_Math.h">
+      <Filter>oculus-lib\Include\Extras</Filter>
+    </ClInclude>
+    <ClInclude Include="oculus-lib\Include\Extras\OVR_StereoProjection.h">
+      <Filter>oculus-lib\Include\Extras</Filter>
+    </ClInclude>
+    <ClInclude Include="oculus-lib\Src\OVR_CAPI_Prototypes.h">
+      <Filter>oculus-lib\Src</Filter>
+    </ClInclude>
+    <ClInclude Include="OculusVR.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="HookCore3.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="dllmain.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="mhook-lib\mhook.cpp">
+      <Filter>mhook-lib</Filter>
+    </ClCompile>
+    <ClCompile Include="disasm-lib\cpu.c">
+      <Filter>disasm-lib</Filter>
+    </ClCompile>
+    <ClCompile Include="disasm-lib\disasm.c">
+      <Filter>disasm-lib</Filter>
+    </ClCompile>
+    <ClCompile Include="disasm-lib\disasm_x86.c">
+      <Filter>disasm-lib</Filter>
+    </ClCompile>
+    <ClCompile Include="disasm-lib\misc.c">
+      <Filter>disasm-lib</Filter>
+    </ClCompile>
+    <ClCompile Include="oculus-lib\Src\OVR_CAPI_Util.cpp">
+      <Filter>oculus-lib\Src</Filter>
+    </ClCompile>
+    <ClCompile Include="oculus-lib\Src\OVR_CAPIShim.c">
+      <Filter>oculus-lib\Src</Filter>
+    </ClCompile>
+    <ClCompile Include="oculus-lib\Src\OVR_StereoProjection.cpp">
+      <Filter>oculus-lib\Src</Filter>
+    </ClCompile>
+    <ClCompile Include="OculusVR.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

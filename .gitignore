@@ -18,3 +18,5 @@ SampleTest/DetectHMD/DetectHMD.VC.VC.opendb
 *.exe
 *.suo
 *.suo
+*.exp
+*.exp

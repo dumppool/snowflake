@@ -226,7 +226,8 @@ uint32_t InjectIntoProcess(uint32_t pid, const char *logfile, bool waitForExit)
 {
 	wstring wlogfile = logfile == NULL ? L"" : UTF8ToWide(logfile);
 
-	HANDLE hProcess =
+	HANDLE hProcess = 
+		//OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 		OpenProcess(PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION |
 			PROCESS_VM_WRITE | PROCESS_VM_READ | SYNCHRONIZE,
 			FALSE, pid);
@@ -356,7 +357,6 @@ uint32_t InjectIntoProcess(uint32_t pid, const char *logfile, bool waitForExit)
 	{
 		char Params[] = "install";
 		InjectFunctionCall(hProcess, loc, "InstallHook", &Result, sizeof(Result));
-		//InjectFunctionCall(hProcess, loc, "InstallHook", &Result, sizeof(&Result));
 	}
 
 	if (waitForExit)
@@ -367,9 +367,32 @@ uint32_t InjectIntoProcess(uint32_t pid, const char *logfile, bool waitForExit)
 	return controlident;
 }
 
-uint32_t LaunchAndInjectIntoProcess(const char *app, const char *workingDir, const char *cmdLine, const char *logfile, bool waitForExit)
+void InjectFinished(DWORD pid)
+{
+	HANDLE hProcess =
+		//OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+		OpenProcess(PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION |
+			PROCESS_VM_WRITE | PROCESS_VM_READ | SYNCHRONIZE,
+			FALSE, pid);
+
+	uintptr_t loc = FindRemoteDLL(pid, TEXT(HookCoreModule));
+	int Result = 0;
+	if (loc == 0)
+	{
+		LVLogErr("InjectFinished: Can't locate %s in remote PID %d", HookCoreModule, pid);
+	}
+	else
+	{
+		InjectFunctionCall(hProcess, loc, "UninstallHook", &Result, sizeof(Result));
+	}
+
+	CloseHandle(hProcess);
+}
+
+uint32_t LaunchAndInjectIntoProcess(const char *app, const char *workingDir, const char *cmdLine, const char *logfile, bool waitForExit, DWORD& pid)
 {
 	PROCESS_INFORMATION pi = RunProcess(app, workingDir, cmdLine);
+	pid = pi.dwProcessId;
 
 	if (pi.dwProcessId == 0)
 		return 0;

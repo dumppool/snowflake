@@ -1,4 +1,5 @@
 // HookExperiment.cpp : 定义控制台应用程序的入口点。
+
 #include "HookInstaller.h"
 
 //extern void SetHook_D3D11();
@@ -8,101 +9,83 @@ using namespace std;
 typedef unsigned short uint16;
 typedef unsigned int uint32;
 
-struct ProcessLoader
+int ListProcess()
 {
-public:
-	ProcessLoader(const char* Url, const char* Params, bool bLauncheDetached = false, bool bLaunchHidden = false, bool bLaunchReallyHidden = false);
+	DWORD aProcesses[1024], cbNeeded, cProcesses;
+	unsigned int i;
 
-protected:
-	PROCESS_INFORMATION ProcInfo;
-};
-
-ProcessLoader::ProcessLoader(const char* Url, const char* Params, bool bLaunchDetached, bool bLaunchHidden, bool bLaunchReallyHidden)
-{
-	// initialize process attributes
-	SECURITY_ATTRIBUTES Attr;
-	Attr.nLength = sizeof(SECURITY_ATTRIBUTES);
-	Attr.lpSecurityDescriptor = NULL;
-	Attr.bInheritHandle = true;
-
-	// initialize process creation flags
-	uint32 CreateFlags = NORMAL_PRIORITY_CLASS;
-
-	if (bLaunchDetached)
+	if (!EnumProcesses(aProcesses, sizeof(aProcesses), &cbNeeded))
 	{
-		CreateFlags |= DETACHED_PROCESS;
+		return 1;
 	}
+	cProcesses = cbNeeded / sizeof(DWORD);
 
-	// initialize window flags
-	uint32 dwFlags = 0;
-	uint16 ShowWindowFlags = SW_HIDE;
-	if (bLaunchReallyHidden)
+	for (i = 0; i < cProcesses; i++)
 	{
-		dwFlags = STARTF_USESHOWWINDOW;
-	}
-	else if (bLaunchHidden)
-	{
-		dwFlags = STARTF_USESHOWWINDOW;
-		ShowWindowFlags = SW_SHOWMINNOACTIVE;
-	}
-
-	// initialize startup info
-	STARTUPINFO StartupInfo = {
-		sizeof(STARTUPINFO),
-		NULL, NULL, NULL,
-		(::DWORD)CW_USEDEFAULT,
-		(::DWORD)CW_USEDEFAULT,
-		(::DWORD)CW_USEDEFAULT,
-		(::DWORD)CW_USEDEFAULT,
-		(::DWORD)0, (::DWORD)0, (::DWORD)0,
-		(::DWORD)dwFlags,
-		ShowWindowFlags,
-		0, NULL, NULL, NULL, NULL
-	};
-
-	// create the child process
-	//FString CommandLine = FString::Printf(TEXT("\"%s\" %s"), URL, Parms);
-	string CommandLine;
-	CommandLine.append("\"").append(Url).append("\" ").append(Params);
-
-	if (!::CreateProcess(NULL, const_cast<TCHAR*>(UTF8ToWide(CommandLine).c_str()), &Attr, &Attr, true, (::DWORD)CreateFlags, NULL, NULL, &StartupInfo, &ProcInfo))
-	{
-	}
-	else
-	{
-		HANDLE hProcess =
-			OpenProcess(PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION |
-				PROCESS_VM_WRITE | PROCESS_VM_READ | SYNCHRONIZE,
-				FALSE, ProcInfo.dwProcessId);
-
-		wchar_t renderdocPath[MAX_PATH] = { 0 };
-		GetModuleFileNameW(GetModuleHandleA("renderdoc.dll"), &renderdocPath[0], MAX_PATH - 1);
-		BOOL isWow64 = FALSE;
-		BOOL success = IsWow64Process(hProcess, &isWow64);  if (!success)
+		if (aProcesses[i] != 0)
 		{
-			DWORD err = GetLastError();
-			printf("Couldn't determine bitness of process, err: %08x", err);
+			TCHAR szProcessName[MAX_PATH] = TEXT("<unknown>");
+			HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION |
+				PROCESS_VM_READ,
+				FALSE, aProcesses[i]);
+			if (NULL != hProcess)
+			{
+				HMODULE hMod;
+				DWORD cbNeeded;
+
+				if (EnumProcessModules(hProcess, &hMod, sizeof(hMod),
+					&cbNeeded))
+				{
+					GetModuleBaseName(hProcess, hMod, szProcessName,
+						sizeof(szProcessName) / sizeof(TCHAR));
+				}
+			}
+			_tprintf(TEXT("%s  (PID: %u)\n"), szProcessName, aProcesses[i]);
 			CloseHandle(hProcess);
-			return;
 		}
 	}
+
+	return 0;
+}
+
+int main_experiment2()
+{
+	ListProcess();
+	DWORD processId;
+	std::wcout << "Enter the target process Id: ";
+	std::cin >> processId;
+
+	uint32_t ret = InjectIntoProcess(processId, nullptr, false);
+	printf("\nmain_experiment2: InjectIntoProcess returned %d", ret);
+
+	printf("\n");
+	::system("PAUSE");
+	InjectFinished(processId);
+	return 0;
 }
 
 int main()
 {
-	//ProcessLoader Loader("D:/GitUnreal/UnrealEngine-4.11/Engine/Binaries/Win64/UE4Editor.exe", "E:/UnrealProjects/LostVR411/XYVR410.uproject -game");
-	//::system("PAUSE");
 	HANDLE hModule = ::LoadLibrary(TEXT(HookCoreModule));
+
+#if 0
+	DWORD pid = 0;
 	LaunchAndInjectIntoProcess(
 		"D:/GitUnreal/UnrealEngine-4.11/Engine/Binaries/Win64/UE4Editor.exe", 
-		//"D:/Heroes of the Storm/Support64/HeroesSwitcher_x64.exe",
+		//"G:/Games/Heroes of the Storm/Support64/HeroesSwitcher_x64.exe",
+		//"G:/Games/World of Warcraft/Wow-64.exe",
+		//"D:/GitUnreal/UnrealEngine-4.11/Engine/Binaries/Win64/UE4Editor.exe",
 		nullptr, 
 		"E:/UnrealProjects/LostVR411/XYVR410.uproject -game -cameratarget=1 -log", 
-		//"-d3d11",
-		nullptr, 
-		false);
+		//"",
+		//" E:/UnrealProjects/LostVR411/XYVR410.uproject -enablehmd = 0 - hidewindow = 0 - unique - cameratarget = 1 -game",
+		nullptr, false,	pid);
 
- 	::system("PAUSE");
+	printf("\n");
+	::system("PAUSE");
+	InjectFinished(pid);
+#else
+	main_experiment2();
+#endif
     return 0;
 }
-
