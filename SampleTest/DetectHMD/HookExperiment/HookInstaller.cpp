@@ -18,7 +18,7 @@ void InjectDLL(HANDLE hProcess, wstring libName)
 		VirtualAllocEx(hProcess, NULL, sizeof(dllPath), MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 	if (remoteMem)
 	{
-		printf("\nready to load %s\n", HookCoreModule);
+		printf("\nready to load %s: %ls\n", HookCoreModule, dllPath);
 		//system("PAUSE");
 		WriteProcessMemory(hProcess, remoteMem, (void *)dllPath, sizeof(dllPath), NULL);
 
@@ -89,6 +89,8 @@ uintptr_t FindRemoteDLL(DWORD pid, wstring libName)
 
 	int numModules = 0;
 
+	std::vector<std::wstring> checkedModules;
+
 	do
 	{
 		wchar_t modnameLower[MAX_MODULE_NAME32 + 1];
@@ -107,6 +109,10 @@ uintptr_t FindRemoteDLL(DWORD pid, wstring libName)
 		if (wcsstr(modnameLower, libName.c_str()))
 		{
 			ret = (uintptr_t)me32.modBaseAddr;
+		}
+		else
+		{
+			checkedModules.push_back(std::wstring(me32.szModule));
 		}
 	} while (ret == 0 && Module32Next(hModuleSnap, &me32));
 
@@ -227,10 +233,10 @@ uint32_t InjectIntoProcess(uint32_t pid, const char *logfile, bool waitForExit)
 	wstring wlogfile = logfile == NULL ? L"" : UTF8ToWide(logfile);
 
 	HANDLE hProcess = 
-		//OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
-		OpenProcess(PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION |
-			PROCESS_VM_WRITE | PROCESS_VM_READ | SYNCHRONIZE,
-			FALSE, pid);
+		OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+		//OpenProcess(PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION |
+		//	PROCESS_VM_WRITE | PROCESS_VM_READ | SYNCHRONIZE,
+		//	FALSE, pid);
 
 	LVLog("Injecting HookCore into process %lu", pid);
 

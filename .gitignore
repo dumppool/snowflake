@@ -20,3 +20,6 @@ SampleTest/DetectHMD/DetectHMD.VC.VC.opendb
 *.suo
 *.exp
 *.exp
+*.iobj
+SampleTest/DetectHMD/x64/Release/HookExperiment.iobj
+*.ipdb

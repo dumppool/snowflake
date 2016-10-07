@@ -68,6 +68,17 @@ int main()
 {
 	HANDLE hModule = ::LoadLibrary(TEXT(HookCoreModule));
 
+	//HMODULE hVR = ::LoadLibrary(TEXT("C:\\Users\\Administrator\\Documents\\GitHub\\snowflake\\SampleTest\\DetectHMD\\HookCore3\\openvr-lib\\bin\\win64\\openvr_api.dll"));
+	//void* pFn = ::GetProcAddress(hVR, "VR_Init");
+	//if (pFn)
+	//{
+	//	printf("1");
+	//}
+	//else
+	//{
+	//	printf("2");
+	//}
+
 #if 0
 	DWORD pid = 0;
 	LaunchAndInjectIntoProcess(

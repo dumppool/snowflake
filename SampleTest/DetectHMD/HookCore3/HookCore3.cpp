@@ -2,7 +2,8 @@
 //
 
 #include "stdafx.h"
-#include "OculusVR.h"
+//#include "OculusVR.h"
+#include "openvr-lib/OpenVR.h"
 
 #define LVSETHOOK(Module, FuncName, FuncType, FuncVarOrig, FuncVarHook, ErrVar, ErrCode)\
 {\
@@ -26,7 +27,8 @@ static HRESULT STDMETHODCALLTYPE SwapChainPresent_Hook(IDXGISwapChain* This, UIN
 	HRESULT hr = S_FALSE;
 	if (SwapChainPresent_OrigPtr != nullptr)
 	{
-		LostVR::OculusVR::Get()->OnPresent(This);
+		//LostVR::OculusVR::Get()->OnPresent(This);
+		LostVR::OpenVRRenderer::Get()->OnPresent(This);
 		hr = SwapChainPresent_OrigPtr(This, Sync, Flags);
 		//LVMSG("SwapChainPresent_Hook", "called.");
 	}

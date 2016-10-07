@@ -31,6 +31,12 @@
     <Filter Include="oculus-lib\Include\Extras">
       <UniqueIdentifier>{e74eea36-64fa-4a6b-b38d-d4109a7b27de}</UniqueIdentifier>
     </Filter>
+    <Filter Include="openvr-lib">
+      <UniqueIdentifier>{771e4790-254b-4082-8f18-1e46279d2232}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="scene">
+      <UniqueIdentifier>{c6b21350-78cc-4698-a8cb-6853b48992f2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -96,6 +102,12 @@
     <ClInclude Include="OculusVR.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="openvr-lib\OpenVR.h">
+      <Filter>openvr-lib</Filter>
+    </ClInclude>
+    <ClInclude Include="LostScene.h">
+      <Filter>scene</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -133,6 +145,12 @@
     </ClCompile>
     <ClCompile Include="OculusVR.cpp">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="openvr-lib\OpenVR.cpp">
+      <Filter>openvr-lib</Filter>
+    </ClCompile>
+    <ClCompile Include="LostScene.cpp">
+      <Filter>scene</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
