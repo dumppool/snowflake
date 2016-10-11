@@ -1,11 +1,12 @@
 #pragma once
 
 #include "openvr-lib/headers/openvr.h"
+#include "projector/Projector.h"
 //#pragma comment(lib, "openvr-lib/lib/win64/openvr_api.lib")
 #define OPENVR_RUNTIME "C:\\Users\\Administrator\\Documents\\GitHub\\snowflake\\SampleTest\\DetectHMD\\HookCore3\\openvr-lib\\bin\\win64\\openvr_api.dll"
 
 #ifndef OPENVR_USEOVERLAY
-#define OPENVR_USEOVERLAY 1
+#define OPENVR_USEOVERLAY 0
 #endif
 
 #define LOAD_INTERFACE_OPENVR(FnType, FnVar, FnName, Module)\
@@ -31,15 +32,15 @@ namespace LostVR {
 		typedef const char *(VR_CALLTYPE *pVR_GetVRInitErrorAsEnglishDescription)(vr::EVRInitError error);
 		typedef vr::IVROverlay *(VR_CALLTYPE *pVROverlay)();
 
-		pVRInit pVRInitFn;
-		pVRShutdown pVRShutdownFn;
-		pVRIsHmdPresent pVRIsHmdPresentFn;
-		pVRGetStringForHmdError pVRGetStringForHmdErrorFn;
-		pVRGetGenericInterface pVRGetGenericInterfaceFn;
-		pVRExtendedDisplay pVRExtendedDisplayFn;
-		pVRCompositor pVRCompositorFn;
-		pVR_GetVRInitErrorAsEnglishDescription pVR_GetVRInitErrorAsEnglishDescriptionFn;
-		pVROverlay pVROverlayFn;
+		pVRInit									pVRInitFn;
+		pVRShutdown								pVRShutdownFn;
+		pVRIsHmdPresent							pVRIsHmdPresentFn;
+		pVRGetStringForHmdError					pVRGetStringForHmdErrorFn;
+		pVRGetGenericInterface					pVRGetGenericInterfaceFn;
+		pVRExtendedDisplay						pVRExtendedDisplayFn;
+		pVRCompositor							pVRCompositorFn;
+		pVR_GetVRInitErrorAsEnglishDescription	pVR_GetVRInitErrorAsEnglishDescriptionFn;
+		pVROverlay								pVROverlayFn;
 
 		vr::IVRSystem *Sys;
 		vr::VROverlayHandle_t OverlayHandle;
@@ -162,12 +163,34 @@ namespace LostVR {
 			//pCompositor = (vr::IVRCompositor*)(*pVRGetGenericInterfaceFn)(vr::IVRCompositor_Version, &VRInitErr);
 			if (pCompositor == nullptr)
 			{
-				LVMSG("OpenVR::OnPresent", "null compositor: %d", 0);
+				LVMSG("OpenVR::OnPresent", "null compositor:");
 				return;
 			}
 
 			//pCompositor->SetTrackingSpace(vr::TrackingUniverseRawAndUncalibrated);
 			pCompositor->WaitGetPoses(TrackedDevicePose, vr::k_unMaxTrackedDeviceCount, NULL, 0);
+
+			if (!LostVR::TextureProjector::Get()->OnPresent(Buf))
+			{
+				LostVR::TextureProjector::Get()->Fini();
+				LVMatrix LeftV, LeftP, RightV, RightP;
+				GetEyeViewProject(vr::Hmd_Eye::Eye_Left, 0.1f, 10000.f, vr::EGraphicsAPIConvention::API_DirectX, LeftV, LeftP);
+				GetEyeViewProject(vr::Hmd_Eye::Eye_Right, 0.1f, 10000.f, vr::EGraphicsAPIConvention::API_DirectX, RightV, RightP);
+				uint32 w, h;
+				Sys->GetRecommendedRenderTargetSize(&w, &h);
+				if (!LostVR::TextureProjector::Get()->Init(Buf, w, h, &LeftV, &LeftP, &RightV, &RightP))
+				{
+					LostVR::TextureProjector::Get()->Fini();
+					LVMSG("OpenVR::OnPresent", "failed to init TextureProjector");
+				}
+				else
+				{
+					LVMSG("OpenVR::OnPresent", "inited TextureProjector successfully");
+				}
+
+				LostVR::ReleaseComObjectRef(Buf);
+				return;
+			}
 
 			vr::VRTextureBounds_t LeftBounds;
 			LeftBounds.uMin = 0.0f;
@@ -176,7 +199,7 @@ namespace LostVR {
 			LeftBounds.vMax = 1.0f;
 
 			vr::Texture_t Texture;
-			Texture.handle = Buf;
+			Texture.handle = LostVR::TextureProjector::Get()->GetFinalBuffer(0);
 			Texture.eType = vr::API_DirectX;
 			Texture.eColorSpace = vr::ColorSpace_Auto;
 			vr::EVRCompositorError Error = pCompositor->Submit(vr::Eye_Left, &Texture, 0, vr::Submit_Default);
@@ -190,27 +213,36 @@ namespace LostVR {
 			RightBounds.vMin = 0.0f;
 			RightBounds.vMax = 1.0f;
 
-			Texture.handle = Buf;
+			Texture.handle = LostVR::TextureProjector::Get()->GetFinalBuffer(1);
 			Error = pCompositor->Submit(vr::Eye_Right, &Texture, 0, vr::Submit_Default);
 
 			if (vr::VRCompositorError_None != Error)
 				LVMSG("OpenVR::OnPresent", "Submit right with result: %d", Error);
-#else
+
+			//LVMSG("OpenVR::OnPresent", "tracking space: %d.", pCompositor->GetTrackingSpace());
+
+#else /*if OPENVR_USEOVERLAY*/
 			vr::IVROverlay* pOverlay = pVROverlayFn();
 			if (pOverlay == nullptr)
 			{
+				LostVR::ReleaseComObjectRef(Buf);
 				LVMSG("OpenVR::OnPresent", "null overlay");
 				return;
 			}
 
 			if (!pOverlay->IsOverlayVisible(OverlayHandle) && !pOverlay->IsOverlayVisible(OverlayThumbnailHandle))
 			{
+				LostVR::ReleaseComObjectRef(Buf);
 				return;
 			}
 
 			vr::Texture_t texture = { (void*)Buf, vr::API_DirectX, vr::ColorSpace_Auto };
 			pOverlay->SetOverlayTexture(OverlayHandle, &texture);
 #endif
+
+			LostVR::ReleaseComObjectRef(Buf);
 		}
+
+		void GetEyeViewProject(vr::Hmd_Eye Eye, float fNearZ, float fFarZ, vr::EGraphicsAPIConvention eProjType, LVMatrix& EyeView, LVMatrix& Proj) const;
 	};
 };

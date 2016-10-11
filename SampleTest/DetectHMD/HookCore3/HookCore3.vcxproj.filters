@@ -34,8 +34,8 @@
     <Filter Include="openvr-lib">
       <UniqueIdentifier>{771e4790-254b-4082-8f18-1e46279d2232}</UniqueIdentifier>
     </Filter>
-    <Filter Include="scene">
-      <UniqueIdentifier>{c6b21350-78cc-4698-a8cb-6853b48992f2}</UniqueIdentifier>
+    <Filter Include="projector">
+      <UniqueIdentifier>{0bee53ec-b69e-4d18-802d-832b1b99a181}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -105,8 +105,8 @@
     <ClInclude Include="openvr-lib\OpenVR.h">
       <Filter>openvr-lib</Filter>
     </ClInclude>
-    <ClInclude Include="LostScene.h">
-      <Filter>scene</Filter>
+    <ClInclude Include="projector\Projector.h">
+      <Filter>projector</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -149,8 +149,8 @@
     <ClCompile Include="openvr-lib\OpenVR.cpp">
       <Filter>openvr-lib</Filter>
     </ClCompile>
-    <ClCompile Include="LostScene.cpp">
-      <Filter>scene</Filter>
+    <ClCompile Include="projector\Projector.cpp">
+      <Filter>projector</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

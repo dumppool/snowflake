@@ -60,6 +60,7 @@ static bool HookSwapChainPresent()
 	}
 	else
 	{
+		LVMSG("HookCore3", "*******************************************************");
 		LVMSG("HookSwapChainPresent", "got foreground window(%x).", hwnd);
 	}
 

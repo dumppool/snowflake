@@ -60,7 +60,61 @@ inline static void log_cap_cnt(const char* cap, const char* fmt, ...)
 	logfile.flush();
 }
 
+#define LVASSERT(Condition, Cap, ...) {\
+	if (!(Condition))\
+	{\
+		LVMSG(Cap, __VA_ARGS__);\
+		LVMSG("assert failed", "file: %s, line: %d.", __FILE__, __LINE__);\
+		assert(0);\
+	}\
+}
+
 #include "d3d11.h"
 #pragma comment(lib, "d3d11.lib")
 
-// TODO:  在此处引用程序需要的其他头文件
+#include <d3dcompiler.h>
+#pragma comment(lib, "d3dcompiler.lib")
+
+// d3dx includes
+#include <DirectXMath.h>
+#include <DirectXColors.h>
+
+typedef unsigned char uint8;
+typedef unsigned short uint16;
+typedef unsigned int uint32;
+typedef unsigned long long uint64;
+typedef int int32;
+
+typedef DirectX::XMFLOAT2 LVVec2;
+typedef DirectX::XMFLOAT3 LVVec3;
+typedef DirectX::XMFLOAT4 LVVec;
+typedef DirectX::XMMATRIX LVMatrix;
+
+#define ALIGNED_LOSTVR(x) __declspec(align(x))
+#define VERIFY_HRESULT(result, cmd, info)\
+{\
+	if (FAILED(result))\
+	{\
+		assert(0 && info);\
+		cmd;\
+	}\
+}
+
+// Vertex data for a colored cube.
+ALIGNED_LOSTVR(16) struct MeshVertex
+{
+	LVVec3 Position;
+	LVVec2 Texcoord;
+	MeshVertex() = default;
+	MeshVertex(LVVec3 p, LVVec2 t) : Position(p), Texcoord(t) { }
+};
+
+ALIGNED_LOSTVR(16) struct FrameBufferWVP
+{
+	LVMatrix W;
+	LVMatrix V;
+	LVMatrix P;
+	FrameBufferWVP() = default;
+	FrameBufferWVP(const LVMatrix& w, const LVMatrix& v, const LVMatrix& p)
+		: W(w), V(v), P(p) {}
+};
