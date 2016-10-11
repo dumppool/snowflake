@@ -1,8 +1,8 @@
 cbuffer WorldViewProject : register(b0)
 {
-    float4x4 w;
-    float4x4 v;
-	float4x4 p;
+	float4x4 World;
+	float4x4 View;
+	float4x4 Project;
 };
 
 struct VertexIn
@@ -25,28 +25,27 @@ struct VertexOut2
 Texture2D Texture : register(t0);
 sampler   Sampler : register(s0);
 
-VertexOut vs_main(VertexIn in_v)
+VertexOut vs_main(VertexIn Input)
 {
-	VertexOut out_v;
 
-	out_v.pos = float4(in_v.pos, 1.0f);
+	float4 Vec = float4(Input.pos, 1.0f);
+	float4x4 wvp;
 	if (1)
 	{
-		out_v.pos = mul(out_v.pos, w);
-		out_v.pos = mul(out_v.pos, p);
+		Vec = mul(Vec, World);
+		Vec = mul(Vec, Project);
 	}
 	else
 	{
-		float4x4 wvp = w;
-		wvp = mul(wvp, p);
-		out_v.pos = mul(out_v.pos, wvp);
+		wvp = mul(World, Project);
+		Vec = mul(Vec, wvp);
 	}
-	
-	out_v.pos /= out_v.pos.w;
 
-	out_v.tco = in_v.tco;
-
-    return out_v;
+	VertexOut Output;
+	Output.pos = Vec;
+	//Output.pos = float4(Vec.xyz / Vec.w, Vec.w);
+	Output.tco = Input.tco;
+    return Output;
 }
 
 float4 ps_main(VertexOut in_data) : SV_TARGET

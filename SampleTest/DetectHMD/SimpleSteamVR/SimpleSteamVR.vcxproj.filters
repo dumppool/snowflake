@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="Win32_DirectXAppUtil.h" />
+    <ClInclude Include="projector\Projector.h">
+      <Filter>projector</Filter>
+    </ClInclude>
+    <ClInclude Include="openvr-lib\OpenVR.h">
+      <Filter>openvr</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="openvr">
+      <UniqueIdentifier>{41cf9704-0051-47cd-ad89-870e2ca1f1aa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="projector">
+      <UniqueIdentifier>{e8e9f8ab-79c5-4980-b4c1-c9ab6e8a0ae3}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="projector\Projector.cpp">
+      <Filter>projector</Filter>
+    </ClCompile>
+    <ClCompile Include="openvr-lib\OpenVR.cpp">
+      <Filter>openvr</Filter>
+    </ClCompile>
+    <ClCompile Include="SimpleMain.cpp" />
+    <ClCompile Include="stdafx.cpp" />
+  </ItemGroup>
+</Project>

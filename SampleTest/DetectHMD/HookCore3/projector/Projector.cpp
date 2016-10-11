@@ -370,12 +370,10 @@ void TextureProjector::Update()
 		// vertex shader
 		ContextRef->VSSetShader(VS, nullptr, 0);
 
-		//LVMatrix Proj = DirectX::XMMatrixPerspectiveLH((float)BufferWidth, (float)BufferHeight, 0.1f, 10000.0f);
-		LVMatrix Proj = DirectX::XMMatrixPerspectiveFovLH(10.f*3.14159f/180.f, 10.f / 16.f, 0.1f, 10000.0f);
-		LVMatrix Trans = DirectX::XMMatrixTranslation(0.0f, 0.0f, 100.0f);
+		LVMatrix Trans = DirectX::XMMatrixTranslation(0.0f, 0.0f, -10.0f);
 		LVMatrix Rot = DirectX::XMMatrixRotationAxis({ 0.f, 1.f, 0.f }, 0.f);
-		LVMatrix Scale = DirectX::XMMatrixScaling(1.f, 1.f, 1.f);
-		FrameBufferWVP WVP(Scale * /*Rot * */Trans, EyePose[i].V, EyePose[i].P);
+		LVMatrix Scale = DirectX::XMMatrixScaling(10.404f, 10.404f, 10.404f);
+		FrameBufferWVP WVP(DirectX::XMMatrixTranspose(Scale * Trans), EyePose[i].V, EyePose[i].P);
 		ContextRef->UpdateSubresource(WVPCB, 0, nullptr, &WVP, 0, 0);
 		ContextRef->VSSetConstantBuffers(0, 1, &WVPCB);
 
