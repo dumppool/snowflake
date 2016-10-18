@@ -1,7 +1,6 @@
 #pragma once
 #include "targetver.h"
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
-#define _CRT_SECURE_NO_WARNINGS
 // Windows Header Files:
 #include <windows.h>
 
@@ -22,7 +21,7 @@ inline static void log_cap_cnt(const char* cap, const char* fmt, ...)
 
 	va_list args;
 	va_start(args, fmt);
-	int sz = vsnprintf(msg, 1023, fmt, args);
+	vsnprintf(msg, 1023, fmt, args);
 	//msg[sz] = '\0';
 	va_end(args);
 
@@ -31,10 +30,21 @@ inline static void log_cap_cnt(const char* cap, const char* fmt, ...)
 	::localtime_s(&curr, &t);
 	char cdate[1024];
 	snprintf(cdate, 1023, "%d/%d/%d %d:%d:%d", 1900 + curr.tm_year, curr.tm_mon + 1, curr.tm_mday, curr.tm_hour, curr.tm_min, curr.tm_sec);
-	
+
+	char* envdir = nullptr;
+	size_t sz = 0;
+	if (!_dupenv_s(&envdir, &sz, "APPDATA") == 0 || envdir == nullptr)
+	{
+		::MessageBoxA(0, "", "failed to get environment path", 0);
+		return;
+	}
+
 	DWORD pid = ::GetCurrentProcessId();
 	char filepath[1024];
-	snprintf(filepath, 1023, "%s\\%s-%d.log", getenv("APPDATA"), "HookCore", pid);
+	snprintf(filepath, 1023, "%s\\%s-%d.log", envdir, "HookCore", pid);
+
+	free(envdir);
+	envdir = nullptr;
 
 	ofstream logfile(filepath, ios::app | ios::out);
 	if (!logfile)
