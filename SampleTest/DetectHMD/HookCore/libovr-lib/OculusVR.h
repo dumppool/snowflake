@@ -381,7 +381,7 @@ namespace lostvr
 			}
 			else
 			{
-				LVMSG("OculusVR::OnPresent", "format(%d), w(%d), h(%d), buff count(%d)", Desc.BufferDesc.Format, Desc.BufferDesc.Width, Desc.BufferDesc.Height, Desc.BufferCount);
+				//LVMSG("OculusVR::OnPresent", "format(%d), w(%d), h(%d), buff count(%d)", Desc.BufferDesc.Format, Desc.BufferDesc.Width, Desc.BufferDesc.Height, Desc.BufferCount);
 			}
 
 			if (!bInitialized)

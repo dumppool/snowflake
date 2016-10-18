@@ -2,6 +2,7 @@
 //
 
 #include "HookCorePCH.h"
+#include "mhook-lib/mhook.h"
 #include "libovr-lib/OculusVR.h"
 #include "openvr-lib/OpenVR.h"
 

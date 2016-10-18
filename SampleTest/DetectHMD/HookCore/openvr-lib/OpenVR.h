@@ -213,7 +213,7 @@ namespace lostvr {
 
 			D3D11_TEXTURE2D_DESC LDesc;
 			(lostvr::TextureProjector::Get()->GetFinalBuffer(0))->GetDesc(&LDesc);
-			//if (vr::VRCompositorError_None != Error)
+			if (vr::VRCompositorError_None != Error)
 				LVMSG("OpenVR::OnPresent", "Submit left  with result: %d, texture: 0x%x, width(%d), height(%d), format(%d)", Error, 
 					Texture.handle, LDesc.Width, LDesc.Height, LDesc.Format);
 
@@ -228,7 +228,7 @@ namespace lostvr {
 
 			D3D11_TEXTURE2D_DESC RDesc;
 			(lostvr::TextureProjector::Get()->GetFinalBuffer(1))->GetDesc(&RDesc);
-			//if (vr::VRCompositorError_None != Error)
+			if (vr::VRCompositorError_None != Error)
 				LVMSG("OpenVR::OnPresent", "Submit right with result: %d, texture: 0x%x, width(%d), height(%d), format(%d)", Error,
 					Texture.handle, LDesc.Width, LDesc.Height, LDesc.Format);
 

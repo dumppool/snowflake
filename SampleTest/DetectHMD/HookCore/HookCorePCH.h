@@ -1,25 +1,15 @@
 #pragma once
 #include "targetver.h"
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
+#define _CRT_SECURE_NO_WARNINGS
 // Windows Header Files:
 #include <windows.h>
 
-#define ENABLEHOOKLIB_MHOOK
-//#define ENABLEHOOKLIB_EASYHOOK
-
-#ifdef ENABLEHOOKLIB_EASYHOOK
-#include "easyhook/Public/easyhook.h"
-#endif
-
-#ifdef ENABLEHOOKLIB_MHOOK
-#include "mhook-lib/mhook.h"
-#endif
-
+//#pragma warning(disable : 4996)
 #include <assert.h>
 #include <vector>
 #include <string>
 
-#define LOG_FILEPATH "D:\\HookCore.log"
 #define LVMSG(Cap, ...) {\
 log_cap_cnt(Cap, __VA_ARGS__);}
 
@@ -36,18 +26,30 @@ inline static void log_cap_cnt(const char* cap, const char* fmt, ...)
 	//msg[sz] = '\0';
 	va_end(args);
 
-	ofstream logfile(LOG_FILEPATH, ios::app | ios::out);
-	if (!logfile)
-	{
-		::MessageBoxA(0, "failed to open log file", "LOG", 0);
-		return;
-	}
-
 	time_t t = ::time(0);
 	tm curr;
 	::localtime_s(&curr, &t);
-	logfile << 1900 + curr.tm_year << "/" << curr.tm_mon + 1 << "/" << curr.tm_mday << " " << curr.tm_hour << ":" << curr.tm_min << ":" << curr.tm_sec << "\t";
-	logfile << "PIE: " << ::GetCurrentProcessId() << "\t\t";
+	char cdate[1024];
+	snprintf(cdate, 1023, "%d/%d/%d %d:%d:%d", 1900 + curr.tm_year, curr.tm_mon + 1, curr.tm_mday, curr.tm_hour, curr.tm_min, curr.tm_sec);
+	
+	DWORD pid = ::GetCurrentProcessId();
+	char filepath[1024];
+	snprintf(filepath, 1023, "%s\\%s-%d.log", getenv("APPDATA"), "HookCore", pid);
+
+	ofstream logfile(filepath, ios::app | ios::out);
+	if (!logfile)
+	{
+		::MessageBoxA(0, filepath, "failed to open log file", 0);
+		return;
+	}
+	//else
+	//{
+	//	::MessageBoxA(0, filepath, "open log file", 0);
+	//	return;
+	//}
+
+	logfile << cdate << "\t";
+	logfile << "PID: " << pid << "\t";
 	logfile << cap << ": " << string(msg).c_str() << endl;
 	logfile.flush();
 }
