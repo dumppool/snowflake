@@ -1,40 +1,32 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <Filter Include="disasm-lib">
+      <UniqueIdentifier>{670802f2-3f63-4daf-a38e-1498b2e751eb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mhook-lib">
+      <UniqueIdentifier>{1af22986-52f4-476e-a5b2-3c8041d66705}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libovr-lib">
+      <UniqueIdentifier>{fc5bacb1-a831-4e71-8f68-fee40a09ec42}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="openvr-lib">
+      <UniqueIdentifier>{45398f4d-5226-446e-99aa-f9f36da3843c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="projector">
+      <UniqueIdentifier>{00454f60-7401-4548-a843-ea8b1821cc71}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libovr-lib\Src">
+      <UniqueIdentifier>{97685afb-5669-4e45-a4e1-34234397e752}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="interface">
+      <UniqueIdentifier>{b6467d7f-a032-448b-86d6-b76e92c0dcf0}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="dllmain.cpp" />
-    <ClCompile Include="HookCore.cpp" />
-    <ClCompile Include="mhook-lib\mhook.cpp">
-      <Filter>mhook-lib</Filter>
-    </ClCompile>
-    <ClCompile Include="disasm-lib\cpu.c">
-      <Filter>disasm-lib</Filter>
-    </ClCompile>
-    <ClCompile Include="disasm-lib\disasm.c">
-      <Filter>disasm-lib</Filter>
-    </ClCompile>
-    <ClCompile Include="disasm-lib\disasm_x86.c">
-      <Filter>disasm-lib</Filter>
-    </ClCompile>
-    <ClCompile Include="disasm-lib\misc.c">
-      <Filter>disasm-lib</Filter>
-    </ClCompile>
-    <ClCompile Include="string_utils.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <Filter Include="disasm-lib">
-      <UniqueIdentifier>{f868bfe9-374b-499d-affc-9efe35c88440}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="mhook-lib">
-      <UniqueIdentifier>{e57d9e72-0f3a-4f2c-a8eb-66242cee5ab0}</UniqueIdentifier>
-    </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="mhook-lib\mhook.h">
-      <Filter>mhook-lib</Filter>
-    </ClInclude>
     <ClInclude Include="disasm-lib\cpu.h">
       <Filter>disasm-lib</Filter>
     </ClInclude>
@@ -50,7 +42,83 @@
     <ClInclude Include="disasm-lib\misc.h">
       <Filter>disasm-lib</Filter>
     </ClInclude>
-    <ClInclude Include="HookCore.h" />
-    <ClInclude Include="string_utils.h" />
+    <ClInclude Include="mhook-lib\mhook.h">
+      <Filter>mhook-lib</Filter>
+    </ClInclude>
+    <ClInclude Include="projector\Projector.h">
+      <Filter>projector</Filter>
+    </ClInclude>
+    <ClInclude Include="openvr-lib\OpenVR.h">
+      <Filter>openvr-lib</Filter>
+    </ClInclude>
+    <ClInclude Include="libovr-lib\OculusVR.h">
+      <Filter>libovr-lib</Filter>
+    </ClInclude>
+    <ClInclude Include="libovr-lib\Src\OVR_CAPI_Prototypes.h">
+      <Filter>libovr-lib\Src</Filter>
+    </ClInclude>
+    <ClInclude Include="interface\IRenderer.h">
+      <Filter>interface</Filter>
+    </ClInclude>
+    <ClInclude Include="interface\IVRDevice.h">
+      <Filter>interface</Filter>
+    </ClInclude>
+    <ClInclude Include="interface\LostVR.h">
+      <Filter>interface</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h" />
+    <ClInclude Include="HookCorePCH.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="disasm-lib\cpu.c">
+      <Filter>disasm-lib</Filter>
+    </ClCompile>
+    <ClCompile Include="disasm-lib\disasm.c">
+      <Filter>disasm-lib</Filter>
+    </ClCompile>
+    <ClCompile Include="disasm-lib\disasm_x86.c">
+      <Filter>disasm-lib</Filter>
+    </ClCompile>
+    <ClCompile Include="disasm-lib\misc.c">
+      <Filter>disasm-lib</Filter>
+    </ClCompile>
+    <ClCompile Include="mhook-lib\mhook.cpp">
+      <Filter>mhook-lib</Filter>
+    </ClCompile>
+    <ClCompile Include="projector\Projector.cpp">
+      <Filter>projector</Filter>
+    </ClCompile>
+    <ClCompile Include="openvr-lib\OpenVR.cpp">
+      <Filter>openvr-lib</Filter>
+    </ClCompile>
+    <ClCompile Include="libovr-lib\OculusVR.cpp">
+      <Filter>libovr-lib</Filter>
+    </ClCompile>
+    <ClCompile Include="libovr-lib\Src\OVR_CAPI_Util.cpp">
+      <Filter>libovr-lib\Src</Filter>
+    </ClCompile>
+    <ClCompile Include="libovr-lib\Src\OVR_CAPIShim.c">
+      <Filter>libovr-lib\Src</Filter>
+    </ClCompile>
+    <ClCompile Include="libovr-lib\Src\OVR_StereoProjection.cpp">
+      <Filter>libovr-lib\Src</Filter>
+    </ClCompile>
+    <ClCompile Include="interface\IRenderer.cpp">
+      <Filter>interface</Filter>
+    </ClCompile>
+    <ClCompile Include="interface\IVRDevice.cpp">
+      <Filter>interface</Filter>
+    </ClCompile>
+    <ClCompile Include="interface\LostVR.cpp">
+      <Filter>interface</Filter>
+    </ClCompile>
+    <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="HookCore.cpp" />
+    <ClCompile Include="HookCorePCH.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="projector\projector.hlsl">
+      <Filter>projector</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>
