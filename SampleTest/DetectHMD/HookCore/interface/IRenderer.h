@@ -32,7 +32,7 @@ namespace lostvr
 		// Qualifier:
 		// Parameter: IDXGISwapChain * InSwapChain
 		//************************************
-		virtual void OnPresent(IDXGISwapChain* InSwapChain) = 0;
+		virtual bool OnPresent(IDXGISwapChain* InSwapChain) = 0;
 
 		virtual std::string GetRendererID() const = 0;
 	};

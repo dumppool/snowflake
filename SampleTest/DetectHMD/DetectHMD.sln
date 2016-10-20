@@ -23,6 +23,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DirectXTK_Desktop_2015", "D
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HookLoader", "HookLoader\HookLoader.vcxproj", "{894E4CCC-7810-4403-8C17-EBFB762F358A}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RavTest", "RavTest\RavTest.vcxproj", "{994626BE-93EF-4AE2-B7E3-CA061B33428F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -111,6 +113,14 @@ Global
 		{894E4CCC-7810-4403-8C17-EBFB762F358A}.Release|x64.Build.0 = Release|x64
 		{894E4CCC-7810-4403-8C17-EBFB762F358A}.Release|x86.ActiveCfg = Release|Win32
 		{894E4CCC-7810-4403-8C17-EBFB762F358A}.Release|x86.Build.0 = Release|Win32
+		{994626BE-93EF-4AE2-B7E3-CA061B33428F}.Debug|x64.ActiveCfg = Debug|x64
+		{994626BE-93EF-4AE2-B7E3-CA061B33428F}.Debug|x64.Build.0 = Debug|x64
+		{994626BE-93EF-4AE2-B7E3-CA061B33428F}.Debug|x86.ActiveCfg = Debug|Win32
+		{994626BE-93EF-4AE2-B7E3-CA061B33428F}.Debug|x86.Build.0 = Debug|Win32
+		{994626BE-93EF-4AE2-B7E3-CA061B33428F}.Release|x64.ActiveCfg = Release|x64
+		{994626BE-93EF-4AE2-B7E3-CA061B33428F}.Release|x64.Build.0 = Release|x64
+		{994626BE-93EF-4AE2-B7E3-CA061B33428F}.Release|x86.ActiveCfg = Release|Win32
+		{994626BE-93EF-4AE2-B7E3-CA061B33428F}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

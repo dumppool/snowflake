@@ -52,7 +52,7 @@ int ListProcess()
 int HookMain()
 {
 	ListProcess();
-	DWORD processId;
+	DWORD processId; 
 	std::wcout << "Enter the target process Id: ";
 	std::cin >> processId;
 
@@ -65,9 +65,20 @@ int HookMain()
 	return 0;
 }
 
-int main()
+int main(int argc, char* argv[])
 {
-	HANDLE hModule = ::LoadLibrary(TEXT(HookCoreModule));
+	printf("num of commands: %d\n", argc);
+	for (int i = 0; i < argc; ++i)
+	{
+		printf("command: %s\n", argv[i]);
+		if (0 == strcmp(argv[i], "x86"))
+		{
+			SUseWin32 = true;
+			printf("use win32 version\n");
+		}
+	}
+
+	//HANDLE hModule = ::LoadLibrary(SGlobalSharedDataInst.GetHookCoreDllPath());
 	HookMain();
     return 0;
 }

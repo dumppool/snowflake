@@ -56,7 +56,7 @@ static bool HookSwapChainPresent()
 	}
 
 	IDXGISwapChain* SwapChain = nullptr;
-	ID3D11DeviceContext* Context = nullptr; 
+	ID3D11DeviceContext* Context = nullptr;
 	ID3D11Device* Device = nullptr;
 
 	HWND hwnd = ::GetForegroundWindow();
@@ -90,8 +90,36 @@ static bool HookSwapChainPresent()
 
 	if (FAILED(hr))
 	{
-		LVMSG("HookSwapChainPresent", "D3D11CreateDeviceAndSwapChain failed");
-		return false;
+		LVMSG("HookSwapChainPresent", "D3D11CreateDeviceAndSwapChain failed: %d", hr);
+
+		LVMSG("HookSwapChainPresent", "creating factory1... ");
+		IDXGIFactory1* Factory1 = nullptr;
+		hr = CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&Factory1);
+		if (Factory1 == nullptr)
+		{
+			LVMSG("HookSwapChainPresent", "failed to create factory1: %d", hr);
+			return false;
+		}
+		else
+		{
+			IDXGIAdapter* Adapter = nullptr;
+			for (int i = 0;; ++i)
+			{
+				DXGI_ADAPTER_DESC AdapterDesc;
+				if (FAILED(Factory1->EnumAdapters(i, &Adapter)) || FAILED(Adapter->GetDesc(&AdapterDesc)))
+				{
+					LVMSG("HookSwapChainPresent", "EnumAdapter end at index: %d", i);
+					return false;
+				}
+
+				if (SUCCEEDED(D3D11CreateDeviceAndSwapChain(Adapter, D3D_DRIVER_TYPE_UNKNOWN, NULL, NULL,
+					&FeatureLevels, 1, D3D11_SDK_VERSION, &Desc, &SwapChain, &Device, NULL, &Context)))
+				{
+					LVMSG("HookSwapChainPresent", "CreateDeviceAndSwapChain succeeded, adapter desc: %ls, index: %d", AdapterDesc.Description, i);
+					break;
+				}
+			}
+		}
 	}
 
 	SwapChainPresent_OrigPtr = (PFN_DXGISWAPCHAIN_PRESENT)*((__int64*)*(__int64*)SwapChain + 8);
@@ -129,7 +157,7 @@ extern "C" _declspec(dllexport) void _cdecl InstallHook(int* Result)
 	HookSwapChainPresent();
 	if (Result != nullptr)
 	{
-		*Result = -1;
+		*Result = 111;
 	}
 
 	return;

@@ -19,8 +19,7 @@ void InjectDLL(HANDLE hProcess, wstring libName)
 		VirtualAllocEx(hProcess, NULL, sizeof(dllPath), MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 	if (remoteMem)
 	{
-		printf("\nready to load %s: %ls\n", HookCoreModule, dllPath);
-		//system("PAUSE");
+		LVLog("\nready to load %ls: %ls\n", SGlobalSharedDataInst.GetHookCoreDllName(), dllPath);
 		WriteProcessMemory(hProcess, remoteMem, (void *)dllPath, sizeof(dllPath), NULL);
 
 		HANDLE hThread = CreateRemoteThread(
@@ -136,15 +135,13 @@ void InjectFunctionCall(HANDLE hProcess, uintptr_t renderdoc_remote, const char 
 		return;
 	}
 
-	LVLogDebug("Injecting call to %s", funcName);
-
-	HMODULE renderdoc_local = GetModuleHandleA(HookCoreModule);
-
+	LVLog("Injecting call to %s", funcName);
+	HMODULE renderdoc_local = LoadLibraryW(SGlobalSharedDataInst.GetHookCoreDllPath());
 	uintptr_t func_local = (uintptr_t)GetProcAddress(renderdoc_local, funcName);
 
 	if (func_local == 0)
 	{
-		LVLogErr("Failed to get function(%s) from module(%s)", funcName, HookCoreModule);
+		LVLogErr("Failed to get function(%s) from module(%ls)", funcName, SGlobalSharedDataInst.GetHookCoreDllName());
 		return;
 	}
 
@@ -245,10 +242,7 @@ uint32_t InjectIntoProcess(uint32_t pid, const char *logfile, bool waitForExit)
 		//	PROCESS_VM_WRITE | PROCESS_VM_READ | SYNCHRONIZE,
 		//	FALSE, pid);
 
-	LVLog("Injecting HookCore into process %lu", pid);
-
-	wchar_t renderdocPath[MAX_PATH] = { 0 };
-	GetModuleFileNameW(GetModuleHandleA(HookCoreModule), &renderdocPath[0], MAX_PATH - 1);
+	LVLog("Injecting %ls into process %lu", SGlobalSharedDataInst.GetHookCoreDllName(), pid);
 
 	BOOL isWow64 = FALSE;
 	BOOL success = IsWow64Process(hProcess, &isWow64);
@@ -256,12 +250,12 @@ uint32_t InjectIntoProcess(uint32_t pid, const char *logfile, bool waitForExit)
 	if (!success)
 	{
 		DWORD err = GetLastError();
-		LVLogErr("Couldn't determine bitness of process, err: %08x", err);
+		LVLogErr("Couldn't determine bitness of process: %d, err: %08x", pid, err);
 		CloseHandle(hProcess);
 		return 0;
 	}
 
-#if !defined(WIN64)
+#if 1
 	BOOL selfWow64 = FALSE;
 
 	HANDLE hSelfProcess = GetCurrentProcess();
@@ -355,16 +349,16 @@ uint32_t InjectIntoProcess(uint32_t pid, const char *logfile, bool waitForExit)
 	}
 #endif
 
-	InjectDLL(hProcess, renderdocPath);
+	InjectDLL(hProcess, SGlobalSharedDataInst.GetHookCoreDllPath());
 
-	uintptr_t loc = FindRemoteDLL(pid, TEXT(HookCoreModule));
+	uintptr_t loc = FindRemoteDLL(pid, SGlobalSharedDataInst.GetHookCoreDllName());
 
 	uint32_t controlident = 1;
 	int Result = 0;
 
 	if (loc == 0)
 	{
-		LVLogErr("Can't locate %s in remote PID %d", HookCoreModule, pid);
+		LVLogErr("Can't locate %ls in remote PID %d", SGlobalSharedDataInst.GetHookCoreDllName(), pid);
 	}
 	else
 	{
@@ -388,11 +382,11 @@ void InjectFinished(DWORD pid)
 			PROCESS_VM_WRITE | PROCESS_VM_READ | SYNCHRONIZE,
 			FALSE, pid);
 
-	uintptr_t loc = FindRemoteDLL(pid, TEXT(HookCoreModule));
+	uintptr_t loc = FindRemoteDLL(pid, SGlobalSharedDataInst.GetHookCoreDllName());
 	int Result = 0;
 	if (loc == 0)
 	{
-		LVLogErr("InjectFinished: Can't locate %s in remote PID %d", HookCoreModule, pid);
+		LVLogErr("InjectFinished: Can't locate %ls in remote PID %d", SGlobalSharedDataInst.GetHookCoreDllName(), pid);
 	}
 	else
 	{

@@ -87,10 +87,10 @@ namespace lostvr {
 
 		bool Init()
 		{
-			HMODULE hModule = ::LoadLibrary(TEXT(OPENVR_RUNTIME));
+			HMODULE hModule = ::LoadLibrary(SGlobalSharedDataInst.GetOpenVRDllPath());
 			if (!hModule)
 			{
-				LVMSG("OpenVR::Init", "failed to load openvr_api.dll");
+				LVMSG("OpenVR::Init", "failed to load %ls", SGlobalSharedDataInst.GetOpenVRDllName());
 				return false;
 			}
 

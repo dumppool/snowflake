@@ -1,9 +1,6 @@
 #include "HookCorePCH.h"
 #include "Projector.h"
 
-static const TCHAR* SVertexShaderPath = TEXT("C:\\Users\\Administrator\\Documents\\GitHub\\snowflake\\SampleTest\\DetectHMD\\HookCore3\\projector\\projector.hlsl");
-static const TCHAR* SPixelShaderPath = SVertexShaderPath;
-
 using namespace lostvr;
 
 #define ENABLETEST_TRANSFORM
@@ -229,7 +226,7 @@ bool TextureProjector::Init(const ID3D11Resource* Source, uint32 HmdBufWidth, ui
 		// Create shader
 		// VS
 		ID3DBlob* VSBlob = nullptr;
-		if (!CompileShader(SVertexShaderPath, "vs_main", "vs_5_0", &VSBlob) || !VSBlob)
+		if (!CompileShader(SGlobalSharedDataInst.GetShaderFilePath(), "vs_main", "vs_5_0", &VSBlob) || !VSBlob)
 		{
 			return false;
 		}
@@ -241,7 +238,7 @@ bool TextureProjector::Init(const ID3D11Resource* Source, uint32 HmdBufWidth, ui
 
 		// PS
 		ID3DBlob* PSBlob = nullptr;
-		if (!CompileShader(SPixelShaderPath, "ps_main", "ps_5_0", &PSBlob) || !PSBlob)
+		if (!CompileShader(SGlobalSharedDataInst.GetShaderFilePath(), "ps_main", "ps_5_0", &PSBlob) || !PSBlob)
 		{
 			return false;
 		}
