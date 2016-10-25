@@ -8,7 +8,7 @@
 
 #define NUMEYES 1
 
-namespace LostVR
+namespace lostvr
 {
 	static inline void PrintSwapChainDesc(DXGI_SWAP_CHAIN_DESC desc)
 	{

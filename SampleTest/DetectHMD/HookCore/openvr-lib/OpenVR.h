@@ -3,7 +3,7 @@
 #include "openvr-lib/headers/openvr.h"
 #include "projector/Projector.h"
 
-#include "interface/IVRDevice.h"
+#include "renderers/IRenderer.h"
 
 //#define OPENVR_RUNTIME "C:\\Users\\Administrator\\Documents\\GitHub\\snowflake\\SampleTest\\DetectHMD\\HookCore3\\openvr-lib\\bin\\win64\\openvr_api.dll"
 #define OPENVR_RUNTIME "openvr_api.dll"
@@ -23,7 +23,7 @@
 }
 
 namespace lostvr {
-	class OpenVRRenderer : public IVRDevice
+	class OpenVRRenderer/* : public IVRDevice*/
 	{
 		typedef vr::IVRSystem*(VR_CALLTYPE *pVRInit)(vr::HmdError* peError, vr::EVRApplicationType eApplicationType);
 		typedef void(VR_CALLTYPE *pVRShutdown)();
@@ -54,7 +54,7 @@ namespace lostvr {
 
 		virtual bool InitializeVR() { return false; }
 		virtual void DestroyVR() {}
-		virtual void Submit(IRenderer* InRenderer, IDXGISwapChain* InSwapChain) {};
+		//virtual void Submit(IRenderer* InRenderer, IDXGISwapChain* InSwapChain) {};
 
 		static OpenVRRenderer* Get()
 		{

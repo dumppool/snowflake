@@ -2,159 +2,195 @@
 //
 
 #include "HookCorePCH.h"
-#include "mhook-lib/mhook.h"
-#include "libovr-lib/OculusVR.h"
-#include "openvr-lib/OpenVR.h"
+//#include "mhook-lib/mhook.h"
+//#include "libovr-lib/OculusVR.h"
+//#include "openvr-lib/OpenVR.h"
+//#include "renderers/Direct3D11Renderer.h"
 
-#define LVSETHOOK(Module, FuncName, FuncType, FuncVarOrig, FuncVarHook, ErrVar, ErrCode)\
-{\
-	FuncVarOrig = (FuncType)::GetProcAddress(::GetModuleHandle(TEXT(Module)), FuncName);\
-	if (Mhook_SetHook((PVOID*)&FuncVarOrig, FuncVarHook))\
-	{\
-		LVMSG("FuncName", "Hook"##" "##FuncName##" successfully!");\
-	}\
-	else\
-	{\
-		LVMSG(FuncName, "Hook"##" "##FuncName##" failed...");\
-		ErrVar = ErrCode;\
-		return;\
-	}\
-}
+#include "renderers/RouteAPIs.h"
 
-typedef HRESULT(STDMETHODCALLTYPE *PFN_DXGISWAPCHAIN_PRESENT)(IDXGISwapChain* This, UINT SyncInterval, UINT Flags);
-static PFN_DXGISWAPCHAIN_PRESENT SwapChainPresent_OrigPtr = nullptr;
-static HRESULT STDMETHODCALLTYPE SwapChainPresent_Hook(IDXGISwapChain* This, UINT Sync, UINT Flags)
-{
-	HRESULT hr = S_FALSE;
-	if (SwapChainPresent_OrigPtr != nullptr)
-	{
-		if (lostvr::OculusVR::Get()->IsDeviceConnected())
-		{
-			lostvr::OculusVR::Get()->OnPresent(This);
-		}
-		else if (lostvr::OpenVRRenderer::Get()->IsDeviceConnected())
-		{
-			lostvr::OpenVRRenderer::Get()->OnPresent(This);
-		}
+using namespace lostvr;
 
-		hr = SwapChainPresent_OrigPtr(This, Sync, Flags);
-	}
-	else
-	{
-		LVMSG("SwapChainPresent_Hook", "hook get called without original function pointer!");
-	}
-
-	return hr;
-}
-
-static bool HookSwapChainPresent()
-{
-	if (SwapChainPresent_OrigPtr != nullptr)
-	{
-		LVMSG("HookSwapChainPresent", "already hooked.");
-		//return false;
-	}
-
-	IDXGISwapChain* SwapChain = nullptr;
-	ID3D11DeviceContext* Context = nullptr;
-	ID3D11Device* Device = nullptr;
-
-	HWND hwnd = ::GetForegroundWindow();
-	if (hwnd == NULL)
-	{
-		LVMSG("HookSwapChainPresent", "failed to get foreground window.");
-		return false;
-	}
-	else
-	{
-		LVMSG("HookCore", "");
-		LVMSG("HookCore", "*******************************************************");
-		LVMSG("HookSwapChainPresent", "got foreground window(%x).", hwnd);
-	}
-
-	D3D_FEATURE_LEVEL FeatureLevels = D3D_FEATURE_LEVEL_11_0;
-	DXGI_SWAP_CHAIN_DESC Desc{ 0 };
-	Desc.BufferCount = 1;
-	Desc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	Desc.BufferDesc.RefreshRate.Numerator = 0;
-	Desc.BufferDesc.RefreshRate.Denominator = 1;
-	Desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	Desc.OutputWindow = hwnd;
-	Desc.Windowed = (GetWindowLong(hwnd, GWL_STYLE) & WS_POPUP) != 0 ? FALSE : TRUE;;
-	Desc.SampleDesc.Count = 1;
-	Desc.SampleDesc.Quality = 0;
-	Desc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
-	Desc.Flags = 0;
-	HRESULT hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, NULL, &FeatureLevels, 1,
-		D3D11_SDK_VERSION, &Desc, &SwapChain, &Device, NULL, &Context);
-
-	if (FAILED(hr))
-	{
-		LVMSG("HookSwapChainPresent", "D3D11CreateDeviceAndSwapChain failed: %d", hr);
-
-		LVMSG("HookSwapChainPresent", "creating factory1... ");
-		IDXGIFactory1* Factory1 = nullptr;
-		hr = CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&Factory1);
-		if (Factory1 == nullptr)
-		{
-			LVMSG("HookSwapChainPresent", "failed to create factory1: %d", hr);
-			return false;
-		}
-		else
-		{
-			IDXGIAdapter* Adapter = nullptr;
-			for (int i = 0;; ++i)
-			{
-				DXGI_ADAPTER_DESC AdapterDesc;
-				if (FAILED(Factory1->EnumAdapters(i, &Adapter)) || FAILED(Adapter->GetDesc(&AdapterDesc)))
-				{
-					LVMSG("HookSwapChainPresent", "EnumAdapter end at index: %d", i);
-					return false;
-				}
-
-				if (SUCCEEDED(D3D11CreateDeviceAndSwapChain(Adapter, D3D_DRIVER_TYPE_UNKNOWN, NULL, NULL,
-					&FeatureLevels, 1, D3D11_SDK_VERSION, &Desc, &SwapChain, &Device, NULL, &Context)))
-				{
-					LVMSG("HookSwapChainPresent", "CreateDeviceAndSwapChain succeeded, adapter desc: %ls, index: %d", AdapterDesc.Description, i);
-					break;
-				}
-			}
-		}
-	}
-
-	SwapChainPresent_OrigPtr = (PFN_DXGISWAPCHAIN_PRESENT)*((__int64*)*(__int64*)SwapChain + 8);
-	if (Mhook_SetHook((PVOID*)&SwapChainPresent_OrigPtr, SwapChainPresent_Hook))
-	{
-		LVMSG("HookSwapChainPresent", "set hook succeeded.");
-		return true;
-	}
-	else
-	{
-		LVMSG("HookSwapChainPresent", "set hook failed.");
-		return false;
-	}
-}
-
-static void UnhookSwapChainPresent()
-{
-	if (SwapChainPresent_OrigPtr == nullptr)
-	{
-		LVMSG("UnhookSwapChainPresent", "null original function pointer.");
-	}
-
-	if (Mhook_Unhook((PVOID*)&SwapChainPresent_OrigPtr))
-	{
-		LVMSG("UnhookSwapChainPresent", "unhook succeeded.");
-	}
-	else
-	{
-		LVMSG("UnhookSwapChainPresent", "unhook failed.");
-	}
-}
+//static Direct3D11Helper* SD3D11Helper = nullptr;
+//
+//#define LVSETHOOK(Module, FuncName, FuncType, FuncVarOrig, FuncVarHook, ErrVar, ErrCode)\
+//{\
+//	FuncVarOrig = (FuncType)::GetProcAddress(::GetModuleHandle(TEXT(Module)), FuncName);\
+//	if (Mhook_SetHook((PVOID*)&FuncVarOrig, FuncVarHook))\
+//	{\
+//		LVMSG("FuncName", "Hook"##" "##FuncName##" successfully!");\
+//	}\
+//	else\
+//	{\
+//		LVMSG(FuncName, "Hook"##" "##FuncName##" failed...");\
+//		ErrVar = ErrCode;\
+//		return;\
+//	}\
+//}
+//
+//typedef HRESULT(STDMETHODCALLTYPE *PFN_DXGISWAPCHAIN_PRESENT)(IDXGISwapChain* This, UINT SyncInterval, UINT Flags);
+//static PFN_DXGISWAPCHAIN_PRESENT SwapChainPresent_OrigPtr = nullptr;
+//static HRESULT STDMETHODCALLTYPE SwapChainPresent_Hook(IDXGISwapChain* This, UINT Sync, UINT Flags)
+//{
+//	HRESULT hr = S_FALSE;
+//	if (SwapChainPresent_OrigPtr != nullptr)
+//	{
+//		if (lostvr::OculusVR::Get()->IsDeviceConnected())
+//		{
+//			lostvr::OculusVR::Get()->OnPresent(This);
+//		}
+//		else if (lostvr::OpenVRRenderer::Get()->IsDeviceConnected())
+//		{
+//			lostvr::OpenVRRenderer::Get()->OnPresent(This);
+//		}
+//
+//		hr = SwapChainPresent_OrigPtr(This, Sync, Flags);
+//	}
+//	else
+//	{
+//		LVMSG("SwapChainPresent_Hook", "hook get called without original function pointer!");
+//	}
+//
+//	return hr;
+//}
+//
+//static bool HookSwapChainPresent()
+//{
+//	const CHAR* head = "HookSwapChainPresent";
+//	if (SwapChainPresent_OrigPtr != nullptr)
+//	{
+//		LVMSG(head, "already hooked.");
+//		return false;
+//	}
+//
+//	if (SD3D11Helper == nullptr || SD3D11Helper->GetSwapChain() == nullptr)
+//	{
+//		if (SD3D11Helper != nullptr)
+//		{
+//			delete SD3D11Helper;
+//		}
+//
+//		SD3D11Helper = new Direct3D11Helper(EDirect3D::DXGI0);
+//		if (SD3D11Helper == nullptr)
+//		{
+//			LVMSG(head, "allocate new Direct3D11Helper failed");
+//			return false;
+//		}
+//	}
+//
+//	IDXGISwapChain* swapChain = SD3D11Helper->GetSwapChain();
+//
+//#ifdef _WIN64
+//	SwapChainPresent_OrigPtr = (PFN_DXGISWAPCHAIN_PRESENT)*((__int64*)*(__int64*)swapChain + 8);
+//#else
+//	SwapChainPresent_OrigPtr = (PFN_DXGISWAPCHAIN_PRESENT)*((__int32*)*(__int32*)swapChain + 8);
+//#endif
+//
+//	if (Mhook_SetHook((PVOID*)&SwapChainPresent_OrigPtr, SwapChainPresent_Hook))
+//	{
+//		LVMSG("HookSwapChainPresent", "set hook succeeded.");
+//		return true;
+//	}
+//	else
+//	{
+//		LVMSG("HookSwapChainPresent", "set hook failed.");
+//		return false;
+//	}
+//}
+//
+//static void UnhookSwapChainPresent()
+//{
+//	if (SwapChainPresent_OrigPtr == nullptr)
+//	{
+//		LVMSG("UnhookSwapChainPresent", "null original function pointer.");
+//	}
+//
+//	if (Mhook_Unhook((PVOID*)&SwapChainPresent_OrigPtr))
+//	{
+//		LVMSG("UnhookSwapChainPresent", "unhook succeeded.");
+//	}
+//	else
+//	{
+//		LVMSG("UnhookSwapChainPresent", "unhook failed.");
+//	}
+//}
+//
+//typedef HRESULT(STDMETHODCALLTYPE *PFN_DEVICE_PRESENT)(IDirect3DDevice9* This, CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion);
+//static PFN_DEVICE_PRESENT DevicePresent_OrigPtr = nullptr;
+//static HRESULT STDMETHODCALLTYPE Direct3DDevice9Present_Hook(IDirect3DDevice9* This, CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion)
+//{
+//	HRESULT hr = S_FALSE;
+//	if (DevicePresent_OrigPtr != nullptr)
+//	{
+//		LVMSG("Direct3DDevice9Present_Hook", "hook get called...");
+//		hr = DevicePresent_OrigPtr(This, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
+//	}
+//	else
+//	{
+//		LVMSG("Direct3DDevice9Present_Hook", "hook get called without original function pointer!");
+//	}
+//
+//	return hr;
+//}
+//
+//static bool HookDirect3DDevice9Present(int* Result)
+//{
+//	HWND wnd = GetForegroundWindow();
+//
+//	IDirect3D9* D3D = Direct3DCreate9(D3D_SDK_VERSION);
+//	if (D3D == nullptr)
+//	{
+//		LVMSG("HookDirect3DDevice9Present", "Direct3DCreate9");
+//		return false;
+//	}
+//
+//	D3DDISPLAYMODE mode;
+//	D3D->GetAdapterDisplayMode(0, &mode);
+//
+//	D3DPRESENT_PARAMETERS pp;
+//	ZeroMemory(&pp, sizeof(D3DPRESENT_PARAMETERS));
+//	//pp.BackBufferWidth = WinSizeW;
+//	//pp.BackBufferHeight = WinSizeH;
+//	pp.BackBufferFormat = mode.Format;
+//	pp.BackBufferCount = 1;
+//	pp.SwapEffect = D3DSWAPEFFECT_COPY;
+//	pp.Windowed = true;
+//	pp.hDeviceWindow = wnd;
+//
+//	IDirect3DDevice9* Device = nullptr;
+//	if (FAILED(D3D->CreateDevice(D3DADAPTER_DEFAULT, true ? D3DDEVTYPE_HAL : D3DDEVTYPE_REF,
+//		wnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &pp, &Device)))
+//	{
+//		LVMSG("HookDirect3DDevice9Present", "CreateDevice failed");
+//		return false;
+//	}
+//
+//#ifdef _WIN64
+//	DevicePresent_OrigPtr = (PFN_DEVICE_PRESENT)*((__int64*)*(__int64*)Device + 17);
+//#else
+//	DevicePresent_OrigPtr = (PFN_DEVICE_PRESENT)*((__int32*)*(__int32*)Device + 17);
+//#endif
+//	if (Mhook_SetHook((PVOID*)&DevicePresent_OrigPtr, Direct3DDevice9Present_Hook))
+//	{
+//		LVMSG("HookDirect3DDevice9Present", "set hook succeeded.");
+//		return true;
+//	}
+//	else
+//	{
+//		LVMSG("HookDirect3DDevice9Present", "set hook faled.");
+//		return false;
+//	}
+//}
+//
+//static void UnhookDirect3DDevice9Present(int* Result)
+//{
+//}
 
 extern "C" _declspec(dllexport) void _cdecl InstallHook(int* Result)
 {
-	HookSwapChainPresent();
+	//HookSwapChainPresent();
+	//HookDirect3DDevice9Present(Result);
+	RouteModule::Get()->InstallRouters();
 	if (Result != nullptr)
 	{
 		*Result = 111;
@@ -165,7 +201,7 @@ extern "C" _declspec(dllexport) void _cdecl InstallHook(int* Result)
 
 extern "C" _declspec(dllexport) void _cdecl UninstallHook(int* p)
 {
-	UnhookSwapChainPresent();
+	RouteModule::Get()->UninstallRouters();
 	return;
 }
 
@@ -173,13 +209,13 @@ extern "C" _declspec(dllexport) void _cdecl UninstallHook(int* p)
 
 extern "C" _declspec(dllexport) void _cdecl NativeInjectionEntryPointMhook(int* Result)
 {
-	InstallHook(Result);
+	RouteModule::Get()->InstallRouters();
 }
 
 #include "easyhook/Public/easyhook.h"
 extern "C" void __declspec(dllexport) __stdcall NativeInjectionEntryPoint(REMOTE_ENTRY_INFO* inRemoteInfo)
 {
-	InstallHook(nullptr);
+	RouteModule::Get()->UninstallRouters();
 }
 
 #endif

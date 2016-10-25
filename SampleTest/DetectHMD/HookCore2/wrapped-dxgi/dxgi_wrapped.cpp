@@ -91,7 +91,7 @@ HRESULT WrappedIDXGIFactory::staticCreateSwapChain(IDXGIFactory *factory, IUnkno
 		}
 
 		// vr init
-		LostVR::OculusVR::Get()->Init((ID3D11Device*)wrapDevice->GetRealIUnknown());
+		lostvr::OculusVR::Get()->Init((ID3D11Device*)wrapDevice->GetRealIUnknown());
 		HRESULT ret = factory->CreateSwapChain(wrapDevice->GetRealIUnknown(), pDesc, ppSwapChain);
 
 		if (SUCCEEDED(ret))
@@ -109,7 +109,7 @@ HRESULT WrappedIDXGIFactory::staticCreateSwapChain(IDXGIFactory *factory, IUnkno
 #else
 	DXGI_FORMAT format;
 	int w, h;
-	LostVR::OculusVR::Get()->GetSwapChainData(format, w, h);
+	lostvr::OculusVR::Get()->GetSwapChainData(format, w, h);
 	pDesc->BufferDesc.Format = format;
 	pDesc->BufferDesc.Width = w;
 	pDesc->BufferDesc.Height = h;
@@ -117,11 +117,11 @@ HRESULT WrappedIDXGIFactory::staticCreateSwapChain(IDXGIFactory *factory, IUnkno
 	pDesc->BufferCount = 1;
 	//pDesc->BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	HRESULT ret = factory->CreateSwapChain(pDevice, pDesc, ppSwapChain);
-	LostVR::PrintSwapChainDesc(*pDesc);
+	lostvr::PrintSwapChainDesc(*pDesc);
 	ID3D11Device* Dev = nullptr;
 	if (SUCCEEDED((*ppSwapChain)->GetDevice(__uuidof(ID3D11Device), (void**)&Dev)))
 	{
-		LostVR::OculusVR::Get()->Init(Dev);
+		lostvr::OculusVR::Get()->Init(Dev);
 	}
 
 	if (SUCCEEDED(ret))
@@ -507,7 +507,7 @@ HRESULT WrappedIDXGISwapChain3::Present(
 		SUCCEEDED(m_pReal->GetDevice(__uuidof(ID3D11Device), (void**)&Dev)))
 	{
 		//LVMSG("succeed", "WrappedIDXGISwapChain3::Present");
-		LostVR::OculusVR::Get()->Update(Dev, Tex);
+		lostvr::OculusVR::Get()->Update(Dev, Tex);
 	}
 	else
 	{

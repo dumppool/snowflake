@@ -19,8 +19,8 @@
     <Filter Include="libovr-lib\Src">
       <UniqueIdentifier>{97685afb-5669-4e45-a4e1-34234397e752}</UniqueIdentifier>
     </Filter>
-    <Filter Include="interface">
-      <UniqueIdentifier>{b6467d7f-a032-448b-86d6-b76e92c0dcf0}</UniqueIdentifier>
+    <Filter Include="renderers">
+      <UniqueIdentifier>{57007b16-6c4f-4c30-bcdd-8f9dd35af11e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -51,23 +51,23 @@
     <ClInclude Include="openvr-lib\OpenVR.h">
       <Filter>openvr-lib</Filter>
     </ClInclude>
-    <ClInclude Include="libovr-lib\OculusVR.h">
-      <Filter>libovr-lib</Filter>
-    </ClInclude>
+    <ClInclude Include="targetver.h" />
+    <ClInclude Include="HookCorePCH.h" />
     <ClInclude Include="libovr-lib\Src\OVR_CAPI_Prototypes.h">
       <Filter>libovr-lib\Src</Filter>
     </ClInclude>
-    <ClInclude Include="interface\IRenderer.h">
-      <Filter>interface</Filter>
+    <ClInclude Include="renderers\Direct3D11Renderer.h">
+      <Filter>renderers</Filter>
     </ClInclude>
-    <ClInclude Include="interface\IVRDevice.h">
-      <Filter>interface</Filter>
+    <ClInclude Include="renderers\IRenderer.h">
+      <Filter>renderers</Filter>
     </ClInclude>
-    <ClInclude Include="interface\LostVR.h">
-      <Filter>interface</Filter>
+    <ClInclude Include="renderers\OculusVR.h">
+      <Filter>renderers</Filter>
     </ClInclude>
-    <ClInclude Include="targetver.h" />
-    <ClInclude Include="HookCorePCH.h" />
+    <ClInclude Include="renderers\RouteAPIs.h">
+      <Filter>renderers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="disasm-lib\cpu.c">
@@ -91,9 +91,9 @@
     <ClCompile Include="openvr-lib\OpenVR.cpp">
       <Filter>openvr-lib</Filter>
     </ClCompile>
-    <ClCompile Include="libovr-lib\OculusVR.cpp">
-      <Filter>libovr-lib</Filter>
-    </ClCompile>
+    <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="HookCore.cpp" />
+    <ClCompile Include="HookCorePCH.cpp" />
     <ClCompile Include="libovr-lib\Src\OVR_CAPI_Util.cpp">
       <Filter>libovr-lib\Src</Filter>
     </ClCompile>
@@ -103,18 +103,21 @@
     <ClCompile Include="libovr-lib\Src\OVR_StereoProjection.cpp">
       <Filter>libovr-lib\Src</Filter>
     </ClCompile>
-    <ClCompile Include="interface\IRenderer.cpp">
-      <Filter>interface</Filter>
+    <ClCompile Include="renderers\Direct3D11Renderer.cpp">
+      <Filter>renderers</Filter>
     </ClCompile>
-    <ClCompile Include="interface\IVRDevice.cpp">
-      <Filter>interface</Filter>
+    <ClCompile Include="renderers\IRenderer.cpp">
+      <Filter>renderers</Filter>
     </ClCompile>
-    <ClCompile Include="interface\LostVR.cpp">
-      <Filter>interface</Filter>
+    <ClCompile Include="renderers\OculusVR.cpp">
+      <Filter>renderers</Filter>
     </ClCompile>
-    <ClCompile Include="dllmain.cpp" />
-    <ClCompile Include="HookCore.cpp" />
-    <ClCompile Include="HookCorePCH.cpp" />
+    <ClCompile Include="renderers\RouteAPIs.cpp">
+      <Filter>renderers</Filter>
+    </ClCompile>
+    <ClCompile Include="renderers\Direct3DRouters.cpp">
+      <Filter>renderers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="projector\projector.hlsl">

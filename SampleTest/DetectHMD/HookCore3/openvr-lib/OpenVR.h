@@ -19,7 +19,7 @@
 	}\
 }
 
-namespace LostVR {
+namespace lostvr {
 	class OpenVRRenderer
 	{
 		typedef vr::IVRSystem*(VR_CALLTYPE *pVRInit)(vr::HmdError* peError, vr::EVRApplicationType eApplicationType);
@@ -170,17 +170,17 @@ namespace LostVR {
 			//pCompositor->SetTrackingSpace(vr::TrackingUniverseRawAndUncalibrated);
 			pCompositor->WaitGetPoses(TrackedDevicePose, vr::k_unMaxTrackedDeviceCount, NULL, 0);
 
-			if (!LostVR::TextureProjector::Get()->OnPresent(Buf))
+			if (!lostvr::TextureProjector::Get()->OnPresent(Buf))
 			{
-				LostVR::TextureProjector::Get()->Fini();
+				lostvr::TextureProjector::Get()->Fini();
 				LVMatrix LeftV, LeftP, RightV, RightP;
 				GetEyeViewProject(vr::Hmd_Eye::Eye_Left, 0.1f, 10000.f, vr::EGraphicsAPIConvention::API_DirectX, LeftV, LeftP);
 				GetEyeViewProject(vr::Hmd_Eye::Eye_Right, 0.1f, 10000.f, vr::EGraphicsAPIConvention::API_DirectX, RightV, RightP);
 				uint32 w, h;
 				Sys->GetRecommendedRenderTargetSize(&w, &h);
-				if (!LostVR::TextureProjector::Get()->Init(Buf, w, h, &LeftV, &LeftP, &RightV, &RightP))
+				if (!lostvr::TextureProjector::Get()->Init(Buf, w, h, &LeftV, &LeftP, &RightV, &RightP))
 				{
-					LostVR::TextureProjector::Get()->Fini();
+					lostvr::TextureProjector::Get()->Fini();
 					LVMSG("OpenVR::OnPresent", "failed to init TextureProjector");
 				}
 				else
@@ -188,7 +188,7 @@ namespace LostVR {
 					LVMSG("OpenVR::OnPresent", "inited TextureProjector successfully");
 				}
 
-				LostVR::ReleaseComObjectRef(Buf);
+				lostvr::ReleaseComObjectRef(Buf);
 				return;
 			}
 
@@ -199,13 +199,13 @@ namespace LostVR {
 			LeftBounds.vMax = 1.0f;
 
 			vr::Texture_t Texture;
-			Texture.handle = LostVR::TextureProjector::Get()->GetFinalBuffer(0);
+			Texture.handle = lostvr::TextureProjector::Get()->GetFinalBuffer(0);
 			Texture.eType = vr::API_DirectX;
 			Texture.eColorSpace = vr::ColorSpace_Auto;
 			vr::EVRCompositorError Error = pVRCompositorFn()->Submit(vr::Eye_Left, &Texture, 0, vr::Submit_Default);
 
 			D3D11_TEXTURE2D_DESC LDesc;
-			(LostVR::TextureProjector::Get()->GetFinalBuffer(0))->GetDesc(&LDesc);
+			(lostvr::TextureProjector::Get()->GetFinalBuffer(0))->GetDesc(&LDesc);
 			if (vr::VRCompositorError_None != Error)
 				LVMSG("OpenVR::OnPresent", "Submit left  with result: %d, width(%d), height(%d), format(%d)", Error, LDesc.Width, LDesc.Height, LDesc.Format);
 
@@ -215,11 +215,11 @@ namespace LostVR {
 			RightBounds.vMin = 0.0f;
 			RightBounds.vMax = 1.0f;
 
-			Texture.handle = LostVR::TextureProjector::Get()->GetFinalBuffer(1);
+			Texture.handle = lostvr::TextureProjector::Get()->GetFinalBuffer(1);
 			Error = pVRCompositorFn()->Submit(vr::Eye_Right, &Texture, 0, vr::Submit_Default);
 
 			D3D11_TEXTURE2D_DESC RDesc;
-			(LostVR::TextureProjector::Get()->GetFinalBuffer(1))->GetDesc(&RDesc);
+			(lostvr::TextureProjector::Get()->GetFinalBuffer(1))->GetDesc(&RDesc);
 			if (vr::VRCompositorError_None != Error)
 				LVMSG("OpenVR::OnPresent", "Submit right with result: %d, width(%d), height(%d), format(%d)", Error, RDesc.Width, RDesc.Height, RDesc.Format);
 
@@ -229,14 +229,14 @@ namespace LostVR {
 			vr::IVROverlay* pOverlay = pVROverlayFn();
 			if (pOverlay == nullptr)
 			{
-				LostVR::ReleaseComObjectRef(Buf);
+				lostvr::ReleaseComObjectRef(Buf);
 				LVMSG("OpenVR::OnPresent", "null overlay");
 				return;
 			}
 
 			if (!pOverlay->IsOverlayVisible(OverlayHandle) && !pOverlay->IsOverlayVisible(OverlayThumbnailHandle))
 			{
-				LostVR::ReleaseComObjectRef(Buf);
+				lostvr::ReleaseComObjectRef(Buf);
 				return;
 			}
 
@@ -244,7 +244,7 @@ namespace LostVR {
 			pOverlay->SetOverlayTexture(OverlayHandle, &texture);
 #endif
 
-			LostVR::ReleaseComObjectRef(Buf);
+			lostvr::ReleaseComObjectRef(Buf);
 		}
 
 		void GetEyeViewProject(vr::Hmd_Eye Eye, float fNearZ, float fFarZ, vr::EGraphicsAPIConvention eProjType, LVMatrix& EyeView, LVMatrix& Proj) const;

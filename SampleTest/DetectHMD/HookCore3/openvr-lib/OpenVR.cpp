@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "openvr-lib/OpenVR.h"
 
-using namespace LostVR;
+using namespace lostvr;
 
 void OpenVRRenderer::GetEyeViewProject(vr::Hmd_Eye Eye, float fNearZ, float fFarZ, vr::EGraphicsAPIConvention eProjType, LVMatrix& EyeView, LVMatrix& Proj) const
 {

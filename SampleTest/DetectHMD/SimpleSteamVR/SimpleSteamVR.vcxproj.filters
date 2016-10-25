@@ -1,31 +1,39 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClInclude Include="Win32_DirectXAppUtil.h" />
-    <ClInclude Include="projector\Projector.h">
-      <Filter>projector</Filter>
-    </ClInclude>
     <ClInclude Include="openvr-lib\OpenVR.h">
       <Filter>openvr</Filter>
     </ClInclude>
-    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="MainEntry.h" />
+    <ClInclude Include="renderer\DirectXUtil.h">
+      <Filter>renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="renderer\IRenderer.h">
+      <Filter>renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="HookCorePCH.h" />
+    <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="openvr">
       <UniqueIdentifier>{41cf9704-0051-47cd-ad89-870e2ca1f1aa}</UniqueIdentifier>
     </Filter>
-    <Filter Include="projector">
-      <UniqueIdentifier>{e8e9f8ab-79c5-4980-b4c1-c9ab6e8a0ae3}</UniqueIdentifier>
+    <Filter Include="renderer">
+      <UniqueIdentifier>{273cfd8c-5863-41a3-9906-51349b8aed5a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="projector\Projector.cpp">
-      <Filter>projector</Filter>
-    </ClCompile>
     <ClCompile Include="openvr-lib\OpenVR.cpp">
       <Filter>openvr</Filter>
     </ClCompile>
     <ClCompile Include="SimpleMain.cpp" />
-    <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="MainEntry.cpp" />
+    <ClCompile Include="renderer\DirectXUtil.cpp">
+      <Filter>renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\IRenderer.cpp">
+      <Filter>renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="HookCorePCH.cpp" />
   </ItemGroup>
 </Project>

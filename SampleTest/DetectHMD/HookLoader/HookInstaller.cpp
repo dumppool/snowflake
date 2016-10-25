@@ -371,7 +371,7 @@ uint32_t InjectIntoProcess(uint32_t pid, const char *logfile, bool waitForExit)
 
 	CloseHandle(hProcess);
 
-	return controlident;
+	return Result;
 }
 
 void InjectFinished(DWORD pid)

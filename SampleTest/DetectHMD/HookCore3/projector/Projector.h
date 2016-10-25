@@ -1,6 +1,6 @@
 #pragma once
 
-namespace LostVR {
+namespace lostvr {
 	typedef int EnumEyeID;
 
 	template<typename ComObjectType>

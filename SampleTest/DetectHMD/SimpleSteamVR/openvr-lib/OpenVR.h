@@ -1,9 +1,14 @@
 #pragma once
 
 #include "openvr-lib/headers/openvr.h"
-#include "projector/Projector.h"
-//#pragma comment(lib, "openvr-lib/lib/win64/openvr_api.lib")
+#include "renderer/IRenderer.h"
+
+#ifdef _WIN64
 #define OPENVR_RUNTIME "C:\\Users\\Administrator\\Documents\\GitHub\\snowflake\\SampleTest\\DetectHMD\\HookCore3\\openvr-lib\\bin\\win64\\openvr_api.dll"
+#else
+#define OPENVR_RUNTIME "C:\\Users\\Administrator\\Documents\\GitHub\\snowflake\\SampleTest\\DetectHMD\\HookCore3\\openvr-lib\\bin\\win32\\openvr_api.dll"
+#endif
+
 
 #ifndef OPENVR_USEOVERLAY
 #define OPENVR_USEOVERLAY 0
@@ -19,8 +24,8 @@
 	}\
 }
 
-namespace LostVR {
-	class OpenVRRenderer
+namespace lostvr {
+	class OpenVRRenderer : public IVRDevice
 	{
 		typedef vr::IVRSystem*(VR_CALLTYPE *pVRInit)(vr::HmdError* peError, vr::EVRApplicationType eApplicationType);
 		typedef void(VR_CALLTYPE *pVRShutdown)();
@@ -47,6 +52,8 @@ namespace LostVR {
 		vr::VROverlayHandle_t OverlayThumbnailHandle;
 		vr::TrackedDevicePose_t TrackedDevicePose[vr::k_unMaxTrackedDeviceCount];
 
+		ITextureProjector* Projector;
+
 	public:
 
 		static OpenVRRenderer* Get()
@@ -72,6 +79,7 @@ namespace LostVR {
 		, OverlayThumbnailHandle(vr::k_ulOverlayHandleInvalid)
 		, RecommendWidth(1280)
 		, RecommendHeight(720)
+		, Projector(nullptr)
 		{}
 		
 		~OpenVRRenderer()
@@ -83,8 +91,12 @@ namespace LostVR {
 			}
 		}
 
-		bool Init();
-		void OnPresent(IDXGISwapChain* SwapChain);
+		virtual bool Startup() override;
+		virtual void Shutdown() override;
+		virtual bool OnPresent(void* SwapChain) override;
+		virtual bool IsConnected() override;
+		virtual bool GetDeviceRecommendSize(uint32& Width, uint32& Height) override;
+
 		void SubmitTexture(unsigned int Eye, ID3D11Texture2D* Buf);
 		void UpdatePose();
 		void GetEyeViewProject(vr::Hmd_Eye Eye, float fNearZ, float fFarZ, vr::EGraphicsAPIConvention eProjType, LVMatrix& EyeView, LVMatrix& Proj) const;

@@ -8,6 +8,27 @@
 #include <assert.h>
 #include <vector>
 #include <string>
+#include <iostream>
+
+#ifndef SAFE_RELEASE
+#define SAFE_RELEASE(p) \
+  do                    \
+  {                     \
+    if(p)               \
+    {                   \
+      (p)->Release();   \
+      (p) = NULL;       \
+    }                   \
+  } while((void)0, 0)
+#define SAFE_RELEASE_NOCLEAR(p) \
+  do                            \
+  {                             \
+    if(p)                       \
+    {                           \
+      (p)->Release();           \
+    }                           \
+  } while((void)0, 0)
+#endif
 
 #define LVMSG(Cap, ...) {\
 log_cap_cnt(Cap, __VA_ARGS__);}
@@ -72,6 +93,9 @@ inline static void log_cap_cnt(const char* cap, const char* fmt, ...)
 		assert(0);\
 	}\
 }
+
+#include "d3d9.h"
+#pragma comment(lib, "d3d9.lib")
 
 #include "d3d11.h"
 #pragma comment(lib, "d3d11.lib")

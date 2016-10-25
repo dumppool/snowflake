@@ -1,9 +1,9 @@
-#include "stdafx.h"
+#include "HookCorePCH.h"
 #include "openvr-lib/OpenVR.h"
 
-using namespace LostVR;
+using namespace lostvr;
 
-bool OpenVRRenderer::Init()
+bool OpenVRRenderer::Startup()
 {
 	HMODULE hModule = ::LoadLibrary(TEXT(OPENVR_RUNTIME));
 	if (!hModule)
@@ -63,25 +63,40 @@ bool OpenVRRenderer::Init()
 	Sys->GetRecommendedRenderTargetSize(&RecommendWidth, &RecommendHeight);
 	LVMSG("OpenVR::Init", "recommended width: %d, height: %d.", RecommendWidth, RecommendHeight);
 	LVMSG("OpenVR::Init", "Succeeded to init VR runtime");
+
+	LVASSERT(Projector == nullptr, "OpenVR::Init", "projector(%x) should be null before initialized", Projector);
+	Projector = new D3D11Projector;
+	Projector->SetR
+
 	return true;
 }
 
-void OpenVRRenderer::OnPresent(IDXGISwapChain* SwapChain)
+bool OpenVRRenderer::OnPresent(void* InBuf)
 {
-	if (Sys == nullptr)
+	IDXGISwapChain* SwapChain = (IDXGISwapChain*)InBuf;
+
+	if (SwapChain == nullptr)
 	{
-		if (!Init())
-		{
-			LVMSG("OpenVR::OnPresent", "init failed.");
-			return;
-		}
+		LVMSG("OpenVR::OnPresent", "null swap chain");
+		return false;
+	}
+
+	if (!IsConnected())
+	{
+		return false;
+	}
+
+	if (Projector == nullptr)
+	{
+		LVMSG("OpenVR::OnPresent", "null projector");
+		return false;
 	}
 
 	ID3D11Texture2D* Buf = nullptr;
 	if (FAILED(SwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D*), (void**)&Buf)))
 	{
 		LVMSG("OpenVR::OnPresent", "failed to get buffer, SwapChain(%x).", SwapChain);
-		return;
+		return false;
 	}
 
 #if !OPENVR_USEOVERLAY
@@ -91,27 +106,21 @@ void OpenVRRenderer::OnPresent(IDXGISwapChain* SwapChain)
 	if (pCompositor == nullptr)
 	{
 		LVMSG("OpenVR::OnPresent", "null compositor:");
-		return;
+		return false;
 	}
 
 	//pCompositor->SetTrackingSpace(vr::TrackingUniverseRawAndUncalibrated);
 	pCompositor->WaitGetPoses(TrackedDevicePose, vr::k_unMaxTrackedDeviceCount, NULL, 0);
 
-	if (LostVR::TextureProjector::Get()->SetSourceRef(Buf))
+	if (Projector->SetSourceRef(Buf))
 	{
-		LostVR::TextureProjector::Get()->OnPresent(nullptr);
+		Projector->OnPresent();
 	}
 
-	ReleaseComObjectRef(Buf);
-
-	vr::VRTextureBounds_t LeftBounds;
-	LeftBounds.uMin = 0.0f;
-	LeftBounds.uMax = 1.f;
-	LeftBounds.vMin = 0.0f;
-	LeftBounds.vMax = 1.0f;
+	Buf->Release();
 
 	vr::Texture_t Texture;
-	Texture.handle = LostVR::TextureProjector::Get()->GetFinalBuffer(0);
+	Texture.handle = Projector->GetFinalBuffer(0);
 	Texture.eType = vr::API_DirectX;
 	Texture.eColorSpace = vr::ColorSpace_Auto;
 	vr::EVRCompositorError Error = pCompositor->Submit(vr::Eye_Left, &Texture, 0, vr::Submit_Default);
@@ -119,40 +128,33 @@ void OpenVRRenderer::OnPresent(IDXGISwapChain* SwapChain)
 	if (vr::VRCompositorError_None != Error)
 		LVMSG("OpenVR::OnPresent", "Submit left  with result: %d", Error);
 
-	vr::VRTextureBounds_t RightBounds;
-	RightBounds.uMin = 0.f;
-	RightBounds.uMax = 1.0f;
-	RightBounds.vMin = 0.0f;
-	RightBounds.vMax = 1.0f;
-
-	Texture.handle = LostVR::TextureProjector::Get()->GetFinalBuffer(1);
+	Texture.handle = Projector->GetFinalBuffer(1);
 	Error = pCompositor->Submit(vr::Eye_Right, &Texture, 0, vr::Submit_Default);
 
 	if (vr::VRCompositorError_None != Error)
 		LVMSG("OpenVR::OnPresent", "Submit right with result: %d", Error);
 
-	//LVMSG("OpenVR::OnPresent", "tracking space: %d.", pCompositor->GetTrackingSpace());
-
 #else /*if OPENVR_USEOVERLAY*/
 	vr::IVROverlay* pOverlay = pVROverlayFn();
 	if (pOverlay == nullptr)
 	{
-		LostVR::ReleaseComObjectRef(Buf);
+		Buf->Release();
 		LVMSG("OpenVR::OnPresent", "null overlay");
-		return;
+		return false;
 	}
 
 	if (!pOverlay->IsOverlayVisible(OverlayHandle) && !pOverlay->IsOverlayVisible(OverlayThumbnailHandle))
 	{
-		LostVR::ReleaseComObjectRef(Buf);
-		return;
+		Buf->Release();
+		return false;
 	}
 
 	vr::Texture_t texture = { (void*)Buf, vr::API_DirectX, vr::ColorSpace_Auto };
 	pOverlay->SetOverlayTexture(OverlayHandle, &texture);
+	Buf->Release();
 #endif
 
-	LostVR::ReleaseComObjectRef(Buf);
+	return true;
 }
 
 void OpenVRRenderer::SubmitTexture(unsigned int Eye, ID3D11Texture2D* Buf)
@@ -240,4 +242,26 @@ void OpenVRRenderer::UpdatePose()
 	}
 
 	pCompositor->WaitGetPoses(TrackedDevicePose, vr::k_unMaxTrackedDeviceCount, NULL, 0);
+}
+
+void OpenVRRenderer::Shutdown()
+{
+
+}
+
+bool OpenVRRenderer::IsConnected()
+{
+	return Sys != nullptr;
+}
+
+bool OpenVRRenderer::GetDeviceRecommendSize(uint32& Width, uint32& Height)
+{
+	if (!IsConnected())
+	{
+		return false;
+	}
+
+	Width = RecommendWidth;
+	Height = RecommendHeight;
+	return true;
 }

@@ -4,7 +4,7 @@
 static const TCHAR* SVertexShaderPath = TEXT("C:\\Users\\Administrator\\Documents\\GitHub\\snowflake\\SampleTest\\DetectHMD\\HookCore3\\projector\\projector.hlsl");
 static const TCHAR* SPixelShaderPath = SVertexShaderPath;
 
-using namespace LostVR;
+using namespace lostvr;
 
 #define ENABLETEST_TRANSFORM
 static void TestMatrixVectorMultiply(const LVMatrix& Mat, const LVVec& Vec)
