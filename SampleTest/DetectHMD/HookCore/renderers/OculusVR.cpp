@@ -156,12 +156,16 @@ bool OculusVR::OnPresent_Direct3D11(IDXGISwapChain* swapChain)
 
 	Layer[0]->GetEyePoses();
 	ID3D11Texture2D* dst = Layer[0]->pEyeRenderTexture[0]->GetBuffer();
-	Renderer->OutputBuffer_Texture2D(dst);
+	if (!Renderer->OutputBuffer_Texture2D(dst))
+	{
+		return false;
+	}
+
 	Layer[0]->Commit(0);
 	ovrResult ret = DistortAndPresent(1);
 	if (!OVR_SUCCESS(ret))
 	{
-		LVMSG(head, "failed(%d), ...", ret);
+		LVMSG(head, "submit failed(%d), ...", ret);
 		return false;
 	}
 
@@ -195,19 +199,20 @@ bool OculusVR::OnPresent_Direct3D9(IDirect3DDevice9* device)
 
 	Layer[0]->GetEyePoses();
 	ID3D11Texture2D* dst = Layer[0]->pEyeRenderTexture[0]->GetBuffer();
-	Renderer->OutputBuffer_Texture2D(dst);
+	if (!Renderer->OutputBuffer_Texture2D_Direct9(dst))
+	{
+		return false;
+	}
+
 	Layer[0]->Commit(0);
 	ovrResult ret = DistortAndPresent(1);
 	if (!OVR_SUCCESS(ret))
 	{
-		LVMSG(head, "failed(%d), ...", ret);
+		LVMSG(head, "submit failed(%d), ...", ret);
 		return false;
 	}
 
 	return true;
-
-
-	return false;
 }
 
 const std::string OculusVR::GetDeviceString() const

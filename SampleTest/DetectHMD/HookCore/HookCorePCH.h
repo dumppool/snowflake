@@ -10,6 +10,12 @@
 #include <string>
 #include <iostream>
 
+//#define INCLUDE_DIRECTXTK
+#ifdef INCLUDE_DIRECTXTK
+#include "../DirectXTK/Inc/ScreenGrab.h"
+#pragma comment(lib, "../DirectXTK/Bin/Desktop_2015/Win32/Debug/DirectXTK.lib")
+#endif
+
 #ifndef SAFE_RELEASE
 #define SAFE_RELEASE(p) \
   do                    \
@@ -18,6 +24,15 @@
     {                   \
       (p)->Release();   \
       (p) = NULL;       \
+    }                   \
+  } while((void)0, 0)
+#define SAFE_DELETE(p)  \
+  do                    \
+  {                     \
+    if(p)               \
+    {                   \
+      delete (p);		\
+      (p) = nullptr;    \
     }                   \
   } while((void)0, 0)
 #define SAFE_RELEASE_NOCLEAR(p) \
@@ -335,6 +350,59 @@ public:
 		wsprintf(ShaderFilePath, L"%s\\res\\projector.hlsl", path);
 		LVMSG("GlobalShadredData::GetShaderFilePath", "%ls", ShaderFilePath);
 		return ShaderFilePath;
+	}
+};
+
+class HighFrequencyCounter
+{
+	LARGE_INTEGER TicksPerSec;
+	LARGE_INTEGER Timestamp;
+
+public:
+	HighFrequencyCounter()
+	{
+		QueryPerformanceFrequency(&TicksPerSec);
+	}
+
+	void Start()
+	{
+		QueryPerformanceCounter(&Timestamp);
+	}
+
+	//************************************
+	// Method:    Stop
+	// FullName:  HighFrequencyCounter::Stop
+	// Access:    public 
+	// Returns:   double in ms
+	// Qualifier:
+	//************************************
+	double Stop()
+	{
+		LARGE_INTEGER end;
+		QueryPerformanceCounter(&end);
+		return (double)((end.QuadPart - Timestamp.QuadPart) * 1000.0 / TicksPerSec.QuadPart);
+	}
+};
+
+class ScopedHighFrequencyCounter
+{
+	const CHAR* MsgHead;
+	HighFrequencyCounter Counter;
+
+public:
+	ScopedHighFrequencyCounter(const CHAR* head) : MsgHead(head), Counter()
+	{
+		Counter.Start();
+	}
+
+	~ScopedHighFrequencyCounter()
+	{
+		double duration = Counter.Stop();
+		{
+#ifndef NDEBUG
+			LVMSG("ScopedHighFrequencyCounter", "%s\t\t%fms", MsgHead?MsgHead:"<null>", duration);
+#endif
+		}
 	}
 };
 

@@ -7,7 +7,7 @@
 #include "OVR_ErrorCode.h"
 
 #include "Direct3D11Renderer.h"
-#include "IRenderer.h"
+#include "renderers/IRenderer.h"
 
 #define NUMEYES 1
 
@@ -82,6 +82,14 @@ namespace lostvr
 			else if (desc.BufferDesc.Format == DXGI_FORMAT_R8G8B8A8_UNORM_SRGB)
 			{
 				Format = OVR_FORMAT_R8G8B8A8_UNORM_SRGB;
+			}
+			else if (desc.BufferDesc.Format == DXGI_FORMAT_B8G8R8A8_UNORM)
+			{
+				Format = OVR_FORMAT_B8G8R8A8_UNORM;
+			}
+			else if (desc.BufferDesc.Format == DXGI_FORMAT_B8G8R8A8_UNORM_SRGB)
+			{
+				Format = OVR_FORMAT_B8G8R8A8_UNORM_SRGB;
 			}
 			else
 			{

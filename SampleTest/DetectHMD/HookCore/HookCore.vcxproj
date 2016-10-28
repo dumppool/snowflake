@@ -176,11 +176,11 @@
     <ClInclude Include="HookCorePCH.h" />
     <ClInclude Include="libovr-lib\Src\OVR_CAPI_Prototypes.h" />
     <ClInclude Include="mhook-lib\mhook.h" />
-    <ClInclude Include="openvr-lib\OpenVR.h" />
-    <ClInclude Include="projector\Projector.h" />
     <ClInclude Include="renderers\Direct3D11Renderer.h" />
     <ClInclude Include="renderers\IRenderer.h" />
     <ClInclude Include="renderers\OculusVR.h" />
+    <ClInclude Include="renderers\OpenVR.h" />
+    <ClInclude Include="renderers\Projector.h" />
     <ClInclude Include="renderers\RouteAPIs.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
@@ -209,21 +209,13 @@
     <ClCompile Include="libovr-lib\Src\OVR_CAPI_Util.cpp" />
     <ClCompile Include="libovr-lib\Src\OVR_StereoProjection.cpp" />
     <ClCompile Include="mhook-lib\mhook.cpp" />
-    <ClCompile Include="openvr-lib\OpenVR.cpp" />
-    <ClCompile Include="projector\Projector.cpp" />
     <ClCompile Include="renderers\Direct3D11Renderer.cpp" />
     <ClCompile Include="renderers\Direct3DRouters.cpp" />
     <ClCompile Include="renderers\IRenderer.cpp" />
     <ClCompile Include="renderers\OculusVR.cpp" />
+    <ClCompile Include="renderers\OpenVR.cpp" />
+    <ClCompile Include="renderers\Projector.cpp" />
     <ClCompile Include="renderers\RouteAPIs.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="projector\projector.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-    </FxCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

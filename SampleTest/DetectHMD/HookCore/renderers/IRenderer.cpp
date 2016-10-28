@@ -66,6 +66,8 @@ IVRDevice* LostVR::GetDevice(const std::string& InKey) const
 
 void LostVR::OnPresent_Direct3D11(IDXGISwapChain* swapChain)
 {
+	ScopedHighFrequencyCounter Count("LostVR::OnPresent_Direct3D11");
+
 	auto dev = GetDevice();
 	if (dev == nullptr)
 	{
@@ -78,6 +80,8 @@ void LostVR::OnPresent_Direct3D11(IDXGISwapChain* swapChain)
 
 void LostVR::OnPresent_Direct3D9(IDirect3DDevice9* device)
 {
+	ScopedHighFrequencyCounter Count("LostVR::OnPresent_Direct3D9");
+
 	auto dev = GetDevice();
 	if (dev == nullptr)
 	{

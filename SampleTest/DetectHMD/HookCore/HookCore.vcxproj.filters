@@ -10,12 +10,6 @@
     <Filter Include="libovr-lib">
       <UniqueIdentifier>{fc5bacb1-a831-4e71-8f68-fee40a09ec42}</UniqueIdentifier>
     </Filter>
-    <Filter Include="openvr-lib">
-      <UniqueIdentifier>{45398f4d-5226-446e-99aa-f9f36da3843c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="projector">
-      <UniqueIdentifier>{00454f60-7401-4548-a843-ea8b1821cc71}</UniqueIdentifier>
-    </Filter>
     <Filter Include="libovr-lib\Src">
       <UniqueIdentifier>{97685afb-5669-4e45-a4e1-34234397e752}</UniqueIdentifier>
     </Filter>
@@ -45,12 +39,6 @@
     <ClInclude Include="mhook-lib\mhook.h">
       <Filter>mhook-lib</Filter>
     </ClInclude>
-    <ClInclude Include="projector\Projector.h">
-      <Filter>projector</Filter>
-    </ClInclude>
-    <ClInclude Include="openvr-lib\OpenVR.h">
-      <Filter>openvr-lib</Filter>
-    </ClInclude>
     <ClInclude Include="targetver.h" />
     <ClInclude Include="HookCorePCH.h" />
     <ClInclude Include="libovr-lib\Src\OVR_CAPI_Prototypes.h">
@@ -66,6 +54,12 @@
       <Filter>renderers</Filter>
     </ClInclude>
     <ClInclude Include="renderers\RouteAPIs.h">
+      <Filter>renderers</Filter>
+    </ClInclude>
+    <ClInclude Include="renderers\OpenVR.h">
+      <Filter>renderers</Filter>
+    </ClInclude>
+    <ClInclude Include="renderers\Projector.h">
       <Filter>renderers</Filter>
     </ClInclude>
   </ItemGroup>
@@ -84,12 +78,6 @@
     </ClCompile>
     <ClCompile Include="mhook-lib\mhook.cpp">
       <Filter>mhook-lib</Filter>
-    </ClCompile>
-    <ClCompile Include="projector\Projector.cpp">
-      <Filter>projector</Filter>
-    </ClCompile>
-    <ClCompile Include="openvr-lib\OpenVR.cpp">
-      <Filter>openvr-lib</Filter>
     </ClCompile>
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="HookCore.cpp" />
@@ -118,10 +106,11 @@
     <ClCompile Include="renderers\Direct3DRouters.cpp">
       <Filter>renderers</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="projector\projector.hlsl">
-      <Filter>projector</Filter>
-    </FxCompile>
+    <ClCompile Include="renderers\OpenVR.cpp">
+      <Filter>renderers</Filter>
+    </ClCompile>
+    <ClCompile Include="renderers\Projector.cpp">
+      <Filter>renderers</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
