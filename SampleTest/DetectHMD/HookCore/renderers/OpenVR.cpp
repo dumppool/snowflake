@@ -1,6 +1,13 @@
 #include "HookCorePCH.h"
 #include "OpenVR.h"
 
+#define GETPROPERTYSTRING_OPENVR(propVar, indent, propEnum)\
+char _##propVar[128] = {0};\
+vr::TrackedPropertyError propVar##err;\
+Sys->GetStringTrackedDeviceProperty(vr::k_unTrackedDeviceIndex_Hmd, propEnum, _##propVar, sizeof(_##propVar), &propVar##err);\
+char propVar[256] = {0};\
+snprintf(&propVar[0], sizeof(propVar), "%s:%s%s\n", #propVar, indent, _##propVar);
+
 using namespace lostvr;
 
 void OpenVR::GetEyeViewProject(vr::Hmd_Eye Eye, float fNearZ, float fFarZ, vr::EGraphicsAPIConvention eProjType, LVMatrix& EyeView, LVMatrix& Proj) const
@@ -278,7 +285,28 @@ bool OpenVR::OnPresent_Direct3D9(IDirect3DDevice9 * device)
 
 const std::string OpenVR::GetDeviceString() const
 {
-	return "unknown";
+	CHAR strDesc[1024];
+	if (Sys == nullptr)
+	{
+		return "[unknown]";
+	}
+
+	GETPROPERTYSTRING_OPENVR(TrackingSystemName, "\t\t", vr::Prop_TrackingSystemName_String);
+	GETPROPERTYSTRING_OPENVR(ModelNumber, "\t\t\t", vr::Prop_ModelNumber_String);
+	GETPROPERTYSTRING_OPENVR(SerialNumber, "\t\t\t", vr::Prop_SerialNumber_String);
+	GETPROPERTYSTRING_OPENVR(RenderModelNumber, "\t\t", vr::Prop_RenderModelName_String);
+	GETPROPERTYSTRING_OPENVR(ManufacturerName, "\t\t", vr::Prop_ManufacturerName_String);
+	GETPROPERTYSTRING_OPENVR(TrackingFirmwareVersion, "\t", vr::Prop_TrackingFirmwareVersion_String);
+	GETPROPERTYSTRING_OPENVR(HardwareRevision, "\t\t", vr::Prop_HardwareRevision_String);
+	GETPROPERTYSTRING_OPENVR(AllWirelessDongleDescriptions, "\t", vr::Prop_AllWirelessDongleDescriptions_String);
+	GETPROPERTYSTRING_OPENVR(ConnectedWirelessDongle, "\t", vr::Prop_ConnectedWirelessDongle_String);
+	GETPROPERTYSTRING_OPENVR(FirmwareManualUpdateURL, "\t", vr::Prop_Firmware_ManualUpdateURL_String);
+	GETPROPERTYSTRING_OPENVR(AttachedDeviceId, "\t\t", vr::Prop_AttachedDeviceId_String);
+
+	snprintf(strDesc, sizeof(strDesc), "\n%s%s%s%s%s%s%s%s%s%s%s", TrackingSystemName, ModelNumber, SerialNumber, RenderModelNumber, ManufacturerName,
+		TrackingFirmwareVersion, HardwareRevision, AllWirelessDongleDescriptions, ConnectedWirelessDongle, FirmwareManualUpdateURL, AttachedDeviceId);
+
+	return std::string(strDesc);
 }
 
 static OpenVR* SInst = new OpenVR;

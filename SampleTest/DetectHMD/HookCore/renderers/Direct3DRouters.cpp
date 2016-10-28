@@ -91,7 +91,6 @@ static HRESULT STDMETHODCALLTYPE Direct3D9Present(IDirect3DDevice9* This, CONST 
 	PFN_DEVICE_PRESENT func = (PFN_DEVICE_PRESENT)SRouter9->GetOriginalEntry();
 	if (func != nullptr)
 	{
-		LVMSG(head, "hook get called...");
 		LostVR::Get()->OnPresent_Direct3D9(This);
 		hr = func(This, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
 	}

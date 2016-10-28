@@ -28,6 +28,16 @@ namespace lostvr {
 		ID3D11Texture2D* GetFinalBuffer(EnumEyeID Eye);
 		void SetEyePose(EnumEyeID Eye, const LVMatrix& EyeView, const LVMatrix& Proj);
 
+		void* operator new(size_t i)
+		{
+			return _mm_malloc(i, 16);
+		}
+
+		void operator delete(void* p)
+		{
+			_mm_free(p);
+		}
+
 	protected:
 		void Update();
 
