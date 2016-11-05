@@ -1,5 +1,6 @@
 #include "HookCorePCH.h"
 #include "OpenVR.h"
+#include "ConcreteProjectors.h"
 
 #define GETPROPERTYSTRING_OPENVR(propVar, indent, propEnum)\
 char _##propVar[128] = {0};\
@@ -69,7 +70,8 @@ void OpenVR::GetEyeViewProject(vr::Hmd_Eye Eye, float fNearZ, float fFarZ, vr::E
 	}
 }
 
-OpenVR::OpenVR() : Sys(nullptr)
+OpenVR::OpenVR(const std::string& key) : IVRDevice(key)
+, Sys(nullptr)
 , pVRInitFn(nullptr)
 , pVRShutdownFn(nullptr)
 , pVRIsHmdPresentFn(nullptr)
@@ -83,7 +85,6 @@ OpenVR::OpenVR() : Sys(nullptr)
 , OverlayThumbnailHandle(vr::k_ulOverlayHandleInvalid)
 , Projector(nullptr)
 {
-
 }
 
 OpenVR::~OpenVR()
@@ -188,7 +189,7 @@ bool OpenVR::OnPresent_Direct3D11(IDXGISwapChain* swapChain)
 
 	if (Projector == nullptr)
 	{
-		Projector = new TextureProjector;
+		Projector = new TextureProjector0;
 	}
 
 #if !OPENVR_USEOVERLAY
@@ -208,51 +209,58 @@ bool OpenVR::OnPresent_Direct3D11(IDXGISwapChain* swapChain)
 		Sys->GetRecommendedRenderTargetSize(&w, &h);
 		if (!Projector->InitializeProjector(swapChain, w, h, &leftV, &leftP, &rightV, &rightP))
 		{
-			LVMSG(head, "initialize projectpr failed");
+			LVMSG(head, "initialize projector failed");
 			return false;
 		}
 	}
 
 	pCompositor->WaitGetPoses(TrackedDevicePose, vr::k_unMaxTrackedDeviceCount, NULL, 0);
 
-	if (!Projector->UpdateTexture())
+	if (!Projector->UpdateTexture(swapChain))
 	{
 		LVMSG(head, "projector update failed");
 		return false;
 	}
 
-	vr::VRTextureBounds_t LeftBounds;
-	LeftBounds.uMin = 0.0f;
-	LeftBounds.uMax = 1.f;
-	LeftBounds.vMin = 0.0f;
-	LeftBounds.vMax = 1.0f;
-
 	vr::Texture_t Texture;
 	Texture.handle = Projector->GetFinalBuffer(0);
 	Texture.eType = vr::API_DirectX;
 	Texture.eColorSpace = vr::ColorSpace_Auto;
-	vr::EVRCompositorError Error = pVRCompositorFn()->Submit(vr::Eye_Left, &Texture, 0, vr::Submit_Default);
+	vr::EVRCompositorError lError = pVRCompositorFn()->Submit(vr::Eye_Left, &Texture, 0, vr::Submit_Default);
 
 	D3D11_TEXTURE2D_DESC LDesc;
 	(Projector->GetFinalBuffer(0))->GetDesc(&LDesc);
-	if (vr::VRCompositorError_None != Error)
-		LVMSG("OpenVR::OnPresent", "Submit left  with result: %d, texture: 0x%x, width(%d), height(%d), format(%d)", Error,
+	//if (vr::VRCompositorError_None != lError)
+	{
+		LVMSG("OpenVR::OnPresent", "Submit left  with result: %d, texture: 0x%x, width(%d), height(%d), format(%d)", lError,
 			Texture.handle, LDesc.Width, LDesc.Height, LDesc.Format);
-
-	vr::VRTextureBounds_t RightBounds;
-	RightBounds.uMin = 0.f;
-	RightBounds.uMax = 1.0f;
-	RightBounds.vMin = 0.0f;
-	RightBounds.vMax = 1.0f;
+	}
 
 	Texture.handle = Projector->GetFinalBuffer(1);
-	Error = pVRCompositorFn()->Submit(vr::Eye_Right, &Texture, 0, vr::Submit_Default);
+	vr::EVRCompositorError rError = pVRCompositorFn()->Submit(vr::Eye_Right, &Texture, 0, vr::Submit_Default);
 
 	D3D11_TEXTURE2D_DESC RDesc;
 	(Projector->GetFinalBuffer(1))->GetDesc(&RDesc);
-	if (vr::VRCompositorError_None != Error)
-		LVMSG("OpenVR::OnPresent", "Submit right with result: %d, texture: 0x%x, width(%d), height(%d), format(%d)", Error,
-			Texture.handle, LDesc.Width, LDesc.Height, LDesc.Format);
+	//if (vr::VRCompositorError_None != rError)
+		LVMSG("OpenVR::OnPresent", "Submit right with result: %d, texture: 0x%x, width(%d), height(%d), format(%d)", rError,
+			Texture.handle, RDesc.Width, RDesc.Height, RDesc.Format);
+
+	if ((int)lError == 106 || (int)rError == 106)
+	{
+		SAFE_DELETE(Projector);
+		Projector = new TextureProjector1;
+		LVMatrix leftV, leftP, rightV, rightP;
+		GetEyeViewProject(vr::Hmd_Eye::Eye_Left, 0.1f, 10000.f, vr::EGraphicsAPIConvention::API_DirectX, leftV, leftP);
+		GetEyeViewProject(vr::Hmd_Eye::Eye_Right, 0.1f, 10000.f, vr::EGraphicsAPIConvention::API_DirectX, rightV, rightP);
+		uint32 w, h;
+		Sys->GetRecommendedRenderTargetSize(&w, &h);
+		if (!Projector->InitializeProjector(swapChain, w, h, &leftV, &leftP, &rightV, &rightP))
+		{
+			LVMSG(head, "after submit failed, initialize projector failed");
+		}
+
+		return false;
+	}
 
 	//LVMSG("OpenVR::OnPresent", "tracking space: %d.", pCompositor->GetTrackingSpace());
 
@@ -309,4 +317,4 @@ const std::string OpenVR::GetDeviceString() const
 	return std::string(strDesc);
 }
 
-static OpenVR* SInst = new OpenVR;
+static OpenVR* SInst = new OpenVR("openvr");

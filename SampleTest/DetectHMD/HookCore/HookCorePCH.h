@@ -7,6 +7,7 @@
 //#pragma warning(disable : 4996)
 #include <assert.h>
 #include <vector>
+#include <map>
 #include <string>
 #include <iostream>
 
@@ -109,6 +110,51 @@ inline static void log_cap_cnt(const char* cap, const char* fmt, ...)
 	}\
 }
 
+inline wstring UTF8ToWide(const string &utf8)
+{
+	if (utf8.length() == 0) {
+		return wstring();
+	}
+
+	// compute the length of the buffer we'll need
+	int charcount = MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), -1, NULL, 0);
+
+	if (charcount == 0) {
+		return wstring();
+	}
+
+	// convert
+	wchar_t* buf = new wchar_t[charcount];
+	MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), -1, buf, charcount);
+	wstring result(buf);
+	delete[] buf;
+	return result;
+}
+
+// static
+inline string WideToUTF8(const wstring &wide) {
+	if (wide.length() == 0) {
+		return string();
+	}
+
+	// compute the length of the buffer we'll need
+	int charcount = WideCharToMultiByte(CP_UTF8, 0, wide.c_str(), -1,
+		NULL, 0, NULL, NULL);
+	if (charcount == 0) {
+		return string();
+	}
+
+	// convert
+	char *buf = new char[charcount];
+	WideCharToMultiByte(CP_UTF8, 0, wide.c_str(), -1, buf, charcount,
+		NULL, NULL);
+
+	string result(buf);
+	delete[] buf;
+	return result;
+}
+
+
 #include "d3d9.h"
 #pragma comment(lib, "d3d9.lib")
 
@@ -183,6 +229,10 @@ protected:
 	WCHAR*			OpenVRDllPath;
 
 	WCHAR*			ShaderFilePath;
+
+public:
+	// ProcessInstance 在main初始化，不能在global使用
+	HMODULE			ProcessInstance;
 
 public:
 
@@ -399,12 +449,29 @@ public:
 	{
 		double duration = Counter.Stop();
 		{
-#ifndef NDEBUG
+#if 1
 			LVMSG("ScopedHighFrequencyCounter", "%s\t\t%fms", MsgHead?MsgHead:"<null>", duration);
 #endif
 		}
 	}
 };
+
+static bool GetWndFromProcessID(DWORD pid, HWND hwnd[], UINT& nwnd)
+{
+	HWND temp = NULL;
+	nwnd = 0;
+	while ((temp = FindWindowEx(NULL, temp, NULL, NULL)) && sizeof(hwnd) > nwnd)
+	{
+		DWORD p;
+		GetWindowThreadProcessId(temp, &p);
+		if (pid == p)
+		{
+			hwnd[nwnd++] = temp;
+		}
+	}
+
+	return true;
+}
 
 static GlobalSharedData SGlobalSharedDataInst;
 

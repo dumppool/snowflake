@@ -1,5 +1,10 @@
 #pragma once
 
+//struct IDXGIDevice;
+//struct IDXGIDevice1;
+//struct IDXGIDevice2;
+//struct IDXGIDevice3;
+
 namespace lostvr
 {
 	enum class EDirect3D : uint8
@@ -13,44 +18,15 @@ namespace lostvr
 		Num,
 	};
 
-	static bool GetNextGIVersion(EDirect3D ver, EDirect3D& nextVer)
-	{
-		nextVer = EDirect3D(((int)ver + 1) % (int)EDirect3D::Num);
-		switch (ver)
-		{
-		case EDirect3D::Undefined:
-		case EDirect3D::DeviceRef:
-		case EDirect3D::DXGI2:
-		case EDirect3D::DXGI3:
-			return false;
-		}
+	extern bool GetNextGIVersion(EDirect3D ver, EDirect3D& nextVer);
 
-		return true;
-	}
+	extern const CHAR* GetEDirect3DString(EDirect3D Ver);
 
-	static const CHAR* GetEDirect3DString(EDirect3D Ver)
-	{
-		if (Ver == EDirect3D::DeviceRef)
-		{
-			return "Device reference";
-		}
-		else if (Ver == EDirect3D::DXGI0)
-		{
-			return "DXGI 1.0";
-		}
-		else if (Ver == EDirect3D::DXGI1)
-		{
-			return "DXGI 1.1";
-		}
-		else if (Ver == EDirect3D::DXGI2)
-		{
-			return "DXGI 1.2";
-		}
-		else
-		{
-			return "unknown graphics interface";
-		}
-	}
+	extern EDirect3D GetInterfaceVersionFromSwapChain(IDXGISwapChain* swapChain);
+
+	extern std::string GetDescriptionFromSwapChain(IDXGISwapChain* swapChain);
+
+	extern void ContextCopyResource(ID3D11DeviceContext* context, ID3D11Texture2D* dst, ID3D11Texture2D* src, const CHAR* msgHead = "", bool bCheckContext = false);
 
 	class Direct3D11Helper
 	{
@@ -136,5 +112,7 @@ namespace lostvr
 		// Parameter: D3DFORMAT format
 		//************************************
 		DXGI_FORMAT GetDirect9FormatMatch(D3DFORMAT format);
+
+		HRESULT CreateShaderResourceViewBySwapChain(void** ppTex, void** ppView);
 	};
 }

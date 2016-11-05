@@ -308,7 +308,7 @@ namespace lostvr
 
 	public:
 
-		OculusVR();
+		OculusVR(const std::string& key);
 		virtual ~OculusVR();
 		virtual bool Startup() override;
 		virtual void Shutdown() override;
@@ -318,10 +318,6 @@ namespace lostvr
 		virtual bool OnPresent_Direct3D9(IDirect3DDevice9* device) override;
 
 		virtual const std::string GetDeviceString() const override;
-		virtual std::string GetKeyString() const override
-		{
-			return std::string("[oculus]");
-		}
 
 		void GetSwapChainData(DXGI_FORMAT& outFormat, int& sizeW, int& sizeH)
 		{

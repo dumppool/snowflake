@@ -163,7 +163,7 @@ bool Direct3D11Helper::UpdateBuffer_Direct3D9(IDirect3DDevice9 * device)
 					UINT height = min(surfaceDesc.Height, mappedDesc.Height);
 					UINT pitch = min(locked.Pitch, mapped.RowPitch);
 					LVMSG(head, "ready to copy, height: %d, pitch: %d", height, pitch);
-					for (int i = 0; i < height; ++i)
+					for (UINT i = 0; i < height; ++i)
 					{
 						memcpy((CHAR*)mapped.pData + i * pitch, (CHAR*)locked.pBits + i * pitch, pitch);
 					}
@@ -409,6 +409,37 @@ DXGI_FORMAT Direct3D11Helper::GetDirect9FormatMatch(D3DFORMAT format)
 	}
 }
 
+HRESULT Direct3D11Helper::CreateShaderResourceViewBySwapChain(void ** ppTex, void ** ppView)
+{
+	if (SwapChain == nullptr || ppView == nullptr || Device == nullptr)
+	{
+		return false;
+	}
+
+	DXGI_SWAP_CHAIN_DESC scDesc;
+	SwapChain->GetDesc(&scDesc);
+
+	D3D11_SHADER_RESOURCE_VIEW_DESC desc;
+	ZeroMemory(&desc, sizeof(desc));
+	desc.Format = scDesc.BufferDesc.Format;
+	desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	desc.Texture2D.MipLevels = 1;
+	ID3D11Texture2D* tex = 0;
+	SwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&tex);
+	HRESULT hr = Device->CreateShaderResourceView(tex, &desc, (ID3D11ShaderResourceView**)ppView);
+
+	if (ppTex != nullptr)
+	{
+		*ppTex = tex;
+	}
+	else
+	{
+		SAFE_RELEASE(tex);
+	}
+
+	return hr;
+}
+
 ID3D11Device* Direct3D11Helper::GetDevice()
 {
 	return Device;
@@ -444,4 +475,194 @@ bool Direct3D11Helper::GetSwapChainData(UINT & width, UINT & height, DXGI_FORMAT
 EDirect3D Direct3D11Helper::GetGraphicsInterfaceVersion()
 {
 	return GIVer;
+}
+
+bool lostvr::GetNextGIVersion(EDirect3D ver, EDirect3D& nextVer)
+{
+	nextVer = EDirect3D(((int)ver + 1) % (int)EDirect3D::Num);
+	switch (ver)
+	{
+	case EDirect3D::Undefined:
+	case EDirect3D::DeviceRef:
+	case EDirect3D::DXGI2:
+	case EDirect3D::DXGI3:
+		return false;
+	}
+
+	return true;
+}
+
+const CHAR* lostvr::GetEDirect3DString(EDirect3D Ver)
+{
+	if (Ver == EDirect3D::DeviceRef)
+	{
+		return "Device reference";
+	}
+	else if (Ver == EDirect3D::DXGI0)
+	{
+		return "DXGI 1.0";
+	}
+	else if (Ver == EDirect3D::DXGI1)
+	{
+		return "DXGI 1.1";
+	}
+	else if (Ver == EDirect3D::DXGI2)
+	{
+		return "DXGI 1.2";
+	}
+	else
+	{
+		return "unknown graphics interface";
+	}
+}
+
+lostvr::EDirect3D lostvr::GetInterfaceVersionFromSwapChain(IDXGISwapChain* swapChain)
+{
+	EDirect3D ret = EDirect3D::Undefined;
+	if (swapChain == nullptr)
+	{
+		return ret;
+	}
+
+	ID3D11Device* device = nullptr;
+	if (SUCCEEDED(swapChain->GetDevice(__uuidof(ID3D11Device), (void**)&device)))
+	{
+		ret = EDirect3D::DXGI0;
+
+		IDXGIDevice* dxgiDevice = nullptr;
+		IDXGIDevice1* dxgiDevice1 = nullptr;
+		IDXGIFactory* dxgiFactory = nullptr;
+		IDXGIFactory1* dxgiFactory1 = nullptr;
+		/*			if (SUCCEEDED(device->QueryInterface(__uuidof(IDXGIDevice3), (void**)&dxgiDevice)) && dxgiDevice != nullptr)
+					{
+						ret = EDirect3D::DXGI3;
+					}
+					else if (SUCCEEDED(device->QueryInterface(__uuidof(IDXGIDevice2), (void**)&dxgiDevice)) && dxgiDevice != nullptr)
+					{
+						ret = EDirect3D::DXGI2;
+					}
+					else */
+		if (SUCCEEDED(device->QueryInterface(__uuidof(IDXGIDevice), (void**)&dxgiDevice)) && dxgiDevice != nullptr)
+		{
+			IDXGIAdapter* dxgiAdapter = nullptr;
+			IDXGIAdapter1* dxgiAdapter1 = nullptr;
+			if (SUCCEEDED(dxgiDevice->GetAdapter(&dxgiAdapter)))
+			{
+				if (SUCCEEDED(dxgiAdapter->QueryInterface(__uuidof(IDXGIAdapter1), (void**)&dxgiAdapter1)) && dxgiAdapter1 != nullptr)
+				{
+					ret = EDirect3D::DXGI1;
+					DXGI_ADAPTER_DESC1 desc1;
+					dxgiAdapter1->GetDesc1(&desc1);
+				}
+			}
+		}
+	}
+
+	return ret;
+}
+
+std::string lostvr::GetDescriptionFromSwapChain(IDXGISwapChain * swapChain)
+{
+	std::string ret;
+	ret.reserve(1024);
+	if (swapChain == nullptr)
+	{
+		return ret;
+	}
+
+	DXGI_SWAP_CHAIN_DESC scDesc;
+	if (SUCCEEDED(swapChain->GetDesc(&scDesc)))
+	{
+		CHAR buf[1024];
+		snprintf(buf, 1023, "swap chain width:\t%d \n\tswap chain height:\t%d \n\tswap chain format:\t%d\n\tswap chain flag:\t0x%x ",
+			scDesc.BufferDesc.Width, scDesc.BufferDesc.Height, scDesc.BufferDesc.Format, scDesc.Flags);
+
+		ret += "\n\t";
+		ret += buf;
+	}
+
+	ID3D11Device* device = nullptr;
+	IDXGIDevice* dxgiDevice = nullptr;
+	D3D_FEATURE_LEVEL feature;
+	if (SUCCEEDED(swapChain->GetDevice(__uuidof(ID3D11Device), (void**)&device)) &&
+		SUCCEEDED(device->QueryInterface(__uuidof(IDXGIDevice), (void**)&dxgiDevice)))
+	{
+		feature = device->GetFeatureLevel();
+		CHAR buf[1024];
+		snprintf(&buf[0], 1023, "feature level:\t\t0x%x", feature);
+
+		ret += "\n\t";
+		ret += buf;
+
+		IDXGIAdapter* dxgiAdapter = nullptr;
+		if (SUCCEEDED(dxgiDevice->GetAdapter(&dxgiAdapter)))
+		{
+			DXGI_ADAPTER_DESC desc;
+			if (SUCCEEDED(dxgiAdapter->GetDesc(&desc)))
+			{
+				CHAR buf[1024];
+				snprintf(&buf[0], 1023, "adapter:\t\t%d-%d\n\tadapter description:\t%ls\n\tadapter vendor id:\t%d\n\tadapter device id:\t%d",
+					desc.AdapterLuid.HighPart, desc.AdapterLuid.LowPart, desc.Description, desc.VendorId, desc.DeviceId);
+
+				ret += "\n\t";
+				ret += buf;
+
+				snprintf(&buf[0], 1023, "adapter subsytem id:\t%d\n\tadapter revision:\t%d\n\tadapter video memory:\t%lldmb\n\tadapter system memory:\t%lldmb\n\tadapter shared memory:\t%lldmb",
+					desc.SubSysId, desc.Revision, desc.DedicatedVideoMemory/(1024*1024), desc.DedicatedSystemMemory / (1024 * 1024), desc.SharedSystemMemory / (1024 * 1024));
+			
+				ret += "\n\t";
+				ret += buf;
+			}
+
+			SAFE_RELEASE(dxgiAdapter);
+		}
+
+	}
+
+	SAFE_RELEASE(device);
+	SAFE_RELEASE(dxgiDevice);
+	return ret;
+}
+
+void lostvr::ContextCopyResource(ID3D11DeviceContext * context, ID3D11Texture2D * dst, ID3D11Texture2D * src, const CHAR* msgHead, bool bCheckContext)
+{
+	const CHAR* head = "ContextCopyResource";
+	if (context == nullptr || dst == nullptr || src == nullptr)
+	{
+		return;
+	}
+
+	if (bCheckContext)
+	{
+		ID3D11Device *dstDevice, *srcDevice;
+		ID3D11DeviceContext* cxt;
+		dst->GetDevice(&dstDevice);
+		src->GetDevice(&srcDevice);
+
+		if (dstDevice != srcDevice)
+		{
+			LVMSG(head, "intent to copy between different context");
+			SAFE_RELEASE(srcDevice);
+			SAFE_RELEASE(dstDevice);
+			return;
+		}
+
+		srcDevice->GetImmediateContext(&cxt);
+		LVMSG(head, "%s, 0x%x, context(0x%x), input context(0x%x), flag(0x%x), feature(0x%x)",
+			msgHead, srcDevice, cxt, context, srcDevice->GetCreationFlags(), srcDevice->GetFeatureLevel());
+		SAFE_RELEASE(srcDevice);
+		SAFE_RELEASE(dstDevice);
+		SAFE_RELEASE(cxt);
+	}
+
+	//context->CopyResource(dst, src);
+
+	D3D11_TEXTURE2D_DESC dstDesc, srcDesc;
+	dst->GetDesc(&dstDesc);
+	src->GetDesc(&srcDesc);
+
+	context->ResolveSubresource(dst, 0, src, 0, dstDesc.Format);
+
+	LVMSG(head, "%s, dst width(%d), height(%d), format(%d)", msgHead, dstDesc.Width, dstDesc.Height, dstDesc.Format);
+	LVMSG(head, "%s, src width(%d), height(%d), format(%d)", msgHead, srcDesc.Width, srcDesc.Height, srcDesc.Format);
 }

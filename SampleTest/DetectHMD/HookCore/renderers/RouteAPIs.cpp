@@ -17,9 +17,31 @@ RouteObject::~RouteObject()
 	RouterEntry = nullptr;
 }
 
+bool RouteObject::InstallRoute()
+{
+	return InstallRoute_MhookImpl();
+}
+
+bool RouteObject::UninstallRoute()
+{
+	return UninstallRoute_MhookImpl();
+}
+
 bool RouteObject::InstallRoute_MhookImpl()
 {
 	const CHAR* head = "RouteObject::InstallRoute_MhookImpl";
+	if (OriginalEntry == nullptr)
+	{
+		LVMSG(head, "null original entry");
+		return false;
+	}
+
+	if (RouterEntry == nullptr)
+	{
+		LVMSG(head, "null router entry");
+		return false;
+	}
+
 	if (Mhook_SetHook((PVOID*)&OriginalEntry, RouterEntry))
 	{
 		LVMSG(head, "installed %s", GetRouteString());
@@ -32,16 +54,18 @@ bool RouteObject::InstallRoute_MhookImpl()
 	}
 }
 
-void RouteObject::UninstallRoute_MhookImpl()
+bool RouteObject::UninstallRoute_MhookImpl()
 {
 	const CHAR* head = "RouteObject::UninstallRoute_MhookImpl";
 	if (Mhook_Unhook((PVOID*)&OriginalEntry))
 	{
 		LVMSG(head, "uninstalled %s", GetRouteString());
+		return true;
 	}
 	else
 	{
 		LVMSG(head, "failed to uninstall %s", GetRouteString());
+		return false;
 	}
 }
 
@@ -110,16 +134,12 @@ bool MemberFunctionRouter::InstallRoute()
 		return false;
 	}
 
-#ifdef _WIN64
-	OriginalEntry = (void*)*((__int64*)*(__int64*)target + Offset);
-#else
-	OriginalEntry = (void*)*((__int32*)*(__int32*)target + Offset);
-#endif
+	OriginalEntry = (void*)*((__int3264*)*(__int3264*)target + Offset);
 
 	return InstallRoute_MhookImpl();
 }
 
-void MemberFunctionRouter::UninstallRoute()
+bool MemberFunctionRouter::UninstallRoute()
 {
-	UninstallRoute_MhookImpl();
+	return UninstallRoute_MhookImpl();
 }

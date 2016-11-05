@@ -62,6 +62,9 @@
     <ClInclude Include="renderers\Projector.h">
       <Filter>renderers</Filter>
     </ClInclude>
+    <ClInclude Include="renderers\ConcreteProjectors.h">
+      <Filter>renderers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="disasm-lib\cpu.c">
@@ -110,6 +113,12 @@
       <Filter>renderers</Filter>
     </ClCompile>
     <ClCompile Include="renderers\Projector.cpp">
+      <Filter>renderers</Filter>
+    </ClCompile>
+    <ClCompile Include="renderers\WindowsRouters.cpp">
+      <Filter>renderers</Filter>
+    </ClCompile>
+    <ClCompile Include="renderers\ConcreteProjectors.cpp">
       <Filter>renderers</Filter>
     </ClCompile>
   </ItemGroup>

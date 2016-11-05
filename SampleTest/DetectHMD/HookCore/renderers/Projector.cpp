@@ -54,7 +54,7 @@ static bool CompileShader(LPCWSTR file, LPCSTR entry, LPCSTR target, ID3DBlob** 
 	}
 }
 
-TextureProjector::TextureProjector() :
+BaseTextureProjector::BaseTextureProjector() :
 	DSS(nullptr)
 	, RS(nullptr)
 	, VB(nullptr)
@@ -64,7 +64,6 @@ TextureProjector::TextureProjector() :
 	, PS(nullptr)
 	, Sampler(nullptr)
 	, WVPCB(nullptr)
-	, SRV(nullptr)
 {
 	for (int i = 0; i < 2; ++i)
 	{
@@ -75,17 +74,12 @@ TextureProjector::TextureProjector() :
 	DestroyRHI();
 }
 
-TextureProjector::~TextureProjector()
+BaseTextureProjector::~BaseTextureProjector()
 {
 	DestroyRHI();
 }
 
-bool TextureProjector::IsInitialized(IDXGISwapChain* swapChain) const
-{
-	return (Renderer != nullptr && Renderer->GetSwapChain() == swapChain);
-}
-
-bool TextureProjector::InitializeProjector(
+bool BaseTextureProjector::InitializeProjector(
 	IDXGISwapChain* swapChain,
 	uint32 width, uint32 height,
 	const LVMatrix* leftView,
@@ -100,11 +94,14 @@ bool TextureProjector::InitializeProjector(
 	RecommendWidth = width;
 	RecommendHeight = height;
 
-	if (swapChain == nullptr)
+	if (!InitializeRenderer(swapChain))
 	{
-		LVMSG(head, "null swap chain");
+		LVMSG(head, "initialize renderer failed");
 		return false;
 	}
+
+	LVMSG(head, "dxgi version: %s", GetEDirect3DString(GetInterfaceVersionFromSwapChain(swapChain)));
+	LVMSG(head, "%s", GetDescriptionFromSwapChain(swapChain).c_str());
 
 	DXGI_SWAP_CHAIN_DESC scDesc;
 	swapChain->GetDesc(&scDesc);
@@ -118,9 +115,11 @@ bool TextureProjector::InitializeProjector(
 	//	return false;
 	//}
 	
-	Renderer = new Direct3D11Helper(EDirect3D::DeviceRef);
-	Renderer->UpdateRHIWithSwapChain(swapChain);
-	IDXGISwapChain* swapChainRef = Renderer->GetSwapChain();
+	//Renderer = new Direct3D11Helper(EDirect3D::DeviceRef);
+	//Renderer->UpdateRHIWithSwapChain(swapChain);
+	//Renderer = new Direct3D11Helper(EDirect3D::DXGI1, scDesc.BufferDesc.Width, scDesc.BufferDesc.Height, scDesc.BufferDesc.Format);
+	//IDXGISwapChain* swapChainRef = Renderer->GetSwapChain();
+
 
 	HRESULT hr = S_FALSE;
 
@@ -134,7 +133,7 @@ bool TextureProjector::InitializeProjector(
 		SetEyePose(SEnumEyeR, *rightView, *rightProj);
 	}
 
-	ID3D11Device* deviceRef = Renderer->GetDevice();
+	ID3D11Device* deviceRef = GetRenderer()->GetDevice();
 	for (int i = 0; i < 2; ++i)
 	{
 		{
@@ -288,51 +287,12 @@ bool TextureProjector::InitializeProjector(
 		VERIFY_HRESULT(hr, return false, "failed to create sampler.");
 	}
 
-	{
-		//{
-		//	// buffer of projector's shader resource view
-		//	D3D11_TEXTURE2D_DESC Desc{ 0 };
-		//	Desc.Format = BufferFormat;
-		//	Desc.Width = BufferWidth;
-		//	Desc.Height = BufferHeight;
-		//	Desc.ArraySize = 1;
-		//	Desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-		//	Desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-		//	Desc.MipLevels = 1;
-		//	Desc.MiscFlags = 0;
-		//	Desc.SampleDesc.Count = 1;
-		//	Desc.SampleDesc.Quality = 0;
-		//	Desc.Usage = D3D11_USAGE_DEFAULT;
-		//	//Desc.Usage = D3D11_USAGE_DYNAMIC;
-		//	VERIFY_HRESULT(DeviceRef->CreateTexture2D(&Desc, nullptr, &SourceCopy), return false, "failed to create buffer of projector's shader resource view.");
-		//}
-
-		{
-			D3D11_SHADER_RESOURCE_VIEW_DESC desc;
-			ZeroMemory(&desc, sizeof(desc));
-			desc.Format = format;
-			desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-			desc.Texture2D.MipLevels = 1;
-			ID3D11Texture2D* tex = 0;
-			swapChainRef->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&tex);
-			VERIFY_HRESULT(deviceRef->CreateShaderResourceView(tex, &desc, &SRV), return false, "failed to create source's shader resource view.");
-			SAFE_RELEASE(tex);
-		}
-	}
-
+	InitializeTextureSRV();
 	return SUCCEEDED(hr);
 }
 
-void TextureProjector::DestroyRHI()
+void BaseTextureProjector::DestroyRHI()
 {
-	LastGIVersion = (Renderer != nullptr ? Renderer->GetGraphicsInterfaceVersion() : EDirect3D::DeviceRef);
-
-	if (Renderer != nullptr)
-	{
-		delete Renderer;
-		Renderer = nullptr;
-	}
-
 	for (int i = 0; i < 2; ++i)
 	{
 		SAFE_RELEASE(RTVs[i]);
@@ -349,20 +309,25 @@ void TextureProjector::DestroyRHI()
 	SAFE_RELEASE(PS);
 	SAFE_RELEASE(Sampler);
 	SAFE_RELEASE(WVPCB);
-	SAFE_RELEASE(SRV);
 
 }
 
-bool TextureProjector::UpdateTexture()
+bool BaseTextureProjector::UpdateTexture(IDXGISwapChain* swapChain)
 {
 	const CHAR* head = "TextureProjector::UpdateTexture";
-	if (Renderer == nullptr)
+	if (GetRenderer() == nullptr)
 	{
 		LVMSG(head, "null renderer");
 		return false;
 	}
 
-	ID3D11DeviceContext* context = Renderer->GetContext();
+	if (!PrepareSRV())
+	{
+		LVMSG(head, "prepare shader resource view failed");
+		return false;
+	}
+
+	ID3D11DeviceContext* context = GetRenderer()->GetContext();
 
 	D3D11_VIEWPORT Viewport{ 0.0f, 0.0f, (float)RecommendWidth, (float)RecommendHeight, 0.0f, 1.0f };
 	context->RSSetViewports(1, &Viewport);
@@ -397,18 +362,16 @@ bool TextureProjector::UpdateTexture()
 		context->PSSetShader(PS, nullptr, 0);
 		context->PSSetSamplers(0, 1, &Sampler);
 
-		ID3D11ShaderResourceView* srvs[] = { SRV };
+		ID3D11ShaderResourceView* srvs[] = { GetTextureSRV() };
 		context->PSSetShaderResources(0, 1, &srvs[0]);
-		//ContextRef->PS
 
 		context->DrawIndexed(6, 0, 0);
-		//LVMSG("TextureProjector::Update", "");
 	}
 
 	return true;
 }
 
-ID3D11Texture2D* TextureProjector::GetFinalBuffer(EnumEyeID eye)
+ID3D11Texture2D* BaseTextureProjector::GetFinalBuffer(EnumEyeID eye)
 {
 	return BB[eye];
 }
@@ -422,7 +385,7 @@ ID3D11Texture2D* TextureProjector::GetFinalBuffer(EnumEyeID eye)
 //		m[0] * n[12] + m[4] * n[13] + m[8] * n[14] + m[12] * n[15], m[1] * n[12] + m[5] * n[13] + m[9] * n[14] + m[13] * n[15], m[2] * n[12] + m[6] * n[13] + m[10] * n[14] + m[14] * n[15], m[3] * n[12] + m[7] * n[13] + m[11] * n[14] + m[15] * n[15]);
 //}
 
-void TextureProjector::SetEyePose(EnumEyeID Eye, const LVMatrix& EyeView, const LVMatrix& Proj)
+void BaseTextureProjector::SetEyePose(EnumEyeID Eye, const LVMatrix& EyeView, const LVMatrix& Proj)
 {
 	EyePose[Eye].V = DirectX::XMMatrixIdentity();
 	EyePose[Eye].P = EyeView * Proj;

@@ -46,11 +46,11 @@ namespace lostvr {
 		vr::VROverlayHandle_t OverlayThumbnailHandle;
 		vr::TrackedDevicePose_t TrackedDevicePose[vr::k_unMaxTrackedDeviceCount];
 
-		TextureProjector* Projector;
+		BaseTextureProjector* Projector;
 
 	public:
 
-		OpenVR();
+		OpenVR(const std::string& key);
 		virtual ~OpenVR();
 
 		virtual bool Startup() override;
@@ -61,7 +61,6 @@ namespace lostvr {
 		virtual bool OnPresent_Direct3D9(IDirect3DDevice9* device) override;
 
 		virtual const std::string GetDeviceString() const;
-		virtual std::string GetKeyString() const { return "[openvr]"; }
 
 		void GetEyeViewProject(vr::Hmd_Eye Eye, float fNearZ, float fFarZ, vr::EGraphicsAPIConvention eProjType, LVMatrix& EyeView, LVMatrix& Proj) const;
 	};

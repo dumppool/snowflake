@@ -92,7 +92,7 @@ void LostVR::OnPresent_Direct3D9(IDirect3DDevice9* device)
 	dev->OnPresent_Direct3D9(device);
 }
 
-IVRDevice::IVRDevice()
+IVRDevice::IVRDevice(const std::string& key) : Key(key)
 {
 	LostVR::Get()->RegisterVRDevice(GetKeyString(), this);
 }

@@ -7,13 +7,22 @@ namespace lostvr {
 	const EnumEyeID SEnumEyeL = 0;
 	const EnumEyeID SEnumEyeR = 1;
 
-	class TextureProjector
+	class BaseTextureProjector
 	{
 	public:
-		TextureProjector();
-		~TextureProjector();
+		BaseTextureProjector();
+		~BaseTextureProjector();
 
-		bool IsInitialized(IDXGISwapChain* swapChain) const;
+		virtual bool IsInitialized(IDXGISwapChain* swapChain) const = 0;
+		virtual bool InitializeRenderer(IDXGISwapChain* swapChain) = 0;
+		virtual Direct3D11Helper* GetRenderer() = 0;
+		virtual bool InitializeTextureSRV() = 0;
+		virtual ID3D11ShaderResourceView* GetTextureSRV() = 0;
+
+		virtual void DestroyRHI();
+
+		virtual bool PrepareSRV() { return true; }
+
 		bool InitializeProjector(
 			IDXGISwapChain* swapChain,
 			uint32 width, uint32 height,
@@ -22,8 +31,8 @@ namespace lostvr {
 			const LVMatrix* rightView,
 			const LVMatrix* rightProj);
 
-		void DestroyRHI();
-		bool UpdateTexture();
+
+		bool UpdateTexture(IDXGISwapChain* swapChain = nullptr);
 
 		ID3D11Texture2D* GetFinalBuffer(EnumEyeID Eye);
 		void SetEyePose(EnumEyeID Eye, const LVMatrix& EyeView, const LVMatrix& Proj);
@@ -55,10 +64,6 @@ namespace lostvr {
 		ID3D11PixelShader*			PS;
 		ID3D11SamplerState*			Sampler;
 		ID3D11Buffer*				WVPCB;
-		ID3D11ShaderResourceView*	SRV;
-
-		Direct3D11Helper*			Renderer;
-		EDirect3D					LastGIVersion;
 
 		UINT RecommendWidth;
 		UINT RecommendHeight;

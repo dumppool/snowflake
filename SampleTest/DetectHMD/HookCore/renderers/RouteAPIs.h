@@ -8,8 +8,8 @@ namespace lostvr
 		explicit RouteObject(PVOID entry);
 		virtual ~RouteObject();
 
-		virtual bool InstallRoute() = 0;
-		virtual void UninstallRoute() = 0;
+		virtual bool InstallRoute();
+		virtual bool UninstallRoute();
 		virtual const CHAR* GetRouteString() const = 0;
 
 		PVOID GetOriginalEntry()
@@ -19,7 +19,7 @@ namespace lostvr
 
 	protected:
 		bool InstallRoute_MhookImpl();
-		void UninstallRoute_MhookImpl();
+		bool UninstallRoute_MhookImpl();
 
 	protected:
 		PVOID OriginalEntry;
@@ -33,7 +33,7 @@ namespace lostvr
 		explicit MemberFunctionRouter(PVOID router, int vfoffset);
 
 		virtual bool InstallRoute() override;
-		virtual void UninstallRoute() override;
+		virtual bool UninstallRoute() override;
 
 		virtual PVOID GetThisObject() = 0;
 

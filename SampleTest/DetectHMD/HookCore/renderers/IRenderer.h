@@ -8,8 +8,10 @@ namespace lostvr
 
 	class IVRDevice
 	{
+		std::string Key;
+
 	public:
-		IVRDevice();
+		explicit IVRDevice(const std::string& key);
 
 		//virtual ~IVRDevice() = 0;
 
@@ -62,7 +64,7 @@ namespace lostvr
 		virtual bool OnPresent_Direct3D9(IDirect3DDevice9* device) = 0;
 
 		virtual const std::string GetDeviceString() const { return "unknown"; }
-		virtual std::string GetKeyString() const { return "[unknown]"; }
+		const std::string& GetKeyString() const { return Key; }
 
 	};
 

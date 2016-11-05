@@ -3,7 +3,8 @@
 
 using namespace lostvr;
 
-OculusVR::OculusVR() :
+OculusVR::OculusVR(const std::string& key) :
+	IVRDevice(key),
 	Session(nullptr),
 	HmdDesc(),
 	TrackerDescArray(),
@@ -28,7 +29,7 @@ bool OculusVR::Startup()
 	ovrDetectResult detectResult = ovr_Detect(0);
 	LVMSG("Oculus startup", "detect result: IsOculusServiceRunning(%d), IsOculusHMDConnected(%d)", detectResult.IsOculusServiceRunning, detectResult.IsOculusHMDConnected);
 
-	if (detectResult.IsOculusServiceRunning)
+	if (detectResult.IsOculusServiceRunning && detectResult.IsOculusHMDConnected)
 	{
 		ovrInitParams initParams;
 		memset(&initParams, 0, sizeof(initParams));
@@ -293,4 +294,4 @@ ovrResult OculusVR::DistortAndPresent(int numLayersToRender, D3D11_BOX * optiona
 	return(presentResult);
 }
 
-static OculusVR* SInst = new OculusVR;
+static OculusVR* SInst = new OculusVR("libovr");
