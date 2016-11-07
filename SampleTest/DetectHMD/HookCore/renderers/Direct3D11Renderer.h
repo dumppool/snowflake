@@ -114,5 +114,9 @@ namespace lostvr
 		DXGI_FORMAT GetDirect9FormatMatch(D3DFORMAT format);
 
 		HRESULT CreateShaderResourceViewBySwapChain(void** ppTex, void** ppView);
+		void GetDescriptionTemplate_DefaultTexture2D(D3D11_TEXTURE2D_DESC& desc);
+		bool CreateTexture2D(ID3D11Texture2D** ppTex, ID3D11ShaderResourceView** ppSRV, D3D11_TEXTURE2D_DESC * pDesc,
+			ID3D11Device* deviceOverride = nullptr);
+		bool CreateShaderResourceView(ID3D11Texture2D* tex, ID3D11ShaderResourceView** ppSRV);
 	};
 }

@@ -440,6 +440,124 @@ HRESULT Direct3D11Helper::CreateShaderResourceViewBySwapChain(void ** ppTex, voi
 	return hr;
 }
 
+void Direct3D11Helper::GetDescriptionTemplate_DefaultTexture2D(D3D11_TEXTURE2D_DESC & desc)
+{
+	desc.ArraySize = 1;
+	desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	desc.CPUAccessFlags = 0;
+	desc.Format = DXGI_FORMAT_B8G8R8A8_TYPELESS;
+	desc.Width = 0;
+	desc.Height = 0;
+	desc.MipLevels = 1;
+	desc.MiscFlags = 0;
+	desc.SampleDesc.Count = 1;
+	desc.SampleDesc.Quality = 0;
+	desc.Usage = D3D11_USAGE_DEFAULT;
+}
+
+bool Direct3D11Helper::CreateTexture2D(ID3D11Texture2D ** ppTex, ID3D11ShaderResourceView ** ppSRV, D3D11_TEXTURE2D_DESC * pDesc,
+	ID3D11Device* deviceOverride)
+{
+	const CHAR* head = "Direct3D11Helper::CreateTexture2D";
+
+	ID3D11Device* dev = deviceOverride != nullptr ? deviceOverride : GetDevice();
+	if (dev == nullptr)
+	{
+		LVMSG(head, "null device");
+		return false;
+	}
+
+	if (ppTex == nullptr && ppSRV == nullptr)
+	{
+		LVMSG(head, "both texture2d and srv are invalid");
+		return false;
+	}
+
+	if (pDesc == nullptr)
+	{
+		LVMSG(head, "null description input");
+		return false;
+	}
+
+	HRESULT hr = S_FALSE;
+
+	ID3D11Texture2D* tex = nullptr;
+	hr = dev->CreateTexture2D(pDesc, nullptr, &tex);
+	if (FAILED(hr))
+	{
+		LVMSG(head, "create texture 2d failed: 0x%x(%d)", hr, hr);
+		return false;
+	}
+
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+	ZeroMemory(&srvDesc, sizeof(srvDesc));
+	srvDesc.Format = (*pDesc).Format;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = (*pDesc).MipLevels;
+
+	ID3D11ShaderResourceView* srv = nullptr;
+	hr = dev->CreateShaderResourceView(tex, &srvDesc, &srv);
+	if (FAILED(hr))
+	{
+		LVMSG(head, "create shader resource view failed: 0x%x(%d)", hr, hr);
+		SAFE_RELEASE(tex);
+		return false;
+	}
+
+	if (ppTex == nullptr)
+	{
+		SAFE_RELEASE(tex);
+	}
+	else
+	{
+		*ppTex = tex;
+	}
+
+	if (ppSRV == nullptr)
+	{
+		SAFE_RELEASE(srv);
+	}
+	else
+	{
+		*ppSRV = srv;
+	}
+
+	return true;
+}
+
+bool Direct3D11Helper::CreateShaderResourceView(ID3D11Texture2D * tex, ID3D11ShaderResourceView ** ppSRV)
+{
+	const CHAR* head = "Direct3D11Helper::CreateShaderResourceView";
+	ID3D11Device* dev = GetDevice();
+	if (dev == nullptr)
+	{
+		LVMSG(head, "null device");
+		return false;
+	}
+
+	if (tex == nullptr)
+	{
+		LVMSG(head, "null source texture 2d");
+		return false;
+	}
+
+	if (ppSRV == nullptr)
+	{
+		LVMSG(head, "null shader resource view output");
+		return false;
+	}
+
+	D3D11_TEXTURE2D_DESC td;
+	tex->GetDesc(&td);
+	
+	D3D11_SHADER_RESOURCE_VIEW_DESC sd;
+	ZeroMemory(&sd, sizeof(sd));
+	sd.Format = td.Format;
+	sd.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	sd.Texture2D.MipLevels = 1;
+	return SUCCEEDED(dev->CreateShaderResourceView(tex, &sd, ppSRV));
+}
+
 ID3D11Device* Direct3D11Helper::GetDevice()
 {
 	return Device;
@@ -655,14 +773,14 @@ void lostvr::ContextCopyResource(ID3D11DeviceContext * context, ID3D11Texture2D 
 		SAFE_RELEASE(cxt);
 	}
 
-	//context->CopyResource(dst, src);
+	context->CopyResource(dst, src);
 
 	D3D11_TEXTURE2D_DESC dstDesc, srcDesc;
 	dst->GetDesc(&dstDesc);
 	src->GetDesc(&srcDesc);
 
-	context->ResolveSubresource(dst, 0, src, 0, dstDesc.Format);
+	//context->ResolveSubresource(dst, 0, src, 0, dstDesc.Format);
 
-	LVMSG(head, "%s, dst width(%d), height(%d), format(%d)", msgHead, dstDesc.Width, dstDesc.Height, dstDesc.Format);
-	LVMSG(head, "%s, src width(%d), height(%d), format(%d)", msgHead, srcDesc.Width, srcDesc.Height, srcDesc.Format);
+	//LVMSG(head, "%s, dst width(%d), height(%d), format(%d)", msgHead, dstDesc.Width, dstDesc.Height, dstDesc.Format);
+	//LVMSG(head, "%s, src width(%d), height(%d), format(%d)", msgHead, srcDesc.Width, srcDesc.Height, srcDesc.Format);
 }

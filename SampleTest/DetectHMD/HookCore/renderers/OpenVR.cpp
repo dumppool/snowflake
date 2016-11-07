@@ -230,7 +230,7 @@ bool OpenVR::OnPresent_Direct3D11(IDXGISwapChain* swapChain)
 
 	D3D11_TEXTURE2D_DESC LDesc;
 	(Projector->GetFinalBuffer(0))->GetDesc(&LDesc);
-	//if (vr::VRCompositorError_None != lError)
+	if (vr::VRCompositorError_None != lError)
 	{
 		LVMSG("OpenVR::OnPresent", "Submit left  with result: %d, texture: 0x%x, width(%d), height(%d), format(%d)", lError,
 			Texture.handle, LDesc.Width, LDesc.Height, LDesc.Format);
@@ -241,9 +241,11 @@ bool OpenVR::OnPresent_Direct3D11(IDXGISwapChain* swapChain)
 
 	D3D11_TEXTURE2D_DESC RDesc;
 	(Projector->GetFinalBuffer(1))->GetDesc(&RDesc);
-	//if (vr::VRCompositorError_None != rError)
+	if (vr::VRCompositorError_None != rError)
+	{
 		LVMSG("OpenVR::OnPresent", "Submit right with result: %d, texture: 0x%x, width(%d), height(%d), format(%d)", rError,
 			Texture.handle, RDesc.Width, RDesc.Height, RDesc.Format);
+	}
 
 	if ((int)lError == 106 || (int)rError == 106)
 	{

@@ -28,10 +28,10 @@ namespace lostvr {
 	protected:
 		Direct3D11Helper* Renderer;
 		ID3D11ShaderResourceView* SRV;
-		ID3D11Texture2D* Tex;
 
-		ID3D11Texture2D* SharedTex;
-		IDXGISwapChain* SwapChainRef;
+		ID3D11Texture2D* SharedTex_Self;
+		ID3D11Texture2D* SharedTex_Other;
+		IDXGISwapChain* SwapChainRef_Other;
 
 	public:
 		TextureProjector1();

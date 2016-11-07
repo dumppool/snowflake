@@ -53,9 +53,9 @@ void TextureProjector0::DestroyRHI()
 
 TextureProjector1::TextureProjector1() : Renderer(nullptr)
 , SRV(nullptr)
-, Tex(nullptr)
-, SharedTex(nullptr)
-, SwapChainRef(nullptr)
+, SharedTex_Self(nullptr)
+, SharedTex_Other(nullptr)
+, SwapChainRef_Other(nullptr)
 {
 }
 
@@ -66,7 +66,7 @@ TextureProjector1::~TextureProjector1()
 
 bool TextureProjector1::IsInitialized(IDXGISwapChain* swapChain) const
 {
-	return (Renderer != nullptr && SwapChainRef == swapChain);
+	return (Renderer != nullptr && SwapChainRef_Other == swapChain);
 }
 
 bool TextureProjector1::InitializeRenderer(IDXGISwapChain* swapChain)
@@ -75,43 +75,53 @@ bool TextureProjector1::InitializeRenderer(IDXGISwapChain* swapChain)
 
 	HRESULT hr = S_FALSE;
 
-	SAFE_RELEASE(SwapChainRef);
-	SwapChainRef = swapChain;
-	SwapChainRef->AddRef();
+	SAFE_RELEASE(SwapChainRef_Other);
+	SwapChainRef_Other = swapChain;
+	SwapChainRef_Other->AddRef();
 
 	SAFE_DELETE(Renderer);
 	DXGI_SWAP_CHAIN_DESC scDesc;
-	SwapChainRef->GetDesc(&scDesc);
+	SwapChainRef_Other->GetDesc(&scDesc);
 	Renderer = new Direct3D11Helper(EDirect3D::DXGI1, scDesc.BufferDesc.Width, scDesc.BufferDesc.Height, scDesc.BufferDesc.Format);
 
+	SAFE_RELEASE(SharedTex_Other);
 	D3D11_TEXTURE2D_DESC sharedDesc = { 0 };
-	sharedDesc.ArraySize = 1;
-	sharedDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
-	sharedDesc.CPUAccessFlags = 0;
+	Renderer->GetDescriptionTemplate_DefaultTexture2D(sharedDesc);
 	sharedDesc.Format = scDesc.BufferDesc.Format;
 	sharedDesc.Width = scDesc.BufferDesc.Width;
 	sharedDesc.Height = scDesc.BufferDesc.Height;
-	sharedDesc.MipLevels = 1;
 	sharedDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED/*_NTHANDLE | D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX*/;
-	sharedDesc.SampleDesc.Count = 1;
-	sharedDesc.SampleDesc.Quality = 0;
-	sharedDesc.Usage = D3D11_USAGE_DEFAULT;
+
 	ID3D11Device* device = nullptr;
-	if (SUCCEEDED(SwapChainRef->GetDevice(__uuidof(ID3D11Device), (void**)&device)))
+	if (SUCCEEDED(SwapChainRef_Other->GetDevice(__uuidof(ID3D11Device), (void**)&device)))
 	{
-		SAFE_RELEASE(SharedTex);
-		hr = device->CreateTexture2D(&sharedDesc, nullptr, &SharedTex);
-		if (SUCCEEDED(hr))
+		if (Renderer->CreateTexture2D(&SharedTex_Other, nullptr, &sharedDesc, device))
 		{
 			LVMSG(head, "create shared texture succeeded");
 		}
 		else
 		{
-			LVMSG(head, "create shared texture failed: 0x%x(%d)", hr, hr);
+			LVMSG(head, "create shared texture failed");
 		}
 	}
 
-	return true;
+	SAFE_RELEASE(SharedTex_Self);
+	IDXGIResource* res = nullptr;
+	if (SUCCEEDED(SharedTex_Other->QueryInterface(__uuidof(IDXGIResource), (void**)&res)))
+	{
+		HANDLE hShared;
+		if (SUCCEEDED(res->GetSharedHandle(&hShared)) &&
+			SUCCEEDED(Renderer->GetDevice()->OpenSharedResource(hShared, __uuidof(ID3D11Texture2D), (void**)&SharedTex_Self)))
+		{
+			LVMSG(head, "map shared resource succeeded");
+		}
+		else
+		{
+			LVMSG(head, "map shared resource failed");
+		}
+	}
+
+	return SharedTex_Other != nullptr && SharedTex_Self != nullptr;
 }
 
 Direct3D11Helper* TextureProjector1::GetRenderer()
@@ -130,44 +140,16 @@ bool TextureProjector1::InitializeTextureSRV()
 	}
 
 	DXGI_SWAP_CHAIN_DESC scDesc;
-	SwapChainRef->GetDesc(&scDesc);
+	SwapChainRef_Other->GetDesc(&scDesc);
 
 	D3D11_TEXTURE2D_DESC desc = { 0 };
-	desc.ArraySize = 1;
-	desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
-	desc.CPUAccessFlags = 0;
+	Renderer->GetDescriptionTemplate_DefaultTexture2D(desc);
 	desc.Format = scDesc.BufferDesc.Format;
 	desc.Width = scDesc.BufferDesc.Width;
 	desc.Height = scDesc.BufferDesc.Height;
-	desc.MipLevels = 1;
-	desc.MiscFlags = 0;
-	desc.SampleDesc.Count = 1;
-	desc.SampleDesc.Quality = 0;
-	desc.Usage = D3D11_USAGE_DEFAULT;
-	ID3D11Device* device = nullptr;
 
-	SAFE_RELEASE(Tex);
-	hr = Renderer->GetDevice()->CreateTexture2D(&desc, nullptr, &Tex);
-	if (FAILED(hr))
-	{
-		LVMSG(head, "failed to create texture 2d: 0x%x(%d)", hr, hr);
-		return false;
-	}
-
-	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
-	ZeroMemory(&srvDesc, sizeof(srvDesc));
-	srvDesc.Format = scDesc.BufferDesc.Format;
-	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Texture2D.MipLevels = 1;
 	SAFE_RELEASE(SRV);
-	hr = Renderer->GetDevice()->CreateShaderResourceView(Tex, &srvDesc, &SRV);
-	if (FAILED(hr))
-	{
-		LVMSG(head, "failed to create shader resource view: 0x%x(%d)", hr, hr);
-		return false;
-	}
-
-	return true;
+	return Renderer->CreateShaderResourceView(SharedTex_Self, &SRV);
 }
 
 ID3D11ShaderResourceView* TextureProjector1::GetTextureSRV()
@@ -181,15 +163,15 @@ void TextureProjector1::DestroyRHI()
 
 	SAFE_DELETE(Renderer);
 	SAFE_RELEASE(SRV);
-	SAFE_RELEASE(Tex);
-	SAFE_RELEASE(SharedTex);
-	SAFE_RELEASE(SwapChainRef);
+	SAFE_RELEASE(SharedTex_Self);
+	SAFE_RELEASE(SharedTex_Other);
+	SAFE_RELEASE(SwapChainRef_Other);
 }
 
 bool TextureProjector1::PrepareSRV()
 {
 	const CHAR* head = "TextureProjector1::PrepareSRV";
-	if (SwapChainRef == nullptr || Renderer == nullptr)
+	if (SwapChainRef_Other == nullptr || Renderer == nullptr)
 	{
 		return false;
 	}
@@ -197,42 +179,32 @@ bool TextureProjector1::PrepareSRV()
 	bool bSuccess = true;
 
 	ID3D11Texture2D* srcTex = nullptr;
-	ID3D11Texture2D* tmpTex = nullptr;
 	IDXGIResource* src = nullptr;
-	IDXGIResource* dst = nullptr;
 	ID3D11Device* device = nullptr;
 	ID3D11DeviceContext* context = nullptr;
-	if (SUCCEEDED(SwapChainRef->GetDevice(__uuidof(ID3D11Device), (void**)&device)))
+	if (SUCCEEDED(SwapChainRef_Other->GetDevice(__uuidof(ID3D11Device), (void**)&device)))
 	{
 		device->GetImmediateContext(&context);
-		if (context != nullptr && SUCCEEDED(SwapChainRef->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&srcTex)))
+		if (context != nullptr && SUCCEEDED(SwapChainRef_Other->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&srcTex)))
 		{
-			//context->CopyResource(SharedTex, srcTex);
-			ContextCopyResource(context, SharedTex, srcTex, "source context", true);
+			ContextCopyResource(context, SharedTex_Other, srcTex, "source context");
 
-			if (SUCCEEDED(SharedTex->QueryInterface(__uuidof(IDXGIResource), (void**)&src)))
-			{
-				HANDLE hShared;
-				if (SUCCEEDED(src->GetSharedHandle(&hShared)) &&
-					SUCCEEDED(Renderer->GetDevice()->OpenSharedResource(hShared, __uuidof(IDXGIResource), (void**)&dst)) &&
-					SUCCEEDED(dst->QueryInterface(__uuidof(ID3D11Texture2D), (void**)&tmpTex)))
-				{
-					D3D11_TEXTURE2D_DESC tmpDesc;
-					tmpTex->GetDesc(&tmpDesc);
-					//LVMSG(head, "tmp width(%d), height(%d), format(%d)", tmpDesc.Width, tmpDesc.Height, tmpDesc.Format);
-					//Renderer->GetContext()->CopyResource(Tex, tmpTex);
-					ContextCopyResource(Renderer->GetContext(), Tex, tmpTex, "destination context", true);
-					bSuccess = true;
-				}
-			}
+			//if (SUCCEEDED(SharedTex_Other->QueryInterface(__uuidof(IDXGIResource), (void**)&src)))
+			//{
+			//	HANDLE hShared;
+			//	if (SUCCEEDED(src->GetSharedHandle(&hShared)) &&
+			//		SUCCEEDED(Renderer->GetDevice()->OpenSharedResource(hShared, __uuidof(ID3D11Texture2D), (void**)&SharedTex_Self)))
+			//	{
+			//		ContextCopyResource(Renderer->GetContext(), Tex, SharedTex_Self, "destination context");
+			//		bSuccess = true;
+			//	}
+			//}
 		}
 	}
 
 	SAFE_RELEASE(context);
 	SAFE_RELEASE(device);
 	SAFE_RELEASE(srcTex);
-	SAFE_RELEASE(tmpTex);
 	SAFE_RELEASE(src);
-	SAFE_RELEASE(dst);
 	return bSuccess;
 }
