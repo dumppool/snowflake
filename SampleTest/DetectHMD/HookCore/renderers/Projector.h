@@ -26,13 +26,13 @@ namespace lostvr {
 		bool InitializeProjector(
 			IDXGISwapChain* swapChain,
 			uint32 width, uint32 height,
-			const LVMatrix* leftView,
-			const LVMatrix* leftProj,
-			const LVMatrix* rightView,
-			const LVMatrix* rightProj);
+			const LVMatrix& leftView,
+			const LVMatrix& leftProj,
+			const LVMatrix& rightView,
+			const LVMatrix& rightProj);
 
-
-		bool UpdateTexture(IDXGISwapChain* swapChain = nullptr);
+		bool InitializeRHI();
+		bool UpdateTexture();
 
 		ID3D11Texture2D* GetFinalBuffer(EnumEyeID Eye);
 		void SetEyePose(EnumEyeID Eye, const LVMatrix& EyeView, const LVMatrix& Proj);
@@ -48,7 +48,6 @@ namespace lostvr {
 		}
 
 	protected:
-		void Update();
 
 		// renderer properties
 		ID3D11Texture2D*			BB[2];
@@ -69,5 +68,33 @@ namespace lostvr {
 		UINT RecommendHeight;
 
 		FrameBufferWVP	EyePose[2];
+	};
+
+	class BaseTextureProjector_Direct3D9 : public BaseTextureProjector
+	{
+	public:
+
+		virtual bool IsInitialized(IDXGISwapChain* swapChain) const override
+		{
+			LVASSERT(0, "BaseTextureProjector_Direct3D9::IsInitialized", "get called"); 
+			return false;
+		}
+
+		virtual bool InitializeRenderer(IDXGISwapChain* swapChain) override 
+		{
+			LVASSERT(0, "BaseTextureProjector_Direct3D9::InitializeRenderer", "get called");
+			return false;
+		}
+
+		virtual bool IsInitialized_Direct3D9(IDirect3DDevice9* device) = 0;
+		virtual bool InitializeRenderer_Direct3D9(IDirect3DDevice9* device) = 0;
+
+		bool InitializeProjector_Direct3D9(
+			IDirect3DDevice9* device,
+			uint32 hmdWidth, uint32 hmdHeight,
+			const LVMatrix& leftView,
+			const LVMatrix& leftProj,
+			const LVMatrix& rightView,
+			const LVMatrix& rightProj);
 	};
 }

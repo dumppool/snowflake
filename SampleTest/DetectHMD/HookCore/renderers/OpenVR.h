@@ -46,7 +46,8 @@ namespace lostvr {
 		vr::VROverlayHandle_t OverlayThumbnailHandle;
 		vr::TrackedDevicePose_t TrackedDevicePose[vr::k_unMaxTrackedDeviceCount];
 
-		BaseTextureProjector* Projector;
+		BaseTextureProjector*			Projector;
+		BaseTextureProjector_Direct3D9* Projector9;
 
 	public:
 

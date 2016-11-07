@@ -196,7 +196,7 @@ bool OpenVR::OnPresent_Direct3D11(IDXGISwapChain* swapChain)
 	vr::IVRCompositor* pCompositor = pVRCompositorFn();
 	if (pCompositor == nullptr)
 	{
-		LVMSG("OpenVR::OnPresent", "null compositor:");
+		LVMSG(head, "null compositor:");
 		return false;
 	}
 
@@ -207,7 +207,7 @@ bool OpenVR::OnPresent_Direct3D11(IDXGISwapChain* swapChain)
 		GetEyeViewProject(vr::Hmd_Eye::Eye_Right, 0.1f, 10000.f, vr::EGraphicsAPIConvention::API_DirectX, rightV, rightP);
 		uint32 w, h;
 		Sys->GetRecommendedRenderTargetSize(&w, &h);
-		if (!Projector->InitializeProjector(swapChain, w, h, &leftV, &leftP, &rightV, &rightP))
+		if (!Projector->InitializeProjector(swapChain, w, h, leftV, leftP, rightV, rightP))
 		{
 			LVMSG(head, "initialize projector failed");
 			return false;
@@ -216,7 +216,7 @@ bool OpenVR::OnPresent_Direct3D11(IDXGISwapChain* swapChain)
 
 	pCompositor->WaitGetPoses(TrackedDevicePose, vr::k_unMaxTrackedDeviceCount, NULL, 0);
 
-	if (!Projector->UpdateTexture(swapChain))
+	if (!Projector->UpdateTexture())
 	{
 		LVMSG(head, "projector update failed");
 		return false;
@@ -256,7 +256,7 @@ bool OpenVR::OnPresent_Direct3D11(IDXGISwapChain* swapChain)
 		GetEyeViewProject(vr::Hmd_Eye::Eye_Right, 0.1f, 10000.f, vr::EGraphicsAPIConvention::API_DirectX, rightV, rightP);
 		uint32 w, h;
 		Sys->GetRecommendedRenderTargetSize(&w, &h);
-		if (!Projector->InitializeProjector(swapChain, w, h, &leftV, &leftP, &rightV, &rightP))
+		if (!Projector->InitializeProjector(swapChain, w, h, leftV, leftP, rightV, rightP))
 		{
 			LVMSG(head, "after submit failed, initialize projector failed");
 		}
@@ -290,7 +290,61 @@ bool OpenVR::OnPresent_Direct3D11(IDXGISwapChain* swapChain)
 
 bool OpenVR::OnPresent_Direct3D9(IDirect3DDevice9 * device)
 {
-	return false;
+	const CHAR* head = "OpenVR::OnPresent_Direct3D9";
+	
+	if (Projector9 == nullptr)
+	{
+		Projector9 = new TextureProjector9;
+	}
+
+	vr::IVRCompositor* pCompositor = pVRCompositorFn();
+	if (pCompositor == nullptr)
+	{
+		LVMSG(head, "null compositor:");
+		return false;
+	}
+
+	if (!Projector9->IsInitialized_Direct3D9(device))
+	{
+		LVMatrix leftV, leftP, rightV, rightP;
+		GetEyeViewProject(vr::Hmd_Eye::Eye_Left, 0.1f, 10000.f, vr::EGraphicsAPIConvention::API_DirectX, leftV, leftP);
+		GetEyeViewProject(vr::Hmd_Eye::Eye_Right, 0.1f, 10000.f, vr::EGraphicsAPIConvention::API_DirectX, rightV, rightP);
+		uint32 w, h;
+		Sys->GetRecommendedRenderTargetSize(&w, &h);
+		if (!Projector9->InitializeProjector_Direct3D9(device, w, h, leftV, leftP, rightV, rightP))
+		{
+			LVMSG(head, "initialize projector failed");
+			return false;
+		}
+	}
+
+	pCompositor->WaitGetPoses(TrackedDevicePose, vr::k_unMaxTrackedDeviceCount, NULL, 0);
+
+	if (!Projector9->UpdateTexture())
+	{
+		LVMSG(head, "projector update failed");
+		return false;
+	}
+
+	vr::VRCompositorError vrErr;
+	vr::Texture_t vrTex;
+	vrTex.handle = Projector9->GetFinalBuffer(vr::Eye_Left);
+	vrTex.eType = vr::API_DirectX;
+	vrTex.eColorSpace = vr::ColorSpace_Auto;
+	vrErr = pCompositor->Submit(vr::Eye_Left, &vrTex);
+	if (vrErr != vr::VRCompositorError_None)
+	{
+		LVMSG(head, "submit failed: %d, eye: %d", vrErr, vr::Eye_Left);
+	}
+
+	vrTex.handle = Projector9->GetFinalBuffer(vr::Eye_Right);
+	vrErr = pCompositor->Submit(vr::Eye_Right, &vrTex);
+	if (vrErr != vr::VRCompositorError_None)
+	{
+		LVMSG(head, "submit failed: %d, eye: %d", vrErr, vr::Eye_Right);
+	}
+
+	return true;
 }
 
 const std::string OpenVR::GetDeviceString() const

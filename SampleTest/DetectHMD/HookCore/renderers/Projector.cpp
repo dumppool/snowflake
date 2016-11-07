@@ -81,18 +81,18 @@ BaseTextureProjector::~BaseTextureProjector()
 
 bool BaseTextureProjector::InitializeProjector(
 	IDXGISwapChain* swapChain,
-	uint32 width, uint32 height,
-	const LVMatrix* leftView,
-	const LVMatrix* leftProj,
-	const LVMatrix* rightView,
-	const LVMatrix* rightProj)
+	uint32 hmdWidth, uint32 hmdHeight,
+	const LVMatrix& leftView,
+	const LVMatrix& leftProj,
+	const LVMatrix& rightView,
+	const LVMatrix& rightProj)
 {
 	const CHAR* head = "TextureProjector::InitializeProjector";
 
 	DestroyRHI();
 
-	RecommendWidth = width;
-	RecommendHeight = height;
+	RecommendWidth = hmdWidth;
+	RecommendHeight = hmdHeight;
 
 	if (!InitializeRenderer(swapChain))
 	{
@@ -103,37 +103,22 @@ bool BaseTextureProjector::InitializeProjector(
 	LVMSG(head, "dxgi version: %s", GetEDirect3DString(GetInterfaceVersionFromSwapChain(swapChain)));
 	LVMSG(head, "%s", GetDescriptionFromSwapChain(swapChain).c_str());
 
-	DXGI_SWAP_CHAIN_DESC scDesc;
-	swapChain->GetDesc(&scDesc);
+	SetEyePose(SEnumEyeL, leftView, leftProj);
+	SetEyePose(SEnumEyeR, rightView, rightProj);
 
-	DXGI_FORMAT format = scDesc.BufferDesc.Format;
+	bool ret = InitializeRHI() && InitializeTextureSRV();
+	return ret;
+}
 
-	//EDirect3D nextVer;
-	//if (!GetNextGIVersion(LastGIVersion, nextVer))
-	//{
-	//	LVMSG(head, "invalid graphics interface version: %s", GetEDirect3DString(nextVer));
-	//	return false;
-	//}
-	
-	//Renderer = new Direct3D11Helper(EDirect3D::DeviceRef);
-	//Renderer->UpdateRHIWithSwapChain(swapChain);
-	//Renderer = new Direct3D11Helper(EDirect3D::DXGI1, scDesc.BufferDesc.Width, scDesc.BufferDesc.Height, scDesc.BufferDesc.Format);
-	//IDXGISwapChain* swapChainRef = Renderer->GetSwapChain();
-
+bool BaseTextureProjector::InitializeRHI()
+{
+	const CHAR* head = "BaseTextureProjector::InitializeRHI";
 
 	HRESULT hr = S_FALSE;
 
-	if (leftView != nullptr && leftProj != nullptr)
-	{
-		SetEyePose(SEnumEyeL, *leftView, *leftProj);
-	}
-
-	if (rightView != nullptr && rightProj != nullptr)
-	{
-		SetEyePose(SEnumEyeR, *rightView, *rightProj);
-	}
-
 	ID3D11Device* deviceRef = GetRenderer()->GetDevice();
+
+	DXGI_FORMAT format = DXGI_FORMAT_B8G8R8A8_UNORM;
 	for (int i = 0; i < 2; ++i)
 	{
 		{
@@ -287,7 +272,6 @@ bool BaseTextureProjector::InitializeProjector(
 		VERIFY_HRESULT(hr, return false, "failed to create sampler.");
 	}
 
-	InitializeTextureSRV();
 	return SUCCEEDED(hr);
 }
 
@@ -312,7 +296,7 @@ void BaseTextureProjector::DestroyRHI()
 
 }
 
-bool BaseTextureProjector::UpdateTexture(IDXGISwapChain* swapChain)
+bool BaseTextureProjector::UpdateTexture()
 {
 	const CHAR* head = "TextureProjector::UpdateTexture";
 	if (GetRenderer() == nullptr)
@@ -400,4 +384,27 @@ void BaseTextureProjector::SetEyePose(EnumEyeID Eye, const LVMatrix& EyeView, co
 
 	TestMatrixVectorMultiply(EyePose[Eye].P, LVVec(-1.f, 1.f, 1.f, 1.f));
 #endif
+}
+
+bool BaseTextureProjector_Direct3D9::InitializeProjector_Direct3D9(IDirect3DDevice9 * device, uint32 hmdWidth, uint32 hmdHeight,
+	const LVMatrix & leftView, const LVMatrix & leftProj, const LVMatrix & rightView, const LVMatrix & rightProj)
+{
+	const CHAR* head = "TextureProjector::InitializeProjector_Direct3D9";
+
+	DestroyRHI();
+
+	RecommendWidth = hmdWidth;
+	RecommendHeight = hmdHeight;
+
+	if (!InitializeRenderer_Direct3D9(device))
+	{
+		LVMSG(head, "initialize renderer failed");
+		return false;
+	}
+
+	SetEyePose(SEnumEyeL, leftView, leftProj);
+	SetEyePose(SEnumEyeR, rightView, rightProj);
+
+	bool ret = InitializeRHI() && InitializeTextureSRV();
+	return ret;
 }
