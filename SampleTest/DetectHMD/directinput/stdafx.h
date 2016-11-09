@@ -103,8 +103,8 @@ inline static void log_cap_cnt(const CHAR* prefix, const char* cap, const char* 
 	logfile << cap << ": " << string(msg).c_str() << endl;
 	logfile.flush();
 
-	OutputDebugStringA(msg);
-	OutputDebugStringA("\n");
+	//OutputDebugStringA(msg);
+	//OutputDebugStringA("\n");
 }
 
 #include <assert.h>

@@ -6,6 +6,13 @@ namespace lostvr
 {
 	typedef int EEye;
 
+	enum class EMovement : uint8
+	{
+		UnDefined,
+		CameraFront,
+		CameraBack,
+	};
+
 	class IVRDevice
 	{
 		std::string Key;
@@ -66,6 +73,15 @@ namespace lostvr
 		virtual const std::string GetDeviceString() const { return "unknown"; }
 		const std::string& GetKeyString() const { return Key; }
 
+		//************************************
+		// Method:    AddMovement
+		// FullName:  lostvr::IVRDevice::AddMovement
+		// Access:    virtual public 
+		// Returns:   void
+		// Qualifier:
+		// Parameter: EMovement movement
+		//************************************
+		virtual void AddMovement(EMovement movement) = 0;
 	};
 
 	class LostVR
@@ -87,6 +103,8 @@ namespace lostvr
 
 		void OnPresent_Direct3D11(IDXGISwapChain* swapChain);
 		void OnPresent_Direct3D9(IDirect3DDevice9* device);
+
+		void SetupInput();
 
 	protected:
 		typedef std::map<const std::string, IVRDevice*> KeyDeviceMap;

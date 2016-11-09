@@ -1,20 +1,11 @@
-// winhook.cpp : 定义应用程序的入口点。
+// directinput.cpp : 定义应用程序的入口点。
 //
 
 #include "stdafx.h"
-#include "winhook.h"
-#include "hookbody.h"
-
-//#include "CustomFormat.cpp"
+#include "directinput.h"
 #include "InputDevice.h"
 
 #define MAX_LOADSTRING 100
-
-HRESULT InitDirectInput(HWND hDlg);
-VOID FreeDirectInput();
-HRESULT UpdateInputState(HWND hDlg);
-
-HWND g_hWnd;
 
 // 全局变量: 
 HINSTANCE hInst;                                // 当前实例
@@ -39,7 +30,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     // 初始化全局字符串
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-    LoadStringW(hInstance, IDC_WINHOOK, szWindowClass, MAX_LOADSTRING);
+    LoadStringW(hInstance, IDC_DIRECTINPUT, szWindowClass, MAX_LOADSTRING);
     MyRegisterClass(hInstance);
 
     // 执行应用程序初始化: 
@@ -48,14 +39,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         return FALSE;
     }
 
-    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_WINHOOK));
+    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_DIRECTINPUT));
 
     MSG msg;
-
-	installhook(hInstance, g_hWnd);
-
-	//InitDirectInput(g_hWnd);
-	SetupInputDevice(&g_hWnd);
 
     // 主消息循环: 
     while (GetMessage(&msg, nullptr, 0, 0))
@@ -66,8 +52,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             DispatchMessage(&msg);
         }
 
-		PollInputDevice(&g_hWnd);
-		//UpdateInputState(g_hWnd);
+		{
+			//PollInputDevice((void*)&msg.hwnd);
+		}
     }
 
     return (int) msg.wParam;
@@ -91,10 +78,10 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.cbClsExtra     = 0;
     wcex.cbWndExtra     = 0;
     wcex.hInstance      = hInstance;
-    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_WINHOOK));
+    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_DIRECTINPUT));
     wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
     wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
-    wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_WINHOOK);
+    wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_DIRECTINPUT);
     wcex.lpszClassName  = szWindowClass;
     wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 
@@ -123,8 +110,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
       return FALSE;
    }
 
-   g_hWnd = hWnd;
-
    ShowWindow(hWnd, nCmdShow);
    UpdateWindow(hWnd);
 
@@ -141,12 +126,67 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //  WM_DESTROY  - 发送退出消息并返回
 //
 //
+
+static bool SPressed_Shift;
+static bool SReleased_W;
+static bool SReleased_S;
+
+void _cdecl OnCombinedKeyUpdate()
+{
+	if (SPressed_Shift && SReleased_S)
+	{
+		MessageBoxA(NULL, "move back", "camera", 0);
+	}
+	else if (SPressed_Shift && SReleased_W)
+	{
+		MessageBoxA(NULL, "move front", "camera", 0);
+	}
+
+	SReleased_S = false;
+	SReleased_W = false;
+}
+
+void _cdecl OnKeyUpdate_Shift(bool bReleased)
+{
+	SPressed_Shift = !bReleased;
+	OnCombinedKeyUpdate();
+}
+
+void _cdecl OnKeyUpdate_W(bool bReleased)
+{
+	SReleased_W = bReleased;
+	OnCombinedKeyUpdate();
+}
+
+void _cdecl OnKeyUpdate_S(bool bReleased)
+{
+	SReleased_S = bReleased;
+	OnCombinedKeyUpdate();
+}
+
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
+	case WM_TIMER:
+		PollInputDevice((void*)&hWnd);
+		break;
+
+	case WM_CREATE:
+		CHAR buf[1024];
+		snprintf(buf, 1023, "WndProc window: 0x%x\n", hWnd);
+		OutputDebugStringA(buf);
+		SetupInputDevice((void*)&hWnd);
+		RegisterKeyboardCallback(0x2A, OnKeyUpdate_Shift);
+		RegisterKeyboardCallback(0x36, OnKeyUpdate_Shift);
+		RegisterKeyboardCallback(0x1F, OnKeyUpdate_S);
+		RegisterKeyboardCallback(0x11, OnKeyUpdate_W);
+		SetTimer(hWnd, 0, 1000 / 30, NULL);
+		break;
+
     case WM_COMMAND:
-        {
+	{
+
             int wmId = LOWORD(wParam);
             // 分析菜单选择: 
             switch (wmId)
@@ -173,14 +213,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_DESTROY:
         PostQuitMessage(0);
         break;
-	case WM_KEYUP:
-	{
-		CHAR msg[1024];
-		char key = wParam;
-		snprintf(msg, sizeof(msg), "hwnd: 0x%x, msg: %d, wparam: %c, lparam: %d", hWnd, message, wParam, lParam);
-		MessageBoxA(hWnd, msg, "WM_KEYUP", 0);
-	}
-	break;
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
     }

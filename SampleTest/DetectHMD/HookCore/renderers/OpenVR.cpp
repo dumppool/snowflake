@@ -373,4 +373,36 @@ const std::string OpenVR::GetDeviceString() const
 	return std::string(strDesc);
 }
 
+void OpenVR::AddMovement(EMovement movement)
+{
+	float rate = 1.f;
+	switch (movement)
+	{
+	case lostvr::EMovement::UnDefined:
+		break;
+	case lostvr::EMovement::CameraFront:
+		if (Projector != nullptr)
+		{
+			Projector->Translation.z += rate;
+		}
+		if (Projector9 != nullptr)
+		{
+			Projector9->Translation.z += rate;
+		}
+		break;
+	case lostvr::EMovement::CameraBack:
+		if (Projector != nullptr)
+		{
+			Projector->Translation.z += -rate;
+		}
+		if (Projector9 != nullptr)
+		{
+			Projector9->Translation.z += -rate;
+		}
+		break;
+	default:
+		break;
+	}
+}
+
 static OpenVR* SInst = new OpenVR("openvr");

@@ -178,6 +178,7 @@
     <ClInclude Include="disasm-lib\disasm_x86_tables.h" />
     <ClInclude Include="disasm-lib\misc.h" />
     <ClInclude Include="HookCorePCH.h" />
+    <ClInclude Include="input\InputDevice.h" />
     <ClInclude Include="libovr-lib\Src\OVR_CAPI_Prototypes.h" />
     <ClInclude Include="mhook-lib\mhook.h" />
     <ClInclude Include="renderers\ConcreteProjectors.h" />
@@ -210,6 +211,7 @@
     </ClCompile>
     <ClCompile Include="HookCore.cpp" />
     <ClCompile Include="HookCorePCH.cpp" />
+    <ClCompile Include="input\InputDevice.cpp" />
     <ClCompile Include="libovr-lib\Src\OVR_CAPIShim.c" />
     <ClCompile Include="libovr-lib\Src\OVR_CAPI_Util.cpp" />
     <ClCompile Include="libovr-lib\Src\OVR_StereoProjection.cpp" />

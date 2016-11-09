@@ -68,6 +68,11 @@ namespace lostvr {
 		UINT RecommendHeight;
 
 		FrameBufferWVP	EyePose[2];
+
+	public:
+		LVVec3 Translation;
+		LVVec3 Scale;
+		LVVec3 Rotation;
 	};
 
 	class BaseTextureProjector_Direct3D9 : public BaseTextureProjector

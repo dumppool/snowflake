@@ -50,18 +50,13 @@
 #define LOGFILE_PREFIX "Undefined"
 #endif
 
-static const CHAR* SLogFilePrefixDefault = "Default";
-
 #define LVMSG(Cap, ...) {\
-log_cap_cnt(SLogFilePrefixDefault, Cap, __VA_ARGS__);}
-
-#define LVMSG2(Prefix, Cap, ...) {\
-log_cap_cnt(Prefix, Cap, __VA_ARGS__);}
+log_cap_cnt(Cap, __VA_ARGS__);}
 
 #include <time.h>
 #include <fstream>
 using namespace std;
-inline static void log_cap_cnt(const CHAR* Prefix, const CHAR* cap, const CHAR* fmt, ...)
+inline static void log_cap_cnt(const char* cap, const char* fmt, ...)
 {
 	char msg[1024];
 
@@ -85,14 +80,11 @@ inline static void log_cap_cnt(const CHAR* Prefix, const CHAR* cap, const CHAR* 
 		return;
 	}
 
-	char logpath[1024];
-	snprintf(logpath, 1023, "%s\\_LostVR", envdir);
-	free(envdir);
-	envdir = nullptr;
+	snprintf(envdir, 1023, "%s\\_LostVR", envdir);
 
 	DWORD pid = ::GetCurrentProcessId();
 	char filepath[1024];
-	snprintf(filepath, 1023, "%s\\%s-%d.log", logpath, Prefix, pid);
+	snprintf(filepath, 1023, "%s\\%s-%d.log", envdir, LOGFILE_PREFIX, pid);
 
 	ofstream logfile(filepath, ios::app | ios::out);
 	if (!logfile)
@@ -101,12 +93,17 @@ inline static void log_cap_cnt(const CHAR* Prefix, const CHAR* cap, const CHAR* 
 		secu.bInheritHandle = TRUE;
 		secu.lpSecurityDescriptor = nullptr;
 		secu.nLength = sizeof(SECURITY_ATTRIBUTES);
-		if (::CreateDirectoryA(logpath, &secu) == FALSE)
+		if (::CreateDirectoryA(envdir, &secu) == FALSE)
 		{
-			::MessageBoxA(0, logpath, "failed to create directory", 0);
+			::MessageBoxA(0, envdir, "failed to create directory", 0);
+			free(envdir);
+			envdir = nullptr;
 			return;
 		}
 	}
+
+	free(envdir);
+	envdir = nullptr;
 
 	logfile << cdate << "\t";
 	logfile << "PID: " << pid << "\t";
@@ -121,32 +118,6 @@ inline static void log_cap_cnt(const CHAR* Prefix, const CHAR* cap, const CHAR* 
 		LVMSG("assert failed", "file: %s, line: %d.", __FILE__, __LINE__);\
 		assert(0);\
 	}\
-}
-
-#define LVASSERT2(Condition, Prefix, Cap, ...) {\
-	if (!(Condition))\
-	{\
-		LVMSG2(Prefix, Cap, __VA_ARGS__);\
-		LVMSG2(Prefix, "assert failed", "file: %s, line: %d.", __FILE__, __LINE__);\
-		assert(0);\
-	}\
-}
-
-inline bool GetWndFromProcessID(DWORD pid, HWND hwnd[], UINT& nwnd)
-{
-	HWND temp = NULL;
-	nwnd = 0;
-	while ((temp = FindWindowEx(NULL, temp, NULL, NULL)) && sizeof(hwnd) > nwnd)
-	{
-		DWORD p;
-		GetWindowThreadProcessId(temp, &p);
-		if (pid == p)
-		{
-			hwnd[nwnd++] = temp;
-		}
-	}
-
-	return true;
 }
 
 inline wstring UTF8ToWide(const string &utf8)
@@ -222,23 +193,12 @@ typedef DirectX::XMFLOAT4 LVVec;
 typedef DirectX::XMMATRIX LVMatrix;
 
 #define ALIGNED_LOSTVR(x) __declspec(align(x))
-
 #define VERIFY_HRESULT(result, cmd, info)\
 {\
 	if (FAILED(result))\
 	{\
 		assert(0 && info);\
 		cmd;\
-	}\
-}
-
-#define VERIFY_HRESULT2(Result, FailureBranch, Prefix, Cap, ...)\
-{\
-	HRESULT _hr = Result;\
-	if (FAILED(hr))\
-	{\
-		LVMSG2(Prefix, Cap, __VA_ARGS__);\
-		FailureBranch;\
 	}\
 }
 
@@ -505,6 +465,23 @@ public:
 		}
 	}
 };
+
+static bool GetWndFromProcessID(DWORD pid, HWND hwnd[], UINT& nwnd)
+{
+	HWND temp = NULL;
+	nwnd = 0;
+	while ((temp = FindWindowEx(NULL, temp, NULL, NULL)) && sizeof(hwnd) > nwnd)
+	{
+		DWORD p;
+		GetWindowThreadProcessId(temp, &p);
+		if (pid == p)
+		{
+			hwnd[nwnd++] = temp;
+		}
+	}
+
+	return true;
+}
 
 static GlobalSharedData SGlobalSharedDataInst;
 

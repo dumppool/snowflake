@@ -191,17 +191,6 @@ bool TextureProjector1::PrepareSRV()
 		if (context != nullptr && SUCCEEDED(SwapChainRef_Target->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&srcTex)))
 		{
 			ContextCopyResource(context, SharedTex_Target, srcTex, "source context");
-
-			//if (SUCCEEDED(SharedTex_Other->QueryInterface(__uuidof(IDXGIResource), (void**)&src)))
-			//{
-			//	HANDLE hShared;
-			//	if (SUCCEEDED(src->GetSharedHandle(&hShared)) &&
-			//		SUCCEEDED(Renderer->GetDevice()->OpenSharedResource(hShared, __uuidof(ID3D11Texture2D), (void**)&SharedTex_Self)))
-			//	{
-			//		ContextCopyResource(Renderer->GetContext(), Tex, SharedTex_Self, "destination context");
-			//		bSuccess = true;
-			//	}
-			//}
 		}
 	}
 

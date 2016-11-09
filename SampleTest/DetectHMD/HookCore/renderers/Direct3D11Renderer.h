@@ -26,6 +26,8 @@ namespace lostvr
 
 	extern std::string GetDescriptionFromSwapChain(IDXGISwapChain* swapChain);
 
+	extern std::string GetDescriptionFromDevice(IDirect3DDevice9* device);
+
 	extern void ContextCopyResource(ID3D11DeviceContext* context, ID3D11Texture2D* dst, ID3D11Texture2D* src, const CHAR* msgHead = "", bool bCheckContext = false);
 
 	class Direct3D11Helper

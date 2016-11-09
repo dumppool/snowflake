@@ -226,6 +226,17 @@ namespace lostvr
 			}
 		}
 
+		void AdjustViewport(float scaleW, float scaleH, float offsetW, float offsetH)
+		{
+			for (int i = 0; i < NUMEYES; ++i)
+			{
+				EyeRenderViewport[i].Pos.x += offsetW;
+				EyeRenderViewport[i].Pos.y += offsetH;
+				EyeRenderViewport[i].Size.w *= scaleW;
+				EyeRenderViewport[i].Size.h *= scaleH;
+			}
+		}
+
 		//--------------------------------------------------------
 		void ConfigureRendering(const ovrFovPort * fov = 0)
 		{
@@ -332,5 +343,8 @@ namespace lostvr
 		bool EnsureInitialized(IDXGISwapChain* swapChain);
 
 		ovrResult DistortAndPresent(int numLayersToRender, D3D11_BOX * optionalBoxForMirrorWindow = 0, bool mirror = true);
+
+		virtual void AddMovement(EMovement movement) override;
+
 	};
 };

@@ -294,4 +294,21 @@ ovrResult OculusVR::DistortAndPresent(int numLayersToRender, D3D11_BOX * optiona
 	return(presentResult);
 }
 
+void OculusVR::AddMovement(EMovement movement)
+{
+	switch (movement)
+	{
+	case lostvr::EMovement::UnDefined:
+		break;
+	case lostvr::EMovement::CameraFront:
+		Layer[0]->AdjustViewport(1.25f, 1.25f, 0.0f, 0.0f);
+		break;
+	case lostvr::EMovement::CameraBack:
+		Layer[0]->AdjustViewport(0.8f, 0.8f, 0.0f, 0.0f);
+		break;
+	default:
+		break;
+	}
+}
+
 static OculusVR* SInst = new OculusVR("libovr");

@@ -64,6 +64,9 @@ BaseTextureProjector::BaseTextureProjector() :
 	, PS(nullptr)
 	, Sampler(nullptr)
 	, WVPCB(nullptr)
+	, Translation(0.f, 0.f, -10.f)
+	, Scale(10.4f, 10.4f, 10.4f)
+	, Rotation(0.f, 1.f, 0.f)
 {
 	for (int i = 0; i < 2; ++i)
 	{
@@ -321,7 +324,7 @@ bool BaseTextureProjector::UpdateTexture()
 		context->RSSetState(RS);
 		context->OMSetRenderTargets(1, &RTVs[i], nullptr);
 
-		context->ClearRenderTargetView(RTVs[i], DirectX::Colors::DarkOrange);
+		context->ClearRenderTargetView(RTVs[i], DirectX::Colors::Black);
 
 		uint32 stride = sizeof(MeshVertex);
 		uint32 offset = 0;
@@ -335,9 +338,9 @@ bool BaseTextureProjector::UpdateTexture()
 		// vertex shader
 		context->VSSetShader(VS, nullptr, 0);
 
-		LVMatrix trans = DirectX::XMMatrixTranslation(0.0f, 0.0f, -10.0f);
-		LVMatrix rot = DirectX::XMMatrixRotationAxis({ 0.f, 1.f, 0.f }, 0.f);
-		LVMatrix scale = DirectX::XMMatrixScaling(10.404f, 10.404f, 10.404f);
+		LVMatrix trans = DirectX::XMMatrixTranslation(Translation.x, Translation.y, Translation.z);
+		LVMatrix rot = DirectX::XMMatrixRotationAxis({Rotation.x, Rotation.y, Rotation.z}, 0.f);
+		LVMatrix scale = DirectX::XMMatrixScaling(Scale.x, Scale.y, Scale.z);
 		FrameBufferWVP WVP(DirectX::XMMatrixTranspose(scale * trans), EyePose[i].V, EyePose[i].P);
 		context->UpdateSubresource(WVPCB, 0, nullptr, &WVP, 0, 0);
 		context->VSSetConstantBuffers(0, 1, &WVPCB);
@@ -359,15 +362,6 @@ ID3D11Texture2D* BaseTextureProjector::GetFinalBuffer(EnumEyeID eye)
 {
 	return BB[eye];
 }
-
-
-//static LVMatrix LVMatrixMultiply(const LVMatrix& l, const LVMatrix& r)
-//{
-//	return LVMatrix(m[0] * n[0] + m[4] * n[1] + m[8] * n[2] + m[12] * n[3], m[1] * n[0] + m[5] * n[1] + m[9] * n[2] + m[13] * n[3], m[2] * n[0] + m[6] * n[1] + m[10] * n[2] + m[14] * n[3], m[3] * n[0] + m[7] * n[1] + m[11] * n[2] + m[15] * n[3],
-//		m[0] * n[4] + m[4] * n[5] + m[8] * n[6] + m[12] * n[7], m[1] * n[4] + m[5] * n[5] + m[9] * n[6] + m[13] * n[7], m[2] * n[4] + m[6] * n[5] + m[10] * n[6] + m[14] * n[7], m[3] * n[4] + m[7] * n[5] + m[11] * n[6] + m[15] * n[7],
-//		m[0] * n[8] + m[4] * n[9] + m[8] * n[10] + m[12] * n[11], m[1] * n[8] + m[5] * n[9] + m[9] * n[10] + m[13] * n[11], m[2] * n[8] + m[6] * n[9] + m[10] * n[10] + m[14] * n[11], m[3] * n[8] + m[7] * n[9] + m[11] * n[10] + m[15] * n[11],
-//		m[0] * n[12] + m[4] * n[13] + m[8] * n[14] + m[12] * n[15], m[1] * n[12] + m[5] * n[13] + m[9] * n[14] + m[13] * n[15], m[2] * n[12] + m[6] * n[13] + m[10] * n[14] + m[14] * n[15], m[3] * n[12] + m[7] * n[13] + m[11] * n[14] + m[15] * n[15]);
-//}
 
 void BaseTextureProjector::SetEyePose(EnumEyeID Eye, const LVMatrix& EyeView, const LVMatrix& Proj)
 {
@@ -395,6 +389,8 @@ bool BaseTextureProjector_Direct3D9::InitializeProjector_Direct3D9(IDirect3DDevi
 
 	RecommendWidth = hmdWidth;
 	RecommendHeight = hmdHeight;
+
+	LVMSG(head, "%s", GetDescriptionFromDevice(device).c_str());
 
 	if (!InitializeRenderer_Direct3D9(device))
 	{

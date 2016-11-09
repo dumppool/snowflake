@@ -27,13 +27,8 @@
     <ClInclude Include="Resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="winhook.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="hookbody.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="InputDevice.h">
+    <ClInclude Include="InputDevice.h" />
+    <ClInclude Include="directinput.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -41,18 +36,13 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="winhook.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="InputDevice.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="CustomFormat.cpp">
+    <ClCompile Include="InputDevice.cpp" />
+    <ClCompile Include="directinput.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="winhook.rc">
+    <ResourceCompile Include="directinput.rc">
       <Filter>资源文件</Filter>
     </ResourceCompile>
   </ItemGroup>
@@ -60,7 +50,7 @@
     <Image Include="small.ico">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="winhook.ico">
+    <Image Include="directinput.ico">
       <Filter>资源文件</Filter>
     </Image>
   </ItemGroup>

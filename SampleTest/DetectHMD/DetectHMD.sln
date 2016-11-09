@@ -27,6 +27,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "winhook", "winhook\winhook.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "winhookdll", "winhookdll\winhookdll.vcxproj", "{885E5593-1AF7-4790-AF17-FFCAED02B70E}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "directinput", "directinput\directinput.vcxproj", "{F6039C9A-390C-4259-9479-4865B3FACD38}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -131,6 +133,14 @@ Global
 		{885E5593-1AF7-4790-AF17-FFCAED02B70E}.Release|x64.Build.0 = Release|x64
 		{885E5593-1AF7-4790-AF17-FFCAED02B70E}.Release|x86.ActiveCfg = Release|Win32
 		{885E5593-1AF7-4790-AF17-FFCAED02B70E}.Release|x86.Build.0 = Release|Win32
+		{F6039C9A-390C-4259-9479-4865B3FACD38}.Debug|x64.ActiveCfg = Debug|x64
+		{F6039C9A-390C-4259-9479-4865B3FACD38}.Debug|x64.Build.0 = Debug|x64
+		{F6039C9A-390C-4259-9479-4865B3FACD38}.Debug|x86.ActiveCfg = Debug|Win32
+		{F6039C9A-390C-4259-9479-4865B3FACD38}.Debug|x86.Build.0 = Debug|Win32
+		{F6039C9A-390C-4259-9479-4865B3FACD38}.Release|x64.ActiveCfg = Release|x64
+		{F6039C9A-390C-4259-9479-4865B3FACD38}.Release|x64.Build.0 = Release|x64
+		{F6039C9A-390C-4259-9479-4865B3FACD38}.Release|x86.ActiveCfg = Release|Win32
+		{F6039C9A-390C-4259-9479-4865B3FACD38}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

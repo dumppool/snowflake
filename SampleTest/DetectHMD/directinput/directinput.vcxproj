@@ -19,9 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{F3D4DF0E-1CAF-4DA2-A2A1-FD0F894E13DD}</ProjectGuid>
+    <ProjectGuid>{F6039C9A-390C-4259-9479-4865B3FACD38}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>winhook</RootNamespace>
+    <RootNamespace>directinput</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -119,9 +119,9 @@
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -136,24 +136,23 @@
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="hookbody.h" />
+    <ClInclude Include="directinput.h" />
     <ClInclude Include="InputDevice.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
-    <ClInclude Include="winhook.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CustomFormat.cpp" />
+    <ClCompile Include="directinput.cpp" />
     <ClCompile Include="InputDevice.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -161,14 +160,13 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="winhook.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="winhook.rc" />
+    <ResourceCompile Include="directinput.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="directinput.ico" />
     <Image Include="small.ico" />
-    <Image Include="winhook.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

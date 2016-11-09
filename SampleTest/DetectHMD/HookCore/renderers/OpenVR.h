@@ -64,5 +64,8 @@ namespace lostvr {
 		virtual const std::string GetDeviceString() const;
 
 		void GetEyeViewProject(vr::Hmd_Eye Eye, float fNearZ, float fFarZ, vr::EGraphicsAPIConvention eProjType, LVMatrix& EyeView, LVMatrix& Proj) const;
+
+		virtual void AddMovement(EMovement movement) override;
+
 	};
 };

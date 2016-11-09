@@ -16,6 +16,9 @@
     <Filter Include="renderers">
       <UniqueIdentifier>{57007b16-6c4f-4c30-bcdd-8f9dd35af11e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="input">
+      <UniqueIdentifier>{252477db-ed81-41c5-9e28-176ec020b92c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -64,6 +67,9 @@
     </ClInclude>
     <ClInclude Include="renderers\ConcreteProjectors.h">
       <Filter>renderers</Filter>
+    </ClInclude>
+    <ClInclude Include="input\InputDevice.h">
+      <Filter>input</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -120,6 +126,9 @@
     </ClCompile>
     <ClCompile Include="renderers\ConcreteProjectors.cpp">
       <Filter>renderers</Filter>
+    </ClCompile>
+    <ClCompile Include="input\InputDevice.cpp">
+      <Filter>input</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

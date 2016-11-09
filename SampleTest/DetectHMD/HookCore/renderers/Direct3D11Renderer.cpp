@@ -647,33 +647,33 @@ lostvr::EDirect3D lostvr::GetInterfaceVersionFromSwapChain(IDXGISwapChain* swapC
 	{
 		ret = EDirect3D::DXGI0;
 
-		IDXGIDevice* dxgiDevice = nullptr;
-		IDXGIDevice1* dxgiDevice1 = nullptr;
-		IDXGIFactory* dxgiFactory = nullptr;
-		IDXGIFactory1* dxgiFactory1 = nullptr;
-		/*			if (SUCCEEDED(device->QueryInterface(__uuidof(IDXGIDevice3), (void**)&dxgiDevice)) && dxgiDevice != nullptr)
-					{
-						ret = EDirect3D::DXGI3;
-					}
-					else if (SUCCEEDED(device->QueryInterface(__uuidof(IDXGIDevice2), (void**)&dxgiDevice)) && dxgiDevice != nullptr)
-					{
-						ret = EDirect3D::DXGI2;
-					}
-					else */
-		if (SUCCEEDED(device->QueryInterface(__uuidof(IDXGIDevice), (void**)&dxgiDevice)) && dxgiDevice != nullptr)
-		{
-			IDXGIAdapter* dxgiAdapter = nullptr;
-			IDXGIAdapter1* dxgiAdapter1 = nullptr;
-			if (SUCCEEDED(dxgiDevice->GetAdapter(&dxgiAdapter)))
+IDXGIDevice* dxgiDevice = nullptr;
+IDXGIDevice1* dxgiDevice1 = nullptr;
+IDXGIFactory* dxgiFactory = nullptr;
+IDXGIFactory1* dxgiFactory1 = nullptr;
+/*			if (SUCCEEDED(device->QueryInterface(__uuidof(IDXGIDevice3), (void**)&dxgiDevice)) && dxgiDevice != nullptr)
 			{
-				if (SUCCEEDED(dxgiAdapter->QueryInterface(__uuidof(IDXGIAdapter1), (void**)&dxgiAdapter1)) && dxgiAdapter1 != nullptr)
-				{
-					ret = EDirect3D::DXGI1;
-					DXGI_ADAPTER_DESC1 desc1;
-					dxgiAdapter1->GetDesc1(&desc1);
-				}
+				ret = EDirect3D::DXGI3;
 			}
+			else if (SUCCEEDED(device->QueryInterface(__uuidof(IDXGIDevice2), (void**)&dxgiDevice)) && dxgiDevice != nullptr)
+			{
+				ret = EDirect3D::DXGI2;
+			}
+			else */
+if (SUCCEEDED(device->QueryInterface(__uuidof(IDXGIDevice), (void**)&dxgiDevice)) && dxgiDevice != nullptr)
+{
+	IDXGIAdapter* dxgiAdapter = nullptr;
+	IDXGIAdapter1* dxgiAdapter1 = nullptr;
+	if (SUCCEEDED(dxgiDevice->GetAdapter(&dxgiAdapter)))
+	{
+		if (SUCCEEDED(dxgiAdapter->QueryInterface(__uuidof(IDXGIAdapter1), (void**)&dxgiAdapter1)) && dxgiAdapter1 != nullptr)
+		{
+			ret = EDirect3D::DXGI1;
+			DXGI_ADAPTER_DESC1 desc1;
+			dxgiAdapter1->GetDesc1(&desc1);
 		}
+	}
+}
 	}
 
 	return ret;
@@ -726,8 +726,8 @@ std::string lostvr::GetDescriptionFromSwapChain(IDXGISwapChain * swapChain)
 				ret += buf;
 
 				snprintf(&buf[0], 1023, "adapter subsytem id:\t%d\n\tadapter revision:\t%d\n\tadapter video memory:\t%lldmb\n\tadapter system memory:\t%lldmb\n\tadapter shared memory:\t%lldmb",
-					desc.SubSysId, desc.Revision, desc.DedicatedVideoMemory/(1024*1024), desc.DedicatedSystemMemory / (1024 * 1024), desc.SharedSystemMemory / (1024 * 1024));
-			
+					desc.SubSysId, desc.Revision, desc.DedicatedVideoMemory / (1024 * 1024), desc.DedicatedSystemMemory / (1024 * 1024), desc.SharedSystemMemory / (1024 * 1024));
+
 				ret += "\n\t";
 				ret += buf;
 			}
@@ -740,6 +740,20 @@ std::string lostvr::GetDescriptionFromSwapChain(IDXGISwapChain * swapChain)
 	SAFE_RELEASE(device);
 	SAFE_RELEASE(dxgiDevice);
 	return ret;
+}
+
+std::string lostvr::GetDescriptionFromDevice(IDirect3DDevice9 * device)
+{
+	IDirect3DDevice9Ex* deviceEx = nullptr;
+	if (SUCCEEDED(device->QueryInterface(__uuidof(IDirect3DDevice9Ex), (void**)&deviceEx)) && deviceEx != nullptr)
+	{
+		SAFE_RELEASE(deviceEx);
+		return "IDirect3DDevice9Ex";
+	}
+	else
+	{
+		return "IDirect3DDevice9";
+	}
 }
 
 void lostvr::ContextCopyResource(ID3D11DeviceContext * context, ID3D11Texture2D * dst, ID3D11Texture2D * src, const CHAR* msgHead, bool bCheckContext)
