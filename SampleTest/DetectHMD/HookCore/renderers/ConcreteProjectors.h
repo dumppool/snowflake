@@ -1,3 +1,9 @@
+ * file ConcreteProjectors.h
+ *
+ * author luoxw
+ *
+ * 
+ */
 #pragma once
 #include "Projector.h"
 #include "Direct3D11Renderer.h"

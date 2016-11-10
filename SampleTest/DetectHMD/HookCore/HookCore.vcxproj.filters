@@ -121,9 +121,6 @@
     <ClCompile Include="renderers\Projector.cpp">
       <Filter>renderers</Filter>
     </ClCompile>
-    <ClCompile Include="renderers\WindowsRouters.cpp">
-      <Filter>renderers</Filter>
-    </ClCompile>
     <ClCompile Include="renderers\ConcreteProjectors.cpp">
       <Filter>renderers</Filter>
     </ClCompile>

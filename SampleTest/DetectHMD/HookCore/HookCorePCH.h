@@ -1,3 +1,11 @@
+/*
+ * file HookCorePCH.h
+ *
+ * author luoxw
+ * date 2016/11/10
+ *
+ * 
+ */
 #pragma once
 #include "targetver.h"
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers

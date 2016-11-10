@@ -1,3 +1,11 @@
+/*
+ * file Direct3D11Renderer.h
+ *
+ * author luoxw
+ * date 2016/11/10
+ *
+ * 
+ */
 #pragma once
 
 //struct IDXGIDevice;

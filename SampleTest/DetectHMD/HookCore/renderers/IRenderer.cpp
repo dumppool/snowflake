@@ -1,3 +1,11 @@
+/*
+ * file IRenderer.cpp
+ *
+ * author luoxw
+ * date 2016/11/10
+ *
+ * 
+ */
 #include "HookCorePCH.h"
 #include "IRenderer.h"
 #include "input/InputDevice.h"

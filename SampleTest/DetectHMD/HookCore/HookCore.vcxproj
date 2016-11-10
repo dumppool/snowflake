@@ -224,7 +224,6 @@
     <ClCompile Include="renderers\OpenVR.cpp" />
     <ClCompile Include="renderers\Projector.cpp" />
     <ClCompile Include="renderers\RouteAPIs.cpp" />
-    <ClCompile Include="renderers\WindowsRouters.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
