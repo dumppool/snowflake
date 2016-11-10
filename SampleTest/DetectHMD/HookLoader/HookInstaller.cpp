@@ -1,3 +1,11 @@
+/*
+ * file HookInstaller.cpp
+ *
+ * author luoxw
+ * date 2016/11/10
+ *
+ * 
+ */
 #include "stdafx.h"
 #include "HookInstaller.h"
 #include "StringUtils.h"

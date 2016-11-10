@@ -1,3 +1,11 @@
+/*
+ * file HookInstaller.h
+ *
+ * author luoxw
+ * date 2016/11/10
+ *
+ * 
+ */
 #pragma once
 
 #include <SDKDDKVer.h>
