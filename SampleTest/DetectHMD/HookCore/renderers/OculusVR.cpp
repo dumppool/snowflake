@@ -208,7 +208,7 @@ bool OculusVR::OnPresent_Direct3D9(IDirect3DDevice9* device)
 
 	Layer[0]->GetEyePoses();
 	ID3D11Texture2D* dst = Layer[0]->pEyeRenderTexture[0]->GetBuffer();
-	if (!Renderer->OutputBuffer_Texture2D_Direct9(dst))
+	if (!Renderer->OutputBuffer_Texture2D_Direct3D9(dst))
 	{
 		return false;
 	}

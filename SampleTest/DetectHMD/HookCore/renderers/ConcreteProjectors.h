@@ -15,6 +15,7 @@ namespace lostvr {
 	{
 	protected:
 		Direct3D11Helper* Renderer;
+		ID3D11Texture2D* Tex;
 		ID3D11ShaderResourceView* SRV;
 
 	public:
@@ -27,8 +28,8 @@ namespace lostvr {
 		virtual bool InitializeTextureSRV() override;
 		virtual ID3D11ShaderResourceView* GetTextureSRV() override;
 
-		// Í¨¹ý BaseTextureProjector ¼Ì³Ð
 		virtual void DestroyRHI() override;
+		virtual bool PrepareSRV() override;
 	};
 
 	class TextureProjector1 : public BaseTextureProjector

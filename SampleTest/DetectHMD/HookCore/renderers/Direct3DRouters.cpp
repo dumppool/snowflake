@@ -53,7 +53,12 @@ static HRESULT STDMETHODCALLTYPE Direct3D11Present(IDXGISwapChain* This, UINT Sy
 	if (func != nullptr)
 	{
 		LostVR::Get()->OnPresent_Direct3D11(This);
+
 		hr = func(This, Sync, Flags);
+		if (FAILED(hr))
+		{
+			LVMSG("Direct3D11Present", "failed with 0x%x(%d)", hr, hr);
+		}
 	}
 	else
 	{

@@ -36,7 +36,7 @@ namespace lostvr
 
 	extern std::string GetDescriptionFromDevice(IDirect3DDevice9* device);
 
-	extern void ContextCopyResource(ID3D11DeviceContext* context, ID3D11Texture2D* dst, ID3D11Texture2D* src, const CHAR* msgHead = "", bool bCheckContext = false);
+	extern void ContextCopyResource(ID3D11Texture2D* dst, ID3D11Texture2D* src, const CHAR* msgHead = "", bool bCheckContext = false);
 
 	class Direct3D11Helper
 	{
@@ -48,6 +48,27 @@ namespace lostvr
 		ID3D11Texture2D*		Buffer_Direct9Copy;
 		IDXGISwapChain*			SwapChain;
 
+		ID3D11VertexShader*		DefaultVS;
+		ID3D11PixelShader*		DefaultPS;
+		ID3D11InputLayout*		DefaultInputLayout;
+
+		ID3D11Buffer*			CursorVB;
+		ID3D11Buffer*			CursorIB;
+
+		void ZeroRHI()
+		{
+			Buffer = nullptr;
+			Buffer_Direct9Copy = nullptr;
+			SwapChain = nullptr;
+			Context = nullptr;
+			Device = nullptr;
+			DefaultVS = nullptr;
+			DefaultPS = nullptr;
+			DefaultInputLayout = nullptr;
+			CursorVB = nullptr;
+			CursorIB = nullptr;
+		}
+
 		void DestroyRHI()
 		{
 			SAFE_RELEASE(Buffer);
@@ -55,6 +76,11 @@ namespace lostvr
 			SAFE_RELEASE(SwapChain);
 			SAFE_RELEASE(Context);
 			SAFE_RELEASE(Device);
+			SAFE_RELEASE(DefaultVS);
+			SAFE_RELEASE(DefaultPS);
+			SAFE_RELEASE(DefaultInputLayout);
+			SAFE_RELEASE(CursorVB);
+			SAFE_RELEASE(CursorIB);
 		}
 
 		bool InitializeRHI(UINT width = 0, UINT height = 0, DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM);
@@ -95,7 +121,7 @@ namespace lostvr
 		bool UpdateRHIWithSwapChain(IDXGISwapChain* swapChain);
 		bool OutputBuffer_Texture2D(ID3D11Texture2D* dst);
 		bool UpdateBuffer_Direct3D9(IDirect3DDevice9* device);
-		bool OutputBuffer_Texture2D_Direct9(ID3D11Texture2D* dst);
+		bool OutputBuffer_Texture2D_Direct3D9(ID3D11Texture2D* dst);
 
 		ID3D11Device* GetDevice();
 		ID3D11DeviceContext* GetContext();
@@ -123,10 +149,15 @@ namespace lostvr
 		//************************************
 		DXGI_FORMAT GetDirect9FormatMatch(D3DFORMAT format);
 
-		HRESULT CreateShaderResourceViewBySwapChain(void** ppTex, void** ppView);
 		void GetDescriptionTemplate_DefaultTexture2D(D3D11_TEXTURE2D_DESC& desc);
 		bool CreateTexture2D(ID3D11Texture2D** ppTex, ID3D11ShaderResourceView** ppSRV, D3D11_TEXTURE2D_DESC * pDesc,
 			ID3D11Device* deviceOverride = nullptr);
 		bool CreateShaderResourceView(ID3D11Texture2D* tex, ID3D11ShaderResourceView** ppSRV);
+
+		void UpdateCursor(float size, bool bVisible);
+
+		bool CreateMesh_Rect(float width, float height, ID3D11Buffer** vb, ID3D11Buffer** ib);
+		bool GetDefaultShader(ID3D11VertexShader** vs, ID3D11PixelShader** ps, ID3D11InputLayout** layout);
+		bool CompileShader(LPCWSTR file, LPCSTR entry, LPCSTR target, ID3DBlob** blob);
 	};
 }

@@ -24,44 +24,6 @@ static void TestMatrixVectorMultiply(const LVMatrix& Mat, const LVVec& Vec)
 	LVMSG("TestMatrixVectorMultiply", "Mat %f\t%f\t%f\t%f", Mat.r[3].m128_f32[0], Mat.r[3].m128_f32[1], Mat.r[3].m128_f32[2], Mat.r[3].m128_f32[3]);
 }
 
-static bool CompileShader(LPCWSTR file, LPCSTR entry, LPCSTR target, ID3DBlob** blob)
-{
-	if (!file || !entry || !target || !blob)
-	{
-		LVASSERT(0, "CompileShader", "file(%ls), entry(%s), target(%s), blob(%x)", file, entry, target, blob);
-		return false;
-	}
-
-	ID3DBlob* ShaderBlob = nullptr;
-	ID3DBlob* ErrorBlob = nullptr;
-	UINT Flag1 = 0;
-	UINT Flag2 = 0;
-	Flag1 |= D3DCOMPILE_DEBUG;
-	HRESULT Res = D3DCompileFromFile(file, NULL, NULL, entry, target, Flag1, Flag2, &ShaderBlob, &ErrorBlob);
-	if (FAILED(Res))
-	{
-		LVMSG("CompileShader", "compile %ls(%s, %s) failed: %s", file, entry, target, ErrorBlob?ErrorBlob->GetBufferPointer():"");
-
-		if (ShaderBlob)
-		{
-			ShaderBlob->Release();
-		}
-
-		if (ErrorBlob)
-		{
-			ErrorBlob->Release();
-		}
-
-		return false;
-	}
-	else
-	{
-		LVMSG("CompileShader", "compile %ls(%s, %s) successfully", file, entry, target);
-		*blob = ShaderBlob;
-		return true;
-	}
-}
-
 BaseTextureProjector::BaseTextureProjector() :
 	DSS(nullptr)
 	, RS(nullptr)
@@ -183,36 +145,7 @@ bool BaseTextureProjector::InitializeRHI()
 		VERIFY_HRESULT(deviceRef->CreateRasterizerState(&desc, &RS), return false, "failed to create projector's rasterize state.");
 	}
 
-	{
-		// Create Mesh
-		const MeshVertex rectVertices[4] =
-		{
-			{ LVVec3(-1.0f, -1.0f, 0.0f), LVVec2(0.0f, 1.0f) },		// bottom left
-			{ LVVec3(-1.0f, 1.0f, 0.0f), LVVec2(0.0f, 0.0f) },			// top left
-			{ LVVec3(1.0f, 1.0f, 0.0f), LVVec2(1.0f, 0.0f) },			// top right
-			{ LVVec3(1.0f, -1.0f, 0.0f), LVVec2(1.0f, 1.0f) },			// bottom right
-		};
-
-		const uint16 rectIndices[6] = { 0, 1, 2, 3, 0, 2 };
-
-		{
-			// Vertex Buffer
-			uint32 sz = sizeof(MeshVertex) * ARRAYSIZE(rectVertices);
-			D3D11_BUFFER_DESC Desc{ sz, D3D11_USAGE_DEFAULT	, D3D11_BIND_VERTEX_BUFFER, 0, 0, 0 };
-			D3D11_SUBRESOURCE_DATA Data{ &rectVertices[0], 0, 0 };
-			hr = deviceRef->CreateBuffer(&Desc, &Data, &VB);
-			VERIFY_HRESULT(hr, return false, "failed to create rect vertex buffer.");
-		}
-
-		{
-			// Index Buffer
-			uint32 sz = (int32)sizeof(uint16) * ARRAYSIZE(rectIndices);
-			D3D11_BUFFER_DESC Desc{ sz, D3D11_USAGE_DEFAULT, D3D11_BIND_INDEX_BUFFER, 0, 0, 0 };
-			D3D11_SUBRESOURCE_DATA Data{ &rectIndices[0], 0, 0 };
-			hr = deviceRef->CreateBuffer(&Desc, &Data, &IB);
-			VERIFY_HRESULT(hr, return false, "failed to create rect index buffer.");
-		}
-	}
+	GetRenderer()->CreateMesh_Rect(2.f, 2.f, &VB, &IB);
 
 	{
 		// Create frame buffer
@@ -225,42 +158,7 @@ bool BaseTextureProjector::InitializeRHI()
 		VERIFY_HRESULT(hr, return false, "failed to create frame buffer wvp.");
 	}
 
-	{
-		// Create shader
-		// VS
-		ID3DBlob* VSBlob = nullptr;
-		if (!CompileShader(SGlobalSharedDataInst.GetShaderFilePath(), "vs_main", "vs_5_0", &VSBlob) || !VSBlob)
-		{
-			return false;
-		}
-		else
-		{
-			hr = deviceRef->CreateVertexShader(VSBlob->GetBufferPointer(), VSBlob->GetBufferSize(), nullptr, &VS);
-			VERIFY_HRESULT(hr, return false, "failed to create vertex shader.");
-		}
-
-		// PS
-		ID3DBlob* PSBlob = nullptr;
-		if (!CompileShader(SGlobalSharedDataInst.GetShaderFilePath(), "ps_main", "ps_5_0", &PSBlob) || !PSBlob)
-		{
-			return false;
-		}
-		else
-		{
-			hr = deviceRef->CreatePixelShader(PSBlob->GetBufferPointer(), PSBlob->GetBufferSize(), nullptr, &PS);
-			VERIFY_HRESULT(hr, return false, "failed to create pixel shader.");
-		}
-
-		// Vertex Layout
-		D3D11_INPUT_ELEMENT_DESC desc[]
-		{
-			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(MeshVertex, Position), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT   , 0, offsetof(MeshVertex, Texcoord), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		};
-
-		hr = deviceRef->CreateInputLayout(desc, ARRAYSIZE(desc), VSBlob->GetBufferPointer(), VSBlob->GetBufferSize(), &VL);
-		VERIFY_HRESULT(hr, return false, "failed to create vertex layout.");
-	}
+	GetRenderer()->GetDefaultShader(&VS, &PS, &VL);
 
 	{
 		// Create sampler
@@ -307,6 +205,10 @@ void BaseTextureProjector::DestroyRHI()
 
 }
 
+#ifndef ENABLE_RESTORESTATE
+//#define ENABLE_RESTORESTATE
+#endif
+
 bool BaseTextureProjector::UpdateTexture()
 {
 	const CHAR* head = "TextureProjector::UpdateTexture";
@@ -324,14 +226,45 @@ bool BaseTextureProjector::UpdateTexture()
 
 	ID3D11DeviceContext* context = GetRenderer()->GetContext();
 
+#ifdef ENABLE_RESTORESTATE
+	D3D11_VIEWPORT oldVP;
+	UINT numVPs = 1;
+	context->RSGetViewports(&numVPs, &oldVP);
+
+	ID3D11RasterizerState* oldRSState = nullptr;
+	context->RSGetState(&oldRSState);
+
+	ID3D11Buffer* oldBuffer = nullptr;
+	context->VSGetConstantBuffers(0, 1, &oldBuffer);
+
+	UINT oldStride, oldOffset;
+	ID3D11Buffer* oldVB = nullptr;
+	context->IAGetVertexBuffers(0, 1, &oldVB, &oldStride, &oldOffset);
+
+	ID3D11Buffer* oldIB = nullptr;
+	DXGI_FORMAT oldFormat;
+	UINT oldOffset2;
+	context->IAGetIndexBuffer(&oldIB, &oldFormat, &oldOffset2);
+
+	D3D11_PRIMITIVE_TOPOLOGY oldTopo;
+	context->IAGetPrimitiveTopology(&oldTopo);
+
+	ID3D11InputLayout* oldIL = nullptr;
+	context->IAGetInputLayout(&oldIL);
+
+	ID3D11RenderTargetView* oldRTV[2] = {0};
+	ID3D11DepthStencilView* oldDSV = nullptr;
+	context->OMGetRenderTargets(1, &oldRTV[0], &oldDSV);
+
+#endif // ENABLE_RESTORESTATE
+
 	D3D11_VIEWPORT Viewport{ 0.0f, 0.0f, (float)RecommendWidth, (float)RecommendHeight, 0.0f, 1.0f };
 	context->RSSetViewports(1, &Viewport);
+	context->RSSetState(RS);
 
 	for (int i = 0; i < 2; ++i)
 	{
-		context->RSSetState(RS);
 		context->OMSetRenderTargets(1, &RTVs[i], nullptr);
-
 		context->ClearRenderTargetView(RTVs[i], DirectX::Colors::Black);
 
 		uint32 stride = sizeof(MeshVertex);
@@ -349,8 +282,8 @@ bool BaseTextureProjector::UpdateTexture()
 		LVMatrix trans = DirectX::XMMatrixTranslation(Translation.x, Translation.y, Translation.z);
 		LVMatrix rot = DirectX::XMMatrixRotationAxis({Rotation.x, Rotation.y, Rotation.z}, 0.f);
 		LVMatrix scale = DirectX::XMMatrixScaling(Scale.x, Scale.y, Scale.z);
-		FrameBufferWVP WVP(DirectX::XMMatrixTranspose(scale * trans), EyePose[i].V, EyePose[i].P);
-		context->UpdateSubresource(WVPCB, 0, nullptr, &WVP, 0, 0);
+		FrameBufferWVP wvp(DirectX::XMMatrixTranspose(scale * trans), EyePose[i].V, EyePose[i].P);
+		context->UpdateSubresource(WVPCB, 0, nullptr, &wvp, 0, 0);
 		context->VSSetConstantBuffers(0, 1, &WVPCB);
 
 		// pixel shader
@@ -362,6 +295,17 @@ bool BaseTextureProjector::UpdateTexture()
 
 		context->DrawIndexed(6, 0, 0);
 	}
+
+#ifdef ENABLE_RESTORESTATE
+	context->RSSetViewports(numVPs, &oldVP);
+	context->RSSetState(oldRSState);
+	context->VSSetConstantBuffers(0, 1, &oldBuffer);
+	context->IASetVertexBuffers(0, 1, &oldVB, &oldStride, &oldOffset);
+	context->IASetIndexBuffer(oldIB, oldFormat, oldOffset2);
+	context->IASetPrimitiveTopology(oldTopo);
+	context->IASetInputLayout(oldIL);
+	context->OMSetRenderTargets(1, &oldRTV[0], oldDSV);
+#endif // ENABLE_RESTORESTATE
 
 	return true;
 }

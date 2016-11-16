@@ -174,7 +174,7 @@ void LostVR::SetupInput()
 	UINT nwnd;
 	if (GetWndFromProcessID(GetCurrentProcessId(), hwnd, nwnd))
 	{
-		LVMSG2(SLogPrefix, "LostVR::SetupInput", "window count: %d, window0: 0x%x", nwnd, hwnd[0]);
+		LVMSG("LostVR::SetupInput", "window count: %d, window0: 0x%x", nwnd, hwnd[0]);
 		//for (int i = 0; i < nwnd; ++i)
 			//LVMSG2(SLogPrefix, "LostVR::SetupInput", "window: 0x%x", hwnd[i]);
 

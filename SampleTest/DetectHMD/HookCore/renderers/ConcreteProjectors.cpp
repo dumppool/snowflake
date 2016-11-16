@@ -11,7 +11,7 @@
 
 using namespace lostvr;
 
-TextureProjector0::TextureProjector0() : Renderer(nullptr), SRV(nullptr)
+TextureProjector0::TextureProjector0() : Renderer(nullptr), Tex(nullptr), SRV(nullptr)
 {
 }
 
@@ -33,12 +33,36 @@ bool TextureProjector0::InitializeRenderer(IDXGISwapChain * swapChain)
 
 bool TextureProjector0::InitializeTextureSRV()
 {
+	const CHAR* head = "TextureProjector0::InitializeTextureSRV";
 	if (Renderer == nullptr)
 	{
 		return false;
 	}
 
-	return SUCCEEDED(Renderer->CreateShaderResourceViewBySwapChain(nullptr, (void**)&SRV));
+	bool bSuccess = false;
+	ID3D11Texture2D* tex = nullptr;
+	if (SUCCEEDED(Renderer->GetSwapChain()->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&tex)) &&
+		Renderer->CreateShaderResourceView(tex, &SRV))
+	{
+		LVMSG(head, "create swap chain directly from swap chain successfully");
+		bSuccess = true;
+	}
+	else
+	{
+		DXGI_SWAP_CHAIN_DESC scDesc;
+		Renderer->GetSwapChain()->GetDesc(&scDesc);
+
+		D3D11_TEXTURE2D_DESC desc2;
+		Renderer->GetDescriptionTemplate_DefaultTexture2D(desc2);
+		desc2.Width = scDesc.BufferDesc.Width;
+		desc2.Height = scDesc.BufferDesc.Height;
+		desc2.Format = scDesc.BufferDesc.Format;
+
+		bSuccess = Renderer->CreateTexture2D(&Tex, &SRV, &desc2);
+	}
+
+	SAFE_RELEASE(tex);
+	return true;
 }
 
 Direct3D11Helper * lostvr::TextureProjector0::GetRenderer()
@@ -56,7 +80,18 @@ void TextureProjector0::DestroyRHI()
 	BaseTextureProjector::DestroyRHI();
 
 	SAFE_DELETE(Renderer);
+	SAFE_RELEASE(Tex);
 	SAFE_RELEASE(SRV);
+}
+
+bool TextureProjector0::PrepareSRV()
+{
+	if (Tex != nullptr)
+	{
+		return Renderer->OutputBuffer_Texture2D(Tex);
+	}
+
+	return true;
 }
 
 TextureProjector1::TextureProjector1() : Renderer(nullptr)
@@ -143,7 +178,6 @@ Direct3D11Helper* TextureProjector1::GetRenderer()
 bool TextureProjector1::InitializeTextureSRV()
 {
 	const CHAR* head = "TextureProjector1::InitializeTextureSRV";
-	HRESULT hr;
 
 	if (Renderer == nullptr)
 	{
@@ -182,30 +216,16 @@ void TextureProjector1::DestroyRHI()
 bool TextureProjector1::PrepareSRV()
 {
 	const CHAR* head = "TextureProjector1::PrepareSRV";
-	if (SwapChainRef_Target == nullptr || Renderer == nullptr)
-	{
-		return false;
-	}
-
-	bool bSuccess = true;
+	bool bSuccess = false;
 
 	ID3D11Texture2D* srcTex = nullptr;
-	IDXGIResource* src = nullptr;
-	ID3D11Device* device = nullptr;
-	ID3D11DeviceContext* context = nullptr;
-	if (SUCCEEDED(SwapChainRef_Target->GetDevice(__uuidof(ID3D11Device), (void**)&device)))
+	if (SwapChainRef_Target != nullptr && SUCCEEDED(SwapChainRef_Target->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&srcTex)))
 	{
-		device->GetImmediateContext(&context);
-		if (context != nullptr && SUCCEEDED(SwapChainRef_Target->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&srcTex)))
-		{
-			ContextCopyResource(context, SharedTex_Target, srcTex, "source context");
-		}
+		ContextCopyResource(SharedTex_Target, srcTex, "source context");
+		bSuccess = true;
 	}
 
-	SAFE_RELEASE(context);
-	SAFE_RELEASE(device);
 	SAFE_RELEASE(srcTex);
-	SAFE_RELEASE(src);
 	return bSuccess;
 }
 
@@ -277,5 +297,5 @@ void TextureProjector9::DestroyRHI()
 bool TextureProjector9::PrepareSRV()
 {
 	return Renderer->UpdateBuffer_Direct3D9(DeviceRef_Target) &&
-		Renderer->OutputBuffer_Texture2D_Direct9(Tex);
+		Renderer->OutputBuffer_Texture2D_Direct3D9(Tex);
 }
