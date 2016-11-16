@@ -7,3 +7,5 @@
  * 
  */
 #include "HookCorePCH.h"
+
+GlobalSharedData SGlobalSharedDataInst;

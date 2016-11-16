@@ -27,7 +27,17 @@ bool TextureProjector0::IsInitialized(IDXGISwapChain * swapChain) const
 
 bool TextureProjector0::InitializeRenderer(IDXGISwapChain * swapChain)
 {
+	if (swapChain == nullptr)
+	{
+		return false;
+	}
+
+	DXGI_SWAP_CHAIN_DESC desc;
+	swapChain->GetDesc(&desc);
+
 	Renderer = new Direct3D11Helper(EDirect3D::DeviceRef);
+	SGlobalSharedDataInst.TargetWindow = desc.OutputWindow;
+
 	return Renderer->UpdateRHIWithSwapChain(swapChain);
 }
 
@@ -65,12 +75,12 @@ bool TextureProjector0::InitializeTextureSRV()
 	return true;
 }
 
-Direct3D11Helper * lostvr::TextureProjector0::GetRenderer()
+Direct3D11Helper * TextureProjector0::GetRenderer()
 {
 	return Renderer;
 }
 
-ID3D11ShaderResourceView* lostvr::TextureProjector0::GetTextureSRV()
+ID3D11ShaderResourceView* TextureProjector0::GetTextureSRV()
 {
 	return SRV;
 }
@@ -116,16 +126,22 @@ bool TextureProjector1::InitializeRenderer(IDXGISwapChain* swapChain)
 {
 	const CHAR* head = "TextureProjector1::InitializeRenderer";
 
+	if (swapChain == nullptr)
+	{
+		return false;
+	}
+
 	HRESULT hr = S_FALSE;
 
+	swapChain->AddRef();
 	SAFE_RELEASE(SwapChainRef_Target);
 	SwapChainRef_Target = swapChain;
-	SwapChainRef_Target->AddRef();
 
 	SAFE_DELETE(Renderer);
 	DXGI_SWAP_CHAIN_DESC scDesc;
 	SwapChainRef_Target->GetDesc(&scDesc);
 	Renderer = new Direct3D11Helper(EDirect3D::DXGI1, scDesc.BufferDesc.Width, scDesc.BufferDesc.Height, scDesc.BufferDesc.Format);
+	SGlobalSharedDataInst.TargetWindow = scDesc.OutputWindow;
 
 	SAFE_RELEASE(SharedTex_Target);
 	D3D11_TEXTURE2D_DESC sharedDesc = { 0 };
@@ -260,6 +276,16 @@ bool TextureProjector9::InitializeRenderer_Direct3D9(IDirect3DDevice9 * device)
 	DeviceRef_Target = device;
 	DeviceRef_Target->AddRef();
 
+	IDirect3DSwapChain9* swapChain = nullptr;
+	D3DPRESENT_PARAMETERS params;
+	if (FAILED(device->GetSwapChain(0, &swapChain)) ||
+		FAILED(swapChain->GetPresentParameters(&params)))
+	{
+		LVERROR(head, "get target window from direct9 device failed");
+		return false;
+	}
+
+	SGlobalSharedDataInst.TargetWindow = params.hDeviceWindow;
 	return true;
 }
 

@@ -170,21 +170,17 @@ void LostVR::SetupInput()
 		return;
 	}
 
-	HWND hwnd[16];
-	UINT nwnd;
-	if (GetWndFromProcessID(GetCurrentProcessId(), hwnd, nwnd))
+	if (SGlobalSharedDataInst.TargetWindow == NULL)
 	{
-		LVMSG("LostVR::SetupInput", "window count: %d, window0: 0x%x", nwnd, hwnd[0]);
-		//for (int i = 0; i < nwnd; ++i)
-			//LVMSG2(SLogPrefix, "LostVR::SetupInput", "window: 0x%x", hwnd[i]);
-
-		SetupInputDevice(&hwnd[nwnd - 1]);
-		RegisterKeyboardCallback(DIK_LSHIFT, KeyboardEventDetector_SWShift::OnKeyUpdate_Shift);
-		RegisterKeyboardCallback(DIK_RSHIFT, KeyboardEventDetector_SWShift::OnKeyUpdate_Shift);
-		RegisterKeyboardCallback(DIK_S, KeyboardEventDetector_SWShift::OnKeyUpdate_S);
-		RegisterKeyboardCallback(DIK_W, KeyboardEventDetector_SWShift::OnKeyUpdate_W);
-		SInitialized = true;
+		return;
 	}
+
+	SetupInputDevice(&SGlobalSharedDataInst.TargetWindow);
+	RegisterKeyboardCallback(DIK_LSHIFT, KeyboardEventDetector_SWShift::OnKeyUpdate_Shift);
+	RegisterKeyboardCallback(DIK_RSHIFT, KeyboardEventDetector_SWShift::OnKeyUpdate_Shift);
+	RegisterKeyboardCallback(DIK_S, KeyboardEventDetector_SWShift::OnKeyUpdate_S);
+	RegisterKeyboardCallback(DIK_W, KeyboardEventDetector_SWShift::OnKeyUpdate_W);
+	SInitialized = true;
 }
 
 IVRDevice::IVRDevice(const std::string& key) : Key(key)

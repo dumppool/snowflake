@@ -35,7 +35,7 @@ BaseTextureProjector::BaseTextureProjector() :
 	, Sampler(nullptr)
 	, WVPCB(nullptr)
 	, Translation(0.f, 0.f, -10.f)
-	, Scale(10.4f, 10.4f, 10.4f)
+	, Scale(20.8f, 20.8f, 20.8f)
 	, Rotation(0.f, 1.f, 0.f)
 {
 	for (int i = 0; i < 2; ++i)
@@ -145,20 +145,23 @@ bool BaseTextureProjector::InitializeRHI()
 		VERIFY_HRESULT(deviceRef->CreateRasterizerState(&desc, &RS), return false, "failed to create projector's rasterize state.");
 	}
 
-	GetRenderer()->CreateMesh_Rect(2.f, 2.f, &VB, &IB);
-
+	if (!GetRenderer()->CreateMesh_Rect(1.f, 1.f, sizeof(MeshVertex), &VB, &IB))
 	{
-		// Create frame buffer
-		D3D11_BUFFER_DESC desc{ 0 };
-		desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-		desc.Usage = D3D11_USAGE_DEFAULT;
-		desc.ByteWidth = sizeof(FrameBufferWVP);
-		desc.CPUAccessFlags = 0;
-		hr = deviceRef->CreateBuffer(&desc, nullptr, &WVPCB);
-		VERIFY_HRESULT(hr, return false, "failed to create frame buffer wvp.");
+		return false;
 	}
 
-	GetRenderer()->GetDefaultShader(&VS, &PS, &VL);
+	D3D11_BUFFER_DESC bdesc;
+	GetRenderer()->GetDescriptionTemplate_DefaultBuffer(bdesc);
+	bdesc.ByteWidth = sizeof(FrameBufferWVP);
+	if (!GetRenderer()->CreateBuffer(bdesc, &WVPCB))
+	{
+		return false;
+	}
+
+	if (!GetRenderer()->GetDefaultShader(&VS, &PS, &VL))
+	{
+		return false;
+	}
 
 	{
 		// Create sampler
@@ -206,7 +209,7 @@ void BaseTextureProjector::DestroyRHI()
 }
 
 #ifndef ENABLE_RESTORESTATE
-//#define ENABLE_RESTORESTATE
+#define ENABLE_RESTORESTATE
 #endif
 
 bool BaseTextureProjector::UpdateTexture()
@@ -294,6 +297,29 @@ bool BaseTextureProjector::UpdateTexture()
 		context->PSSetShaderResources(0, 1, &srvs[0]);
 
 		context->DrawIndexed(6, 0, 0);
+
+		// update cursor position
+		HWND wnd = SGlobalSharedDataInst.TargetWindow;
+		POINT pt;
+		RECT wndRect;
+		if (FALSE == GetCursorPos(&pt) ||
+			FALSE == GetWindowRect(wnd, &wndRect) ||
+			0 == (wndRect.right - wndRect.left) ||
+			0 == (wndRect.bottom - wndRect.top))
+		{
+			LVERROR(head, "get cursor pos failed");
+		}
+		else
+		{
+			float rw = float(wndRect.right - wndRect.left);
+			float rh = float(wndRect.bottom - wndRect.top);
+			float ptx = float(pt.x - wndRect.left) / rw - 0.5f;
+			float pty = 0.5f - float(pt.y - wndRect.top) / rh;
+
+			LVMatrix matTrans2 = DirectX::XMMatrixTranslation(ptx * Scale.x, pty * Scale.y, Translation.z);
+			LVMatrix matScale2 = DirectX::XMMatrixScaling(1.f, 1.f, 1.f);
+			GetRenderer()->UpdateCursor(DirectX::XMMatrixTranspose(matScale2 * matTrans2), EyePose[i].V, EyePose[i].P, true);
+		}
 	}
 
 #ifdef ENABLE_RESTORESTATE

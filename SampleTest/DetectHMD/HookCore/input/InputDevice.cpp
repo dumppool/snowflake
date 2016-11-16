@@ -322,7 +322,7 @@ namespace lostvr
 
 void SetupInputDevice(void * p)
 {
-	lostvr::SInputDevice.Initialize(*(HWND*)p);
+	lostvr::SInputDevice.Initialize(*(HWND*)p, false, true);
 }
 
 void PollInputDevice(void * p)

@@ -54,6 +54,8 @@ namespace lostvr
 
 		ID3D11Buffer*			CursorVB;
 		ID3D11Buffer*			CursorIB;
+		ID3D11Buffer*			CursorCB;
+
 
 		void ZeroRHI()
 		{
@@ -67,6 +69,7 @@ namespace lostvr
 			DefaultInputLayout = nullptr;
 			CursorVB = nullptr;
 			CursorIB = nullptr;
+			CursorCB = nullptr;
 		}
 
 		void DestroyRHI()
@@ -81,11 +84,15 @@ namespace lostvr
 			SAFE_RELEASE(DefaultInputLayout);
 			SAFE_RELEASE(CursorVB);
 			SAFE_RELEASE(CursorIB);
+			SAFE_RELEASE(CursorCB);
 		}
 
 		bool InitializeRHI(UINT width = 0, UINT height = 0, DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM);
 
 	public:
+		bool bRestoreState;
+		bool bEnableDebugWindow;
+
 		explicit Direct3D11Helper(EDirect3D InVer);
 
 
@@ -133,7 +140,7 @@ namespace lostvr
 		// Method:    GetTemporaryDirect9Device 创建临时Direct9设备对象
 		// FullName:  lostvr::Direct3D11Helper::GetTemporaryDirect9Device
 		// Access:    public 
-		// Returns:   IDirect3DDevice9* Direct9设备对象，使用完务必调用释放引用接口
+		// Returns:   IDirect3DDevice9* Direct9设备对象，已AddRef
 		// Qualifier: const
 		//************************************
 		IDirect3DDevice9* GetTemporaryDirect9Device() const;
@@ -150,13 +157,60 @@ namespace lostvr
 		DXGI_FORMAT GetDirect9FormatMatch(D3DFORMAT format);
 
 		void GetDescriptionTemplate_DefaultTexture2D(D3D11_TEXTURE2D_DESC& desc);
-		bool CreateTexture2D(ID3D11Texture2D** ppTex, ID3D11ShaderResourceView** ppSRV, D3D11_TEXTURE2D_DESC * pDesc,
-			ID3D11Device* deviceOverride = nullptr);
+		void GetDescriptionTemplate_DefaultBuffer(D3D11_BUFFER_DESC& desc);
+
+		//************************************
+		// Method:    CreateTexture2D 根据描述(desc)创建纹理资源
+		// FullName:  lostvr::Direct3D11Helper::CreateTexture2D
+		// Access:    public 
+		// Returns:   bool 创建成功返回true，否则返回false
+		// Qualifier:
+		// Parameter: ID3D11Texture2D * * ppTex 不为null则指向创建的纹理Texture2D对象，已AddRef
+		// Parameter: ID3D11ShaderResourceView * * ppSRV 不为null则指向创建的纹理的SRV对象，已AddRef
+		// Parameter: D3D11_TEXTURE2D_DESC * pDesc 创建纹理的描述，参考GetDescriptionTemplate_DefaultTexture2D
+		// Parameter: ID3D11Device * deviceOverride null则使用内部device对象创建，否则使用传入的device对象
+		//************************************
+		bool CreateTexture2D(ID3D11Texture2D** ppTex, ID3D11ShaderResourceView** ppSRV, D3D11_TEXTURE2D_DESC * pDesc, ID3D11Device* deviceOverride = nullptr);
+		
+		//************************************
+		// Method:    CreateShaderResourceView 在纹理的Texture2D对象基础上创建SRV对象；和一般类似的接口都是用内部device创建资源不同，
+		// 这个接口用传入tex的device创建资源。
+		// FullName:  lostvr::Direct3D11Helper::CreateShaderResourceView
+		// Access:    public 
+		// Returns:   bool 创建成功返回true，否则返回false
+		// Qualifier:
+		// Parameter: ID3D11Texture2D * tex 必须指向有意义的纹理Texture2D对象
+		// Parameter: ID3D11ShaderResourceView * * ppSRV 必须指向一个SRV指针，已AddRef
+		//************************************
 		bool CreateShaderResourceView(ID3D11Texture2D* tex, ID3D11ShaderResourceView** ppSRV);
 
-		void UpdateCursor(float size, bool bVisible);
+		//************************************
+		// Method:    CreateMesh_Rect 创建一个rect的vertex/index buffer
+		// FullName:  lostvr::Direct3D11Helper::CreateMesh_Rect
+		// Access:    public 
+		// Returns:   bool 创建成功返回true，否则返回false
+		// Qualifier:
+		// Parameter: float width rect宽度
+		// Parameter: float height rect高度
+		// Parameter: UINT vertexSizeInBytes size of single vertex data
+		// Parameter: ID3D11Buffer * * vb 不为null则指向创建的vertex buffer，已AddRef
+		// Parameter: ID3D11Buffer * * ib 不为null则指向创建index buffer，已AddRef
+		//************************************
+		bool CreateMesh_Rect(float width, float height, UINT vertexSizeInBytes, ID3D11Buffer** vb, ID3D11Buffer** ib);
 
-		bool CreateMesh_Rect(float width, float height, ID3D11Buffer** vb, ID3D11Buffer** ib);
+		//************************************
+		// Method:    CreateBuffer 创建一个ConstantBuffer
+		// FullName:  lostvr::Direct3D11Helper::CreateBuffer
+		// Access:    public 
+		// Returns:   bool 创建成功返回true，否则返回false
+		// Qualifier:
+		// Parameter: D3D11_BUFFER_DESC & desc 参考GetDescriptionTemplate_DefaultBuffer
+		// Parameter: ID3D11Buffer * * ppBuffer 必须指向一个buffer指针，已AddRef
+		//************************************
+		bool CreateBuffer(D3D11_BUFFER_DESC& desc, ID3D11Buffer** ppBuffer);
+
+		void UpdateCursor(const LVMatrix& matWorld, const LVMatrix& matView, const LVMatrix& matProj, bool bVisible);
+
 		bool GetDefaultShader(ID3D11VertexShader** vs, ID3D11PixelShader** ps, ID3D11InputLayout** layout);
 		bool CompileShader(LPCWSTR file, LPCSTR entry, LPCSTR target, ID3DBlob** blob);
 	};

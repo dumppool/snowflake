@@ -66,6 +66,10 @@ log_cap_cnt(SLogFilePrefixDefault, Cap, __VA_ARGS__);}
 #define LVMSG2(Prefix, Cap, ...) {\
 log_cap_cnt(Prefix, Cap, __VA_ARGS__);}
 
+static const CHAR* SLogError = "ErrorReport";
+
+#define LVERROR(Head, ...) LVMSG2(SLogError, Head, __VA_ARGS__)
+
 #include <time.h>
 #include <fstream>
 using namespace std;
@@ -151,9 +155,31 @@ inline bool GetWndFromProcessID(DWORD pid, HWND hwnd[], UINT& nwnd)
 		if (pid == p)
 		{
 			hwnd[nwnd++] = temp;
+			//break;
 		}
 	}
 
+	HWND root = hwnd[nwnd-1];
+	temp = root;
+	//nwnd = 1;
+
+	while ((temp = GetParent(temp)) != NULL)
+	{
+		DWORD p;
+		GetWindowThreadProcessId(temp, &p);
+		if (pid == p)
+		{
+			root = temp;
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	LVMSG("GetWndFromProcessID", "last wnd: %x, root: %x", hwnd[nwnd - 1], root);
+	hwnd[0] = root;
+	nwnd = 1;
 	return true;
 }
 
@@ -292,6 +318,8 @@ public:
 	// ProcessInstance 在main初始化，不能在global使用
 	HMODULE			ProcessInstance;
 
+	HWND			TargetWindow;
+
 public:
 
 	GlobalSharedData() :
@@ -304,6 +332,7 @@ public:
 		, OpenVRDllName(L"openvr_api.dll")
 		, OpenVRDllPath(nullptr)
 		, ShaderFilePath(nullptr)
+		, TargetWindow(NULL)
 	{}
 
 	~GlobalSharedData()
@@ -514,7 +543,7 @@ public:
 	}
 };
 
-static GlobalSharedData SGlobalSharedDataInst;
+extern GlobalSharedData SGlobalSharedDataInst;
 
 extern "C" _declspec(dllexport) void _cdecl InstallHook(int* Result);
 extern "C" _declspec(dllexport) void _cdecl UninstallHook(int* Result);
