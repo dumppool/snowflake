@@ -162,6 +162,12 @@ bool OculusVR::OnPresent_Direct3D11(IDXGISwapChain* swapChain)
 	{
 		return false;
 	}
+	else
+	{
+		DXGI_SWAP_CHAIN_DESC scd;
+		swapChain->GetDesc(&scd);
+		SGlobalSharedDataInst.TargetWindow = scd.OutputWindow;
+	}
 
 	Layer[0]->GetEyePoses();
 	ID3D11Texture2D* dst = Layer[0]->pEyeRenderTexture[0]->GetBuffer();
@@ -193,6 +199,21 @@ bool OculusVR::OnPresent_Direct3D9(IDirect3DDevice9* device)
 			LVMSG(head, "alloc renderer object failed");
 			return false;
 		}
+	}
+
+	if (device != nullptr)
+	{
+		IDirect3DSwapChain9* swapChain = nullptr;
+		D3DPRESENT_PARAMETERS params;
+		if (FAILED(device->GetSwapChain(0, &swapChain)) ||
+			FAILED(swapChain->GetPresentParameters(&params)))
+		{
+			LVERROR(head, "get target window from direct9 device failed");
+			return false;
+		}
+
+		SGlobalSharedDataInst.TargetWindow = params.hDeviceWindow;
+		SAFE_RELEASE(swapChain);
 	}
 
 	if (!EnsureInitialized(Renderer->GetSwapChain()))
@@ -309,10 +330,10 @@ void OculusVR::AddMovement(EMovement movement)
 	case lostvr::EMovement::UnDefined:
 		break;
 	case lostvr::EMovement::CameraFront:
-		Layer[0]->AdjustViewport(1.25f, 1.25f, 0.0f, 0.0f);
+		Layer[0]->AdjustViewport(1.25f, 1.25f);
 		break;
 	case lostvr::EMovement::CameraBack:
-		Layer[0]->AdjustViewport(0.8f, 0.8f, 0.0f, 0.0f);
+		Layer[0]->AdjustViewport(0.8f, 0.8f);
 		break;
 	default:
 		break;

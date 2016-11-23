@@ -234,14 +234,16 @@ namespace lostvr
 			}
 		}
 
-		void AdjustViewport(float scaleW, float scaleH, float offsetW, float offsetH)
+		void AdjustViewport(float scaleW, float scaleH)
 		{
 			for (int i = 0; i < NUMEYES; ++i)
 			{
-				EyeRenderViewport[i].Pos.x += offsetW;
-				EyeRenderViewport[i].Pos.y += offsetH;
-				EyeRenderViewport[i].Size.w *= scaleW;
-				EyeRenderViewport[i].Size.h *= scaleH;
+				float deltaW = EyeRenderViewport[i].Size.w * (scaleW - 1);
+				float deltaH = EyeRenderViewport[i].Size.h * (scaleH - 1);
+				EyeRenderViewport[i].Pos.x += -0.5f * deltaW;
+				EyeRenderViewport[i].Pos.y += -0.5f * deltaH;
+				EyeRenderViewport[i].Size.w += deltaW;
+				EyeRenderViewport[i].Size.h += deltaH;
 			}
 		}
 

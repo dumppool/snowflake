@@ -55,7 +55,10 @@ namespace lostvr
 		ID3D11Buffer*			CursorVB;
 		ID3D11Buffer*			CursorIB;
 		ID3D11Buffer*			CursorCB;
+		ID3D11PixelShader*		CursorPS;
 
+		ID3D11BlendState*		BlendState_Add_RGB;
+		ID3D11BlendState*		BlendState_Blend_RGB;
 
 		void ZeroRHI()
 		{
@@ -70,6 +73,9 @@ namespace lostvr
 			CursorVB = nullptr;
 			CursorIB = nullptr;
 			CursorCB = nullptr;
+			CursorPS = nullptr;
+			BlendState_Add_RGB = nullptr;
+			BlendState_Blend_RGB = nullptr;
 		}
 
 		void DestroyRHI()
@@ -85,6 +91,9 @@ namespace lostvr
 			SAFE_RELEASE(CursorVB);
 			SAFE_RELEASE(CursorIB);
 			SAFE_RELEASE(CursorCB);
+			SAFE_RELEASE(CursorPS);
+			SAFE_RELEASE(BlendState_Add_RGB);
+			SAFE_RELEASE(BlendState_Blend_RGB);
 		}
 
 		bool InitializeRHI(UINT width = 0, UINT height = 0, DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM);
@@ -209,7 +218,7 @@ namespace lostvr
 		//************************************
 		bool CreateBuffer(D3D11_BUFFER_DESC& desc, ID3D11Buffer** ppBuffer);
 
-		void UpdateCursor(const LVMatrix& matWorld, const LVMatrix& matView, const LVMatrix& matProj, bool bVisible);
+		void UpdateCursor(const LVVec3& areaSize, const LVMatrix& matView, const LVMatrix& matProj, bool bVisible);
 
 		bool GetDefaultShader(ID3D11VertexShader** vs, ID3D11PixelShader** ps, ID3D11InputLayout** layout);
 		bool CompileShader(LPCWSTR file, LPCSTR entry, LPCSTR target, ID3DBlob** blob);

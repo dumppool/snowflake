@@ -54,3 +54,13 @@ float4 ps_main(VertexOut in_data) : SV_TARGET
 	//return float4(in_data.tco, 0.f, 1.f);
 	return Texture.Sample(Sampler, in_data.tco);
 }
+
+float4 ps_main_cursor(VertexOut in_data) : SV_TARGET
+{
+	float4 final;
+	in_data.tco = 0.5 - abs(0.5 - in_data.tco);
+	final.a = 2 * dot(in_data.tco, in_data.tco);
+	final.a *= final.a;
+	final.rgb = float3(0.2, 0.8, 0.0);
+	return final;
+}

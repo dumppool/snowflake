@@ -272,6 +272,39 @@ bool Direct3D11Helper::InitializeRHI(UINT width, UINT height, DXGI_FORMAT format
 		}
 	}
 
+	//return true;
+	{
+		// Create default blend states
+		SAFE_RELEASE(BlendState_Add_RGB);
+		SAFE_RELEASE(BlendState_Blend_RGB);
+
+		D3D11_BLEND_DESC bd;
+		ZeroMemory(&bd, sizeof(D3D11_BLEND_DESC));
+		bd.AlphaToCoverageEnable = TRUE;
+		bd.IndependentBlendEnable = FALSE;
+		bd.RenderTarget[0].BlendEnable = TRUE;
+		bd.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+		bd.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+		bd.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
+		bd.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
+		bd.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+		bd.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+		bd.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
+		if (FAILED(hr = Device->CreateBlendState(&bd, &BlendState_Add_RGB)))
+		{
+			LVERROR(head, "create blend state(add) failed: 0x%x(%d)", hr, hr);
+			return false;
+		}
+
+		bd.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+		bd.RenderTarget[0].DestBlend = D3D11_BLEND_INV_DEST_ALPHA;
+		if (FAILED(hr = Device->CreateBlendState(&bd, &BlendState_Blend_RGB)))
+		{
+			LVERROR(head, "create blend state(blend) failed: 0x%x(%d)", hr, hr);
+			return false;
+		}
+	}
+
 	return true;
 }
 
@@ -289,8 +322,8 @@ bool Direct3D11Helper::OutputBuffer_Texture2D(ID3D11Texture2D* dst)
 	Buffer->GetDesc(&srcDesc);
 
 #ifdef _DEBUG
-	LVERROR(head, "width(%d), height(%d), format(%d), usage(%d), miplevels(%d), sampler count(%d)", srcDesc.Width, srcDesc.Height, srcDesc.Format, srcDesc.Usage, srcDesc.MipLevels, srcDesc.SampleDesc.Count);
-	LVERROR(head, "width(%d), height(%d), format(%d), usage(%d), miplevels(%d), sampler count(%d)", dstDesc.Width, dstDesc.Height, dstDesc.Format, dstDesc.Usage, dstDesc.MipLevels, dstDesc.SampleDesc.Count);
+	LVMSG(head, "width(%d), height(%d), format(%d), usage(%d), miplevels(%d), sampler count(%d)", srcDesc.Width, srcDesc.Height, srcDesc.Format, srcDesc.Usage, srcDesc.MipLevels, srcDesc.SampleDesc.Count);
+	LVMSG(head, "width(%d), height(%d), format(%d), usage(%d), miplevels(%d), sampler count(%d)", dstDesc.Width, dstDesc.Height, dstDesc.Format, dstDesc.Usage, dstDesc.MipLevels, dstDesc.SampleDesc.Count);
 #endif
 	Context->CopyResource(dst, Buffer);
 	return true;
@@ -309,8 +342,8 @@ bool Direct3D11Helper::OutputBuffer_Texture2D_Direct3D9(ID3D11Texture2D * dst)
 	dst->GetDesc(&dstDesc);
 	Buffer_Direct9Copy->GetDesc(&srcDesc);
 #ifdef _DEBUG
-	LVERROR(head, "width(%d), height(%d), format(%d), usage(%d), miplevels(%d), sampler count(%d)", srcDesc.Width, srcDesc.Height, srcDesc.Format, srcDesc.Usage, srcDesc.MipLevels, srcDesc.SampleDesc.Count);
-	LVERROR(head, "width(%d), height(%d), format(%d), usage(%d), miplevels(%d), sampler count(%d)", dstDesc.Width, dstDesc.Height, dstDesc.Format, dstDesc.Usage, dstDesc.MipLevels, dstDesc.SampleDesc.Count);
+	LVMSG(head, "width(%d), height(%d), format(%d), usage(%d), miplevels(%d), sampler count(%d)", srcDesc.Width, srcDesc.Height, srcDesc.Format, srcDesc.Usage, srcDesc.MipLevels, srcDesc.SampleDesc.Count);
+	LVMSG(head, "width(%d), height(%d), format(%d), usage(%d), miplevels(%d), sampler count(%d)", dstDesc.Width, dstDesc.Height, dstDesc.Format, dstDesc.Usage, dstDesc.MipLevels, dstDesc.SampleDesc.Count);
 #endif
 	Context->CopyResource(dst, Buffer_Direct9Copy);
 	return true;
@@ -545,7 +578,7 @@ bool Direct3D11Helper::CreateShaderResourceView(ID3D11Texture2D * tex, ID3D11Sha
 	return true;
 }
 
-void Direct3D11Helper::UpdateCursor(const LVMatrix& matWorld, const LVMatrix& matView, const LVMatrix& matProj, bool bVisible)
+void Direct3D11Helper::UpdateCursor(const LVVec3& areaSize, const LVMatrix& matView, const LVMatrix& matProj, bool bVisible)
 {
 	if (!bVisible)
 	{
@@ -554,17 +587,25 @@ void Direct3D11Helper::UpdateCursor(const LVMatrix& matWorld, const LVMatrix& ma
 
 	const CHAR* head = "Direct3D11Helper::UpdateCursor";
 
+	if (Device == nullptr)
+	{
+		LVERROR(head, "null device");
+		return;
+	}
+
 	if (Context == nullptr)
 	{
 		LVERROR(head, "null context");
 		return;
 	}
 
-	if (CursorVB == nullptr || CursorIB == nullptr || CursorCB == nullptr)
+	// create if any requirement has not been prepared
+	if (CursorVB == nullptr || CursorIB == nullptr || CursorCB == nullptr || CursorPS == nullptr)
 	{
 		SAFE_RELEASE(CursorVB);
 		SAFE_RELEASE(CursorIB);
 		SAFE_RELEASE(CursorCB);
+		SAFE_RELEASE(CursorPS);
 		if (!CreateMesh_Rect(1.f, 1.f, sizeof(MeshVertex), &CursorVB, &CursorIB))
 		{
 			LVERROR(head, "create mesh for cursor failed");
@@ -579,18 +620,52 @@ void Direct3D11Helper::UpdateCursor(const LVMatrix& matWorld, const LVMatrix& ma
 			LVERROR(head, "create mesh for cursor failed");
 			return;
 		}
+
+		ID3DBlob* psCode = nullptr;
+		if (!CompileShader(SGlobalSharedDataInst.GetShaderFilePath(), "ps_main_cursor", "ps_5_0", &psCode) ||
+			FAILED(Device->CreatePixelShader(psCode->GetBufferPointer(), psCode->GetBufferSize(), nullptr, &CursorPS)))
+		{
+			LVERROR(head, "create pixel shader for cursor failed");
+			return;
+		}
 	}
 
-	uint32 stride = sizeof(MeshVertex);
-	uint32 offset = 0;
-	Context->IASetVertexBuffers(0, 1, &CursorVB, &stride, &offset);
-	Context->IASetIndexBuffer(CursorIB, DXGI_FORMAT_R16_UINT, 0);
+	// update cursor position
+	HWND wnd = SGlobalSharedDataInst.TargetWindow;
+	POINT pt;
+	RECT wndRect;
+	if (FALSE == GetCursorPos(&pt) ||
+		FALSE == GetWindowRect(wnd, &wndRect) ||
+		0 == (wndRect.right - wndRect.left) ||
+		0 == (wndRect.bottom - wndRect.top))
+	{
+		LVERROR(head, "get cursor pos failed");
+	}
+	else
+	{
+		float rw = float(wndRect.right - wndRect.left);
+		float rh = float(wndRect.bottom - wndRect.top);
+		float ptx = float(pt.x - wndRect.left) / rw - 0.5f;
+		float pty = 0.5f - float(pt.y - wndRect.top) / rh;
 
-	FrameBufferWVP wvp(matWorld, matView, matProj);
-	Context->UpdateSubresource(CursorCB, 0, nullptr, &wvp, 0, 0);
-	Context->VSSetConstantBuffers(0, 1, &CursorCB);
+		LVMatrix matTrans2 = DirectX::XMMatrixTranslation(ptx * areaSize.x, pty * areaSize.y, areaSize.z);
+		LVMatrix matScale2 = DirectX::XMMatrixScaling(1.f, 1.f, 1.f);
 
-	Context->DrawIndexed(6, 0, 0);
+		uint32 stride = sizeof(MeshVertex);
+		uint32 offset = 0;
+		Context->IASetVertexBuffers(0, 1, &CursorVB, &stride, &offset);
+		Context->IASetIndexBuffer(CursorIB, DXGI_FORMAT_R16_UINT, 0);
+
+		FrameBufferWVP wvp(DirectX::XMMatrixTranspose(matScale2 * matTrans2), matView, matProj);
+		Context->UpdateSubresource(CursorCB, 0, nullptr, &wvp, 0, 0);
+		Context->VSSetConstantBuffers(0, 1, &CursorCB);
+		Context->VSSetShader(DefaultVS, nullptr, 0);
+		Context->PSSetShader(CursorPS, nullptr, 0);
+
+		Context->OMSetBlendState(BlendState_Add_RGB, 0, 0xffffffff);
+
+		Context->DrawIndexed(6, 0, 0);
+	}
 }
 
 bool Direct3D11Helper::CreateMesh_Rect(float width, float height, UINT vertexSizeInBytes, ID3D11Buffer ** vb, ID3D11Buffer ** ib)
@@ -701,52 +776,49 @@ bool Direct3D11Helper::GetDefaultShader(ID3D11VertexShader ** vs, ID3D11PixelSha
 
 	if (DefaultVS != nullptr && DefaultPS != nullptr && DefaultInputLayout != nullptr)
 	{
-		*vs = DefaultVS;
-		(*vs)->AddRef();
-		*ps = DefaultPS;
-		(*ps)->AddRef();
-		*layout = DefaultInputLayout;
-		(*layout)->AddRef();
-
-		return true;
 	}
-
-	SAFE_RELEASE(DefaultVS);
-	SAFE_RELEASE(DefaultPS);
-	SAFE_RELEASE(DefaultInputLayout);
-
-	HRESULT hr = S_OK;
-	ID3DBlob* vsCode = nullptr;
-	if (!CompileShader(SGlobalSharedDataInst.GetShaderFilePath(), "vs_main", "vs_5_0", &vsCode) || !vsCode ||
-		FAILED(hr = Device->CreateVertexShader(vsCode->GetBufferPointer(), vsCode->GetBufferSize(), nullptr, &DefaultVS)))
+	else
 	{
-		SAFE_RELEASE(vsCode);
-		LVERROR(head, "create(%ls) vertex shader failed: 0x%x(%d)", SGlobalSharedDataInst.GetShaderFilePath(), hr, hr);
-		return false;
-	}
+		SAFE_RELEASE(DefaultVS);
+		SAFE_RELEASE(DefaultPS);
+		SAFE_RELEASE(DefaultInputLayout);
 
-	ID3DBlob* psCode = nullptr;
-	if (!CompileShader(SGlobalSharedDataInst.GetShaderFilePath(), "ps_main", "ps_5_0", &psCode) || !psCode ||
-		FAILED(hr = Device->CreatePixelShader(psCode->GetBufferPointer(), psCode->GetBufferSize(), nullptr, &DefaultPS)))
-	{
+		HRESULT hr = S_OK;
+		ID3DBlob* vsCode = nullptr;
+		if (!CompileShader(SGlobalSharedDataInst.GetShaderFilePath(), "vs_main", "vs_5_0", &vsCode) || !vsCode ||
+			FAILED(hr = Device->CreateVertexShader(vsCode->GetBufferPointer(), vsCode->GetBufferSize(), nullptr, &DefaultVS)))
+		{
+			SAFE_RELEASE(vsCode);
+			LVERROR(head, "create(%ls) vertex shader failed: 0x%x(%d)", SGlobalSharedDataInst.GetShaderFilePath(), hr, hr);
+			return false;
+		}
+
+		ID3DBlob* psCode = nullptr;
+		if (!CompileShader(SGlobalSharedDataInst.GetShaderFilePath(), "ps_main", "ps_5_0", &psCode) || !psCode ||
+			FAILED(hr = Device->CreatePixelShader(psCode->GetBufferPointer(), psCode->GetBufferSize(), nullptr, &DefaultPS)))
+		{
+			SAFE_RELEASE(vsCode);
+			SAFE_RELEASE(psCode);
+			LVERROR(head, "create(%ls) pixel shader failed: 0x%x(%d)", SGlobalSharedDataInst.GetShaderFilePath(), hr, hr);
+			return false;
+		}
+
+		D3D11_INPUT_ELEMENT_DESC desc[]
+		{
+			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(MeshVertex, Position), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT   , 0, offsetof(MeshVertex, Texcoord), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		};
+
+		if (FAILED(Device->CreateInputLayout(desc, ARRAYSIZE(desc), vsCode->GetBufferPointer(), vsCode->GetBufferSize(), &DefaultInputLayout)))
+		{
+			SAFE_RELEASE(vsCode);
+			SAFE_RELEASE(psCode);
+			LVERROR(head, "create(%ls) input layout failed: 0x%x(%d)", SGlobalSharedDataInst.GetShaderFilePath(), hr, hr);
+			return false;
+		}
+
 		SAFE_RELEASE(vsCode);
 		SAFE_RELEASE(psCode);
-		LVERROR(head, "create(%ls) pixel shader failed: 0x%x(%d)", SGlobalSharedDataInst.GetShaderFilePath(), hr, hr);
-		return false;
-	}
-
-	D3D11_INPUT_ELEMENT_DESC desc[]
-	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(MeshVertex, Position), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT   , 0, offsetof(MeshVertex, Texcoord), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-	};
-
-	if (FAILED(Device->CreateInputLayout(desc, ARRAYSIZE(desc), vsCode->GetBufferPointer(), vsCode->GetBufferSize(), &DefaultInputLayout)))
-	{
-		SAFE_RELEASE(vsCode);
-		SAFE_RELEASE(psCode);
-		LVERROR(head, "create(%ls) input layout failed: 0x%x(%d)", SGlobalSharedDataInst.GetShaderFilePath(), hr, hr);
-		return false;
 	}
 
 	if (vs != nullptr)
@@ -764,8 +836,6 @@ bool Direct3D11Helper::GetDefaultShader(ID3D11VertexShader ** vs, ID3D11PixelSha
 		*layout = DefaultInputLayout;
 	}
 
-	SAFE_RELEASE(vsCode);
-	SAFE_RELEASE(psCode);
 	return true;
 }
 
@@ -975,7 +1045,7 @@ std::string lostvr::GetDescriptionFromSwapChain(IDXGISwapChain * swapChain)
 				ret += "\n\t";
 				ret += buf;
 
-				snprintf(&buf[0], 1023, "adapter subsytem id:\t%d\n\tadapter revision:\t%d\n\tadapter video memory:\t%lldmb\n\tadapter system memory:\t%lldmb\n\tadapter shared memory:\t%lldmb",
+				snprintf(&buf[0], 1023, "adapter subsytem id:\t%d\n\tadapter revision:\t%d\n\tadapter video memory:\t%Idmb\n\tadapter system memory:\t%Idmb\n\tadapter shared memory:\t%Idmb",
 					desc.SubSysId, desc.Revision, desc.DedicatedVideoMemory / (1024 * 1024), desc.DedicatedSystemMemory / (1024 * 1024), desc.SharedSystemMemory / (1024 * 1024));
 
 				ret += "\n\t";

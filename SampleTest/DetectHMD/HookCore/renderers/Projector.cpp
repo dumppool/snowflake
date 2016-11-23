@@ -162,6 +162,12 @@ bool BaseTextureProjector::InitializeRHI()
 	{
 		return false;
 	}
+	else
+	{
+		VS->AddRef();
+		PS->AddRef();
+		VL->AddRef();
+	}
 
 	{
 		// Create sampler
@@ -283,7 +289,7 @@ bool BaseTextureProjector::UpdateTexture()
 		context->VSSetShader(VS, nullptr, 0);
 
 		LVMatrix trans = DirectX::XMMatrixTranslation(Translation.x, Translation.y, Translation.z);
-		LVMatrix rot = DirectX::XMMatrixRotationAxis({Rotation.x, Rotation.y, Rotation.z}, 0.f);
+		LVMatrix rot = DirectX::XMMatrixRotationAxis({ Rotation.x, Rotation.y, Rotation.z }, 0.f);
 		LVMatrix scale = DirectX::XMMatrixScaling(Scale.x, Scale.y, Scale.z);
 		FrameBufferWVP wvp(DirectX::XMMatrixTranspose(scale * trans), EyePose[i].V, EyePose[i].P);
 		context->UpdateSubresource(WVPCB, 0, nullptr, &wvp, 0, 0);
@@ -296,30 +302,11 @@ bool BaseTextureProjector::UpdateTexture()
 		ID3D11ShaderResourceView* srvs[] = { GetTextureSRV() };
 		context->PSSetShaderResources(0, 1, &srvs[0]);
 
+		context->OMSetBlendState(nullptr, nullptr, 0xffffffff);
+
 		context->DrawIndexed(6, 0, 0);
 
-		// update cursor position
-		HWND wnd = SGlobalSharedDataInst.TargetWindow;
-		POINT pt;
-		RECT wndRect;
-		if (FALSE == GetCursorPos(&pt) ||
-			FALSE == GetWindowRect(wnd, &wndRect) ||
-			0 == (wndRect.right - wndRect.left) ||
-			0 == (wndRect.bottom - wndRect.top))
-		{
-			LVERROR(head, "get cursor pos failed");
-		}
-		else
-		{
-			float rw = float(wndRect.right - wndRect.left);
-			float rh = float(wndRect.bottom - wndRect.top);
-			float ptx = float(pt.x - wndRect.left) / rw - 0.5f;
-			float pty = 0.5f - float(pt.y - wndRect.top) / rh;
-
-			LVMatrix matTrans2 = DirectX::XMMatrixTranslation(ptx * Scale.x, pty * Scale.y, Translation.z);
-			LVMatrix matScale2 = DirectX::XMMatrixScaling(1.f, 1.f, 1.f);
-			GetRenderer()->UpdateCursor(DirectX::XMMatrixTranspose(matScale2 * matTrans2), EyePose[i].V, EyePose[i].P, true);
-		}
+		GetRenderer()->UpdateCursor(LVVec3(Scale.x, Scale.y, Translation.z), EyePose[i].V, EyePose[i].P, true);
 	}
 
 #ifdef ENABLE_RESTORESTATE

@@ -54,7 +54,7 @@ bool TextureProjector0::InitializeTextureSRV()
 	if (SUCCEEDED(Renderer->GetSwapChain()->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&tex)) &&
 		Renderer->CreateShaderResourceView(tex, &SRV))
 	{
-		LVMSG(head, "create swap chain directly from swap chain successfully");
+		LVMSG(head, "has created srv directly from swap chain.");
 		bSuccess = true;
 	}
 	else
@@ -286,6 +286,7 @@ bool TextureProjector9::InitializeRenderer_Direct3D9(IDirect3DDevice9 * device)
 	}
 
 	SGlobalSharedDataInst.TargetWindow = params.hDeviceWindow;
+	SAFE_RELEASE(swapChain);
 	return true;
 }
 
