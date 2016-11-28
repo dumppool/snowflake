@@ -33,6 +33,8 @@ OculusVR::~OculusVR()
 
 bool OculusVR::Startup()
 {
+	const CHAR* head = "OculusVR::Startup";
+
 	// Initializes LibOVR, and the Rift
 	ovrResult result;
 	ovrDetectResult detectResult = ovr_Detect(0);
@@ -40,12 +42,23 @@ bool OculusVR::Startup()
 
 	if (detectResult.IsOculusServiceRunning && detectResult.IsOculusHMDConnected)
 	{
+		static bool s_first = true;
+		WCHAR curr[MAX_PATH];
+		if (!s_first)
+		{
+			LVMSG(head, "we've failed once, about to use our runtime");
+			GetCurrentDirectoryW(MAX_PATH, curr);
+			SetCurrentDirectory(SGlobalSharedDataInst.GetDependencyDirectory());
+		}
+
 		ovrInitParams initParams;
 		memset(&initParams, 0, sizeof(initParams));
 		initParams.Flags = ovrInit_RequestVersion;
 		initParams.RequestedMinorVersion = OVR_MINOR_VERSION;
 		initParams.LogCallback = OvrLogCallback;
 		result = ovr_Initialize(&initParams);
+		s_first = false;
+		SetCurrentDirectoryW(curr);
 	}
 	else
 	{
@@ -168,7 +181,7 @@ bool OculusVR::OnPresent_Direct3D11(IDXGISwapChain* swapChain)
 		bInitialized = false;
 	}
 
-	if (!Renderer->UpdateRHIWithSwapChain(swapChain) || !EnsureInitialized(swapChain))
+	if (!Renderer->UpdateRHIWithSwapChain(swapChain) || !EnsureInitialized(swapChain, true))
 	{
 		return false;
 	}
@@ -248,16 +261,45 @@ bool OculusVR::OnPresent_Direct3D9(IDirect3DDevice9* device)
 		SAFE_RELEASE(swapChain);
 	}
 
-	if (!EnsureInitialized(Renderer->GetSwapChain()))
+	if (!EnsureInitialized(Renderer->GetSwapChain(), false))
 	{
 		return false;
 	}
+
 
 	if (!Renderer->UpdateBuffer_Direct3D9(device))
 	{
 		LVMSG(head, "update buffer with direct9 device failed");
 		return false;
 	}
+
+	//{
+	//	if (RTV == nullptr)
+	//	{
+	//		if (Renderer->CreateRenderTargetView(Renderer->GetBufferDirect3D9Copy(), &RTV))
+	//		{
+	//			return false;
+	//		}
+	//	}
+
+	//	RenderStateCache cache(Renderer->GetContext());
+	//	cache.Capture();
+
+	//	D3D11_VIEWPORT vp;
+	//	vp.TopLeftX = Layer[0]->EyeRenderViewport[0].Pos.x;
+	//	vp.TopLeftY = Layer[0]->EyeRenderViewport[0].Pos.y;
+	//	vp.Width = Layer[0]->EyeRenderViewport[0].Size.w;
+	//	vp.Height = Layer[0]->EyeRenderViewport[0].Size.h;
+	//	vp.MinDepth = 0.01f;
+	//	vp.MaxDepth = 10000.f;
+
+	//	Renderer->GetContext()->RSSetViewports(1, &vp);
+	//	Renderer->GetContext()->OMSetRenderTargets(1, &RTV, nullptr);
+	//	Renderer->UpdateCursor(LVVec3(2.f, 2.f, -1.f), 0.1f, DirectX::XMMatrixIdentity(), DirectX::XMMatrixIdentity(),
+	//		SGlobalSharedDataInst.GetBDrawCursor());
+
+	//	cache.Restore();
+	//}
 
 	Layer[0]->GetEyePoses();
 	ID3D11Texture2D* dst = Layer[0]->pEyeRenderTexture[0]->GetBuffer();
@@ -305,7 +347,7 @@ bool OculusVR::Init(ID3D11Device* Dev, DXGI_SWAP_CHAIN_DESC Desc)
 	return true;
 }
 
-bool OculusVR::EnsureInitialized(IDXGISwapChain * swapChain)
+bool OculusVR::EnsureInitialized(IDXGISwapChain * swapChain, bool bCreateRTV)
 {
 	const CHAR* head = "OculusVR::EnsureInitialized";
 
@@ -330,10 +372,13 @@ bool OculusVR::EnsureInitialized(IDXGISwapChain * swapChain)
 			return false;
 		}
 
-		SAFE_RELEASE(RTV);
-		if (!Renderer->CreateRenderTargetView(nullptr, &RTV))
+		if (bCreateRTV)
 		{
-			return false;
+			SAFE_RELEASE(RTV);
+			if (!Renderer->CreateRenderTargetView(nullptr, &RTV))
+			{
+				return false;
+			}
 		}
 	}
 

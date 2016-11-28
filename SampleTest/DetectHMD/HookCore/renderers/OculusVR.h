@@ -74,7 +74,6 @@ namespace lostvr
 		ovrSession               Session;
 		ovrTextureSwapChain      TextureChain;
 		std::vector<ID3D11Texture2D*>			SwapChainBuffer;
-		std::vector<ID3D11RenderTargetView*>	RTVs;
 		int SizeW, SizeH;
 		ovrTextureFormat Format;
 		Direct3D11Helper* Renderer;
@@ -167,12 +166,6 @@ namespace lostvr
 
 					SAFE_RELEASE(dev);
 				}
-
-				ID3D11RenderTargetView* rtv = nullptr;
-				if (Renderer->CreateRenderTargetView(tex, &rtv))
-				{
-					RTVs.push_back(rtv);
-				}
 			}
 
 			LVMSG("OculusTexture::Init", "sucess, width(%d), height(%d), dev(%x)", sizeW, sizeH, dev);
@@ -184,11 +177,6 @@ namespace lostvr
 			for (auto buf : SwapChainBuffer)
 			{
 				SAFE_RELEASE(buf);
-			}
-
-			for (auto rtv : RTVs)
-			{
-				SAFE_RELEASE(rtv);
 			}
 
 			if (TextureChain)
@@ -381,7 +369,7 @@ namespace lostvr
 		}
 
 		bool Init(ID3D11Device* Dev, DXGI_SWAP_CHAIN_DESC Desc);
-		bool EnsureInitialized(IDXGISwapChain* swapChain);
+		bool EnsureInitialized(IDXGISwapChain* swapChain, bool bCreateRTV = false);
 
 		ovrResult DistortAndPresent(int numLayersToRender, D3D11_BOX * optionalBoxForMirrorWindow = 0, bool mirror = true);
 

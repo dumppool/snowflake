@@ -150,6 +150,7 @@ namespace lostvr
 		ID3D11DeviceContext* GetContext();
 		IDXGISwapChain* GetSwapChain();
 		ID3D11Texture2D* GetSwapChainBuffer();
+		ID3D11Texture2D* GetBufferDirect3D9Copy();
 		bool GetSwapChainData(UINT& width, UINT& height, DXGI_FORMAT& format);
 		EDirect3D GetGraphicsInterfaceVersion();
 

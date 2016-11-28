@@ -44,6 +44,15 @@
       (p) = nullptr;    \
     }                   \
   } while((void)0, 0)
+#define SAFE_DELETE_ARRAY(p)  \
+  do                          \
+  {                           \
+    if(p)                     \
+    {                         \
+      delete[] (p);		      \
+      (p) = nullptr;          \
+    }                         \
+  } while((void)0, 0)
 #define SAFE_RELEASE_NOCLEAR(p) \
   do                            \
   {                             \
@@ -306,11 +315,11 @@ ALIGNED_LOSTVR(16) struct FrameBufferWVP
 class GlobalSharedData
 {
 protected:
-	const WCHAR*	HookCoreDllName;
 	WCHAR*			HookCoreDllPath;
 
-	const WCHAR*	OpenVRDllName;
+	WCHAR*			DependencyDirectory;
 	WCHAR*			OpenVRDllPath;
+	WCHAR*			LibOVRDllPath;
 
 	WCHAR*			ShaderFilePath;
 
@@ -319,20 +328,7 @@ protected:
 
 public:
 
-	GlobalSharedData() :
-#ifdef _WIN64
-		HookCoreDllName(L"HookCore_x64.dll")
-#else
-		HookCoreDllName(L"HookCore.dll")
-#endif
-		, HookCoreDllPath(nullptr)
-		, OpenVRDllName(L"openvr_api.dll")
-		, OpenVRDllPath(nullptr)
-		, ShaderFilePath(nullptr)
-		, TargetWindow(NULL)
-		, bDrawCursor(true)
-	{}
-
+	GlobalSharedData();
 	~GlobalSharedData();
 
 	const WCHAR* GetHookCoreDllName() const;
@@ -341,6 +337,9 @@ public:
 	const WCHAR* GetOpenVRDllName() const;
 	WCHAR* GetOpenVRDllPath();
 
+	const WCHAR* GetLibOVRDllName() const;
+	WCHAR* GetLibOVRDllPath();
+
 	WCHAR* GetShaderFilePath();
 
 	HWND GetTargetWindow() const;
@@ -348,6 +347,9 @@ public:
 
 	bool GetBDrawCursor() const;
 	void SetBDrawCursor(bool bEnable);
+
+	const WCHAR* GetDependencyDirectoryName() const;
+	WCHAR* GetDependencyDirectory();
 };
 
 class HighFrequencyCounter

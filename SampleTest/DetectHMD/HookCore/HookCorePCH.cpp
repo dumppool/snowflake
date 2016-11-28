@@ -10,15 +10,30 @@
 
 GlobalSharedData SGlobalSharedDataInst;
 
- GlobalSharedData::~GlobalSharedData()
+GlobalSharedData::GlobalSharedData() : HookCoreDllPath(nullptr)
+, DependencyDirectory(nullptr)
+, OpenVRDllPath(nullptr)
+, LibOVRDllPath(nullptr)
+, ShaderFilePath(nullptr)
+, TargetWindow(NULL)
+, bDrawCursor(true)
+{}
+
+GlobalSharedData::~GlobalSharedData()
  {
-	 delete[] HookCoreDllPath;
-	 HookCoreDllPath = nullptr;
+	SAFE_DELETE_ARRAY(HookCoreDllPath);
+	SAFE_DELETE_ARRAY(DependencyDirectory);
+	SAFE_DELETE_ARRAY(OpenVRDllPath);
+	SAFE_DELETE_ARRAY(LibOVRDllPath);
  }
 
  const WCHAR * GlobalSharedData::GetHookCoreDllName() const
  {
-	 return HookCoreDllName;
+#ifdef _WIN64
+	 return L"HookCore_x64.dll";
+#else
+	 return L"HookCore.dll";
+#endif
  }
 
  WCHAR * GlobalSharedData::GetHookCoreDllPath()
@@ -65,68 +80,50 @@ GlobalSharedData SGlobalSharedDataInst;
 
  const WCHAR * GlobalSharedData::GetOpenVRDllName() const
  {
-	 return OpenVRDllName;
+	 return L"openvr_api.dll";
  }
 
  WCHAR * GlobalSharedData::GetOpenVRDllPath()
  {
+	 const CHAR* head = "GlobalSharedData::GetOpenVRDllPath";
+
 	 if (OpenVRDllPath != nullptr)
 	 {
 		 return OpenVRDllPath;
 	 }
 
 	 OpenVRDllPath = new WCHAR[MAX_PATH];
-	 OpenVRDllPath[0] = '\0';
+	 OpenVRDllPath[0] = L'\0';
 
-	 HMODULE handle = GetModuleHandleW(GetHookCoreDllName());
-	 if (handle == NULL)
-	 {
-		 LVMSG("GlobalSharedData::GetOpenVRDllPath", "not found: %ls", GetHookCoreDllName());
-		 return nullptr;
-	 }
-
-	 WCHAR path[MAX_PATH];
-	 GetModuleFileName(handle, &path[0], MAX_PATH - 1);
-
-	 int lastslash = MAX_PATH;
-	 while ((--lastslash) >= 0)
-	 {
-		 if (path[lastslash] == '\\')
-		 {
-			 path[lastslash + 1] = '\0';
-			 break;
-		 }
-	 }
-
-	 errno_t err = 0;
-	 err = wcscat_s(&OpenVRDllPath[0], MAX_PATH - 1, path);
-	 if (err != 0)
-	 {
-		 LVMSG("GlobalSharedData::GetOpenVRDllPath", "wcscat_s %ls failed with error: %d", path, err);
-		 return nullptr;
-	 }
-
-#ifdef _WIN64
-	 const WCHAR* dep = L"dep_x64\\";
-#else
-	 const WCHAR* dep = L"dep_x86\\";
-#endif
-	 err = wcscat_s(&OpenVRDllPath[0], MAX_PATH - 1, dep);
-	 if (err != 0)
-	 {
-		 LVMSG("GlobalSharedData::GetOpenVRDllPath", "wcscat_s %ls failed with error: %d", dep, err);
-		 return nullptr;
-	 }
-
-	 err = wcscat_s(&OpenVRDllPath[0], MAX_PATH - 1, GetOpenVRDllName());
-	 if (err != 0)
-	 {
-		 LVMSG("GlobalSharedData::GetOpenVRDllPath", "wcscat_s %ls failed with error: %d", GetOpenVRDllName(), err);
-		 return nullptr;
-	 }
-
-	 LVMSG("GlobalSharedData::GetOpenVRDllPath", "%ls dir: %ls", GetOpenVRDllName(), OpenVRDllPath);
+	 wsprintf(OpenVRDllPath, L"%s\\%s", GetDependencyDirectory(), GetOpenVRDllName());
+	 LVMSG(head, "open vr dll path: %ls", OpenVRDllPath);
 	 return OpenVRDllPath;
+ }
+
+ const WCHAR * GlobalSharedData::GetLibOVRDllName() const
+ {
+#ifdef _WIN64
+	 return L"LibOVRRT64_1.dll";
+#else
+	 return L"LibOVRRT32_1.dll";
+#endif
+ }
+
+ WCHAR * GlobalSharedData::GetLibOVRDllPath()
+ {
+	 const CHAR* head = "GlobalSharedData::GetLibOVRDllPath";
+
+	 if (LibOVRDllPath != nullptr)
+	 {
+		 return LibOVRDllPath;
+	 }
+
+	 LibOVRDllPath = new WCHAR[MAX_PATH];
+	 LibOVRDllPath[0] = L'\0';
+
+	 wsprintf(LibOVRDllPath, L"%s\\%s", GetDependencyDirectory(), GetLibOVRDllName());
+	 LVMSG(head, "libOVR dll path: %ls", LibOVRDllPath);
+	 return LibOVRDllPath;
  }
 
  WCHAR * GlobalSharedData::GetShaderFilePath()
@@ -137,7 +134,7 @@ GlobalSharedData SGlobalSharedDataInst;
 	 }
 
 	 ShaderFilePath = new WCHAR[MAX_PATH];
-	 ShaderFilePath[0] = '\0';
+	 ShaderFilePath[0] = L'\0';
 
 	 HMODULE handle = GetModuleHandleW(GetHookCoreDllName());
 	 if (handle == NULL)
@@ -182,6 +179,52 @@ GlobalSharedData SGlobalSharedDataInst;
  void GlobalSharedData::SetBDrawCursor(bool bEnable)
  {
 	 bDrawCursor = bEnable;
+ }
+
+ const WCHAR * GlobalSharedData::GetDependencyDirectoryName() const
+ {
+#ifdef _WIN64
+	 return L"dep_x64";
+#else
+	 return L"dep_x86";
+#endif
+ }
+
+ WCHAR * GlobalSharedData::GetDependencyDirectory()
+ {
+	 const CHAR* head = "GlobalSharedData::GetDependencyDirectory";
+
+	 if (DependencyDirectory != nullptr)
+	 {
+		 return DependencyDirectory;
+	 }
+
+	 DependencyDirectory = new WCHAR[MAX_PATH];
+	 DependencyDirectory[0] = '\0';
+
+	 HMODULE handle = GetModuleHandleW(GetHookCoreDllName());
+	 if (handle == NULL)
+	 {
+		 LVMSG(head, "not found: %ls", GetHookCoreDllName());
+		 return nullptr;
+	 }
+
+	 WCHAR path[MAX_PATH];
+	 GetModuleFileName(handle, &path[0], MAX_PATH - 1);
+
+	 int lastslash = MAX_PATH;
+	 while ((--lastslash) >= 0)
+	 {
+		 if (path[lastslash] == '\\')
+		 {
+			 path[lastslash] = '\0';
+			 break;
+		 }
+	 }
+
+	 wsprintf(DependencyDirectory, L"%s\\%s", path, GetDependencyDirectoryName());
+	 LVMSG(head, "dependency directory: %ls", DependencyDirectory);
+	 return DependencyDirectory;
  }
 
  ScopedHighFrequencyCounter::ScopedHighFrequencyCounter(const CHAR * head) : MsgHead(head), Counter()

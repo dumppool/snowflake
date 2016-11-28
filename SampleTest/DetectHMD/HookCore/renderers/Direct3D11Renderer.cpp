@@ -565,14 +565,18 @@ bool Direct3D11Helper::CreateRenderTargetView(ID3D11Texture2D * tex, ID3D11Rende
 
 	if (tex == nullptr)
 	{
-		if (Buffer == nullptr)
+		if (Buffer_Direct9Copy != nullptr)
 		{
-			LVERROR(head, "null tex input when there is no available internal buffer");
-			return false;
+			tex = Buffer_Direct9Copy;
+		}
+		else if (Buffer != nullptr)
+		{
+			tex = Buffer;
 		}
 		else
 		{
-			tex = Buffer;
+			LVERROR(head, "null tex input when there is no available internal buffer");
+			return false;
 		}
 	}
 
@@ -600,7 +604,7 @@ bool Direct3D11Helper::CreateRenderTargetView(ID3D11Texture2D * tex, ID3D11Rende
 		}
 		else if (td.Format == DXGI_FORMAT_B8G8R8A8_TYPELESS)
 		{
-			td.Format == DXGI_FORMAT_B8G8R8A8_UNORM;
+			td.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
 		}
 
 		hr = dev->CreateRenderTargetView(tex, &rtvd, rtv);
@@ -1031,6 +1035,11 @@ IDXGISwapChain* Direct3D11Helper::GetSwapChain()
 ID3D11Texture2D * Direct3D11Helper::GetSwapChainBuffer()
 {
 	return Buffer;
+}
+
+ID3D11Texture2D * Direct3D11Helper::GetBufferDirect3D9Copy()
+{
+	return Buffer_Direct9Copy;
 }
 
 bool Direct3D11Helper::GetSwapChainData(UINT & width, UINT & height, DXGI_FORMAT & format)
