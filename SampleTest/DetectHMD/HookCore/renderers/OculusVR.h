@@ -73,15 +73,18 @@ namespace lostvr
 	{
 		ovrSession               Session;
 		ovrTextureSwapChain      TextureChain;
-		std::vector<ID3D11Texture2D*> SwapChainBuffer;
-		int                      SizeW, SizeH;
+		std::vector<ID3D11Texture2D*>			SwapChainBuffer;
+		std::vector<ID3D11RenderTargetView*>	RTVs;
+		int SizeW, SizeH;
 		ovrTextureFormat Format;
+		Direct3D11Helper* Renderer;
 
 		OculusTexture(DXGI_SWAP_CHAIN_DESC desc) :
 			Session(nullptr),
 			TextureChain(nullptr),
 			SizeW(desc.BufferDesc.Width),
-			SizeH(desc.BufferDesc.Height)
+			SizeH(desc.BufferDesc.Height),
+			Renderer(nullptr)
 		{
 			if (desc.BufferDesc.Format == DXGI_FORMAT_R8G8B8A8_UNORM)
 			{
@@ -101,12 +104,14 @@ namespace lostvr
 			}
 			else
 			{
-				LVMSG("OculusTexture", "unrecognized format(%d)", desc.BufferDesc.Format);
+				LVERROR("OculusTexture", "unrecognized format(%d)", desc.BufferDesc.Format);
 			}
 		}
 
 		bool Init(ID3D11Device* dev, ovrSession session, int sizeW, int sizeH, bool isItProtectedContent = false)
 		{
+			const CHAR* head = "OculusTexture::Init";
+
 			Session = session;
 			//SizeW = sizeW;
 			//SizeH = sizeH;
@@ -129,9 +134,11 @@ namespace lostvr
 			ovrResult result = ovr_CreateTextureSwapChainDX(Session, dev, &desc, &TextureChain);
 			if (!OVR_SUCCESS(result))
 			{
-				LVMSG("OculusTexture::Init", "ovr_CreateTextureSwapChainDX failed(%d)", (int)result);
+				LVMSG(head, "ovr_CreateTextureSwapChainDX failed(%d)", (int)result);
 				return false;
 			}
+
+			SAFE_DELETE(Renderer);
 
 			int textureCount = 0;
 			ovr_GetTextureSwapChainLength(Session, TextureChain, &textureCount);
@@ -141,10 +148,31 @@ namespace lostvr
 				ovr_GetTextureSwapChainBufferDX(Session, TextureChain, i, IID_PPV_ARGS(&tex));
 				if (tex == nullptr)
 				{
-					LVMSG("OculusTexture::Init", "ovr_GetTextureSwapChainBufferDX failed");
+					LVMSG(head, "ovr_GetTextureSwapChainBufferDX failed");
 				}
 
 				SwapChainBuffer.push_back(tex);
+
+				// Ensure renderer been created
+				if (Renderer == nullptr)
+				{
+					ID3D11Device* dev = nullptr;
+					tex->GetDevice(&dev);
+					Renderer = new Direct3D11Helper(EDirect3D::DeviceRef);
+					if (!Renderer->UpdateRHIWithDevice(dev))
+					{
+						LVERROR(head, "create renderer with oculus's device failed");
+						return false;
+					}
+
+					SAFE_RELEASE(dev);
+				}
+
+				ID3D11RenderTargetView* rtv = nullptr;
+				if (Renderer->CreateRenderTargetView(tex, &rtv))
+				{
+					RTVs.push_back(rtv);
+				}
 			}
 
 			LVMSG("OculusTexture::Init", "sucess, width(%d), height(%d), dev(%x)", sizeW, sizeH, dev);
@@ -153,14 +181,16 @@ namespace lostvr
 
 		~OculusTexture()
 		{
-			for (int i = 0; i < (int)SwapChainBuffer.size(); ++i)
+			for (auto buf : SwapChainBuffer)
 			{
-				if (SwapChainBuffer[i] != nullptr)
-				{
-					SwapChainBuffer[i]->Release();
-					SwapChainBuffer[i] = nullptr;
-				}
+				SAFE_RELEASE(buf);
 			}
+
+			for (auto rtv : RTVs)
+			{
+				SAFE_RELEASE(rtv);
+			}
+
 			if (TextureChain)
 			{
 				ovr_DestroyTextureSwapChain(Session, TextureChain);
@@ -313,7 +343,7 @@ namespace lostvr
 		case ovrLogLevel_Error: levelStr = ("****Error****\t\t"); break;
 		}
 
-		LVMSG("LibOVR logging", "%s %s", levelStr, message);
+		LVMSG2("LibOVR", "LibOVR logging", "%s %s", levelStr, message);
 	}
 
 	class OculusVR : public IVRDevice
@@ -326,6 +356,7 @@ namespace lostvr
 		VRLayer    *					Layer[ovrMaxLayerCount];
 
 		Direct3D11Helper*				Renderer;
+		ID3D11RenderTargetView*			RTV;
 
 	public:
 

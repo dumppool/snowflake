@@ -18,7 +18,8 @@ OculusVR::OculusVR(const std::string& key) :
 	TrackerDescArray(),
 	presentResult(ovrSuccess),
 	bInitialized(false),
-	Renderer(nullptr)
+	Renderer(nullptr),
+	RTV(nullptr)
 {
 	// Set all layers to zero
 	for (int i = 0; i < ovrMaxLayerCount; ++i)
@@ -138,6 +139,9 @@ void OculusVR::Shutdown()
 	}
 
 	memset(&HmdDesc, 0, sizeof(HmdDesc));
+
+	SAFE_RELEASE(RTV);
+	SAFE_DELETE(Renderer);
 }
 
 bool OculusVR::IsConnected()
@@ -158,6 +162,12 @@ bool OculusVR::OnPresent_Direct3D11(IDXGISwapChain* swapChain)
 		}
 	}
 
+	// If swap chain changed, dirt initial state
+	if (swapChain != Renderer->GetSwapChain())
+	{
+		bInitialized = false;
+	}
+
 	if (!Renderer->UpdateRHIWithSwapChain(swapChain) || !EnsureInitialized(swapChain))
 	{
 		return false;
@@ -166,16 +176,38 @@ bool OculusVR::OnPresent_Direct3D11(IDXGISwapChain* swapChain)
 	{
 		DXGI_SWAP_CHAIN_DESC scd;
 		swapChain->GetDesc(&scd);
-		SGlobalSharedDataInst.TargetWindow = scd.OutputWindow;
+		SGlobalSharedDataInst.SetTargetWindow(scd.OutputWindow);
+	}
+
+	{
+		RenderStateCache cache(Renderer->GetContext());
+		cache.Capture();
+
+		D3D11_VIEWPORT vp;
+		vp.TopLeftX = Layer[0]->EyeRenderViewport[0].Pos.x;
+		vp.TopLeftY = Layer[0]->EyeRenderViewport[0].Pos.y;
+		vp.Width = Layer[0]->EyeRenderViewport[0].Size.w;
+		vp.Height = Layer[0]->EyeRenderViewport[0].Size.h;
+		vp.MinDepth = 0.01f;
+		vp.MaxDepth = 10000.f;
+
+		Renderer->GetContext()->RSSetViewports(1, &vp);
+		Renderer->GetContext()->OMSetRenderTargets(1, &RTV, nullptr);
+		Renderer->UpdateCursor(LVVec3(2.f, 2.f, -1.f), 0.1f, DirectX::XMMatrixIdentity(), DirectX::XMMatrixIdentity(),
+			SGlobalSharedDataInst.GetBDrawCursor());
+
+		cache.Restore();
 	}
 
 	Layer[0]->GetEyePoses();
 	ID3D11Texture2D* dst = Layer[0]->pEyeRenderTexture[0]->GetBuffer();
-	if (!Renderer->OutputBuffer_Texture2D(dst))
+	ID3D11Texture2D* buf = Renderer->GetSwapChainBuffer();
+	if (buf == nullptr)
 	{
 		return false;
 	}
 
+	ContextCopyResource(dst, buf, "OculusVR::OnPresent_Direct3D11", false);
 	Layer[0]->Commit(0);
 	ovrResult ret = DistortAndPresent(1);
 	if (!OVR_SUCCESS(ret))
@@ -212,7 +244,7 @@ bool OculusVR::OnPresent_Direct3D9(IDirect3DDevice9* device)
 			return false;
 		}
 
-		SGlobalSharedDataInst.TargetWindow = params.hDeviceWindow;
+		SGlobalSharedDataInst.SetTargetWindow(params.hDeviceWindow);
 		SAFE_RELEASE(swapChain);
 	}
 
@@ -295,6 +327,12 @@ bool OculusVR::EnsureInitialized(IDXGISwapChain * swapChain)
 		if (!(bInitialized = Init(Renderer->GetDevice(), Desc)))
 		{
 			LVMSG(head, "failed to initialize, SwapChain(%x).", swapChain);
+			return false;
+		}
+
+		SAFE_RELEASE(RTV);
+		if (!Renderer->CreateRenderTargetView(nullptr, &RTV))
+		{
 			return false;
 		}
 	}

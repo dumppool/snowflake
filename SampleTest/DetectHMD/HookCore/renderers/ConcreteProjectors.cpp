@@ -36,7 +36,7 @@ bool TextureProjector0::InitializeRenderer(IDXGISwapChain * swapChain)
 	swapChain->GetDesc(&desc);
 
 	Renderer = new Direct3D11Helper(EDirect3D::DeviceRef);
-	SGlobalSharedDataInst.TargetWindow = desc.OutputWindow;
+	SGlobalSharedDataInst.SetTargetWindow(desc.OutputWindow);
 
 	return Renderer->UpdateRHIWithSwapChain(swapChain);
 }
@@ -98,7 +98,15 @@ bool TextureProjector0::PrepareSRV()
 {
 	if (Tex != nullptr)
 	{
-		return Renderer->OutputBuffer_Texture2D(Tex);
+		ID3D11Texture2D* buf = Renderer->GetSwapChainBuffer();
+		if (buf != nullptr)
+		{
+			ContextCopyResource(Tex, buf, "TextureProjector0::PrepareSRV", false);
+		}
+		else
+		{
+			return false;
+		}
 	}
 
 	return true;
@@ -141,7 +149,7 @@ bool TextureProjector1::InitializeRenderer(IDXGISwapChain* swapChain)
 	DXGI_SWAP_CHAIN_DESC scDesc;
 	SwapChainRef_Target->GetDesc(&scDesc);
 	Renderer = new Direct3D11Helper(EDirect3D::DXGI1, scDesc.BufferDesc.Width, scDesc.BufferDesc.Height, scDesc.BufferDesc.Format);
-	SGlobalSharedDataInst.TargetWindow = scDesc.OutputWindow;
+	SGlobalSharedDataInst.SetTargetWindow(scDesc.OutputWindow);
 
 	SAFE_RELEASE(SharedTex_Target);
 	D3D11_TEXTURE2D_DESC sharedDesc = { 0 };
@@ -285,7 +293,7 @@ bool TextureProjector9::InitializeRenderer_Direct3D9(IDirect3DDevice9 * device)
 		return false;
 	}
 
-	SGlobalSharedDataInst.TargetWindow = params.hDeviceWindow;
+	SGlobalSharedDataInst.SetTargetWindow(params.hDeviceWindow);
 	SAFE_RELEASE(swapChain);
 	return true;
 }

@@ -48,6 +48,7 @@ namespace lostvr
 		ID3D11Texture2D*		Buffer_Direct9Copy;
 		IDXGISwapChain*			SwapChain;
 
+		ID3D11RasterizerState*	DefaultRasterizer;
 		ID3D11VertexShader*		DefaultVS;
 		ID3D11PixelShader*		DefaultPS;
 		ID3D11InputLayout*		DefaultInputLayout;
@@ -67,9 +68,12 @@ namespace lostvr
 			SwapChain = nullptr;
 			Context = nullptr;
 			Device = nullptr;
+
+			DefaultRasterizer = nullptr;
 			DefaultVS = nullptr;
 			DefaultPS = nullptr;
 			DefaultInputLayout = nullptr;
+
 			CursorVB = nullptr;
 			CursorIB = nullptr;
 			CursorCB = nullptr;
@@ -85,9 +89,12 @@ namespace lostvr
 			SAFE_RELEASE(SwapChain);
 			SAFE_RELEASE(Context);
 			SAFE_RELEASE(Device);
+
+			SAFE_RELEASE(DefaultRasterizer);
 			SAFE_RELEASE(DefaultVS);
 			SAFE_RELEASE(DefaultPS);
 			SAFE_RELEASE(DefaultInputLayout);
+
 			SAFE_RELEASE(CursorVB);
 			SAFE_RELEASE(CursorIB);
 			SAFE_RELEASE(CursorCB);
@@ -134,14 +141,15 @@ namespace lostvr
 			DestroyRHI();
 		}
 
+		bool UpdateRHIWithDevice(ID3D11Device* device);
 		bool UpdateRHIWithSwapChain(IDXGISwapChain* swapChain);
-		bool OutputBuffer_Texture2D(ID3D11Texture2D* dst);
 		bool UpdateBuffer_Direct3D9(IDirect3DDevice9* device);
 		bool OutputBuffer_Texture2D_Direct3D9(ID3D11Texture2D* dst);
 
 		ID3D11Device* GetDevice();
 		ID3D11DeviceContext* GetContext();
 		IDXGISwapChain* GetSwapChain();
+		ID3D11Texture2D* GetSwapChainBuffer();
 		bool GetSwapChainData(UINT& width, UINT& height, DXGI_FORMAT& format);
 		EDirect3D GetGraphicsInterfaceVersion();
 
@@ -194,6 +202,18 @@ namespace lostvr
 		bool CreateShaderResourceView(ID3D11Texture2D* tex, ID3D11ShaderResourceView** ppSRV);
 
 		//************************************
+		// Method:    CreateRenderTargetView 在纹理的Texture2D上创建RTV
+		// 这个接口用传入tex的device创建资源。
+		// FullName:  lostvr::Direct3D11Helper::CreateShaderResourceView
+		// Access:    public 
+		// Returns:   bool 创建成功返回true，否则返回false
+		// Qualifier:
+		// Parameter: ID3D11Texture2D * tex 纹理Texture2D对象，若为null则使用内部swap chain的Texture2D对象
+		// Parameter: ID3D11RenderTargetView * * rtv 必须指向一个SRV指针，已AddRef
+		//************************************
+		bool CreateRenderTargetView(ID3D11Texture2D* tex, ID3D11RenderTargetView** rtv);
+
+		//************************************
 		// Method:    CreateMesh_Rect 创建一个rect的vertex/index buffer
 		// FullName:  lostvr::Direct3D11Helper::CreateMesh_Rect
 		// Access:    public 
@@ -218,9 +238,48 @@ namespace lostvr
 		//************************************
 		bool CreateBuffer(D3D11_BUFFER_DESC& desc, ID3D11Buffer** ppBuffer);
 
-		void UpdateCursor(const LVVec3& areaSize, const LVMatrix& matView, const LVMatrix& matProj, bool bVisible);
+		void UpdateCursor(const LVVec3& areaSize, float scale, const LVMatrix& matView, const LVMatrix& matProj, bool bVisible);
 
 		bool GetDefaultShader(ID3D11VertexShader** vs, ID3D11PixelShader** ps, ID3D11InputLayout** layout);
 		bool CompileShader(LPCWSTR file, LPCSTR entry, LPCSTR target, ID3DBlob** blob);
+
+		bool GetDefaultRasterizer(ID3D11RasterizerState** rs);
+
+	protected:
+		bool CreateBlendStates();
+	};
+
+	struct RenderStateCacheNull
+	{
+		RenderStateCacheNull(ID3D11DeviceContext* context) {}
+		~RenderStateCacheNull() {}
+
+		void Capture() {}
+		void Restore() {}
+	};
+
+	struct RenderStateCache
+	{
+		UINT NumViewports;
+		D3D11_VIEWPORT Viewport;
+		ID3D11RasterizerState* RS;
+		ID3D11Buffer *CB, *VB, *IB;
+		UINT VBStride, VBOffset;
+		DXGI_FORMAT IBFormat;
+		UINT IBOffset;
+		D3D11_PRIMITIVE_TOPOLOGY Topology;
+		ID3D11InputLayout* InputLayout;
+		ID3D11RenderTargetView* RTV;
+		ID3D11DepthStencilView* DSV;
+		ID3D11VertexShader* VS;
+		ID3D11PixelShader* PS;
+
+		ID3D11DeviceContext* ContextRef;
+
+		RenderStateCache(ID3D11DeviceContext* context);
+		~RenderStateCache();
+
+		void Capture();
+		void Restore();
 	};
 }

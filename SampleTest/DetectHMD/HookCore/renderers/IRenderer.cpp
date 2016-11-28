@@ -170,12 +170,13 @@ void LostVR::SetupInput()
 		return;
 	}
 
-	if (SGlobalSharedDataInst.TargetWindow == NULL)
+	if (SGlobalSharedDataInst.GetTargetWindow() == NULL)
 	{
 		return;
 	}
 
-	SetupInputDevice(&SGlobalSharedDataInst.TargetWindow);
+	HWND wnd = SGlobalSharedDataInst.GetTargetWindow();
+	SetupInputDevice(&wnd);
 	RegisterKeyboardCallback(DIK_LSHIFT, KeyboardEventDetector_SWShift::OnKeyUpdate_Shift);
 	RegisterKeyboardCallback(DIK_RSHIFT, KeyboardEventDetector_SWShift::OnKeyUpdate_Shift);
 	RegisterKeyboardCallback(DIK_S, KeyboardEventDetector_SWShift::OnKeyUpdate_S);

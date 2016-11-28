@@ -23,7 +23,7 @@ static Direct3D11Helper* GetDirectHelper()
 
 	if (SDirectHelper == nullptr || SDirectHelper->GetSwapChain() == nullptr)
 	{
-		LVMSG("GetDirectHelper", "sth wrong, object: 0x%x, swap chain: 0x%x", SDirectHelper, SDirectHelper->GetSwapChain());
+		LVERROR("GetDirectHelper", "sth wrong, object: 0x%x, swap chain: 0x%x", SDirectHelper, SDirectHelper->GetSwapChain());
 		return nullptr;
 	}
 
@@ -48,7 +48,9 @@ static Direct11DevicePresent* SRouter = new Direct11DevicePresent;
 typedef HRESULT(STDMETHODCALLTYPE *PFN_DXGISWAPCHAIN_PRESENT)(IDXGISwapChain* This, UINT SyncInterval, UINT Flags);
 static HRESULT STDMETHODCALLTYPE Direct3D11Present(IDXGISwapChain* This, UINT Sync, UINT Flags)
 {
+	const CHAR* head = "Direct3D11Present";
 	HRESULT hr = S_FALSE;
+
 	PFN_DXGISWAPCHAIN_PRESENT func = (PFN_DXGISWAPCHAIN_PRESENT)SRouter->GetOriginalEntry();
 	if (func != nullptr)
 	{
@@ -57,12 +59,22 @@ static HRESULT STDMETHODCALLTYPE Direct3D11Present(IDXGISwapChain* This, UINT Sy
 		hr = func(This, Sync, Flags);
 		if (FAILED(hr))
 		{
-			LVMSG("Direct3D11Present", "failed with 0x%x(%d)", hr, hr);
+			if (hr == DXGI_ERROR_DEVICE_REMOVED)
+			{
+				ID3D11Device* dev = nullptr;
+				This->GetDevice(__uuidof(ID3D11Device), (void**)&dev);
+				HRESULT err = dev->GetDeviceRemovedReason();
+				LVERROR(head, "device removed error: 0x%x(%d)", err, err);
+			}
+			else
+			{
+				LVERROR(head, "failed with 0x%x(%d)", hr, hr);
+			}
 		}
 	}
 	else
 	{
-		LVMSG("Direct3D11Present", "null original entry");
+		LVERROR(head, "null original entry");
 	}
 
 	return hr;
@@ -77,7 +89,6 @@ PVOID Direct11DevicePresent::GetThisObject()
 {
 	return (GetDirectHelper() != nullptr) ? GetDirectHelper()->GetSwapChain() : nullptr;
 }
-
 
 class Direct9DevicePresent : public MemberFunctionRouter
 {
@@ -109,7 +120,7 @@ static HRESULT STDMETHODCALLTYPE Direct3D9Present(IDirect3DDevice9* This, CONST 
 	}
 	else
 	{
-		LVMSG(head, "null original entry");
+		LVERROR(head, "null original entry");
 	}
 
 	return hr;

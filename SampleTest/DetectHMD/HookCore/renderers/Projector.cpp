@@ -128,21 +128,9 @@ bool BaseTextureProjector::InitializeRHI()
 		VERIFY_HRESULT(deviceRef->CreateDepthStencilState(&desc, &DSS), return false, "failed to create projector's depth-stencil state.");
 	}
 
+	if (!GetRenderer()->GetDefaultRasterizer(&RS))
 	{
-		// projector's rasterize state
-		D3D11_RASTERIZER_DESC desc;
-		ZeroMemory(&desc, sizeof(desc));
-		desc.AntialiasedLineEnable = FALSE;
-		desc.CullMode = D3D11_CULL_NONE;
-		desc.DepthBias = 0;
-		desc.DepthBiasClamp = 0.0f;
-		desc.DepthClipEnable = FALSE;
-		desc.FillMode = D3D11_FILL_SOLID;
-		desc.FrontCounterClockwise = FALSE;
-		desc.MultisampleEnable = FALSE;
-		desc.ScissorEnable = FALSE;
-		desc.SlopeScaledDepthBias = 0.0f;
-		VERIFY_HRESULT(deviceRef->CreateRasterizerState(&desc, &RS), return false, "failed to create projector's rasterize state.");
+		return false;
 	}
 
 	if (!GetRenderer()->CreateMesh_Rect(1.f, 1.f, sizeof(MeshVertex), &VB, &IB))
@@ -306,7 +294,7 @@ bool BaseTextureProjector::UpdateTexture()
 
 		context->DrawIndexed(6, 0, 0);
 
-		GetRenderer()->UpdateCursor(LVVec3(Scale.x, Scale.y, Translation.z), EyePose[i].V, EyePose[i].P, true);
+		GetRenderer()->UpdateCursor(LVVec3(Scale.x, Scale.y, Translation.z), 1.f, EyePose[i].V, EyePose[i].P, true);
 	}
 
 #ifdef ENABLE_RESTORESTATE

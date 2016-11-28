@@ -82,6 +82,28 @@ Direct3D11Helper::Direct3D11Helper(EDirect3D ver, UINT width, UINT height, DXGI_
 	}
 }
 
+bool Direct3D11Helper::UpdateRHIWithDevice(ID3D11Device * device)
+{
+	const CHAR* head = "Direct3D11Helper::UpdateRHIWithDevice";
+	if (device == nullptr)
+	{
+		LVERROR(head, "null device");
+		return false;
+	}
+
+	if (Device == device)
+	{
+		return true;
+	}
+
+	DestroyRHI();
+	Device = device;
+	Device->AddRef();
+	Device->GetImmediateContext(&Context);
+
+	return true;
+}
+
 bool Direct3D11Helper::UpdateRHIWithSwapChain(IDXGISwapChain* swapChain)
 {
 	const CHAR* head = "Direct3D11Helper::UpdateRHIWithSwapChain";
@@ -273,59 +295,12 @@ bool Direct3D11Helper::InitializeRHI(UINT width, UINT height, DXGI_FORMAT format
 	}
 
 	//return true;
+
+	if (!CreateBlendStates())
 	{
-		// Create default blend states
-		SAFE_RELEASE(BlendState_Add_RGB);
-		SAFE_RELEASE(BlendState_Blend_RGB);
-
-		D3D11_BLEND_DESC bd;
-		ZeroMemory(&bd, sizeof(D3D11_BLEND_DESC));
-		bd.AlphaToCoverageEnable = TRUE;
-		bd.IndependentBlendEnable = FALSE;
-		bd.RenderTarget[0].BlendEnable = TRUE;
-		bd.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-		bd.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-		bd.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
-		bd.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
-		bd.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-		bd.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-		bd.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
-		if (FAILED(hr = Device->CreateBlendState(&bd, &BlendState_Add_RGB)))
-		{
-			LVERROR(head, "create blend state(add) failed: 0x%x(%d)", hr, hr);
-			return false;
-		}
-
-		bd.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-		bd.RenderTarget[0].DestBlend = D3D11_BLEND_INV_DEST_ALPHA;
-		if (FAILED(hr = Device->CreateBlendState(&bd, &BlendState_Blend_RGB)))
-		{
-			LVERROR(head, "create blend state(blend) failed: 0x%x(%d)", hr, hr);
-			return false;
-		}
-	}
-
-	return true;
-}
-
-bool Direct3D11Helper::OutputBuffer_Texture2D(ID3D11Texture2D* dst)
-{
-	const CHAR* head = "Direct3D11Helper::OutputBuffer_Texture2D";
-	if (Context == nullptr || Buffer == nullptr)
-	{
-		LVERROR(head, "failed, context: 0x%x, buffer: 0x%x", Context, Buffer);
 		return false;
 	}
 
-	D3D11_TEXTURE2D_DESC srcDesc, dstDesc;
-	dst->GetDesc(&dstDesc);
-	Buffer->GetDesc(&srcDesc);
-
-#ifdef _DEBUG
-	LVMSG(head, "width(%d), height(%d), format(%d), usage(%d), miplevels(%d), sampler count(%d)", srcDesc.Width, srcDesc.Height, srcDesc.Format, srcDesc.Usage, srcDesc.MipLevels, srcDesc.SampleDesc.Count);
-	LVMSG(head, "width(%d), height(%d), format(%d), usage(%d), miplevels(%d), sampler count(%d)", dstDesc.Width, dstDesc.Height, dstDesc.Format, dstDesc.Usage, dstDesc.MipLevels, dstDesc.SampleDesc.Count);
-#endif
-	Context->CopyResource(dst, Buffer);
 	return true;
 }
 
@@ -578,7 +553,69 @@ bool Direct3D11Helper::CreateShaderResourceView(ID3D11Texture2D * tex, ID3D11Sha
 	return true;
 }
 
-void Direct3D11Helper::UpdateCursor(const LVVec3& areaSize, const LVMatrix& matView, const LVMatrix& matProj, bool bVisible)
+bool Direct3D11Helper::CreateRenderTargetView(ID3D11Texture2D * tex, ID3D11RenderTargetView ** rtv)
+{
+	const CHAR* head = "Direct3D11Helper::CreateRenderTargetView";
+
+	if (rtv == nullptr)
+	{
+		LVERROR(head, "null rtv");
+		return false;
+	}
+
+	if (tex == nullptr)
+	{
+		if (Buffer == nullptr)
+		{
+			LVERROR(head, "null tex input when there is no available internal buffer");
+			return false;
+		}
+		else
+		{
+			tex = Buffer;
+		}
+	}
+
+	ID3D11Device* dev = nullptr;
+	tex->GetDevice(&dev);
+	if (dev == nullptr)
+	{
+		LVERROR(head, "null device");
+		return false;
+	}
+
+	bool bSuccess = true;
+	CD3D11_RENDER_TARGET_VIEW_DESC crd(tex, D3D11_RTV_DIMENSION_TEXTURE2D);
+	HRESULT hr = dev->CreateRenderTargetView(tex, &crd, rtv);
+	if (FAILED(hr))
+	{
+		D3D11_RENDER_TARGET_VIEW_DESC rtvd = {};
+		rtvd.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+
+		D3D11_TEXTURE2D_DESC td;
+		tex->GetDesc(&td);
+		if (td.Format == DXGI_FORMAT_R8G8B8A8_TYPELESS)
+		{
+			rtvd.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		}
+		else if (td.Format == DXGI_FORMAT_B8G8R8A8_TYPELESS)
+		{
+			td.Format == DXGI_FORMAT_B8G8R8A8_UNORM;
+		}
+
+		hr = dev->CreateRenderTargetView(tex, &rtvd, rtv);
+		if (FAILED(hr))
+		{
+			LVERROR(head, "create render target view failed: 0x%x(%d)", hr, hr);
+			bSuccess = false;
+		}
+	}
+
+	SAFE_RELEASE(dev);
+	return bSuccess;
+}
+
+void Direct3D11Helper::UpdateCursor(const LVVec3& areaSize, float scale, const LVMatrix& matView, const LVMatrix& matProj, bool bVisible)
 {
 	if (!bVisible)
 	{
@@ -628,10 +665,25 @@ void Direct3D11Helper::UpdateCursor(const LVVec3& areaSize, const LVMatrix& matV
 			LVERROR(head, "create pixel shader for cursor failed");
 			return;
 		}
+
+		// Make sure default variables available
+		if (DefaultInputLayout == nullptr || DefaultRasterizer == nullptr)
+		{
+			GetDefaultShader(nullptr, nullptr, nullptr);
+			GetDefaultRasterizer(nullptr);
+		}
+
+		if (BlendState_Add_RGB == nullptr || BlendState_Blend_RGB == nullptr)
+		{
+			if (!CreateBlendStates())
+			{
+				return;
+			}
+		}
 	}
 
 	// update cursor position
-	HWND wnd = SGlobalSharedDataInst.TargetWindow;
+	HWND wnd = SGlobalSharedDataInst.GetTargetWindow();
 	POINT pt;
 	RECT wndRect;
 	if (FALSE == GetCursorPos(&pt) ||
@@ -649,18 +701,21 @@ void Direct3D11Helper::UpdateCursor(const LVVec3& areaSize, const LVMatrix& matV
 		float pty = 0.5f - float(pt.y - wndRect.top) / rh;
 
 		LVMatrix matTrans2 = DirectX::XMMatrixTranslation(ptx * areaSize.x, pty * areaSize.y, areaSize.z);
-		LVMatrix matScale2 = DirectX::XMMatrixScaling(1.f, 1.f, 1.f);
+		LVMatrix matScale2 = DirectX::XMMatrixScaling(scale, scale, scale);
 
 		uint32 stride = sizeof(MeshVertex);
 		uint32 offset = 0;
 		Context->IASetVertexBuffers(0, 1, &CursorVB, &stride, &offset);
 		Context->IASetIndexBuffer(CursorIB, DXGI_FORMAT_R16_UINT, 0);
+		Context->IASetInputLayout(DefaultInputLayout);
 
 		FrameBufferWVP wvp(DirectX::XMMatrixTranspose(matScale2 * matTrans2), matView, matProj);
 		Context->UpdateSubresource(CursorCB, 0, nullptr, &wvp, 0, 0);
 		Context->VSSetConstantBuffers(0, 1, &CursorCB);
 		Context->VSSetShader(DefaultVS, nullptr, 0);
 		Context->PSSetShader(CursorPS, nullptr, 0);
+		Context->PSSetSamplers(0, 0, nullptr);
+		Context->RSSetState(DefaultRasterizer);
 
 		Context->OMSetBlendState(BlendState_Add_RGB, 0, 0xffffffff);
 
@@ -878,6 +933,86 @@ bool Direct3D11Helper::CompileShader(LPCWSTR file, LPCSTR entry, LPCSTR target, 
 	}
 }
 
+bool Direct3D11Helper::GetDefaultRasterizer(ID3D11RasterizerState ** rs)
+{
+	const CHAR* head = "Direct3D11Helper::GetDefaultRasterizer";
+
+	if (Device == nullptr)
+	{
+		LVERROR(head, "null device");
+		return false;
+	}
+
+	if (DefaultRasterizer == nullptr)
+	{
+		D3D11_RASTERIZER_DESC desc;
+		ZeroMemory(&desc, sizeof(desc));
+		desc.AntialiasedLineEnable = FALSE;
+		desc.CullMode = D3D11_CULL_NONE;
+		desc.DepthBias = 0;
+		desc.DepthBiasClamp = 0.0f;
+		desc.DepthClipEnable = FALSE;
+		desc.FillMode = D3D11_FILL_SOLID;
+		desc.FrontCounterClockwise = FALSE;
+		desc.MultisampleEnable = FALSE;
+		desc.ScissorEnable = FALSE;
+		desc.SlopeScaledDepthBias = 0.0f;
+		HRESULT hr = Device->CreateRasterizerState(&desc, &DefaultRasterizer);
+		if (FAILED(hr))
+		{
+			LVERROR(head, "create rasterizer failed: 0x%x(%d)", hr, hr);
+			return false;
+		}
+	}
+
+	if (rs != nullptr)
+	{
+		*rs = DefaultRasterizer;
+		DefaultRasterizer->AddRef();
+	}
+
+	return true;
+}
+
+bool Direct3D11Helper::CreateBlendStates()
+{
+	const CHAR* head = "Direct3D11Helper::CreateBlendStates";
+
+	HRESULT hr = S_FALSE;
+
+	// Create default blend states
+	SAFE_RELEASE(BlendState_Add_RGB);
+	SAFE_RELEASE(BlendState_Blend_RGB);
+
+	D3D11_BLEND_DESC bd;
+	ZeroMemory(&bd, sizeof(D3D11_BLEND_DESC));
+	bd.AlphaToCoverageEnable = TRUE;
+	bd.IndependentBlendEnable = FALSE;
+	bd.RenderTarget[0].BlendEnable = TRUE;
+	bd.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	bd.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	bd.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
+	bd.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
+	bd.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	bd.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	bd.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
+	if (FAILED(hr = Device->CreateBlendState(&bd, &BlendState_Add_RGB)))
+	{
+		LVERROR(head, "create blend state(add) failed: 0x%x(%d)", hr, hr);
+		return false;
+	}
+
+	bd.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	bd.RenderTarget[0].DestBlend = D3D11_BLEND_INV_DEST_ALPHA;
+	if (FAILED(hr = Device->CreateBlendState(&bd, &BlendState_Blend_RGB)))
+	{
+		LVERROR(head, "create blend state(blend) failed: 0x%x(%d)", hr, hr);
+		return false;
+	}
+
+	return false;
+}
+
 ID3D11Device* Direct3D11Helper::GetDevice()
 {
 	return Device;
@@ -891,6 +1026,11 @@ ID3D11DeviceContext* Direct3D11Helper::GetContext()
 IDXGISwapChain* Direct3D11Helper::GetSwapChain()
 {
 	return SwapChain;
+}
+
+ID3D11Texture2D * Direct3D11Helper::GetSwapChainBuffer()
+{
+	return Buffer;
 }
 
 bool Direct3D11Helper::GetSwapChainData(UINT & width, UINT & height, DXGI_FORMAT & format)
@@ -1131,4 +1271,72 @@ void lostvr::ContextCopyResource(ID3D11Texture2D * dst, ID3D11Texture2D * src, c
 
 	SAFE_RELEASE(device);
 	SAFE_RELEASE(context);
+}
+
+RenderStateCache::RenderStateCache(ID3D11DeviceContext * context) : ContextRef(context)
+, NumViewports(1)
+, RS(nullptr)
+, CB(nullptr)
+, VB(nullptr)
+, IB(nullptr)
+, InputLayout(nullptr)
+, RTV(nullptr)
+, DSV(nullptr)
+, VS(nullptr)
+, PS(nullptr)
+{
+	ContextRef->AddRef();
+}
+
+RenderStateCache::~RenderStateCache()
+{
+	SAFE_RELEASE(RS);
+	SAFE_RELEASE(CB);
+	SAFE_RELEASE(VB);
+	SAFE_RELEASE(IB);
+	SAFE_RELEASE(InputLayout);
+	SAFE_RELEASE(RTV);
+	SAFE_RELEASE(DSV);
+	SAFE_RELEASE(VS);
+	SAFE_RELEASE(PS);
+
+	SAFE_RELEASE(ContextRef);
+}
+
+void RenderStateCache::Capture()
+{
+	if (ContextRef == nullptr)
+	{
+		return;
+	}
+
+	ContextRef->RSGetViewports(&NumViewports, &Viewport);
+	ContextRef->RSGetState(&RS);
+	ContextRef->VSGetConstantBuffers(0, 1, &CB);
+	ContextRef->IAGetVertexBuffers(0, 1, &VB, &VBStride, &VBOffset);
+	ContextRef->IAGetIndexBuffer(&IB, &IBFormat, &IBOffset);
+	ContextRef->IAGetPrimitiveTopology(&Topology);
+	ContextRef->IAGetInputLayout(&InputLayout);
+	ContextRef->OMGetRenderTargets(1, &RTV, &DSV);
+	ContextRef->VSGetShader(&VS, nullptr, 0);
+	ContextRef->PSGetShader(&PS, nullptr, 0);
+}
+
+void RenderStateCache::Restore()
+{
+	if (ContextRef == nullptr)
+	{
+		return;
+	}
+
+	ContextRef->RSSetViewports(NumViewports, &Viewport);
+	ContextRef->RSSetState(RS);
+	ContextRef->VSSetConstantBuffers(0, 1, &CB);
+	ContextRef->IASetVertexBuffers(0, 1, &VB, &VBStride, &VBOffset);
+	ContextRef->IASetIndexBuffer(IB, IBFormat, IBOffset);
+	ContextRef->IASetPrimitiveTopology(Topology);
+	ContextRef->IASetInputLayout(InputLayout);
+	ContextRef->OMSetRenderTargets(1, &RTV, DSV);
+	ContextRef->VSSetShader(VS, nullptr, 0);
+	ContextRef->PSSetShader(PS, nullptr, 0);
 }
