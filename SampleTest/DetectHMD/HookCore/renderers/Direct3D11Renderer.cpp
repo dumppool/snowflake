@@ -244,7 +244,7 @@ bool Direct3D11Helper::InitializeRHI(UINT width, UINT height, DXGI_FORMAT format
 		return false;
 	}
 
-	HWND hwnd = GetForegroundWindow();
+	HWND hwnd = SGlobalSharedDataInst.GetDefaultWindow();
 	IDXGIAdapter* adapter = nullptr;
 	DXGI_ADAPTER_DESC adapterDesc;
 	for (int i = 0;; ++i)
@@ -272,7 +272,7 @@ bool Direct3D11Helper::InitializeRHI(UINT width, UINT height, DXGI_FORMAT format
 		desc.BufferDesc.Width = width;
 		desc.BufferDesc.Height = height;
 		desc.OutputWindow = hwnd;
-		desc.Windowed = (GetWindowLong(hwnd, GWL_STYLE) & WS_POPUP) != 0 ? FALSE : TRUE;;
+		desc.Windowed = TRUE;
 		desc.SampleDesc.Count = 1;
 		desc.SampleDesc.Quality = 0;
 		desc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
@@ -327,7 +327,8 @@ bool Direct3D11Helper::OutputBuffer_Texture2D_Direct3D9(ID3D11Texture2D * dst)
 IDirect3DDevice9 * Direct3D11Helper::GetTemporaryDirect9Device() const
 {
 	const CHAR* head = "Direct3D11Helper::GetTemporaryDirect9Device";
-	HWND wnd = GetForegroundWindow();
+	HWND wnd = SGlobalSharedDataInst.GetDefaultWindow();
+	//HWND wnd = NULL;
 
 	IDirect3D9* d3d = Direct3DCreate9(D3D_SDK_VERSION);
 	if (d3d == nullptr)

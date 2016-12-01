@@ -8,6 +8,12 @@
  */
 #include "HookCorePCH.h"
 
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+
+EXTERN_C IMAGE_DOS_HEADER __ImageBase;
+#define HINST_THISCOMPONENT ((HINSTANCE)&__ImageBase)
+
 GlobalSharedData SGlobalSharedDataInst;
 
 GlobalSharedData::GlobalSharedData() : HookCoreDllPath(nullptr)
@@ -17,6 +23,7 @@ GlobalSharedData::GlobalSharedData() : HookCoreDllPath(nullptr)
 , ShaderFilePath(nullptr)
 , TargetWindow(NULL)
 , bDrawCursor(true)
+, DefaultWindow(NULL)
 {}
 
 GlobalSharedData::~GlobalSharedData()
@@ -25,6 +32,11 @@ GlobalSharedData::~GlobalSharedData()
 	SAFE_DELETE_ARRAY(DependencyDirectory);
 	SAFE_DELETE_ARRAY(OpenVRDllPath);
 	SAFE_DELETE_ARRAY(LibOVRDllPath);
+
+	if (DefaultWindow != NULL)
+	{
+		DestroyWindow(DefaultWindow);
+	}
  }
 
  const WCHAR * GlobalSharedData::GetHookCoreDllName() const
@@ -225,6 +237,38 @@ GlobalSharedData::~GlobalSharedData()
 	 wsprintf(DependencyDirectory, L"%s\\%s", path, GetDependencyDirectoryName());
 	 LVMSG(head, "dependency directory: %ls", DependencyDirectory);
 	 return DependencyDirectory;
+ }
+
+ static LRESULT CALLBACK WindowProc(_In_ HWND hWnd, _In_ UINT Msg, _In_ WPARAM wParam, _In_ LPARAM lParam)
+ {
+	 return DefWindowProc(hWnd, Msg, wParam, lParam);
+ }
+
+ HWND GlobalSharedData::GetDefaultWindow()
+ {
+	 if (DefaultWindow == NULL)
+	 {
+		 WNDCLASSEXW wc;
+		 memset(&wc, 0, sizeof(wc));
+		 wc.cbSize = sizeof(WNDCLASSEX);
+		 wc.lpszClassName = L"HookApp";
+		 wc.style = CS_HREDRAW | CS_VREDRAW;
+		 wc.lpfnWndProc = WindowProc;
+		 wc.cbWndExtra = 0;
+		 wc.hInstance = HINST_THISCOMPONENT;
+		 RegisterClassExW(&wc);
+
+		 // adjust the window size and show at InitDevice time
+		 DefaultWindow = CreateWindowW(wc.lpszClassName, L"DefaultWIN", WS_OVERLAPPEDWINDOW, 
+			 CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, 0, 0, HINST_THISCOMPONENT, 0);
+
+		 if (DefaultWindow)
+		 {
+			 ShowWindow(DefaultWindow, 0);
+		 }
+	 }
+
+	 return DefaultWindow;
  }
 
  ScopedHighFrequencyCounter::ScopedHighFrequencyCounter(const CHAR * head) : MsgHead(head), Counter()

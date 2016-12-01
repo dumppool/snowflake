@@ -326,7 +326,11 @@ protected:
 	HWND			TargetWindow;
 	bool			bDrawCursor;
 
+	HWND			DefaultWindow;
+
 public:
+
+	HINSTANCE hInst;
 
 	GlobalSharedData();
 	~GlobalSharedData();
@@ -350,6 +354,8 @@ public:
 
 	const WCHAR* GetDependencyDirectoryName() const;
 	WCHAR* GetDependencyDirectory();
+
+	HWND GetDefaultWindow();
 };
 
 class HighFrequencyCounter
