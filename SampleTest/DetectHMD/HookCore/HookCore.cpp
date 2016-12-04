@@ -35,6 +35,18 @@ extern "C" _declspec(dllexport) void _cdecl NativeInjectionEntryPointMhook(int* 
 	RouteModule::Get()->InstallRouters();
 }
 
+#ifdef NTDDI_VERSION
+#undef NTDDI_VERSION
+#endif
+
+#ifdef _WIN32_WINNT
+#undef _WIN32_WINNT
+#endif
+
+#ifdef _WIN32_IE_
+#undef _WIN32_IE_
+#endif
+
 #include "easyhook/Public/easyhook.h"
 extern "C" void __declspec(dllexport) __stdcall NativeInjectionEntryPoint(REMOTE_ENTRY_INFO* inRemoteInfo)
 {
