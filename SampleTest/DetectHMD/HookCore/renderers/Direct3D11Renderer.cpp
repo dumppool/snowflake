@@ -1015,7 +1015,7 @@ bool Direct3D11Helper::CreateBlendStates()
 		return false;
 	}
 
-	return false;
+	return true;
 }
 
 ID3D11Device* Direct3D11Helper::GetDevice()
