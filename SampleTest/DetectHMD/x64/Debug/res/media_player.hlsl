@@ -25,6 +25,13 @@ struct VertexOut2
 Texture2D Texture : register(t0);
 sampler   Sampler : register(s0);
 
+static const float3x3 YUV_TO_RGB_JPEG =
+{
+	1.000000, 0.000000, 1.402000,
+	1.000000,-0.344140,-0.714140,
+	1.000000, 1.772000, 0.000000,
+};
+
 VertexOut vs_main(VertexIn Input)
 {
 	float4 Vec = float4(Input.pos, 1.0f);
@@ -43,11 +50,24 @@ VertexOut vs_main(VertexIn Input)
     return Output;
 }
 
+float sRGBToLinearChannel(float ColorChannel)
+{
+	return ColorChannel > 0.04045 ? pow(ColorChannel * (1.0 / 1.055) + 0.0521327, 2.4) : ColorChannel * (1.0 / 12.92);
+}
+
+float3 sRGBToLinear(float3 Color)
+{
+	return float3(sRGBToLinearChannel(Color.r),
+		sRGBToLinearChannel(Color.g),
+		sRGBToLinearChannel(Color.b));
+}
+
 float4 ps_main(VertexOut in_data) : SV_TARGET
 {
 	float y = Texture.Sample(Sampler, in_data.tco[0]).r;
 	float u = Texture.Sample(Sampler, in_data.tco[1]).r;
 	float v = Texture.Sample(Sampler, in_data.tco[2]).r;
+	float3 RGB;
 	float4 channels = float4(y, u, v, 1.0);
 	float4x4 conversion = float4x4(
 		1.000,  0.000,  1.402, -0.701,
@@ -55,15 +75,13 @@ float4 ps_main(VertexOut in_data) : SV_TARGET
 		1.000,  1.772,  0.000, -0.886,
 		0.000,  0.000,  0.000,  0.000);
 
-	//return u.rrrr;
-	//return Texture.Sample(Sampler, in_data.tco[3]);
-	//return float4(
-	//	dot(channels, float4(1.0, 0.0, 1.402, -0.7)),
-	//	dot(channels, float4(1.0, -0.344, -0.714, 0.529)),
-	//	dot(channels, float4(1.0, 1.772, 0.0, -0.886)),
-	//	1.0);
-	//return in_data[1].rgr;
-	return mul(conversion, channels);
+	RGB = mul(conversion, channels).xyz;
+
+	//channels.xyz -= float3(0.0625, 0.5, 0.5);
+	//RGB = mul(YUV_TO_RGB_JPEG, channels.xyz);
+
+	//RGB = sRGBToLinear(RGB);
+	return float4(RGB, 1.0f);
 }
 
 float4 ps_main_cursor(VertexOut in_data) : SV_TARGET

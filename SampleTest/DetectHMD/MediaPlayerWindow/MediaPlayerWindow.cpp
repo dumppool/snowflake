@@ -5,6 +5,11 @@
 #include "MediaPlayerWindow.h"
 #include "LostMediaDecoder.h"
 
+#include <al.h>
+#include <alc.h>
+
+#pragma comment(lib, "OpenAL32.lib")
+
 using namespace lostvr;
 
 DecoderHandle SDecoder;
@@ -31,18 +36,59 @@ public:
 		SPlayer->ProcessVideoBuffer(buf, sz);
 	}
 
+	virtual void ProcessAudioFrame(const uint8* buf, uint32 sz, int32 rate) override
+	{
+		// module for rendering audio?
+		static ALCdevice*  oalDevice = nullptr;
+		static ALCcontext* oalContext = nullptr;
+		static ALuint audio_source;
+		static std::deque<ALuint> audio_buffer_queue;
+
+		if (!oalDevice || !oalContext)
+		{
+			oalDevice = alcOpenDevice(nullptr);
+			if (!oalDevice)
+				return;
+			oalContext = alcCreateContext(oalDevice, nullptr);
+			if (!oalContext)
+				return;
+			alcMakeContextCurrent(oalContext);
+			alGenSources(1, &audio_source);
+		}
+
+		ALuint albuffer = 0;
+		alGenBuffers(1, &albuffer);
+		alBufferData(albuffer, AL_FORMAT_STEREO16, buf, sz, rate);
+		alSourceQueueBuffers(audio_source, 1, &albuffer);
+		audio_buffer_queue.push_front(albuffer);
+
+		int32 val = -1;
+		alGetSourcei(audio_source, AL_BUFFERS_PROCESSED, &val);
+		while (val--)
+		{
+			alSourceUnqueueBuffers(audio_source, 1, &audio_buffer_queue.back());
+			alDeleteBuffers(1, &audio_buffer_queue.back());
+			audio_buffer_queue.pop_back();
+		}
+
+		alGetSourcei(audio_source, AL_SOURCE_STATE, &val);
+		if (val != AL_PLAYING)
+			alSourcePlay(audio_source);
+	}
+
 	virtual void OnEvent(EDecodeEvent event) override
 	{
 		char ret[1024];
+		ret[0] = '\0';
 		switch (event)
 		{
 		case EDecodeEvent::UnDefined:
 			break;
 		case EDecodeEvent::Opened:
-			snprintf(ret, 1023, "opened -\t%s\n", SDecoder->GetMediaInfo()->ToString());
+			snprintf(ret, 1023, "opened -\t%s\n", SDecoder->GetMediaInfo()->Url);
 			break;
 		case EDecodeEvent::OpenFailed:
-			snprintf(ret, 1023, "open failed -\t%s\n", SDecoder->GetMediaInfo()->ToString());
+			snprintf(ret, 1023, "open failed -\t%s\n", SDecoder->GetMediaInfo()->Url);
 			break;
 		case EDecodeEvent::Playing:
 			snprintf(ret, 1023, "playing -\t%f\n", SDecoder->GetPos());
@@ -59,11 +105,19 @@ public:
 		case EDecodeEvent::DroppedOneFrame:
 			snprintf(ret, 1023, "dropped one frame -\t%f\n", SDecoder->GetPos());
 			break;
+		case EDecodeEvent::InfoUpdated:
+			snprintf(ret, 1023, "info updated -\t%s\n", SDecoder->GetMediaInfo()->ToString());
+			break;
 		default:
 			break;
 		}
 
 		OutputDebugStringA(ret);
+	}
+
+	virtual void OnMessage(EDecodeMsgLv level, const CHAR* buf, uint32 sz) override
+	{
+		OutputDebugStringA(buf);
 	}
 };
 
@@ -176,10 +230,26 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    ShowWindow(hWnd, nCmdShow);
    UpdateWindow(hWnd);
 
+   static const char* SURLs[] = {
+	   "file://f:/User/VRMp4/showcase.mp4",
+	   "http://down.video.vronline.com/dev/2c34cf5a90b845c32081a60cf4c66bfb.mp4",
+	   "http://down.video.vronline.com/dev/Video3.mp4",
+	   "http://down.video.vronline.com/dev/49058022ea364643715d501e3c9657db.mp4",
+	   "http://down.video.vronline.com/dev/c66a1ea0a5cf04e74537aa83a92a8065.mp4",
+	   "http://down.video.vronline.com/dev/ed72804f371a166d26aecacd0a5ab69c.mp4",
+	   "http://down.video.vronline.com/dev/948191cd4b137312348114a1d99c4ee6.mp4",
+	   "http://down.video.vronline.com/dev/yaogunxueyuanshishenghaichang.mp4",
+	   "http://down.video.vronline.com/dev/hongsejingjiekongzhongjuedou.mp4",
+	   "http://down.video.vronline.com/dev/meisaidesibenchi.mp4",
+	   "http://down.video.vronline.com/dev/yuehangyuanxunlianrichang.mp4",
+	   "http://down.video.vronline.com/dev/Video13.mp4",
+	   "http://down.video.vronline.com/dev/Video11.mp4",
+	   "http://down.video.vronline.com/dev/nanjidalu.mp4",
+	   "http://down.video.vronline.com/dev/meiguicheng.mp4",
+   };
    SPlayer = new LostMediaPlayer(hWnd);
    SDecodeCallback = IDecodeCallbackPtr(new ADecodeCallback);
-   //SDecoder = DecodeMedia((SDecodeCallback), "file://f:/User/VRMp4/showcase.mp4");
-   SDecoder = DecodeMedia((SDecodeCallback), "f:/User/VRMp4/showcase.mp4");
+   SDecoder = DecodeMedia((SDecodeCallback), SURLs[9]);
 
    return TRUE;
 }

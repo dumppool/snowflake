@@ -254,6 +254,7 @@ typedef unsigned short uint16;
 typedef unsigned int uint32;
 typedef unsigned long long uint64;
 typedef int int32;
+typedef __int64 int64;
 
 typedef DirectX::XMFLOAT2 LVVec2;
 typedef DirectX::XMFLOAT3 LVVec3;

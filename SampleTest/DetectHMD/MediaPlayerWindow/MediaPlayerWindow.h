@@ -3,6 +3,7 @@
 #include "resource.h"
 
 #include "Renderer.h"
+#include <mutex>
 
 static const UINT SFrameNum = 3;
 
@@ -23,6 +24,8 @@ namespace lostvr
 
 		ID3D11Texture2D*			Texture;
 		ID3D11ShaderResourceView*	SRV;
+
+		std::mutex					BufferLock;
 
 		LostVideoBuffer(Direct3D11Helper* renderer, UINT w, UINT h, DXGI_FORMAT format) : bLastRead(true)
 			, NextWriteIndex(0)
@@ -242,8 +245,7 @@ namespace lostvr
 				return;
 			}
 
-			//BufferSize = w * h * bytes;
-			BufferSize = w * (h);
+			BufferSize = w * h * bytes;
 
 			for (int i = 0; i < SFrameNum; ++i)
 			{
@@ -288,53 +290,79 @@ namespace lostvr
 			return NextWriteIndex < SFrameNum && 0 <= NextWriteIndex && (NextWriteIndex != NextReadIndex || bLastRead);
 		}
 
+		bool BeginWrite()
+		{
+			return BufferLock.try_lock();
+		}
+
+		void EndWrite()
+		{
+			NextWriteIndex = (1 + NextWriteIndex) % SFrameNum;
+			bLastRead = false;
+			BufferLock.unlock();
+		}
+
 		bool CanRead()
 		{
 			return NextReadIndex < SFrameNum && 0 <= NextReadIndex && (NextWriteIndex != NextReadIndex || !bLastRead);
 		}
 
-		void IncrementWrite()
+		bool BeginRead()
 		{
-			NextWriteIndex = (1 + NextWriteIndex) % SFrameNum;
-			bLastRead = false;
+			return BufferLock.try_lock();
 		}
 
-		void IncrementRead()
+		void EndRead()
 		{
 			NextReadIndex = (1 + NextReadIndex) % SFrameNum;
 			bLastRead = true;
+			BufferLock.unlock();
 		}
 
 		void Write(const uint8* buf, UINT sz = 0)
 		{
 			if (sz == 0 || sz == BufferSize)
 			{
-				memcpy(FrameBuffer[NextWriteIndex], buf, BufferSize);
-				IncrementWrite();
+				if (BeginWrite())
+				{
+					memcpy(FrameBuffer[NextWriteIndex], buf, BufferSize);
+					EndWrite();
+				}
 			}
 		}
 
 		ID3D11ShaderResourceView* Read()
 		{
-			ID3D11Device* dev;
-			Texture->GetDevice(&dev);
-
-			ID3D11DeviceContext* context;
-			dev->GetImmediateContext(&context);
-
-			D3D11_MAPPED_SUBRESOURCE mapped;
-			if (SUCCEEDED(context->Map(Texture, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped)))
+			if (BeginRead())
 			{
-				memcpy(mapped.pData, FrameBuffer[NextReadIndex], BufferSize);
-				IncrementRead();
-				context->Unmap(Texture, 0);
-				return SRV;
+				ID3D11Device* dev;
+				Texture->GetDevice(&dev);
+
+				ID3D11DeviceContext* context;
+				dev->GetImmediateContext(&context);
+
+				D3D11_MAPPED_SUBRESOURCE mapped;
+				if (SUCCEEDED(context->Map(Texture, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped)))
+				{
+					for (int32 i = 0; i < Height; ++i)
+					{
+						memcpy((uint8*)mapped.pData + i*mapped.RowPitch, 
+							FrameBuffer[NextReadIndex] + i*Width, std::fmin(mapped.RowPitch, Width));
+					}
+
+					context->Unmap(Texture, 0);
+					EndRead();
+					return SRV;
+				}
+				else
+				{
+					LVERROR("LostVideoBuffer::Read", "Map failed");
+					EndRead();
+					return nullptr;
+				}
 			}
-			else
-			{
-				LVERROR("LostVideoBuffer::Read", "Map failed");
-				return nullptr;
-			}
+			
+			return nullptr;
 		}
 	};
 

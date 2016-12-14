@@ -20,6 +20,7 @@ extern "C"
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libswscale/swscale.h>
+#include <libswresample/swresample.h>
 #include <libavutil/opt.h>
 #include <libavutil/imgutils.h>
 }
@@ -68,36 +69,63 @@ enum class EDecodeEvent : uint8
 	Playing,
 	Seeking,
 	Paused,
-	Closed,
 	DroppedOneFrame,
+	InfoUpdated,
+
+	// This decoder is designed to work for only one media, if user
+	// want to open another media, should create a new one. So there is
+	// no point to send back the 'Closed' event.
+	Closed,
+};
+
+class FAudioParams
+{
+public:
+	AVSampleFormat		Format;
+	uint32				Channels;
+	uint32				SampleRate;
+	int64				ChannelLayout;
+	int32				FrameSize;
+	int32				BytesPerSec;
+
+	char				Info[1024];
+
+	const char* ToString();
 };
 
 class FLostMediaInfo
 {
 public:
-	uint32 AudioChannels;
-	uint32 AudioSampleRate;
-	uint32 VideoFrameWidth;
-	uint32 VideoFrameHeight;
-	uint32 VideoBitRate;
-	float VideoFrameRate;
+	int32				AudioCodecID;
+	char				AudioCodecShortName[256];
+	char				AudioCodecLongName[1024];
 
-	float Duration;
-	char Url[256];
+	FAudioParams		AudioParamsSrc;
+	FAudioParams		AudioParamsDst;
 
-	const char* ToString() const
-	{
-		static char SInfo[1024];
-		snprintf(SInfo, 1023,
-			"\nurl:\t\t%s\n" \
-			"duration:\t\t%.2f(min)\n" \
-			"frame width:\t%d\n" \
-			"frame height:\t%d\n" \
-			"frame rate:\t\t%.1f\n" \
-			"video bitrate:\t%d(k)\n",
-			&Url[0], Duration/(60*1000000), VideoFrameWidth, VideoFrameHeight, VideoFrameRate, VideoBitRate/(1<<10));
-		return &SInfo[0];
-	}
+	uint32				VideoFrameWidth;
+	uint32				VideoFrameHeight;
+	uint32				VideoBitRate;
+	float				VideoFrameRate;
+	int32				VideoCodecID;
+	char				VideoCodecShortName[256];
+	char				VideoCodecLongName[256];
+
+	float				Duration;
+	char				Url[256];
+
+	char				Info[1024];
+
+	void UpdateLongName();
+
+	const char* ToString();
+};
+
+enum class EDecodeMsgLv : uint8
+{
+	UnDefined,
+	Info,
+	Error,
 };
 
 class IDecodeCallback
@@ -105,7 +133,9 @@ class IDecodeCallback
 public:
 	virtual bool NeedNewFrame(uint32 texWidth, uint32 texHeight, int32 format) = 0;
 	virtual void ProcessVideoFrame(const uint8* buf, uint32 sz) = 0;
+	virtual void ProcessAudioFrame(const uint8* buf, uint32 sz, int32 rate) = 0;
 	virtual void OnEvent(EDecodeEvent event) = 0;
+	virtual void OnMessage(EDecodeMsgLv level, const CHAR* buf, uint32 sz) = 0;
 };
 
 //typedef std::shared_ptr<IDecodeCallback> IDecodeCallbackPtr;
@@ -141,7 +171,7 @@ public:
 	double GetPos() const;
 	EDecodeState GetState() const;
 
-	const FLostMediaInfo* GetMediaInfo() const;
+	FLostMediaInfo* GetMediaInfo();
 
 protected:
 	void Update_DecodeThread();
@@ -151,14 +181,26 @@ protected:
 	// return true if a video frame has been decoded
 	bool Decode_DecodeThread(bool bDrop = false);
 
-	AVFormatContext*	VideoFormat;
+	int32 AudioResample_DecodeThread(AVFrame* aframe);
+
+	AVFormatContext*	MediaFormat;
+
 	AVCodec*			VideoDecoder;
 	AVCodecContext*		VideoContext;
 	AVStream*			VideoStream;
 	AVFrame*			VideoFrame;
 	int32				VideoStreamIndex;
 
+	AVCodec*			AudioDecoder;
+	AVCodecContext*		AudioContext;
+	AVStream*			AudioStream;
+	AVFrame*			AudioFrame;
+	int32				AudioStreamIndex;
+	SwrContext*			Swr;
+
 	uint8*				YUVBuffer;
+	uint8*				AudioBuffer;
+	uint32				AudioBufferSize;
 
 	std::string			UrlToPlay;
 
@@ -181,6 +223,6 @@ protected:
 };
 
 typedef std::shared_ptr<FLostMediaDecoder> DecoderHandle;
-	
+
 LOSTMEDIA_API DecoderHandle DecodeMedia(IDecodeCallbackWeakPtr callback, const char* url);
 LOSTMEDIA_API void ReleaseDecoder(DecoderHandle* handle);
