@@ -262,6 +262,7 @@ typedef int int32;
 typedef DirectX::XMFLOAT2 LVVec2;
 typedef DirectX::XMFLOAT3 LVVec3;
 typedef DirectX::XMFLOAT4 LVVec;
+typedef DirectX::XMVECTOR LVQuat;
 typedef DirectX::XMMATRIX LVMatrix;
 
 #define ALIGNED_LOSTVR(x) __declspec(align(x))

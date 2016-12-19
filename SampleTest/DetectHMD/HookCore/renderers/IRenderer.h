@@ -111,6 +111,7 @@ namespace lostvr
 
 		void OnPresent_Direct3D11(IDXGISwapChain* swapChain);
 		void OnPresent_Direct3D9(IDirect3DDevice9* device);
+		void OnPresent_Direct3D9Ex(IDirect3DDevice9Ex* device);
 
 		void SetupInput();
 

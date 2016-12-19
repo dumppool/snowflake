@@ -135,3 +135,51 @@ void * Direct9DevicePresent::GetThisObject()
 {
 	return (GetDirectHelper() != nullptr) ? GetDirectHelper()->GetTemporaryDirect9Device() : nullptr;
 }
+
+/********************************************************/
+
+class Direct9DeviceExPresent : public MemberFunctionRouter
+{
+	Direct3D11Helper* Helper;
+
+public:
+	Direct9DeviceExPresent();
+
+	virtual const CHAR* GetRouteString() const
+	{
+		return "[Direct9DeviceExPresent]";
+	}
+
+	virtual void* GetThisObject() override;
+};
+
+static Direct9DeviceExPresent* SRouter9Ex = new Direct9DeviceExPresent;
+
+typedef HRESULT(STDMETHODCALLTYPE *PFN_DEVICEEX_PRESENT)(IDirect3DDevice9Ex* This, CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion);
+static HRESULT STDMETHODCALLTYPE Direct3D9ExPresent(IDirect3DDevice9Ex* This, CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion)
+{
+	const CHAR* head = "Direct3D9ExPresent";
+	HRESULT hr = S_FALSE;
+	PFN_DEVICEEX_PRESENT func = (PFN_DEVICEEX_PRESENT)SRouter9Ex->GetOriginalEntry();
+	if (func != nullptr)
+	{
+		LostVR::Get()->OnPresent_Direct3D9Ex(This);
+		hr = func(This, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
+	}
+	else
+	{
+		LVERROR(head, "null original entry");
+	}
+
+	return hr;
+}
+
+Direct9DeviceExPresent::Direct9DeviceExPresent() :
+	MemberFunctionRouter(Direct3D9ExPresent, 17)
+{
+}
+
+void * Direct9DeviceExPresent::GetThisObject()
+{
+	return (GetDirectHelper() != nullptr) ? GetDirectHelper()->GetTemporaryDirect9DeviceEx() : nullptr;
+}

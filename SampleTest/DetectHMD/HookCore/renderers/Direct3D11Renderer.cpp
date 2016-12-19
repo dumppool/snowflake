@@ -355,7 +355,45 @@ IDirect3DDevice9 * Direct3D11Helper::GetTemporaryDirect9Device() const
 	if (FAILED(hr = d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL,
 		wnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &pp, &device)))
 	{
-		LVERROR("HookDirect3DDevice9Present", "CreateDevice failed, 0x%x", hr);
+		LVERROR(head, "CreateDevice failed, 0x%x", hr);
+		return nullptr;
+	}
+
+	return device;
+}
+
+IDirect3DDevice9Ex * Direct3D11Helper::GetTemporaryDirect9DeviceEx() const
+{
+	const CHAR* head = "Direct3D11Helper::GetTemporaryDirect9DeviceEx";
+	HWND wnd = SGlobalSharedDataInst.GetDefaultWindow();
+	//HWND wnd = NULL;
+
+	IDirect3D9Ex* d3d = nullptr;
+	if (FAILED(Direct3DCreate9Ex(D3D_SDK_VERSION, &d3d)))
+	{
+		LVERROR(head, "Direct3DCreate9Ex failed");
+		return nullptr;
+	}
+
+	D3DDISPLAYMODE mode;
+	d3d->GetAdapterDisplayMode(0, &mode);
+
+	D3DPRESENT_PARAMETERS pp;
+	ZeroMemory(&pp, sizeof(D3DPRESENT_PARAMETERS));
+	//pp.BackBufferWidth = WinSizeW;
+	//pp.BackBufferHeight = WinSizeH;
+	pp.BackBufferFormat = mode.Format;
+	pp.BackBufferCount = 1;
+	pp.SwapEffect = D3DSWAPEFFECT_COPY;
+	pp.Windowed = true;
+	pp.hDeviceWindow = wnd;
+
+	HRESULT hr;
+	IDirect3DDevice9Ex* device = nullptr;
+	if (FAILED(hr = d3d->CreateDeviceEx(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL,
+		wnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &pp, nullptr, &device)))
+	{
+		LVERROR(head, "CreateDevice failed, 0x%x", hr);
 		return nullptr;
 	}
 

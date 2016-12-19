@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LocalDebuggerCommandArguments>app="G:\Games\Overwatch\Overwatch.exe"</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>app="F:\360Downloads\Fallout4\Fallout.4.v1.5.205.Incl.Contraptions.Workshop.Dlc.CHT-ALI213\Fallout 4\Fallout4.exe"</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerCommand>$(TargetPath)</LocalDebuggerCommand>
   </PropertyGroup>

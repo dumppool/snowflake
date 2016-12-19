@@ -19,6 +19,9 @@
     <Filter Include="input">
       <UniqueIdentifier>{252477db-ed81-41c5-9e28-176ec020b92c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="openvr">
+      <UniqueIdentifier>{b4418d82-524b-484b-94ff-8510db245f0d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -59,9 +62,6 @@
     <ClInclude Include="renderers\RouteAPIs.h">
       <Filter>renderers</Filter>
     </ClInclude>
-    <ClInclude Include="renderers\OpenVR.h">
-      <Filter>renderers</Filter>
-    </ClInclude>
     <ClInclude Include="renderers\Projector.h">
       <Filter>renderers</Filter>
     </ClInclude>
@@ -70,6 +70,12 @@
     </ClInclude>
     <ClInclude Include="input\InputDevice.h">
       <Filter>input</Filter>
+    </ClInclude>
+    <ClInclude Include="openvr\OpenVR.h">
+      <Filter>openvr</Filter>
+    </ClInclude>
+    <ClInclude Include="HtcViveController.h">
+      <Filter>openvr</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -115,9 +121,6 @@
     <ClCompile Include="renderers\Direct3DRouters.cpp">
       <Filter>renderers</Filter>
     </ClCompile>
-    <ClCompile Include="renderers\OpenVR.cpp">
-      <Filter>renderers</Filter>
-    </ClCompile>
     <ClCompile Include="renderers\Projector.cpp">
       <Filter>renderers</Filter>
     </ClCompile>
@@ -126,6 +129,12 @@
     </ClCompile>
     <ClCompile Include="input\InputDevice.cpp">
       <Filter>input</Filter>
+    </ClCompile>
+    <ClCompile Include="openvr\OpenVR.cpp">
+      <Filter>openvr</Filter>
+    </ClCompile>
+    <ClCompile Include="HtcViveController.cpp">
+      <Filter>openvr</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

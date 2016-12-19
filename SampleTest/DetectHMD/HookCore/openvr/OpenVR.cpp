@@ -8,7 +8,7 @@
  */
 #include "HookCorePCH.h"
 #include "OpenVR.h"
-#include "ConcreteProjectors.h"
+#include "renderers/ConcreteProjectors.h"
 
 #define GETPROPERTYSTRING_OPENVR(propVar, indent, propEnum)\
 char _##propVar[128] = {0};\
@@ -16,6 +16,54 @@ vr::TrackedPropertyError propVar##err;\
 Sys->GetStringTrackedDeviceProperty(vr::k_unTrackedDeviceIndex_Hmd, propEnum, _##propVar, sizeof(_##propVar), &propVar##err);\
 char propVar[256] = {0};\
 snprintf(&propVar[0], sizeof(propVar), "%s:%s%s\n", #propVar, indent, _##propVar);
+
+
+void FakeInputMessage(HWND wnd, uint32 msg, LPARAM lparam, WPARAM wparam)
+{
+	SendMessageA(wnd, msg, lparam, wparam);
+}
+
+void FakeMouseMove(HWND wnd, uint32 x, uint32 y)
+{
+	//LPARAM lParam = MAKELPARAM(x, y);
+	//uint32 msg = WM_MOUSEMOVE;
+	//SendMessageA(wnd, msg, 0, lParam);
+
+	POINT pt;
+	if (FALSE == GetCursorPos(&pt))
+	{
+		return;
+	}
+
+	if (x == 0 && y == 0)
+	{
+		return;
+	}
+
+	if (SGlobalSharedDataInst.GetTargetWindow() != GetForegroundWindow())
+	{
+		return;
+	}
+
+	INPUT input;
+	input.type = INPUT_MOUSE;
+	memset(&input.mi, 0, sizeof(input.mi));
+	input.mi.dwFlags = MOUSEEVENTF_MOVE;
+	input.mi.dx = x;
+	input.mi.dy = y;
+	input.mi.mouseData = 0;
+	SendInput(1, &input, sizeof(input));
+
+	//pt.x += x;
+	//pt.y += y;
+
+	//SetCursorPos(pt.x, pt.y);
+
+	//input.type = INPUT_MOUSE;
+	//memset(&input.mi, 0, sizeof(input.mi));
+	//input.mi.dwFlags = MOUSEEVENTF_RIGHTUP;
+	//SendInput(1, &input, sizeof(input));
+}
 
 using namespace lostvr;
 
@@ -92,6 +140,7 @@ OpenVR::OpenVR(const std::string& key) : IVRDevice(key)
 , OverlayHandle(vr::k_ulOverlayHandleInvalid)
 , OverlayThumbnailHandle(vr::k_ulOverlayHandleInvalid)
 , Projector(nullptr)
+, PoseOrientation(nullptr)
 {
 }
 
@@ -223,6 +272,7 @@ bool OpenVR::OnPresent_Direct3D11(IDXGISwapChain* swapChain)
 	}
 
 	pCompositor->WaitGetPoses(TrackedDevicePose, vr::k_unMaxTrackedDeviceCount, NULL, 0);
+	ProcessPose();
 
 	if (!Projector->UpdateTexture())
 	{
@@ -412,5 +462,78 @@ void OpenVR::AddMovement(EMovement movement)
 		break;
 	}
 }
+
+void OpenVR::ProcessPose()
+{
+	ScopedHighFrequencyCounter counter("ProcessPose");
+
+	const float scale = 600.0f;
+	for (int32 i = 0; i < vr::k_unMaxTrackedDeviceCount; ++i)
+	{
+		if (TrackedDevicePose[i].bPoseIsValid && TrackedDevicePose[i].eTrackingResult == vr::ETrackingResult::TrackingResult_Running_OK)
+		{
+			vr::HmdMatrix34_t mat = TrackedDevicePose[0].mDeviceToAbsoluteTracking;
+			LVMatrix pose = LVMatrix(
+				mat.m[0][0], mat.m[1][0], mat.m[2][0], 0.0f,
+				mat.m[0][1], mat.m[1][1], mat.m[2][1], 0.0f,
+				mat.m[0][2], mat.m[1][2], mat.m[2][2], 0.0f,
+				mat.m[0][3], mat.m[1][3], mat.m[2][3], 1.0f);
+
+			LVQuat dst(DirectX::XMQuaternionRotationMatrix(pose));
+
+			if (PoseOrientation == nullptr)
+			{
+				PoseOrientation = new LVQuat(dst);
+				break;
+			}
+			else
+			{
+				LVQuat dQuat = DirectX::XMQuaternionMultiply(DirectX::XMQuaternionInverse(*PoseOrientation), dst);
+
+				const float test = dQuat.m128_f32[2] * dQuat.m128_f32[0] - dQuat.m128_f32[3] * dQuat.m128_f32[1];
+				const float yawy = -2.f*(dQuat.m128_f32[3] * dQuat.m128_f32[1] + dQuat.m128_f32[2] * dQuat.m128_f32[0]);
+				const float yawx = (1.f - 2.f*(dQuat.m128_f32[1] * dQuat.m128_f32[1] + dQuat.m128_f32[2] * dQuat.m128_f32[2]));
+				const float pitchy = -2.f*(dQuat.m128_f32[3] * dQuat.m128_f32[0] + dQuat.m128_f32[1] * dQuat.m128_f32[2]);
+				const float pitchx = (1.f - 2.f*(dQuat.m128_f32[1] * dQuat.m128_f32[1] + dQuat.m128_f32[0] * dQuat.m128_f32[0]));
+
+				// reference 
+				// http://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+				// http://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToEuler/
+
+				// this value was found from experience, the above websites recommend different values
+				// but that isn't the case for us, so I went through different testing, and finally found the case 
+				// where both of world lives happily. 
+				const float SINGULARITY_THRESHOLD = 0.4999995f;
+				const float RAD_TO_DEG = (180.f) / 3.1415926535897932f;
+
+				float pitch, yaw;
+				//if (test < -SINGULARITY_THRESHOLD)
+				//{
+				//	yaw = atan2(yawy, yawx) * RAD_TO_DEG;
+				//	pitch = -yaw - (2.f * atan2(dQuat.m128_f32[0], dQuat.m128_f32[3]) * RAD_TO_DEG);
+				//}
+				//else if (test > SINGULARITY_THRESHOLD)
+				//{
+				//	yaw = atan2(yawy, yawx) * RAD_TO_DEG;
+				//	pitch = -yaw - (2.f * atan2(dQuat.m128_f32[0], dQuat.m128_f32[3]) * RAD_TO_DEG);
+				//}
+				//else
+				{
+					//yaw = atan2(yawy, yawx);
+					yaw = asin(yawy);
+					pitch = atan2(pitchy, pitchx);
+				}
+
+				*PoseOrientation = dst;
+				FakeMouseMove(SGlobalSharedDataInst.GetTargetWindow(), scale * yaw, scale * pitch);
+
+				//char info[256];
+				//snprintf(info, 255, "pitch: %.2f, yaw: %.2f\n", pitch, yaw);
+				//OutputDebugStringA(info);
+			}
+
+		}
+	}
+} 
 
 static OpenVR* SInst = new OpenVR("openvr");

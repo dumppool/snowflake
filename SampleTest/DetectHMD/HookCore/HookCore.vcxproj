@@ -179,14 +179,15 @@
     <ClInclude Include="disasm-lib\disasm_x86_tables.h" />
     <ClInclude Include="disasm-lib\misc.h" />
     <ClInclude Include="HookCorePCH.h" />
+    <ClInclude Include="HtcViveController.h" />
     <ClInclude Include="input\InputDevice.h" />
     <ClInclude Include="libovr-lib\Src\OVR_CAPI_Prototypes.h" />
     <ClInclude Include="mhook-lib\mhook.h" />
+    <ClInclude Include="openvr\OpenVR.h" />
     <ClInclude Include="renderers\ConcreteProjectors.h" />
     <ClInclude Include="renderers\Direct3D11Renderer.h" />
     <ClInclude Include="renderers\IRenderer.h" />
     <ClInclude Include="renderers\OculusVR.h" />
-    <ClInclude Include="renderers\OpenVR.h" />
     <ClInclude Include="renderers\Projector.h" />
     <ClInclude Include="renderers\RouteAPIs.h" />
     <ClInclude Include="targetver.h" />
@@ -212,17 +213,18 @@
     </ClCompile>
     <ClCompile Include="HookCore.cpp" />
     <ClCompile Include="HookCorePCH.cpp" />
+    <ClCompile Include="HtcViveController.cpp" />
     <ClCompile Include="input\InputDevice.cpp" />
     <ClCompile Include="libovr-lib\Src\OVR_CAPIShim.c" />
     <ClCompile Include="libovr-lib\Src\OVR_CAPI_Util.cpp" />
     <ClCompile Include="libovr-lib\Src\OVR_StereoProjection.cpp" />
     <ClCompile Include="mhook-lib\mhook.cpp" />
+    <ClCompile Include="openvr\OpenVR.cpp" />
     <ClCompile Include="renderers\ConcreteProjectors.cpp" />
     <ClCompile Include="renderers\Direct3D11Renderer.cpp" />
     <ClCompile Include="renderers\Direct3DRouters.cpp" />
     <ClCompile Include="renderers\IRenderer.cpp" />
     <ClCompile Include="renderers\OculusVR.cpp" />
-    <ClCompile Include="renderers\OpenVR.cpp" />
     <ClCompile Include="renderers\Projector.cpp" />
     <ClCompile Include="renderers\RouteAPIs.cpp" />
   </ItemGroup>

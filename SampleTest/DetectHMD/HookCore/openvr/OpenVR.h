@@ -26,7 +26,8 @@
 	}\
 }
 
-namespace lostvr {
+namespace lostvr 
+{
 	class OpenVR : public IVRDevice
 	{
 		typedef vr::IVRSystem*(VR_CALLTYPE *pVRInit)(vr::HmdError* peError, vr::EVRApplicationType eApplicationType);
@@ -57,6 +58,8 @@ namespace lostvr {
 		BaseTextureProjector*			Projector;
 		BaseTextureProjector_Direct3D9* Projector9;
 
+		LVQuat* PoseOrientation;
+
 	public:
 
 		OpenVR(const std::string& key);
@@ -75,5 +78,6 @@ namespace lostvr {
 
 		virtual void AddMovement(EMovement movement) override;
 
+		virtual void ProcessPose();
 	};
-};
+}

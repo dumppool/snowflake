@@ -6,6 +6,7 @@
  *
  * 
  */
+
 #include "HookCorePCH.h"
 #include "InputDevice.h"
 
@@ -52,8 +53,6 @@ namespace lostvr
 		SMSObjectFormat
 	};
 
-	typedef void (_cdecl *PFN_KeyboardCallback)(bool bReleased);
-
 	class InputDevice
 	{
 	protected:
@@ -72,19 +71,21 @@ namespace lostvr
 		~InputDevice();
 
 		void Initialize(HWND wnd, bool bEnableMouse = true, bool bEnableKeyboard = true, bool bEnableJoystick = false);
+		void Poll();
+		void RegisterKeyboardCallback(int dikey, void* func);
+
+	protected:
 		void DestroyDevice();
 
 		bool IsMouseEnabled() const;
 		bool IsKeyboardEnabled() const;
 		bool IsJoystickEnabled() const;
 
-		void Poll();
 
 		void PollMouseState();
 		void PollKeyboardState();
 		void PollJoystickState();
 
-		void RegisterKeyboardCallback(int dikey, void* func);
 	};
 
 	static InputDevice SInputDevice;
@@ -290,9 +291,9 @@ namespace lostvr
 				{
 					for (auto func : KeyboardCallback[i])
 					{
-						if ((PFN_KeyboardCallback)func != nullptr)
+						if ((PFN_KeyboardCallbackAction)func != nullptr)
 						{
-							((PFN_KeyboardCallback)func)(true);
+							((PFN_KeyboardCallbackAction)func)(true);
 						}
 					}
 				}
@@ -300,9 +301,9 @@ namespace lostvr
 				{
 					for (auto func : KeyboardCallback[i])
 					{
-						if ((PFN_KeyboardCallback)func != nullptr)
+						if ((PFN_KeyboardCallbackAction)func != nullptr)
 						{
-							((PFN_KeyboardCallback)func)(false);
+							((PFN_KeyboardCallbackAction)func)(false);
 						}
 					}
 				}
@@ -318,7 +319,7 @@ namespace lostvr
 	{
 		KeyboardCallback[dikey].push_back(func);
 	}
-};
+}
 
 void SetupInputDevice(void * p)
 {

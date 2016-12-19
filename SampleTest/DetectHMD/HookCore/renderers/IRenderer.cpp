@@ -109,6 +109,23 @@ void LostVR::OnPresent_Direct3D9(IDirect3DDevice9* device)
 	PollInputDevice(nullptr);
 }
 
+void LostVR::OnPresent_Direct3D9Ex(IDirect3DDevice9Ex* device)
+{
+	ScopedHighFrequencyCounter Count("LostVR::OnPresent_Direct3D9Ex");
+
+	auto dev = GetDevice();
+	if (dev == nullptr)
+	{
+		bAllowConnect = true;
+		return;
+	}
+
+	//dev->OnPresent_Direct3D9(device);
+
+	//SetupInput();
+	//PollInputDevice(nullptr);
+}
+
 class KeyboardEventDetector_SWShift
 {
 public:
@@ -156,11 +173,81 @@ public:
 		SReleased_W = bReleased;
 		Update();
 	}
+
+	static void RegisterInputCallback()
+	{
+		RegisterKeyboardCallback(DIK_LSHIFT, KeyboardEventDetector_SWShift::OnKeyUpdate_Shift);
+		RegisterKeyboardCallback(DIK_RSHIFT, KeyboardEventDetector_SWShift::OnKeyUpdate_Shift);
+		RegisterKeyboardCallback(DIK_S, KeyboardEventDetector_SWShift::OnKeyUpdate_S);
+		RegisterKeyboardCallback(DIK_W, KeyboardEventDetector_SWShift::OnKeyUpdate_W);
+	}
 };
 
 bool KeyboardEventDetector_SWShift::SPressed_Shift = false;
 bool KeyboardEventDetector_SWShift::SReleased_S = false;
 bool KeyboardEventDetector_SWShift::SReleased_W = false;
+
+class KeyboardEventDetector_ArrowShift
+{
+public:
+	static bool SPressed_Shift;
+	static bool SReleased_Left;
+	static bool SReleased_Right;
+	static bool SReleased_Up;
+	static bool SReleased_Down;
+
+	static void Update()
+	{
+		if (KeyboardEventDetector_ArrowShift::SPressed_Shift)
+		{
+			if (KeyboardEventDetector_ArrowShift::SReleased_Left)
+			{
+				//SendMessageA(SGlobalSharedDataInst.GetTargetWindow(), )
+			}
+		}
+	}
+
+	static void _cdecl OnKeyUpdate_Shift(bool bReleased)
+	{
+
+	}
+
+	static void _cdecl OnKeyUpdate_Left(bool bReleased)
+	{
+
+	}
+
+	static void _cdecl OnKeyUpdate_Right(bool bReleased)
+	{
+
+	}
+
+	static void _cdecl OnKeyUpdate_Top(bool bReleased)
+	{
+
+	}
+
+	static void _cdecl OnKeyUpdate_Down(bool bReleased)
+	{
+
+	}
+
+	static void RegisterInputCallback()
+	{
+		RegisterKeyboardCallback(DIK_LSHIFT, KeyboardEventDetector_ArrowShift::OnKeyUpdate_Shift);
+		RegisterKeyboardCallback(DIK_RSHIFT, KeyboardEventDetector_ArrowShift::OnKeyUpdate_Shift);
+		RegisterKeyboardCallback(DIK_LEFTARROW, KeyboardEventDetector_ArrowShift::OnKeyUpdate_Left);
+		RegisterKeyboardCallback(DIK_RIGHTARROW, KeyboardEventDetector_ArrowShift::OnKeyUpdate_Right);
+		RegisterKeyboardCallback(DIK_UPARROW, KeyboardEventDetector_ArrowShift::OnKeyUpdate_Top);
+		RegisterKeyboardCallback(DIK_DOWNARROW, KeyboardEventDetector_ArrowShift::OnKeyUpdate_Down);
+	}
+};
+
+bool KeyboardEventDetector_ArrowShift::SPressed_Shift = false;
+bool KeyboardEventDetector_ArrowShift::SReleased_Left = false;
+bool KeyboardEventDetector_ArrowShift::SReleased_Right  = false;
+bool KeyboardEventDetector_ArrowShift::SReleased_Up = false;
+bool KeyboardEventDetector_ArrowShift::SReleased_Down = false;
 
 void LostVR::SetupInput()
 {
@@ -177,10 +264,7 @@ void LostVR::SetupInput()
 
 	HWND wnd = SGlobalSharedDataInst.GetTargetWindow();
 	SetupInputDevice(&wnd);
-	RegisterKeyboardCallback(DIK_LSHIFT, KeyboardEventDetector_SWShift::OnKeyUpdate_Shift);
-	RegisterKeyboardCallback(DIK_RSHIFT, KeyboardEventDetector_SWShift::OnKeyUpdate_Shift);
-	RegisterKeyboardCallback(DIK_S, KeyboardEventDetector_SWShift::OnKeyUpdate_S);
-	RegisterKeyboardCallback(DIK_W, KeyboardEventDetector_SWShift::OnKeyUpdate_W);
+	KeyboardEventDetector_SWShift::RegisterInputCallback();
 	SInitialized = true;
 }
 

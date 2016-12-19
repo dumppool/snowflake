@@ -162,6 +162,7 @@ namespace lostvr
 		// Qualifier: const
 		//************************************
 		IDirect3DDevice9* GetTemporaryDirect9Device() const;
+		IDirect3DDevice9Ex* GetTemporaryDirect9DeviceEx() const;
 		bool EnsureDirect9CopyValid(D3DSURFACE_DESC surfaceDesc);
 
 		//************************************
