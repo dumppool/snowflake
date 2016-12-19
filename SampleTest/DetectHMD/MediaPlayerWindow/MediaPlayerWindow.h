@@ -9,6 +9,26 @@ static const UINT SFrameNum = 3;
 
 namespace lostvr 
 {
+	struct FScopedLock
+	{
+		std::mutex* Lock;
+		FScopedLock(std::mutex* lock) : Lock(lock)
+		{
+			Lock->lock();
+			char msg[128];
+			snprintf(msg, 127, "%d, lock\n", GetCurrentThreadId());
+			OutputDebugStringA(msg);
+		}
+
+		~FScopedLock()
+		{
+			char msg[128];
+			snprintf(msg, 127, "%d, unlock\n", GetCurrentThreadId());
+			OutputDebugStringA(msg);
+			Lock->unlock();
+		}
+	};
+
 	class LostVideoBuffer
 	{
 	public:
@@ -287,19 +307,23 @@ namespace lostvr
 
 		bool CanWrite()
 		{
-			return NextWriteIndex < SFrameNum && 0 <= NextWriteIndex && (NextWriteIndex != NextReadIndex || bLastRead);
+			return	NextWriteIndex < SFrameNum && 0 <= NextWriteIndex && (NextWriteIndex != NextReadIndex || bLastRead);
 		}
 
-		bool BeginWrite()
+		bool Write(const uint8* buf, UINT sz = 0)
 		{
-			return BufferLock.try_lock();
-		}
-
-		void EndWrite()
-		{
-			NextWriteIndex = (1 + NextWriteIndex) % SFrameNum;
-			bLastRead = false;
-			BufferLock.unlock();
+			FScopedLock guard(&BufferLock);
+			if (CanWrite() && (sz == 0 || sz == BufferSize))
+			{
+				memcpy(FrameBuffer[NextWriteIndex], buf, BufferSize);
+				NextWriteIndex = (1 + NextWriteIndex) % SFrameNum;
+				bLastRead = false;
+				return true;
+			}
+			else
+			{
+				return false;
+			}
 		}
 
 		bool CanRead()
@@ -307,33 +331,10 @@ namespace lostvr
 			return NextReadIndex < SFrameNum && 0 <= NextReadIndex && (NextWriteIndex != NextReadIndex || !bLastRead);
 		}
 
-		bool BeginRead()
-		{
-			return BufferLock.try_lock();
-		}
-
-		void EndRead()
-		{
-			NextReadIndex = (1 + NextReadIndex) % SFrameNum;
-			bLastRead = true;
-			BufferLock.unlock();
-		}
-
-		void Write(const uint8* buf, UINT sz = 0)
-		{
-			if (sz == 0 || sz == BufferSize)
-			{
-				if (BeginWrite())
-				{
-					memcpy(FrameBuffer[NextWriteIndex], buf, BufferSize);
-					EndWrite();
-				}
-			}
-		}
-
 		ID3D11ShaderResourceView* Read()
 		{
-			if (BeginRead())
+			FScopedLock guard(&BufferLock);
+			if (CanRead())
 			{
 				ID3D11Device* dev;
 				Texture->GetDevice(&dev);
@@ -346,22 +347,22 @@ namespace lostvr
 				{
 					for (int32 i = 0; i < Height; ++i)
 					{
-						memcpy((uint8*)mapped.pData + i*mapped.RowPitch, 
+						memcpy((uint8*)mapped.pData + i*mapped.RowPitch,
 							FrameBuffer[NextReadIndex] + i*Width, std::fmin(mapped.RowPitch, Width));
 					}
 
 					context->Unmap(Texture, 0);
-					EndRead();
+					NextReadIndex = (1 + NextReadIndex) % SFrameNum;
+					bLastRead = true;
 					return SRV;
 				}
 				else
 				{
 					LVERROR("LostVideoBuffer::Read", "Map failed");
-					EndRead();
 					return nullptr;
 				}
 			}
-			
+
 			return nullptr;
 		}
 	};
@@ -470,7 +471,8 @@ void LostMediaPlayer::Tick()
 		return;
 	}
 
-	if (Frames == nullptr || !Frames->IsValid() || !Frames->CanRead())
+	ID3D11ShaderResourceView* srv = nullptr;
+	if (Frames == nullptr || !Frames->IsValid() || (srv = Frames->Read()) == nullptr)
 	{
 		return;
 	}
@@ -497,7 +499,7 @@ void LostMediaPlayer::Tick()
 	context->PSSetShader(PS, nullptr, 0);
 	context->PSSetSamplers(0, 1, &Sampler);
 
-	ID3D11ShaderResourceView* srvs[] = { Frames->Read() };
+	ID3D11ShaderResourceView* srvs[] = { srv };
 	context->PSSetShaderResources(0, 1, &srvs[0]);
 
 	context->OMSetBlendState(nullptr, nullptr, 0xffffffff);
@@ -509,10 +511,17 @@ void LostMediaPlayer::Tick()
 
 bool LostMediaPlayer::CanWrite(UINT w, UINT h, DXGI_FORMAT format)
 {
-	if (Frames != nullptr && !Frames->IsMatch(w, h, format))
+	if (Frames != nullptr)
+		//&& Frames->BufferLock.try_lock())
 	{
-		delete Frames;
-		Frames = nullptr;
+		FScopedLock guard(&Frames->BufferLock);
+		if (!Frames->IsMatch(w, h, format))
+		{
+			delete Frames;
+			Frames = nullptr;
+		}
+
+		//Frames->BufferLock.unlock();
 	}
 
 	if (Frames == nullptr)
@@ -520,7 +529,8 @@ bool LostMediaPlayer::CanWrite(UINT w, UINT h, DXGI_FORMAT format)
 		Frames = new LostVideoBuffer(Renderer, w, h, format);
 	}
 
-	return Frames->CanWrite();
+	bool bCan = Frames->CanWrite();
+	return bCan;
 }
 
 void LostMediaPlayer::ProcessVideoBuffer(const uint8 * buf, UINT sz)

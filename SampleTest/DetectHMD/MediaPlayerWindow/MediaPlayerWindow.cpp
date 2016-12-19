@@ -22,6 +22,27 @@ HINSTANCE hInst;                                // 当前实例
 WCHAR szTitle[MAX_LOADSTRING];                  // 标题栏文本
 WCHAR szWindowClass[MAX_LOADSTRING];            // 主窗口类名
 
+HWND hWindow;
+
+static int SURLIndex = -1;
+static const char* SURLs[] = {
+	"file://f:/User/VRMp4/showcase.mp4",
+	"http://down.video.vronline.com/dev/2c34cf5a90b845c32081a60cf4c66bfb.mp4",
+	"http://down.video.vronline.com/dev/Video3.mp4",
+	"http://down.video.vronline.com/dev/49058022ea364643715d501e3c9657db.mp4",
+	"http://down.video.vronline.com/dev/c66a1ea0a5cf04e74537aa83a92a8065.mp4",
+	"http://down.video.vronline.com/dev/ed72804f371a166d26aecacd0a5ab69c.mp4",
+	"http://down.video.vronline.com/dev/948191cd4b137312348114a1d99c4ee6.mp4",
+	"http://down.video.vronline.com/dev/yaogunxueyuanshishenghaichang.mp4",
+	"http://down.video.vronline.com/dev/hongsejingjiekongzhongjuedou.mp4",
+	"http://down.video.vronline.com/dev/meisaidesibenchi.mp4",
+	"http://down.video.vronline.com/dev/yuehangyuanxunlianrichang.mp4",
+	"http://down.video.vronline.com/dev/Video13.mp4",
+	"http://down.video.vronline.com/dev/Video11.mp4",
+	"http://down.video.vronline.com/dev/nanjidalu.mp4",
+	"http://down.video.vronline.com/dev/meiguicheng.mp4",
+};
+
 class ADecodeCallback : public IDecodeCallback
 {
 public:
@@ -122,6 +143,17 @@ public:
 };
 
 IDecodeCallbackPtr SDecodeCallback;
+
+void PlayNextMedia()
+{
+	SURLIndex = (SURLIndex + 1) % sizeof(SURLs);
+
+	if (SDecodeCallback == nullptr)
+		SDecodeCallback = IDecodeCallbackPtr(new ADecodeCallback);
+
+	ReleaseDecoder(&SDecoder);
+	SDecoder = DecodeMedia((SDecodeCallback), SURLs[SURLIndex]);
+}
 
 // 此代码模块中包含的函数的前向声明: 
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -230,30 +262,25 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    ShowWindow(hWnd, nCmdShow);
    UpdateWindow(hWnd);
 
-   static const char* SURLs[] = {
-	   "file://f:/User/VRMp4/showcase.mp4",
-	   "http://down.video.vronline.com/dev/2c34cf5a90b845c32081a60cf4c66bfb.mp4",
-	   "http://down.video.vronline.com/dev/Video3.mp4",
-	   "http://down.video.vronline.com/dev/49058022ea364643715d501e3c9657db.mp4",
-	   "http://down.video.vronline.com/dev/c66a1ea0a5cf04e74537aa83a92a8065.mp4",
-	   "http://down.video.vronline.com/dev/ed72804f371a166d26aecacd0a5ab69c.mp4",
-	   "http://down.video.vronline.com/dev/948191cd4b137312348114a1d99c4ee6.mp4",
-	   "http://down.video.vronline.com/dev/yaogunxueyuanshishenghaichang.mp4",
-	   "http://down.video.vronline.com/dev/hongsejingjiekongzhongjuedou.mp4",
-	   "http://down.video.vronline.com/dev/meisaidesibenchi.mp4",
-	   "http://down.video.vronline.com/dev/yuehangyuanxunlianrichang.mp4",
-	   "http://down.video.vronline.com/dev/Video13.mp4",
-	   "http://down.video.vronline.com/dev/Video11.mp4",
-	   "http://down.video.vronline.com/dev/nanjidalu.mp4",
-	   "http://down.video.vronline.com/dev/meiguicheng.mp4",
-   };
+   hWindow = hWnd;
+
    SPlayer = new LostMediaPlayer(hWnd);
-   SDecodeCallback = IDecodeCallbackPtr(new ADecodeCallback);
-   SDecoder = DecodeMedia((SDecodeCallback), SURLs[9]);
+   PlayNextMedia();
 
    return TRUE;
 }
 
+void MoveCursor(HWND hWnd, UINT x, UINT y)
+{
+	UINT msg;
+	msg = WM_RBUTTONDOWN;
+	SendMessageA(hWnd, msg, 0, 0);
+	LPARAM lParam = MAKELPARAM(x, y);
+	msg = WM_MOUSEMOVE;
+	SendMessageA(hWnd, msg, 0, lParam);
+	msg = WM_RBUTTONUP;
+	SendMessageA(hWnd, msg, 0, 0);
+}
 //
 //  函数: WndProc(HWND, UINT, WPARAM, LPARAM)
 //
@@ -268,8 +295,35 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	static bool bSwitch = true;
 	static float rate = 1.f;
+	static bool bRMouseDown = false;
+	static int mx = -1;
+	static int my = -1;
     switch (message)
     {
+	case WM_RBUTTONUP:
+		bRMouseDown = false;
+		break;
+	case WM_RBUTTONDOWN:
+		bRMouseDown = true;
+		break;
+	case WM_MOUSEMOVE:
+	{
+		int xaxis = LOWORD(lParam);
+		int yaxis = HIWORD(lParam);
+		if (mx < 0 || my < 0)
+		{
+			mx = xaxis;
+			my = yaxis;
+		}
+
+		if (bRMouseDown)
+		{
+			char msg[256];
+			snprintf(msg, 255, "[%d, %d, %s]\n", xaxis, yaxis, bRMouseDown ? "down" : "up");
+			OutputDebugStringA(msg);
+		}
+		break;
+	}
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);
@@ -308,10 +362,24 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			SDecoder->SetRate(rate);
 			break;
 		case VK_LEFT:
-			SDecoder->Seek(SDecoder->GetPos() - 5.0);
+			SDecoder->Seek(SDecoder->GetPos() - 10.0);
 			break;
 		case VK_RIGHT:
-			SDecoder->Seek(SDecoder->GetPos() + 5.0);
+			SDecoder->Seek(SDecoder->GetPos() + 10.0);
+			break;
+		case VK_ADD:
+			PlayNextMedia();
+			break;
+		case VK_SUBTRACT:
+			//if (mx < 0 || my < 0)
+			//{
+			//	mx = LOWORD(lParam);
+			//	my = HIWORD(lParam);
+			//}
+
+			mx += 100;
+			my += 100;
+			MoveCursor(hWnd, mx, my);
 			break;
 		default:
 			break;

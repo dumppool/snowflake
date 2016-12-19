@@ -72,7 +72,9 @@ bool FLostMediaDecoder::OpenUrl(const char * url)
 
 void FLostMediaDecoder::EnqueueCommand(EDecodeCommand cmd)
 {
-	if (CommandLock.try_lock())
+	//if (CommandLock.try_lock())
+	CommandLock.lock();
+
 	{
 		Commands.push_front(cmd);
 		CommandLock.unlock();
@@ -625,7 +627,7 @@ OnFailed:
 	//	}
 }
 
-LOSTMEDIA_API DecoderHandle DecodeMedia(IDecodeCallbackWeakPtr callback, const char * url)
+DecoderHandle DecodeMedia(IDecodeCallbackWeakPtr callback, const char * url)
 {
 	DecoderHandle handle(new FLostMediaDecoder);
 	handle->SetCallback(callback);
@@ -633,7 +635,7 @@ LOSTMEDIA_API DecoderHandle DecodeMedia(IDecodeCallbackWeakPtr callback, const c
 	return handle;
 }
 
-LOSTMEDIA_API void ReleaseDecoder(DecoderHandle* handle)
+void ReleaseDecoder(DecoderHandle* handle)
 {
 	//handle = nullptr;
 	if (handle != nullptr)
