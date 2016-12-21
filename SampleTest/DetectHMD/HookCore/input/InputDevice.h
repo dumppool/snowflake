@@ -13,5 +13,21 @@
 extern _declspec(dllexport) void _cdecl SetupInputDevice(void * p);
 extern _declspec(dllexport) void _cdecl PollInputDevice(void* p);
 
-typedef void(_cdecl *PFN_KeyboardCallbackAction)(bool bReleased);
-extern _declspec(dllexport) void _cdecl RegisterKeyboardCallback(int dikey, void* func);
+enum EInputAction : uint8
+{
+	UnDefined,
+	Pressed,
+	Released,
+};
+
+class IInputDeviceCallback
+{
+public:
+	virtual void CALLBACK OnKeyboardAction(int key, EInputAction value) = 0;
+	virtual void CALLBACK OnJoystickAction(int key, EInputAction value) = 0;
+	virtual void CALLBACK OnJoystickAxis(int key, long value) = 0;
+	virtual void CALLBACK OnInputBegin() = 0;
+	virtual void CALLBACK OnInputEnd() = 0;
+};
+
+extern _declspec(dllexport) void WINAPI RegisterInputCallback(IInputDeviceCallback* obj);

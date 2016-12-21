@@ -63,8 +63,9 @@ namespace lostvr
 		LPDIRECTINPUTDEVICE8    Joystick;
 
 		UCHAR KeyStates[2][256];
+		DIJOYSTATE JoyStates[2];
 
-		std::map<int, std::vector<void*>> KeyboardCallback;
+		std::vector<IInputDeviceCallback*> CallbackObjects;
 
 	public:
 		InputDevice();
@@ -72,7 +73,7 @@ namespace lostvr
 
 		void Initialize(HWND wnd, bool bEnableMouse = true, bool bEnableKeyboard = true, bool bEnableJoystick = false);
 		void Poll();
-		void RegisterKeyboardCallback(int dikey, void* func);
+		void RegisterCallback(IInputDeviceCallback* obj);
 
 	protected:
 		void DestroyDevice();
@@ -96,6 +97,7 @@ namespace lostvr
 		, Joystick(nullptr)
 	{
 		memset(KeyStates, 0, sizeof(KeyStates));
+		memset(JoyStates, 0, sizeof(JoyStates));
 	}
 
 	InputDevice::~InputDevice()
@@ -159,6 +161,18 @@ namespace lostvr
 			bContinue = true;
 			VERIFY_HRESULT2(DirectInput->CreateDevice(GUID_Joystick, &Joystick, NULL),
 			{ bContinue = false; }, SLogPrefix, head, "create joystick device failed: 0x%x(%d)", hr, hr);
+
+			if (bContinue)
+			{
+				VERIFY_HRESULT2(Joystick->SetDataFormat(&c_dfDIJoystick),
+				{ bContinue = false; SAFE_RELEASE(Joystick); }, SLogPrefix, head, "create joystick device failed: 0x%x(%d)", hr, hr);
+			}
+
+			if (bContinue)
+			{
+				VERIFY_HRESULT2(Joystick->SetCooperativeLevel(wnd, DISCL_NONEXCLUSIVE),
+				{ bContinue = false; SAFE_RELEASE(Joystick); }, SLogPrefix, head, "set joystick coorperative level failed: 0x%x(%d)", hr, hr);
+			}
 		}
 
 		LVMSG2(SLogPrefix, head, "initialize InputDevice successfully");
@@ -206,6 +220,14 @@ namespace lostvr
 
 	void InputDevice::Poll()
 	{
+		for (auto obj : CallbackObjects)
+		{
+			if (obj != nullptr)
+			{
+				obj->OnInputBegin();
+			}
+		}
+
 		if (IsMouseEnabled())
 		{
 			PollMouseState();
@@ -219,6 +241,14 @@ namespace lostvr
 		if (IsJoystickEnabled())
 		{
 			PollJoystickState();
+		}
+
+		for (auto obj : CallbackObjects)
+		{
+			if (obj != nullptr)
+			{
+				obj->OnInputEnd();
+			}
 		}
 	}
 
@@ -287,24 +317,11 @@ namespace lostvr
 		{
 			if (*((UCHAR*)KeyStates + i) != *((UCHAR*)KeyStates + i + 256))
 			{
-				if (*((UCHAR*)KeyStates + i) == 0)
+				for (auto obj : CallbackObjects)
 				{
-					for (auto func : KeyboardCallback[i])
+					if (obj != nullptr)
 					{
-						if ((PFN_KeyboardCallbackAction)func != nullptr)
-						{
-							((PFN_KeyboardCallbackAction)func)(true);
-						}
-					}
-				}
-				else
-				{
-					for (auto func : KeyboardCallback[i])
-					{
-						if ((PFN_KeyboardCallbackAction)func != nullptr)
-						{
-							((PFN_KeyboardCallbackAction)func)(false);
-						}
+						obj->OnKeyboardAction(i, *((UCHAR*)KeyStates + i) == 0 ? EInputAction::Released : EInputAction::Pressed);
 					}
 				}
 			}
@@ -313,17 +330,101 @@ namespace lostvr
 
 	void InputDevice::PollJoystickState()
 	{
+		const CHAR* head = "InputDevice::PollJoystickState";
+
+		if (Joystick == nullptr)
+		{
+			return;
+		}
+
+		HRESULT hr = S_FALSE;
+
+		hr = Joystick->Poll();
+		if (FAILED(hr))
+		{
+			hr = Joystick->Acquire();
+			return;
+		}
+
+		memcpy((DIJOYSTATE*)JoyStates + 1, JoyStates, sizeof(DIJOYSTATE));
+		hr = Joystick->GetDeviceState(sizeof(DIJOYSTATE), &JoyStates);
+		if (FAILED(hr))
+		{
+			LVMSG2(SLogPrefix, head, "get joystick state failed: 0x%x(%d)", hr, hr);
+			return;
+		}
+
+		static const int SJoyAxisKeys_LONG[] = {
+			DIJOFS_X,
+			DIJOFS_Y,
+			DIJOFS_Z,
+			DIJOFS_RX,
+			DIJOFS_RY,
+			DIJOFS_RZ,
+			DIJOFS_SLIDER(0),
+			DIJOFS_SLIDER(1),
+		};
+
+		static const int SJoyAxisKeys_DWORD[] = {
+			DIJOFS_POV(0),
+			DIJOFS_POV(1),
+			DIJOFS_POV(2),
+			DIJOFS_POV(3),
+		};
+
+		static const int SJoyActionKeyNum = 32;
+
+		for (auto key : SJoyAxisKeys_LONG)
+		{
+			LONG curr = *(LONG*)((uint8*)JoyStates + key);
+			for (auto obj : CallbackObjects)
+			{
+				if (obj != nullptr)
+				{
+					obj->OnJoystickAxis(key, curr);
+				}
+			}
+		}
+
+		for (auto key : SJoyAxisKeys_DWORD)
+		{
+			DWORD curr = *(DWORD*)((uint8*)JoyStates + key);
+			for (auto obj : CallbackObjects)
+			{
+				if (obj != nullptr)
+				{
+					obj->OnJoystickAxis(key, curr);
+				}
+			}
+		}
+
+		for (int i = 0; i < 32; ++i)
+		{
+			int key = DIJOFS_BUTTON(i);
+			uint8 prev = *((uint8*)((DIJOYSTATE*)JoyStates + 1) + key);
+			uint8 curr = *((uint8*)JoyStates + key);
+			if (prev != curr)
+			{
+				for (auto obj : CallbackObjects)
+				{
+					if (obj != nullptr)
+					{
+						obj->OnJoystickAction(i, curr == 0 ? EInputAction::Released : EInputAction::Pressed);
+					}
+				}
+			}
+		}
 	}
 
-	void InputDevice::RegisterKeyboardCallback(int dikey, void * func)
+	void InputDevice::RegisterCallback(IInputDeviceCallback* obj)
 	{
-		KeyboardCallback[dikey].push_back(func);
+		CallbackObjects.push_back(obj);
 	}
 }
 
 void SetupInputDevice(void * p)
 {
-	lostvr::SInputDevice.Initialize(*(HWND*)p, false, true);
+	lostvr::SInputDevice.Initialize(*(HWND*)p, false, true, true);
 }
 
 void PollInputDevice(void * p)
@@ -331,7 +432,7 @@ void PollInputDevice(void * p)
 	lostvr::SInputDevice.Poll();
 }
 
-void RegisterKeyboardCallback(int dikey, void * func)
+void WINAPI RegisterInputCallback(IInputDeviceCallback* obj)
 {
-	lostvr::SInputDevice.RegisterKeyboardCallback(dikey, func);
+	lostvr::SInputDevice.RegisterCallback(obj);
 }

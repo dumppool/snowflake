@@ -130,7 +130,6 @@ uintptr_t FindRemoteDLL(DWORD pid, wstring libName)
 	}
 
 	CloseHandle(hModuleSnap);
-
 	return ret;
 }
 

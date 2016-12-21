@@ -10,6 +10,8 @@
 
 #include <map>
 
+class FInputEventHandler;
+
 namespace lostvr
 {
 	typedef int EEye;
@@ -120,5 +122,7 @@ namespace lostvr
 		KeyDeviceMap VRDevices;
 
 		bool bAllowConnect;
+
+		FInputEventHandler* InputHandler;
 	};
 }

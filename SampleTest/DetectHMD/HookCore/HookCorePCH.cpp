@@ -23,6 +23,9 @@ GlobalSharedData::GlobalSharedData() : HookCoreDllPath(nullptr)
 , ShaderFilePath(nullptr)
 , TargetWindow(NULL)
 , bDrawCursor(true)
+, bFakeMouseMove(false)
+, bHoldWhenMoving(false)
+, bEnableJoystick(false)
 , DefaultWindow(NULL)
 {}
 
@@ -193,6 +196,36 @@ GlobalSharedData::~GlobalSharedData()
 	 bDrawCursor = bEnable;
  }
 
+ bool GlobalSharedData::GetBFakeMouseMove() const
+ {
+	 return bFakeMouseMove;
+ }
+
+ void GlobalSharedData::SetBFakeMouseMove(bool bEnable)
+ {
+	 bFakeMouseMove = bEnable;
+ }
+
+ bool GlobalSharedData::GetBHoldWhenMoving() const
+ {
+	 return bHoldWhenMoving;
+ }
+
+ void GlobalSharedData::SetBHoldWhenMoving(bool bEnable)
+ {
+	 bHoldWhenMoving = bEnable;
+ }
+
+ bool GlobalSharedData::GetBEnableJoystick() const
+ {
+	 return bEnableJoystick;
+ }
+
+ void GlobalSharedData::SetBEnableJoystick(bool bEnable)
+ {
+	 bEnableJoystick = bEnable;
+ }
+
  const WCHAR * GlobalSharedData::GetDependencyDirectoryName() const
  {
 #ifdef _WIN64
@@ -301,4 +334,136 @@ GlobalSharedData::~GlobalSharedData()
 	 LARGE_INTEGER end;
 	 QueryPerformanceCounter(&end);
 	 return (double)((end.QuadPart - Timestamp.QuadPart) * 1000.0 / TicksPerSec.QuadPart);
+ }
+
+ void FakeKeyClicked(uint32 key)
+ {
+	 if (SGlobalSharedDataInst.GetTargetWindow() != GetForegroundWindow())
+	 {
+		 return;
+	 }
+
+	 INPUT input;
+	 input.type = INPUT_KEYBOARD;
+	 memset(&input.ki, 0, sizeof(input.ki));
+	 input.ki.wVk = key;
+	 input.ki.dwFlags = 0;
+	 SendInput(1, &input, sizeof(input));
+
+	 memset(&input.ki, 0, sizeof(input.ki));
+	 input.ki.wVk = key;
+	 input.ki.dwFlags = KEYEVENTF_KEYUP;
+	 SendInput(1, &input, sizeof(input));
+ }
+
+ void FakeKeyPress(uint32 key)
+ {
+	 if (SGlobalSharedDataInst.GetTargetWindow() != GetForegroundWindow())
+	 {
+		 return;
+	 }
+
+	 INPUT input;
+	 input.type = INPUT_KEYBOARD;
+	 memset(&input.ki, 0, sizeof(input.ki));
+	 input.ki.wVk = key;
+	 input.ki.dwFlags = 0;
+	 SendInput(1, &input, sizeof(input));
+ }
+
+ void FakeKeyRelease(uint32 key)
+ {
+	 if (SGlobalSharedDataInst.GetTargetWindow() != GetForegroundWindow())
+	 {
+		 return;
+	 }
+
+	 INPUT input;
+	 input.type = INPUT_KEYBOARD;
+	 memset(&input.ki, 0, sizeof(input.ki));
+	 input.ki.wVk = key;
+	 input.ki.dwFlags = KEYEVENTF_KEYUP;
+	 SendInput(1, &input, sizeof(input));
+ }
+ 
+ void FakeMousePress(bool left)
+ {
+	 if (SGlobalSharedDataInst.GetTargetWindow() != GetForegroundWindow())
+	 {
+		 return;
+	 }
+
+	 INPUT input;
+	 input.type = INPUT_MOUSE;
+	 memset(&input.mi, 0, sizeof(input.mi));
+	 if (left)
+	 {
+		 input.mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
+	 }
+	 else
+	 {
+		 input.mi.dwFlags = MOUSEEVENTF_RIGHTDOWN;
+	 }
+
+	 SendInput(1, &input, sizeof(input));
+ }
+
+ void FakeMouseRelease(bool left)
+ {
+	 if (SGlobalSharedDataInst.GetTargetWindow() != GetForegroundWindow())
+	 {
+		 return;
+	 }
+
+	 INPUT input;
+	 input.type = INPUT_MOUSE;
+	 memset(&input.mi, 0, sizeof(input.mi));
+	 if (left)
+	 {
+		 input.mi.dwFlags = MOUSEEVENTF_LEFTUP;
+	 }
+	 else
+	 {
+		 input.mi.dwFlags = MOUSEEVENTF_RIGHTUP;
+	 }
+
+	 SendInput(1, &input, sizeof(input));
+ }
+
+ void FakeMouseMove(HWND wnd, uint32 x, uint32 y)
+ {
+	 POINT pt;
+	 if (FALSE == GetCursorPos(&pt))
+	 {
+		 return;
+	 }
+
+	 if (x == 0 && y == 0)
+	 {
+		 return;
+	 }
+
+	 if (SGlobalSharedDataInst.GetTargetWindow() != GetForegroundWindow())
+	 {
+		 return;
+	 }
+
+	 //if (SGlobalSharedDataInst.GetBHoldWhenMoving())
+	 //{
+		// FakeMousePress(false);
+	 //}
+
+	 INPUT input;
+	 input.type = INPUT_MOUSE;
+	 memset(&input.mi, 0, sizeof(input.mi));
+	 input.mi.dwFlags = MOUSEEVENTF_MOVE | (SGlobalSharedDataInst.GetBHoldWhenMoving()?MOUSEEVENTF_RIGHTDOWN:0);
+	 input.mi.dx = x;
+	 input.mi.dy = y;
+	 input.mi.mouseData = 0;
+	 SendInput(1, &input, sizeof(input));
+
+	 if (SGlobalSharedDataInst.GetBHoldWhenMoving())
+	 {
+		 FakeMouseRelease(false);
+	 }
  }

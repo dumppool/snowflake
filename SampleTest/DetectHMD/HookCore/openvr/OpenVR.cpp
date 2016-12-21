@@ -17,54 +17,6 @@ Sys->GetStringTrackedDeviceProperty(vr::k_unTrackedDeviceIndex_Hmd, propEnum, _#
 char propVar[256] = {0};\
 snprintf(&propVar[0], sizeof(propVar), "%s:%s%s\n", #propVar, indent, _##propVar);
 
-
-void FakeInputMessage(HWND wnd, uint32 msg, LPARAM lparam, WPARAM wparam)
-{
-	SendMessageA(wnd, msg, lparam, wparam);
-}
-
-void FakeMouseMove(HWND wnd, uint32 x, uint32 y)
-{
-	//LPARAM lParam = MAKELPARAM(x, y);
-	//uint32 msg = WM_MOUSEMOVE;
-	//SendMessageA(wnd, msg, 0, lParam);
-
-	POINT pt;
-	if (FALSE == GetCursorPos(&pt))
-	{
-		return;
-	}
-
-	if (x == 0 && y == 0)
-	{
-		return;
-	}
-
-	if (SGlobalSharedDataInst.GetTargetWindow() != GetForegroundWindow())
-	{
-		return;
-	}
-
-	INPUT input;
-	input.type = INPUT_MOUSE;
-	memset(&input.mi, 0, sizeof(input.mi));
-	input.mi.dwFlags = MOUSEEVENTF_MOVE;
-	input.mi.dx = x;
-	input.mi.dy = y;
-	input.mi.mouseData = 0;
-	SendInput(1, &input, sizeof(input));
-
-	//pt.x += x;
-	//pt.y += y;
-
-	//SetCursorPos(pt.x, pt.y);
-
-	//input.type = INPUT_MOUSE;
-	//memset(&input.mi, 0, sizeof(input.mi));
-	//input.mi.dwFlags = MOUSEEVENTF_RIGHTUP;
-	//SendInput(1, &input, sizeof(input));
-}
-
 using namespace lostvr;
 
 void OpenVR::GetEyeViewProject(vr::Hmd_Eye Eye, float fNearZ, float fFarZ, vr::EGraphicsAPIConvention eProjType, LVMatrix& EyeView, LVMatrix& Proj) const
@@ -272,7 +224,10 @@ bool OpenVR::OnPresent_Direct3D11(IDXGISwapChain* swapChain)
 	}
 
 	pCompositor->WaitGetPoses(TrackedDevicePose, vr::k_unMaxTrackedDeviceCount, NULL, 0);
-	ProcessPose();
+	if (SGlobalSharedDataInst.GetBFakeMouseMove())
+	{
+		ProcessPose();
+	}
 
 	if (!Projector->UpdateTexture())
 	{
@@ -467,71 +422,67 @@ void OpenVR::ProcessPose()
 {
 	ScopedHighFrequencyCounter counter("ProcessPose");
 
-	const float scale = 600.0f;
+	const float scale = 1000.0f;
 	for (int32 i = 0; i < vr::k_unMaxTrackedDeviceCount; ++i)
 	{
-		if (TrackedDevicePose[i].bPoseIsValid && TrackedDevicePose[i].eTrackingResult == vr::ETrackingResult::TrackingResult_Running_OK)
+		if (TrackedDevicePose[i].bPoseIsValid &&
+			TrackedDevicePose[i].eTrackingResult == vr::ETrackingResult::TrackingResult_Running_OK &&
+			Sys->GetTrackedDeviceClass(i) == vr::TrackedDeviceClass_HMD)
 		{
-			vr::HmdMatrix34_t mat = TrackedDevicePose[0].mDeviceToAbsoluteTracking;
-			LVMatrix pose = LVMatrix(
-				mat.m[0][0], mat.m[1][0], mat.m[2][0], 0.0f,
-				mat.m[0][1], mat.m[1][1], mat.m[2][1], 0.0f,
-				mat.m[0][2], mat.m[1][2], mat.m[2][2], 0.0f,
-				mat.m[0][3], mat.m[1][3], mat.m[2][3], 1.0f);
-
-			LVQuat dst(DirectX::XMQuaternionRotationMatrix(pose));
-
-			if (PoseOrientation == nullptr)
+			if (abs(TrackedDevicePose[i].vAngularVelocity.v[0]) > 0.01f ||
+				abs(TrackedDevicePose[i].vAngularVelocity.v[1]) > 0.01f ||
+				abs(TrackedDevicePose[i].vAngularVelocity.v[2]) > 0.01f)
 			{
-				PoseOrientation = new LVQuat(dst);
-				break;
-			}
-			else
-			{
-				LVQuat dQuat = DirectX::XMQuaternionMultiply(DirectX::XMQuaternionInverse(*PoseOrientation), dst);
+				vr::HmdMatrix34_t mat = TrackedDevicePose[0].mDeviceToAbsoluteTracking;
+				LVMatrix pose = LVMatrix(
+					mat.m[0][0], mat.m[1][0], mat.m[2][0], 0.0f,
+					mat.m[0][1], mat.m[1][1], mat.m[2][1], 0.0f,
+					mat.m[0][2], mat.m[1][2], mat.m[2][2], 0.0f,
+					mat.m[0][3], mat.m[1][3], mat.m[2][3], 1.0f);
 
-				const float test = dQuat.m128_f32[2] * dQuat.m128_f32[0] - dQuat.m128_f32[3] * dQuat.m128_f32[1];
-				const float yawy = -2.f*(dQuat.m128_f32[3] * dQuat.m128_f32[1] + dQuat.m128_f32[2] * dQuat.m128_f32[0]);
-				const float yawx = (1.f - 2.f*(dQuat.m128_f32[1] * dQuat.m128_f32[1] + dQuat.m128_f32[2] * dQuat.m128_f32[2]));
-				const float pitchy = -2.f*(dQuat.m128_f32[3] * dQuat.m128_f32[0] + dQuat.m128_f32[1] * dQuat.m128_f32[2]);
-				const float pitchx = (1.f - 2.f*(dQuat.m128_f32[1] * dQuat.m128_f32[1] + dQuat.m128_f32[0] * dQuat.m128_f32[0]));
+				//LVQuat dst(DirectX::XMQuaternionNormalize(DirectX::XMQuaternionRotationMatrix(pose)));
+				LVQuat dst;
+				dst = { 0.0f, 0.0f, 1.0f, 1.0f };
+				dst = DirectX::XMVector4Transform(dst, pose);
 
-				// reference 
-				// http://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
-				// http://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToEuler/
-
-				// this value was found from experience, the above websites recommend different values
-				// but that isn't the case for us, so I went through different testing, and finally found the case 
-				// where both of world lives happily. 
-				const float SINGULARITY_THRESHOLD = 0.4999995f;
-				const float RAD_TO_DEG = (180.f) / 3.1415926535897932f;
-
-				float pitch, yaw;
-				//if (test < -SINGULARITY_THRESHOLD)
-				//{
-				//	yaw = atan2(yawy, yawx) * RAD_TO_DEG;
-				//	pitch = -yaw - (2.f * atan2(dQuat.m128_f32[0], dQuat.m128_f32[3]) * RAD_TO_DEG);
-				//}
-				//else if (test > SINGULARITY_THRESHOLD)
-				//{
-				//	yaw = atan2(yawy, yawx) * RAD_TO_DEG;
-				//	pitch = -yaw - (2.f * atan2(dQuat.m128_f32[0], dQuat.m128_f32[3]) * RAD_TO_DEG);
-				//}
-				//else
+				if (PoseOrientation == nullptr)
 				{
-					//yaw = atan2(yawy, yawx);
-					yaw = asin(yawy);
-					pitch = atan2(pitchy, pitchx);
+					PoseOrientation = new LVQuat(dst);
 				}
+				else
+				{
+					pose = DirectX::XMMatrixInverse(nullptr, pose);
+					LVQuat vdst = DirectX::XMVector4Transform(*PoseOrientation, pose);
+					LVQuat dDir = {
+						dst.m128_f32[0] - PoseOrientation->m128_f32[0],
+						dst.m128_f32[1] - PoseOrientation->m128_f32[1],
+						dst.m128_f32[2] - PoseOrientation->m128_f32[2],
+						dst.m128_f32[3] - PoseOrientation->m128_f32[3] };
 
-				*PoseOrientation = dst;
-				FakeMouseMove(SGlobalSharedDataInst.GetTargetWindow(), scale * yaw, scale * pitch);
+					float pitch, yaw;
+					//LVQuat dQuat = DirectX::XMQuaternionMultiply(DirectX::XMQuaternionInverse(*PoseOrientation), dst);
+					//dQuat = DirectX::XMQuaternionNormalize(dQuat);
+					//const float test = dQuat.m128_f32[2] * dQuat.m128_f32[0] - dQuat.m128_f32[3] * dQuat.m128_f32[1];
+					//const float yawy = -2.f*(dQuat.m128_f32[3] * dQuat.m128_f32[1] + dQuat.m128_f32[2] * dQuat.m128_f32[0]);
+					//const float yawx = (1.f - 2.f*(dQuat.m128_f32[1] * dQuat.m128_f32[1] + dQuat.m128_f32[2] * dQuat.m128_f32[2]));
+					//const float pitchy = -2.f*(dQuat.m128_f32[3] * dQuat.m128_f32[0] + dQuat.m128_f32[1] * dQuat.m128_f32[2]);
+					//const float pitchx = (1.f - 2.f*(dQuat.m128_f32[1] * dQuat.m128_f32[1] + dQuat.m128_f32[0] * dQuat.m128_f32[0]));
 
-				//char info[256];
-				//snprintf(info, 255, "pitch: %.2f, yaw: %.2f\n", pitch, yaw);
-				//OutputDebugStringA(info);
+					//const float SINGULARITY_THRESHOLD = 0.4999995f;
+					//const float RAD_TO_DEG = (180.f) / 3.1415926535897932f;
+
+					//yaw = asin(yawy);
+					//pitch = atan2(pitchy, pitchx);	
+
+					yaw = vdst.m128_f32[0];
+					pitch = -vdst.m128_f32[1];
+
+					*PoseOrientation = dst;
+					FakeMouseMove(SGlobalSharedDataInst.GetTargetWindow(), scale * yaw, scale * pitch);
+				}
 			}
 
+			break;
 		}
 	}
 } 

@@ -18,6 +18,7 @@
 #include <map>
 #include <string>
 #include <iostream>
+//#include <functional>
 
 //#define INCLUDE_DIRECTXTK
 #ifdef INCLUDE_DIRECTXTK
@@ -326,6 +327,9 @@ protected:
 
 	HWND			TargetWindow;
 	bool			bDrawCursor;
+	bool			bFakeMouseMove;
+	bool			bHoldWhenMoving;
+	bool			bEnableJoystick;
 
 	HWND			DefaultWindow;
 
@@ -352,6 +356,15 @@ public:
 
 	bool GetBDrawCursor() const;
 	void SetBDrawCursor(bool bEnable);
+
+	bool GetBFakeMouseMove() const;
+	void SetBFakeMouseMove(bool bEnable);
+
+	bool GetBHoldWhenMoving() const;
+	void SetBHoldWhenMoving(bool bEnable);
+
+	bool GetBEnableJoystick() const;
+	void SetBEnableJoystick(bool bEnable);
 
 	const WCHAR* GetDependencyDirectoryName() const;
 	WCHAR* GetDependencyDirectory();
@@ -390,6 +403,14 @@ public:
 };
 
 extern GlobalSharedData SGlobalSharedDataInst;
+
+extern void FakeKeyPress(uint32 key);
+extern void FakeKeyRelease(uint32 key);
+
+extern void FakeMousePress(bool left);
+extern void FakeMouseRelease(bool left);
+
+extern void FakeMouseMove(HWND wnd, uint32 x, uint32 y);
 
 extern "C" _declspec(dllexport) void _cdecl InstallHook(int* Result);
 extern "C" _declspec(dllexport) void _cdecl UninstallHook(int* Result);
