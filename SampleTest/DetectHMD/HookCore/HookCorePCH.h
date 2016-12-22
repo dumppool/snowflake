@@ -280,7 +280,7 @@ typedef DirectX::XMMATRIX LVMatrix;
 #define VERIFY_HRESULT2(Result, FailureBranch, Prefix, Cap, ...)\
 {\
 	HRESULT _hr = Result;\
-	if (FAILED(hr))\
+	if (FAILED(_hr))\
 	{\
 		LVMSG2(Prefix, Cap, __VA_ARGS__);\
 		FailureBranch;\
@@ -390,6 +390,10 @@ public:
 	// Qualifier:
 	//************************************
 	double Stop();
+
+	double Count();
+
+	bool Started() const;
 };
 
 class ScopedHighFrequencyCounter
@@ -410,7 +414,7 @@ extern void FakeKeyRelease(uint32 key);
 extern void FakeMousePress(bool left);
 extern void FakeMouseRelease(bool left);
 
-extern void FakeMouseMove(HWND wnd, uint32 x, uint32 y);
+extern void FakeMouseMove(uint32 x, uint32 y);
 
 extern "C" _declspec(dllexport) void _cdecl InstallHook(int* Result);
 extern "C" _declspec(dllexport) void _cdecl UninstallHook(int* Result);

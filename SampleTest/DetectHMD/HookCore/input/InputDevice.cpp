@@ -137,6 +137,11 @@ namespace lostvr
 			}
 		}
 
+		if (!bContinue)
+		{
+			LVERROR(head, "initialize mouse failed");
+		}
+
 		if (bEnableKeyboard)
 		{
 			bContinue = true;
@@ -156,6 +161,11 @@ namespace lostvr
 			}
 		}
 
+		if (!bContinue)
+		{
+			LVERROR(head, "initialize keyboard failed");
+		}
+
 		if (bEnableJoystick)
 		{
 			bContinue = true;
@@ -170,14 +180,20 @@ namespace lostvr
 
 			if (bContinue)
 			{
-				VERIFY_HRESULT2(Joystick->SetCooperativeLevel(wnd, DISCL_NONEXCLUSIVE),
+				VERIFY_HRESULT2(Joystick->SetCooperativeLevel(wnd, DISCL_EXCLUSIVE | DISCL_FOREGROUND),
 				{ bContinue = false; SAFE_RELEASE(Joystick); }, SLogPrefix, head, "set joystick coorperative level failed: 0x%x(%d)", hr, hr);
 			}
 		}
 
+		if (!bContinue)
+		{
+			LVERROR(head, "initialize joystick failed");
+			return;
+		}
+
 		LVMSG2(SLogPrefix, head, "initialize InputDevice successfully");
-		LVMSG2(SLogPrefix, head, "err code, DIERR_ACQUIRED: 0x%x, DIERR_INPUTLOST: 0x%x, DIERR_OLDDIRECTINPUTVERSION: 0x%x, DIERR_BETADIRECTINPUTVERSION: 0x%x",
-			DIERR_ACQUIRED, DIERR_INPUTLOST, DIERR_OLDDIRECTINPUTVERSION, DIERR_BETADIRECTINPUTVERSION);
+		//LVMSG2(SLogPrefix, head, "err code, DIERR_ACQUIRED: 0x%x, DIERR_INPUTLOST: 0x%x, DIERR_OLDDIRECTINPUTVERSION: 0x%x, DIERR_BETADIRECTINPUTVERSION: 0x%x",
+			//DIERR_ACQUIRED, DIERR_INPUTLOST, DIERR_OLDDIRECTINPUTVERSION, DIERR_BETADIRECTINPUTVERSION);
 	}
 
 	void InputDevice::DestroyDevice()

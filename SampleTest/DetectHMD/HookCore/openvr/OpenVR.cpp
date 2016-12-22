@@ -93,6 +93,10 @@ OpenVR::OpenVR(const std::string& key) : IVRDevice(key)
 , OverlayThumbnailHandle(vr::k_ulOverlayHandleInvalid)
 , Projector(nullptr)
 , PoseOrientation(nullptr)
+, bIsCounting(false)
+, Count(0)
+, CountMax(100)
+, Counter()
 {
 }
 
@@ -195,6 +199,26 @@ bool OpenVR::IsConnected()
 bool OpenVR::OnPresent_Direct3D11(IDXGISwapChain* swapChain)
 {
 	const CHAR* head = "OpenVR::OnPresent_Direct3D11";
+
+	double elapsed = 0.0;
+	if (!Counter.Started())
+	{
+		Counter.Start();
+	}
+	else
+	{
+		elapsed = Counter.Count();
+	}
+
+	//if (bIsCounting)
+	//{
+	//	Count += elapsed;
+	//	if (Count >= CountMax)
+	//	{
+	//		FakeMouseRelease(false);
+	//		bIsCounting = false;
+	//	}
+	//}
 
 	if (Projector == nullptr)
 	{
@@ -474,12 +498,24 @@ void OpenVR::ProcessPose()
 					//yaw = asin(yawy);
 					//pitch = atan2(pitchy, pitchx);	
 
-					yaw = vdst.m128_f32[0];
-					pitch = -vdst.m128_f32[1];
+					yaw = scale * vdst.m128_f32[0];
+					pitch = scale * -vdst.m128_f32[1];
 
 					*PoseOrientation = dst;
-					FakeMouseMove(SGlobalSharedDataInst.GetTargetWindow(), scale * yaw, scale * pitch);
+
+					if (SGlobalSharedDataInst.GetBHoldWhenMoving() && !bIsCounting)
+					{
+						FakeMousePress(false);
+					}
+
+					FakeMouseMove(yaw, pitch);
+
+					Count = 0;
+					bIsCounting = true;
 				}
+			}
+			else
+			{
 			}
 
 			break;

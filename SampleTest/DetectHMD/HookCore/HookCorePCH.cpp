@@ -321,6 +321,7 @@ GlobalSharedData::~GlobalSharedData()
 
  HighFrequencyCounter::HighFrequencyCounter()
  {
+	 Timestamp.QuadPart = 0;
 	 QueryPerformanceFrequency(&TicksPerSec);
  }
 
@@ -334,6 +335,20 @@ GlobalSharedData::~GlobalSharedData()
 	 LARGE_INTEGER end;
 	 QueryPerformanceCounter(&end);
 	 return (double)((end.QuadPart - Timestamp.QuadPart) * 1000.0 / TicksPerSec.QuadPart);
+ }
+
+ double HighFrequencyCounter::Count()
+ {
+	 LARGE_INTEGER begin, end;
+	 begin = Timestamp;
+	 QueryPerformanceCounter(&Timestamp);
+	 QueryPerformanceCounter(&end);
+	 return (double)((end.QuadPart - begin.QuadPart) * 1000.0 / TicksPerSec.QuadPart);
+ }
+
+ bool HighFrequencyCounter::Started() const
+ {
+	 return Timestamp.QuadPart != 0;
  }
 
  void FakeKeyClicked(uint32 key)
@@ -430,7 +445,7 @@ GlobalSharedData::~GlobalSharedData()
 	 SendInput(1, &input, sizeof(input));
  }
 
- void FakeMouseMove(HWND wnd, uint32 x, uint32 y)
+ void FakeMouseMove(uint32 x, uint32 y)
  {
 	 POINT pt;
 	 if (FALSE == GetCursorPos(&pt))
@@ -448,22 +463,12 @@ GlobalSharedData::~GlobalSharedData()
 		 return;
 	 }
 
-	 //if (SGlobalSharedDataInst.GetBHoldWhenMoving())
-	 //{
-		// FakeMousePress(false);
-	 //}
-
 	 INPUT input;
 	 input.type = INPUT_MOUSE;
 	 memset(&input.mi, 0, sizeof(input.mi));
-	 input.mi.dwFlags = MOUSEEVENTF_MOVE | (SGlobalSharedDataInst.GetBHoldWhenMoving()?MOUSEEVENTF_RIGHTDOWN:0);
+	 input.mi.dwFlags = MOUSEEVENTF_MOVE;
 	 input.mi.dx = x;
 	 input.mi.dy = y;
 	 input.mi.mouseData = 0;
 	 SendInput(1, &input, sizeof(input));
-
-	 if (SGlobalSharedDataInst.GetBHoldWhenMoving())
-	 {
-		 FakeMouseRelease(false);
-	 }
  }

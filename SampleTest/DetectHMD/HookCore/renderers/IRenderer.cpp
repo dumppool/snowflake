@@ -137,6 +137,11 @@ class FInputEventHandler : IInputDeviceCallback
 	EInputAction	ButtonEvents[32];
 	bool			bHasButtonInput;
 
+	bool			bIsCounting;
+	double			Count;
+	double			CountMax;
+	HighFrequencyCounter	Counter;
+
 	EInputAction ConsumeKeyAction(int key)
 	{
 		const CHAR* head = "KeyboardEventDetector::ConsumeKeyAction";
@@ -258,6 +263,29 @@ public:
 
 	virtual void CALLBACK OnInputEnd() override
 	{
+		//double elapsed = 0.0;
+		//if (Counter.Started())
+		//{
+		//	elapsed = Counter.Count();
+		//}
+		//else
+		//{
+		//	bIsCounting = false;
+		//	Count = 0;
+		//	CountMax = 100;
+		//	Counter.Start();
+		//}
+
+		//if (bIsCounting)
+		//{
+		//	Count += elapsed;
+		//	if (Count >= CountMax)
+		//	{
+		//		bIsCounting = false;
+		//		FakeKeyRelease(VK_RSHIFT);
+		//	}
+		//}
+
 		if (bHasKeyInput)
 		{
 			if (ConsumeKeyAction(DIK_S) == EInputAction::Released && (IsKeyDown(DIK_LSHIFT) || IsKeyDown(DIK_RSHIFT)))
@@ -300,24 +328,75 @@ public:
 		{
 			if (bHasButtonInput)
 			{
-				EInputAction action = ConsumeButtonAction(0);
+				EInputAction action;
+				//action = ConsumeButtonAction(7);
+				//if (action == EInputAction::Pressed)
+				//{
+				//	FakeMousePress(true);
+				//}
+				//else if (action == EInputAction::Released)
+				//{
+				//	FakeMouseRelease(true);
+				//}
+
+				action = ConsumeButtonAction(0);
 				if (action == EInputAction::Pressed)
 				{
-					FakeMousePress(true);
+					FakeKeyPress('1');
 				}
 				else if (action == EInputAction::Released)
 				{
-					FakeMouseRelease(true);
+					FakeKeyRelease('1');
 				}
 
 				action = ConsumeButtonAction(1);
 				if (action == EInputAction::Pressed)
 				{
-					FakeMousePress(false);
+					FakeKeyPress('2');
 				}
 				else if (action == EInputAction::Released)
 				{
-					FakeMouseRelease(false);
+					FakeKeyRelease('2');
+				}
+
+				action = ConsumeButtonAction(2);
+				if (action == EInputAction::Pressed)
+				{
+					FakeKeyPress('3');
+				}
+				else if (action == EInputAction::Released)
+				{
+					FakeKeyRelease('3');
+				}
+
+				action = ConsumeButtonAction(3);
+				if (action == EInputAction::Pressed)
+				{
+					FakeKeyPress('4');
+				}
+				else if (action == EInputAction::Released)
+				{
+					FakeKeyRelease('4');
+				}
+
+				action = ConsumeButtonAction(4);
+				if (action == EInputAction::Pressed)
+				{
+					FakeKeyPress('5');
+				}
+				else if (action == EInputAction::Released)
+				{
+					FakeKeyRelease('5');
+				}
+
+				action = ConsumeButtonAction(5);
+				if (action == EInputAction::Pressed)
+				{
+					FakeKeyPress('6');
+				}
+				else if (action == EInputAction::Released)
+				{
+					FakeKeyRelease('6');
 				}
 
 				action = ConsumeButtonAction(6);
@@ -329,82 +408,232 @@ public:
 				{
 					FakeKeyRelease(VK_ESCAPE);
 				}
+
+				action = ConsumeButtonAction(7);
+				if (action == EInputAction::Pressed)
+				{
+					FakeKeyPress(VK_RETURN);
+				}
+				else if (action == EInputAction::Released)
+				{
+					FakeKeyRelease(VK_RETURN);
+				}
 			}
 
 			const uint32 THRESHOLD_SMALL = 1 << 12;
 			const uint32 THRESHOLD_LARGE = (1 << 15) | (1 << 14);
-			static bool SX0 = false;
+			static bool SPressed[] = { false,false,false,false,false,false,
+				false,false,false,false,false,false, };
 			static bool SX1 = false;
 			static bool SY0 = false;
 			static bool SY1 = false;
 			if (JoyStates.lX < THRESHOLD_SMALL)
 			{
-				if (!SX0)
+				if (!SPressed[0])
 				{
-					SX0 = true;
+					SPressed[0] = true;
 					FakeKeyPress('A');
 				}
 			}
 			else
 			{
-				if (SX0)
+				if (SPressed[0])
 				{
-					SX0 = false;
+					SPressed[0] = false;
 					FakeKeyRelease('A');
 				}
 			}
 
 			if (JoyStates.lX > THRESHOLD_LARGE)
 			{
-				if (!SX1)
+				if (!SPressed[1])
 				{
-					SX1 = true;
+					SPressed[1] = true;
 					FakeKeyPress('D');
 				}
 			}
 			else
 			{
-				if (SX1)
+				if (SPressed[1])
 				{
-					SX1 = false;
+					SPressed[1] = false;
 					FakeKeyRelease('D');
 				}
 			}
 
 			if (JoyStates.lY < THRESHOLD_SMALL)
 			{
-				if (!SY0)
+				if (!SPressed[2])
 				{
-					SY0 = true;
+					SPressed[2] = true;
 					FakeKeyPress('W');
 				}
 			}
 			else
 			{
-				if (SY0)
+				if (SPressed[2])
 				{
-					SY0 = false;
+					SPressed[2] = false;
 					FakeKeyRelease('W');
 				}
 			}
 
 			if (JoyStates.lY > THRESHOLD_LARGE)
 			{
-				if (!SY1)
+				if (!SPressed[3])
 				{
-					SY1 = true;
+					SPressed[3] = true;
 					FakeKeyPress('S');
 				}
 			}
 			else
 			{
-				if (SY1)
+				if (SPressed[3])
 				{
-					SY1 = false;
+					SPressed[3] = false;
 					FakeKeyRelease('S');
 				}
 			}
+
+			if (JoyStates.lRx < THRESHOLD_SMALL)
+			{
+				if (!SPressed[4])
+				{
+					SPressed[4] = true;
+					FakeKeyPress('7');
+				}
+			}
+			else
+			{
+				if (SPressed[4])
+				{
+					SPressed[4] = false;
+					FakeKeyRelease('7');
+				}
+			}
+
+			if (JoyStates.lRx > THRESHOLD_LARGE)
+			{
+				if (!SPressed[5])
+				{
+					SPressed[5] = true;
+					FakeKeyPress('8');
+				}
+			}
+			else
+			{
+				if (SPressed[5])
+				{
+					SPressed[5] = false;
+					FakeKeyRelease('8');
+				}
+			}
+
+			if (JoyStates.lRy < THRESHOLD_SMALL)
+			{
+				if (!SPressed[6])
+				{
+					SPressed[6] = true;
+					FakeKeyPress('9');
+				}
+			}
+			else
+			{
+				if (SPressed[6])
+				{
+					SPressed[6] = false;
+					FakeKeyRelease('9');
+				}
+			}
+
+			if (JoyStates.lRy > THRESHOLD_LARGE)
+			{
+				if (!SPressed[7])
+				{
+					SPressed[7] = true;
+					FakeKeyPress('0');
+				}
+			}
+			else
+			{
+				if (SPressed[7])
+				{
+					SPressed[7] = false;
+					FakeKeyRelease('0');
+				}
+			}
+
+			int32 pov = JoyStates.rgdwPOV[0];
+			if (pov >= 31500 || (pov >= 0 && 4500 >= pov))
+			{
+				if (!SPressed[8])
+				{
+					SPressed[8] = true;
+					FakeKeyPress(VK_SPACE);
+				}
+			}
+			else
+			{
+				if (SPressed[8])
+				{
+					SPressed[8] = false;
+					FakeKeyRelease(VK_SPACE);
+				}
+			}
+
+			if (pov >= 13500 && 22500 >= pov)
+			{
+				if (!SPressed[9])
+				{
+					SPressed[9] = true;
+					FakeKeyPress(VK_TAB);
+				}
+			}
+			else
+			{
+				if (SPressed[9])
+				{
+					SPressed[9] = false;
+					FakeKeyRelease(VK_TAB);
+				}
+			}
+
+			if (JoyStates.lZ < THRESHOLD_SMALL)
+			{
+				if (!SPressed[10])
+				{
+					SPressed[10] = true;
+					FakeKeyPress(VK_CONTROL);
+				}
+			}
+			else
+			{
+				if (SPressed[10])
+				{
+					SPressed[10] = false;
+					FakeKeyRelease(VK_CONTROL);
+				}
+			}
+
+			if (JoyStates.lZ > THRESHOLD_LARGE)
+			{
+				if (!SPressed[11])
+				{
+					SPressed[11] = true;
+					FakeKeyPress(VK_LSHIFT);
+				}
+			}
+			else
+			{
+				if (SPressed[11])
+				{
+					SPressed[11] = false;
+					FakeKeyRelease(VK_LSHIFT);
+				}
+			}
 		}
+
+		//OutputJoystickInfo();
 	}
 
 	void Register()

@@ -60,6 +60,11 @@ namespace lostvr
 
 		LVQuat* PoseOrientation;
 
+		bool			bIsCounting;
+		double			Count;
+		double			CountMax;
+		HighFrequencyCounter Counter;
+
 	public:
 
 		OpenVR(const std::string& key);
