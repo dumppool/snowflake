@@ -22,6 +22,9 @@
     <Filter Include="openvr">
       <UniqueIdentifier>{b4418d82-524b-484b-94ff-8510db245f0d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="osvr">
+      <UniqueIdentifier>{06824ff4-8621-4559-bc47-40922c320bc4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -76,6 +79,12 @@
     </ClInclude>
     <ClInclude Include="HtcViveController.h">
       <Filter>openvr</Filter>
+    </ClInclude>
+    <ClInclude Include="renderers\Direct3D11Window.h">
+      <Filter>renderers</Filter>
+    </ClInclude>
+    <ClInclude Include="osvr\OSVR.h">
+      <Filter>osvr</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -135,6 +144,12 @@
     </ClCompile>
     <ClCompile Include="HtcViveController.cpp">
       <Filter>openvr</Filter>
+    </ClCompile>
+    <ClCompile Include="renderers\Direct3D11Window.cpp">
+      <Filter>renderers</Filter>
+    </ClCompile>
+    <ClCompile Include="osvr\OSVR.cpp">
+      <Filter>osvr</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

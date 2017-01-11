@@ -42,7 +42,8 @@ namespace lostvr {
 		bool InitializeRHI();
 		bool UpdateTexture();
 
-		ID3D11Texture2D* GetFinalBuffer(EnumEyeID Eye);
+		ID3D11Texture2D* GetFinalBuffer(EnumEyeID eye);
+		ID3D11RenderTargetView* GetFinalBuffer_RTV(EnumEyeID eye);
 		void SetEyePose(EnumEyeID Eye, const LVMatrix& EyeView, const LVMatrix& Proj);
 
 		void* operator new(size_t i)

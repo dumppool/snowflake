@@ -94,9 +94,6 @@ OpenVR::OpenVR(const std::string& key) : IVRDevice(key)
 , Projector(nullptr)
 , PoseOrientation(nullptr)
 , bIsCounting(false)
-, Count(0)
-, CountMax(100)
-, Counter()
 {
 }
 
@@ -199,26 +196,6 @@ bool OpenVR::IsConnected()
 bool OpenVR::OnPresent_Direct3D11(IDXGISwapChain* swapChain)
 {
 	const CHAR* head = "OpenVR::OnPresent_Direct3D11";
-
-	double elapsed = 0.0;
-	if (!Counter.Started())
-	{
-		Counter.Start();
-	}
-	else
-	{
-		elapsed = Counter.Count();
-	}
-
-	//if (bIsCounting)
-	//{
-	//	Count += elapsed;
-	//	if (Count >= CountMax)
-	//	{
-	//		FakeMouseRelease(false);
-	//		bIsCounting = false;
-	//	}
-	//}
 
 	if (Projector == nullptr)
 	{
@@ -476,12 +453,12 @@ void OpenVR::ProcessPose()
 				else
 				{
 					pose = DirectX::XMMatrixInverse(nullptr, pose);
-					LVQuat vdst = DirectX::XMVector4Transform(*PoseOrientation, pose);
-					LVQuat dDir = {
-						dst.m128_f32[0] - PoseOrientation->m128_f32[0],
-						dst.m128_f32[1] - PoseOrientation->m128_f32[1],
-						dst.m128_f32[2] - PoseOrientation->m128_f32[2],
-						dst.m128_f32[3] - PoseOrientation->m128_f32[3] };
+						LVQuat vdst = DirectX::XMVector4Transform(*PoseOrientation, pose);
+						LVQuat dDir = {
+							dst.m128_f32[0] - PoseOrientation->m128_f32[0],
+							dst.m128_f32[1] - PoseOrientation->m128_f32[1],
+							dst.m128_f32[2] - PoseOrientation->m128_f32[2],
+							dst.m128_f32[3] - PoseOrientation->m128_f32[3] };
 
 					float pitch, yaw;
 					//LVQuat dQuat = DirectX::XMQuaternionMultiply(DirectX::XMQuaternionInverse(*PoseOrientation), dst);
@@ -506,12 +483,10 @@ void OpenVR::ProcessPose()
 					if (SGlobalSharedDataInst.GetBHoldWhenMoving() && !bIsCounting)
 					{
 						FakeMousePress(false);
+						bIsCounting = true;
 					}
 
 					FakeMouseMove(yaw, pitch);
-
-					Count = 0;
-					bIsCounting = true;
 				}
 			}
 			else

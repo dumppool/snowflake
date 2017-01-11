@@ -75,24 +75,25 @@
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <TargetName>$(ProjectName)</TargetName>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);./;./libovr-lib/Include;j./openvr-lib/headers;</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);./;./libovr-lib/Include;./openvr-lib/headers;./osvr-lib/include;</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);./;./libovr-lib/Include;j./openvr-lib/headers;</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);./;./libovr-lib/Include;./openvr-lib/headers;./osvr-lib/include;</IncludePath>
     <TargetName>$(ProjectName)_x64</TargetName>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);./;./libovr-lib/Include;j./openvr-lib/headers;</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);./;./libovr-lib/Include;./openvr-lib/headers;./osvr-lib/include;</IncludePath>
     <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);./;./libovr-lib/Include;j./openvr-lib/headers;</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);./;./libovr-lib/Include;./openvr-lib/headers;./osvr-lib/include;</IncludePath>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <TargetName>$(ProjectName)_x64</TargetName>
   </PropertyGroup>
@@ -184,8 +185,10 @@
     <ClInclude Include="libovr-lib\Src\OVR_CAPI_Prototypes.h" />
     <ClInclude Include="mhook-lib\mhook.h" />
     <ClInclude Include="openvr\OpenVR.h" />
+    <ClInclude Include="osvr\OSVR.h" />
     <ClInclude Include="renderers\ConcreteProjectors.h" />
     <ClInclude Include="renderers\Direct3D11Renderer.h" />
+    <ClInclude Include="renderers\Direct3D11Window.h" />
     <ClInclude Include="renderers\IRenderer.h" />
     <ClInclude Include="renderers\OculusVR.h" />
     <ClInclude Include="renderers\Projector.h" />
@@ -220,8 +223,10 @@
     <ClCompile Include="libovr-lib\Src\OVR_StereoProjection.cpp" />
     <ClCompile Include="mhook-lib\mhook.cpp" />
     <ClCompile Include="openvr\OpenVR.cpp" />
+    <ClCompile Include="osvr\OSVR.cpp" />
     <ClCompile Include="renderers\ConcreteProjectors.cpp" />
     <ClCompile Include="renderers\Direct3D11Renderer.cpp" />
+    <ClCompile Include="renderers\Direct3D11Window.cpp" />
     <ClCompile Include="renderers\Direct3DRouters.cpp" />
     <ClCompile Include="renderers\IRenderer.cpp" />
     <ClCompile Include="renderers\OculusVR.cpp" />

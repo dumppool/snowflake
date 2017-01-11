@@ -316,6 +316,11 @@ ID3D11Texture2D* BaseTextureProjector::GetFinalBuffer(EnumEyeID eye)
 	return BB[eye];
 }
 
+ID3D11RenderTargetView * BaseTextureProjector::GetFinalBuffer_RTV(EnumEyeID eye)
+{
+	return RTVs[eye];
+}
+
 void BaseTextureProjector::SetEyePose(EnumEyeID Eye, const LVMatrix& EyeView, const LVMatrix& Proj)
 {
 	EyePose[Eye].V = DirectX::XMMatrixIdentity();

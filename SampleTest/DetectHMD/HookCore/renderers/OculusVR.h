@@ -214,9 +214,12 @@ namespace lostvr
 		ovrPosef                    EyeRenderPose[NUMEYES];
 		ovrLayerEyeFov              ovrLayer;
 
+		LVQuat*						PoseOrientation;
+
 		//---------------------------------------------------------------
 		VRLayer(ID3D11Device* dev, DXGI_SWAP_CHAIN_DESC desc, ovrSession session, const ovrFovPort * fov = 0, float pixelsPerDisplayPixel = 1.0f, bool isItProtectedContent = false)
 		{
+			PoseOrientation = nullptr;
 			Session = session;
 			MakeEyeBuffers(dev, desc, pixelsPerDisplayPixel, isItProtectedContent);
 			ConfigureRendering(fov);
@@ -308,6 +311,45 @@ namespace lostvr
 			ovrLayer.Fov[1] = EyeRenderDesc[0].Fov;
 			ovrLayer.Viewport[0] = EyeRenderViewport[0];
 			ovrLayer.Viewport[1] = EyeRenderViewport[0];
+
+			LVQuat quat;
+			memcpy(&quat.m128_f32, &EyeRenderPose[0].Orientation, sizeof(EyeRenderPose[0].Orientation));
+			LVMatrix qmat = DirectX::XMMatrixRotationQuaternion(quat);
+			LVQuat dst = { 0.0f, 0.0f, 1.0f, 0.0f };
+			dst = DirectX::XMVector4Transform(dst, qmat);
+			if (PoseOrientation == nullptr)
+			{
+				PoseOrientation = new LVQuat(dst);
+			}
+			else
+			{
+				qmat = DirectX::XMMatrixInverse(nullptr, qmat);
+				LVQuat vdst = DirectX::XMVector4Transform(*PoseOrientation, qmat);
+				LVQuat dDir = {
+					dst.m128_f32[0] - PoseOrientation->m128_f32[0],
+					dst.m128_f32[1] - PoseOrientation->m128_f32[1],
+					dst.m128_f32[2] - PoseOrientation->m128_f32[2],
+					dst.m128_f32[3] - PoseOrientation->m128_f32[3] };
+				float pitch, yaw;
+				float scale = 1000.0f;
+				yaw = scale * vdst.m128_f32[0];
+				pitch = scale * -vdst.m128_f32[1];
+
+				*PoseOrientation = dst;
+
+				static bool bIsPressed = false;
+				if (SGlobalSharedDataInst.GetBFakeMouseMove())
+				{
+					if (SGlobalSharedDataInst.GetBHoldWhenMoving() && !bIsPressed)
+					{
+						FakeMousePress(false);
+						//bIsPressed = true;
+					}
+
+					FakeMouseMove(yaw, pitch);
+				}
+
+			}
 
 			return(trackingState);
 		}

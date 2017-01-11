@@ -61,9 +61,6 @@ namespace lostvr
 		LVQuat* PoseOrientation;
 
 		bool			bIsCounting;
-		double			Count;
-		double			CountMax;
-		HighFrequencyCounter Counter;
 
 	public:
 
@@ -83,6 +80,6 @@ namespace lostvr
 
 		virtual void AddMovement(EMovement movement) override;
 
-		virtual void ProcessPose();
+		void ProcessPose();
 	};
 }

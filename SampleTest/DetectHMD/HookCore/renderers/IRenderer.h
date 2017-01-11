@@ -14,7 +14,9 @@ class FInputEventHandler;
 
 namespace lostvr
 {
-	typedef int EEye;
+	//typedef int EnumEyeID;
+	//static const int SEnumEyeL = 0;
+	//static const int SEnumEyeR = 1;
 
 	enum class EMovement : uint8
 	{
