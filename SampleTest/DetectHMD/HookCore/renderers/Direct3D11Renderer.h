@@ -21,6 +21,7 @@ namespace lostvr
 		DeviceRef,
 		DXGI0,
 		DXGI1,
+		DXGI1Ex,
 		DXGI2,
 		DXGI3,
 		Num,
@@ -41,6 +42,7 @@ namespace lostvr
 	class Direct3D11Helper
 	{
 		EDirect3D				GIVer;
+		IDXGIFactory*			Factory;
 
 		ID3D11Device*			Device;
 		ID3D11DeviceContext*	Context;
@@ -63,6 +65,8 @@ namespace lostvr
 
 		void ZeroRHI()
 		{
+			Factory = nullptr;
+
 			Buffer = nullptr;
 			Buffer_Direct9Copy = nullptr;
 			SwapChain = nullptr;
@@ -84,6 +88,8 @@ namespace lostvr
 
 		void DestroyRHI()
 		{
+			SAFE_RELEASE(Factory);
+
 			SAFE_RELEASE(Buffer);
 			SAFE_RELEASE(Buffer_Direct9Copy);
 			SAFE_RELEASE(SwapChain);
@@ -140,6 +146,9 @@ namespace lostvr
 		{
 			DestroyRHI();
 		}
+
+		bool CreateDevice();
+		bool CreateSwapChain(UINT width, UINT height, DXGI_FORMAT format);
 
 		bool UpdateRHIWithDevice(ID3D11Device* device);
 		bool UpdateRHIWithSwapChain(IDXGISwapChain* swapChain);

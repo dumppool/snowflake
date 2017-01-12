@@ -101,7 +101,7 @@ bool BaseTextureProjector::InitializeRHI()
 			desc.Width = RecommendWidth;
 			desc.Height = RecommendHeight;
 			desc.ArraySize = 1;
-			desc.BindFlags = D3D11_BIND_RENDER_TARGET;
+			desc.BindFlags = D3D11_BIND_RENDER_TARGET|D3D11_BIND_SHADER_RESOURCE;
 			desc.MipLevels = 1;
 			desc.MiscFlags = 0;
 			desc.SampleDesc.Count = 1;

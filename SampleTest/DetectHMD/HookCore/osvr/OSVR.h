@@ -122,7 +122,7 @@ namespace lostvr
 
 	protected:
 
-		bool UpdateRenderInfos();
+		bool UpdateRenderInfos(ID3D11Device* device, ID3D11DeviceContext* context);
 		bool UpdateRenderBuffers();
 		bool UpdateRenderViewports();
 	};

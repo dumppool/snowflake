@@ -27,6 +27,10 @@ const CHAR* GetEDirect3DString(EDirect3D Ver)
 	{
 		return "DXGI 1.1";
 	}
+	else if (Ver == EDirect3D::DXGI1Ex)
+	{
+		return "DXGI 1.1 ex";
+	}
 	else if (Ver == EDirect3D::DXGI2)
 	{
 		return "DXGI 1.2";
@@ -66,7 +70,7 @@ Direct3D11Helper::Direct3D11Helper(EDirect3D ver) : GIVer(ver)
 {
 	ZeroRHI();
 
-	if (GIVer != EDirect3D::DeviceRef)
+	if (GIVer != EDirect3D::DeviceRef && GIVer != EDirect3D::DXGI1Ex)
 	{
 		InitializeRHI();
 	}
@@ -80,6 +84,117 @@ Direct3D11Helper::Direct3D11Helper(EDirect3D ver, UINT width, UINT height, DXGI_
 	{
 		InitializeRHI(width, height, format);
 	}
+}
+
+bool Direct3D11Helper::CreateDevice()
+{
+	const CHAR* head = "Direct3D11Helper::CreateDevice";
+
+	HRESULT hr;
+
+	SAFE_RELEASE(Factory);
+	if (GIVer == EDirect3D::DXGI0)
+	{
+		hr = CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)&Factory);
+	}
+	else if (GIVer == EDirect3D::DXGI1)
+	{
+		hr = CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&Factory);
+	}
+	else
+	{
+		LVERROR(head, "intent to create unsupport interface, ver: %s", GetEDirect3DString(GIVer));
+		return false;
+	}
+
+	if (FAILED(hr))
+	{
+		LVERROR(head, "failed to create Factory, result: %d, ver: %s", hr, GetEDirect3DString(GIVer));
+		return false;
+	}
+
+	HWND hwnd = SGlobalSharedDataInst.GetDefaultWindow();
+	IDXGIAdapter* adapter = nullptr;
+	DXGI_ADAPTER_DESC adapterDesc;
+	for (int i = 0;; ++i)
+	{
+		if (FAILED(Factory->EnumAdapters(i, &adapter)))
+		{
+			LVERROR(head, "enum adapter ended at: %d, ver: %s", i, GetEDirect3DString(GIVer))
+			break;
+		}
+
+		if (FAILED(hr = adapter->GetDesc(&adapterDesc)))
+		{
+			LVERROR(head, "failed to get description for adapter at: %d, result: %d, ver: %s", i, hr, GetEDirect3DString(GIVer));
+		}
+
+		IDXGISwapChain* swapChain = nullptr;
+		D3D_FEATURE_LEVEL featureLevels[] = { D3D_FEATURE_LEVEL_11_0 };
+
+		UINT createFlags = 0;
+
+#ifdef _DEBUG
+		createFlags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
+
+		if (SUCCEEDED(D3D11CreateDevice(adapter, D3D_DRIVER_TYPE_UNKNOWN, NULL, createFlags, featureLevels, 1,
+			D3D11_SDK_VERSION, &Device, nullptr, nullptr)))
+		{
+			LVMSG(head, "created device successfully, adapter: %ls, ver: %s", &adapterDesc.Description[0], GetEDirect3DString(GIVer));
+			Device->GetImmediateContext(&Context);
+			break;
+		}
+		else
+		{
+			LVERROR(head, "create device failed");
+			return false;
+		}
+	}
+
+	if (!CreateBlendStates())
+	{
+		return false;
+	}
+
+	return true;
+}
+
+bool Direct3D11Helper::CreateSwapChain(UINT width, UINT height, DXGI_FORMAT format)
+{
+	const CHAR* head = "Direct3D11Helper::CreateSwapChain";
+
+	if (Factory == nullptr)
+	{
+		LVERROR(head, "null factory, result: ver: %s", GetEDirect3DString(GIVer));
+		return false;
+	}
+
+	HWND hwnd = SGlobalSharedDataInst.GetDefaultWindow();
+
+	DXGI_SWAP_CHAIN_DESC desc{ 0 };
+	desc.BufferCount = 1;
+	desc.BufferDesc.Format = format;
+	desc.BufferDesc.RefreshRate.Numerator = 0;
+	desc.BufferDesc.RefreshRate.Denominator = 1;
+	desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	desc.BufferDesc.Width = width;
+	desc.BufferDesc.Height = height;
+	desc.OutputWindow = hwnd;
+	desc.Windowed = TRUE;
+	desc.SampleDesc.Count = 1;
+	desc.SampleDesc.Quality = 0;
+	desc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+	desc.Flags = 0;
+
+	HRESULT hr = Factory->CreateSwapChain(Device, &desc, &SwapChain);
+	if (FAILED(hr))
+	{
+		LVERROR(head, "create swapchain failed: 0x%x(%d)", hr, hr);
+		return false;
+	}
+
+	return true;
 }
 
 bool Direct3D11Helper::UpdateRHIWithDevice(ID3D11Device * device)
@@ -221,16 +336,31 @@ bool Direct3D11Helper::InitializeRHI(UINT width, UINT height, DXGI_FORMAT format
 {
 	const CHAR* head = "Direct3D11Helper::InitializeRHI";
 
+	if (CreateDevice())
+	{
+		CreateSwapChain(width, height, format);
+		if (SwapChain != nullptr)
+		{
+			SwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&Buffer);
+		}
+
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+
 	HRESULT hr;
 
-	IDXGIFactory* factory = nullptr;
+	SAFE_RELEASE(Factory);
 	if (GIVer == EDirect3D::DXGI0)
 	{
-		hr = CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)&factory);
+		hr = CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)&Factory);
 	}
 	else if (GIVer == EDirect3D::DXGI1)
 	{
-		hr = CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&factory);
+		hr = CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&Factory);
 	}
 	else
 	{
@@ -249,7 +379,7 @@ bool Direct3D11Helper::InitializeRHI(UINT width, UINT height, DXGI_FORMAT format
 	DXGI_ADAPTER_DESC adapterDesc;
 	for (int i = 0;; ++i)
 	{
-		if (FAILED(factory->EnumAdapters(i, &adapter)))
+		if (FAILED(Factory->EnumAdapters(i, &adapter)))
 		{
 			LVERROR(head, "enum adapter ended at: %d, ver: %s", i, GetEDirect3DString(GIVer))
 				break;
@@ -1020,6 +1150,11 @@ bool Direct3D11Helper::GetDefaultRasterizer(ID3D11RasterizerState ** rs)
 bool Direct3D11Helper::CreateBlendStates()
 {
 	const CHAR* head = "Direct3D11Helper::CreateBlendStates";
+
+	if (Device == nullptr)
+	{
+		return false;
+	}
 
 	HRESULT hr = S_FALSE;
 

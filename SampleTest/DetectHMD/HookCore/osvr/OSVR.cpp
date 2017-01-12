@@ -50,6 +50,14 @@ bool FOSVR::Startup()
 
 	Shutdown();
 
+	LoadLibraryA("dep_x64/d3dcompiler_47.dll");
+	LoadLibraryA("dep_x64/glew32.dll");
+	LoadLibraryA("dep_x64/osvrClient.dll");
+	LoadLibraryA("dep_x64/osvrClientKit.dll");
+	LoadLibraryA("dep_x64/osvrCommon.dll");
+	LoadLibraryA("dep_x64/osvrRenderManager.dll");
+	LoadLibraryA("dep_x64/osvrUtil.dll");
+	LoadLibraryA("dep_x64/SDL2.dll");
 	// load dlls
 	//Modules.push_back()
 
@@ -148,6 +156,7 @@ bool FOSVR::IsConnected()
 bool FOSVR::OnPresent_Direct3D11(IDXGISwapChain* swapChain)
 {
 	const CHAR* head = "FOSVR::OnPresent_Direct3D11";
+	OSVR_ReturnCode rc;
 
 	if (Projector == nullptr)
 	{
@@ -156,19 +165,26 @@ bool FOSVR::OnPresent_Direct3D11(IDXGISwapChain* swapChain)
 
 	if (!Projector->IsInitialized(swapChain))
 	{
-		UpdateRenderInfos();
-		LVMatrix leftV = Description.GetViewMatrix(SEnumEyeL);
-		LVMatrix leftP = Description.GetProjectionMatrix(SEnumEyeL, DisplayConf, 0.1f, 1000.f);
-		LVMatrix rightV = Description.GetViewMatrix(SEnumEyeR);
-		LVMatrix rightP = Description.GetProjectionMatrix(SEnumEyeR, DisplayConf, 0.1f, 1000.f);
-		if (!Projector->InitializeProjector(swapChain, (uint32)RenderInfos[0].viewport.width, (uint32)RenderInfos[0].viewport.height, leftV, leftP, rightV, rightP))
+		//ID3D11Device* device = nullptr;
+		//ID3D11DeviceContext* context = nullptr;
+		//swapChain->GetDevice(__uuidof(ID3D11Device), (void**)&device);
+		//device->GetImmediateContext(&context);
+		//if (UpdateRenderInfos(nullptr, nullptr))
 		{
-			LVMSG(head, "initialize projector failed");
-			return false;
-		}
+			LVMatrix leftV = Description.GetViewMatrix(SEnumEyeL);
+			LVMatrix leftP = Description.GetProjectionMatrix(SEnumEyeL, DisplayConf, 0.1f, 1000.f);
+			LVMatrix rightV = Description.GetViewMatrix(SEnumEyeR);
+			LVMatrix rightP = Description.GetProjectionMatrix(SEnumEyeR, DisplayConf, 0.1f, 1000.f);
+			if (!Projector->InitializeProjector(swapChain, 1440, 1620, leftV, leftP, rightV, rightP))
+			{
+				LVMSG(head, "initialize projector failed");
+				return false;
+			}
 
-		UpdateRenderBuffers();
-		UpdateRenderViewports();
+			UpdateRenderInfos(Projector->GetRenderer()->GetDevice(), Projector->GetRenderer()->GetContext());
+			UpdateRenderBuffers();
+			UpdateRenderViewports();
+		}
 	}
 
 	if (OSVR_RETURN_SUCCESS != osvrClientUpdate(ClientCxt))
@@ -176,6 +192,9 @@ bool FOSVR::OnPresent_Direct3D11(IDXGISwapChain* swapChain)
 		LVERROR(head, "client update failed");
 		return false;
 	}
+
+	//OSVR_Pose3 pose;
+	//rc = osvrClientGetViewerPose(DisplayConf, 0, &pose);
 
 	if (!Projector->UpdateTexture())
 	{
@@ -185,7 +204,6 @@ bool FOSVR::OnPresent_Direct3D11(IDXGISwapChain* swapChain)
 
 	// all of the render manager samples keep the flipY at the default false,
 	// for both OpenGL and DirectX. Is this even needed anymore?
-	OSVR_ReturnCode rc;
 	OSVR_RenderManagerPresentState presentState;
 	rc = osvrRenderManagerStartPresentRenderBuffers(&presentState);
 	if (rc != OSVR_RETURN_SUCCESS)
@@ -276,28 +294,38 @@ void FOSVR::ProcessPose()
 
 }
 
-bool FOSVR::UpdateRenderInfos()
+bool FOSVR::UpdateRenderInfos(ID3D11Device* device, ID3D11DeviceContext* context)
 {
 	const CHAR* head = "FOSVR::UpdateRenderInfos";
 
-	if (Projector == nullptr && Projector9 == nullptr)
-	{
-		LVERROR(head, "both projector and projector9 are invalid");
-		return false;
-	}
+	//if (Projector == nullptr && Projector9 == nullptr)
+	//{
+	//	LVERROR(head, "both projector and projector9 are invalid");
+	//	return false;
+	//}
 
-	Direct3D11Helper* renderer = Projector != nullptr ? Projector->GetRenderer() : Projector9->GetRenderer();
-	if (renderer == nullptr)
-	{
-		LVERROR(head, "null renderer");
-		return false;
-	}
+	//Direct3D11Helper* renderer = Projector != nullptr ? Projector->GetRenderer() : Projector9->GetRenderer();
+	//if (renderer == nullptr)
+	//{
+	//	LVERROR(head, "null renderer");
+	//	return false;
+	//}
 
-	RenderParams;
+	//RenderParams;
 
 	OSVR_GraphicsLibraryD3D11 glib;
-	glib.device = renderer->GetDevice();
-	glib.context = renderer->GetContext();
+	glib.device = device;
+	glib.context = context;
+
+	if (device != nullptr)
+	{
+		device->AddRef();
+	}
+
+	if (context != nullptr)
+	{
+		context->AddRef();
+	}
 
 	OSVR_ReturnCode rc;
 
@@ -458,7 +486,7 @@ bool FOSVR::UpdateRenderBuffers()
 	return true;
 }
 
-bool lostvr::FOSVR::UpdateRenderViewports()
+bool FOSVR::UpdateRenderViewports()
 {
 	RenderViewports.clear();
 
@@ -577,7 +605,7 @@ LVMatrix FOSVRDescription::GetProjectionMatrix(EnumEyeID eye, OSVR_DisplayConfig
 LVMatrix FOSVRDescription::GetViewMatrix(EnumEyeID eye) const
 {
 	LVMatrix mat = DirectX::XMMatrixIdentity();
-	mat.r[0].m128_f32[0] = m_ipd * 0.5f * (eye == SEnumEyeL ? -1 : 1);
+	mat.r[0].m128_f32[3] = m_ipd * 0.5f * (eye == SEnumEyeL ? -1 : 1);
 	mat = DirectX::XMMatrixTranspose(mat);
 	mat = DirectX::XMMatrixInverse(nullptr, mat);
 	return mat;
@@ -597,7 +625,8 @@ LVMatrix FOSVRDescription::GetProjectionMatrix(float left, float right, float bo
 	// be checked for conversion issues.
 	projection.farClip = static_cast<double>(farClip);
 	float p[16];
-	OSVR_Projection_to_Unreal(p, projection);
+	OSVR_Projection_to_D3D(p, projection);
+	//OSVR_Projection_to_Unreal(p, projection);
 	LVMatrix ret;
 	memcpy(&ret.r[0], p, sizeof(p));
 	return ret;

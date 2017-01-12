@@ -127,6 +127,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <DelayLoadDLLs>d3dcompiler_47.dll;glew32.dll;osvrClient.dll;osvrClientKit.dll;osvrCommon.dll;osvrRenderManager.dll;osvrUtil.dll;SDL2.dll</DelayLoadDLLs>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

@@ -178,6 +178,12 @@ bool TextureProjector1::InitializeRenderer(IDXGISwapChain* swapChain)
 	IDXGIResource* res = nullptr;
 	if (SUCCEEDED(SharedTex_Target->QueryInterface(__uuidof(IDXGIResource), (void**)&res)))
 	{
+		if (Renderer->GetDevice() == nullptr)
+		{
+			LVERROR(head, "renderer got no valid device");
+			return false;
+		}
+
 		HANDLE hShared;
 		if (SUCCEEDED(res->GetSharedHandle(&hShared)) &&
 			SUCCEEDED(Renderer->GetDevice()->OpenSharedResource(hShared, __uuidof(ID3D11Texture2D), (void**)&SharedTex_Self)))
