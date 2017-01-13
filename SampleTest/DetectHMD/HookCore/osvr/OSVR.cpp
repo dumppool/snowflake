@@ -802,4 +802,4 @@ bool FOSVRDescription::InitFOV(OSVR_DisplayConfig displayConfig)
 	return true;
 }
 
-static FOSVR* SInst = new FOSVR("osvr");
+//static FOSVR* SInst = new FOSVR("osvr");
