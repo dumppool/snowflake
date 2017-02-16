@@ -1,0 +1,124 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="targetver.h" />
+    <ClInclude Include="Interface\MaterialInterface.h">
+      <Filter>Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="Interface\RenderContextInterface.h">
+      <Filter>Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="Interface\TextureInterface.h">
+      <Filter>Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="Interface\ShaderInterface.h">
+      <Filter>Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="Interface\ShaderParameterInterface.h">
+      <Filter>Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="Interface\PrimitiveGroupInterface.h">
+      <Filter>Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="Interface\Drawable.h">
+      <Filter>Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\LostCore.h">
+      <Filter>Inc</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\ExportTest.h">
+      <Filter>Inc</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\SimpleWorld.h">
+      <Filter>Inc</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\BasicScene.h">
+      <Filter>Inc</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\BasicWorld.h">
+      <Filter>Inc</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="Inc\Math\Matrix.h">
+      <Filter>Inc\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\Math\Quat.h">
+      <Filter>Inc\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\Math\Transform.h">
+      <Filter>Inc\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\Math\MathBase.h">
+      <Filter>Inc\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\Math\Vector2.h">
+      <Filter>Inc\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\Math\Vector3.h">
+      <Filter>Inc\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\Math\Vector4.h">
+      <Filter>Inc\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\BasicCamera.h">
+      <Filter>Inc</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\BasicStaticMesh.h">
+      <Filter>Inc</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\BasicInterface.h">
+      <Filter>Inc</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\D3D11RenderContext.h">
+      <Filter>D3D11</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="RenderCore\BasicWorld.cpp">
+      <Filter>RenderCore</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\LostCore.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\SimpleWorld.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderCore\BasicScene.cpp">
+      <Filter>RenderCore</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderCore\BasicCamera.cpp">
+      <Filter>RenderCore</Filter>
+    </ClCompile>
+    <ClCompile Include="Inc\BasicStaticMesh.cpp">
+      <Filter>RenderCore</Filter>
+    </ClCompile>
+    <ClCompile Include="Inc\D3D11RenderContext.cpp">
+      <Filter>D3D11</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Interface">
+      <UniqueIdentifier>{050b25b3-ab71-446c-b69f-8092291a77b6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="D3D11">
+      <UniqueIdentifier>{b04fe6f5-870f-4830-90ec-2398d6664480}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RenderCore">
+      <UniqueIdentifier>{66bd4fa5-68ac-496e-85e3-9dfa88dc4575}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Inc">
+      <UniqueIdentifier>{542b5db1-07af-4772-8357-2afb4e7d8bcf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Src">
+      <UniqueIdentifier>{0388b4ab-6aa8-47c6-8abf-4963292af8e1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Inc\Math">
+      <UniqueIdentifier>{909fecc6-bb3a-4071-9a13-b1e68c02aa73}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
