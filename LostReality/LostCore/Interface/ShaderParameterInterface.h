@@ -11,7 +11,7 @@
 
 namespace LostCore
 {
-	class IShaderParameter
+	class IShaderParameter : public IDrawable
 	{
 	public:
 		virtual ~IShaderParameter() {}

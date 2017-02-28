@@ -9,53 +9,48 @@
 
 #include "stdafx.h"
 #include "Material.h"
+#include "RenderContext.h"
 
 using namespace LostCore;
 
-void D3D11::FMaterial::Tick(float sec)
+bool D3D11::FMaterialShader::LoadShader(FRenderContext * rc, const char * path, uint32 idMask)
 {
+	const char* head = "D3D11::FMaterialShader::LoadShader";
+	ID3D11DeviceContext* cxt = FRenderContext::GetDeviceContext(rc, head);
+	if (cxt == nullptr)
+	{
+		return false;
+	}
+
+	EShadeModel sm = rc->GetShadeModel();
+	if ((idMask & SShaderID_Vertex) == 1)
+	{
+		if (sm == EShadeModel::SM5)
+		{
+		}
+	}
+
+	return false;
 }
 
-void D3D11::FMaterial::Draw(float sec, IRenderContext * rc)
+
+void D3D11::FMaterial::Draw(IRenderContext * rc, float sec)
 {
-	ID3D11DeviceContext* cxt = static_cast<ID3D11DeviceContext*>(rc->GetContextRHI());
-	if (cxt == nullptr)
+
+	if (!VertexShader.IsValid())
 	{
 		return;
 	}
 
-	if (VertexShader != nullptr)
-	{
-		VertexShader->Draw(sec, rc);
-	}
-
-	if (PixelShader != nullptr)
-	{
-		PixelShader->Draw(sec, rc);
-	}
+	cxt->VSSetShader
 }
 
-void * D3D11::FMaterial::GetRHI()
+bool D3D11::FMaterial::LoadShader(const char * path)
 {
-	return nullptr;
+	return false;
 }
 
-void D3D11::FMaterial::SetVertexShader(IShader * shader)
+void D3D11::FMaterial::UpdateMatrix_World(const FMatrix& mat)
 {
-	VertexShader = shader;
-}
 
-const IShader * D3D11::FMaterial::GetVertexShader() const
-{
-	return VertexShader;
-}
-
-void D3D11::FMaterial::SetPixelShader(IShader * shader)
-{
-	PixelShader = shader;
-}
-
-const IShader * D3D11::FMaterial::GetPixelShader() const
-{
-	return PixelShader;
 }

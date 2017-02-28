@@ -25,7 +25,8 @@ D3D11::FShaderParameter::~FShaderParameter()
 
 bool D3D11::FShaderParameter::Construct(LostCore::IRenderContext* rc, uint32 bytes, bool bDynamic)
 {
-	auto device = static_cast<ID3D11Device*>(rc != nullptr ? rc->GetDeviceRHI() : nullptr);
+	const char* head = "D3D11::FShaderParameter::Construct";
+	ID3D11Device* device = FRenderContext::GetDevice(rc, head);
 	if (device == nullptr)
 	{
 		return false;
@@ -49,6 +50,12 @@ void D3D11::FShaderParameter::UpdateBuffer(LostCore::IRenderContext * rc, const 
 {
 	assert(ByteWidth == bytes);
 
-	FRenderContext* crc = static_cast<FRenderContext*>(rc);
-	auto cxt = static_cast<ID3D11DeviceContext*>(crc != nullptr ? crc->GetContextID
+	const char* head = "D3D11::FShaderParameter::UpdateBuffer";
+	ID3D11DeviceContext* cxt = FRenderContext::GetDeviceContext(rc, head);
+	if (cxt == nullptr)
+	{
+		return;
+	}
+
+	cxt->UpdateSubresource(Buffer.GetReference(), 0, nullptr, buf, 0, 0);
 }

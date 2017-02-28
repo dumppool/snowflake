@@ -17,6 +17,7 @@ D3D11::FRenderContext::FRenderContext(LostCore::EContextID id)
 	, Device(nullptr)
 	, Context(nullptr)
 	, SwapChain(nullptr)
+	, ShadeModel(EShadeModel::Undefined)
 {
 }
 
@@ -25,6 +26,7 @@ D3D11::FRenderContext::~FRenderContext()
 	SwapChain = nullptr;
 	Context = nullptr;
 	Device = nullptr;
+	ShadeModel = EShadeModel::Undefined;
 }
 
 bool D3D11::FRenderContext::Init(HWND wnd, bool bWindowed, int32 width, int32 height)
@@ -39,6 +41,17 @@ void D3D11::FRenderContext::Fini()
 	SwapChain = nullptr;
 	Context = nullptr;
 	Device = nullptr;
+}
+
+bool D3D11::FRenderContext::EnableShadeModel(EShadeModel sm)
+{
+	ShadeModel = sm;
+	return false;
+}
+
+EShadeModel D3D11::FRenderContext::GetShadeModel() const
+{
+	return ShadeModel;
 }
 
 FMatrix D3D11::FRenderContext::GetViewProjectMatrix() const

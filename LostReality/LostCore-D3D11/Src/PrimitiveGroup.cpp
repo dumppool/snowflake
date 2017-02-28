@@ -9,6 +9,7 @@
 
 #include "stdafx.h"
 #include "PrimitiveGroup.h"
+#include "RenderContext.h"
 
 using namespace LostCore;
 
@@ -34,7 +35,8 @@ D3D11::FPrimitiveGroup::~FPrimitiveGroup()
 
 void D3D11::FPrimitiveGroup::Draw(float sec, IRenderContext * rc)
 {
-	ID3D11DeviceContext* cxt = static_cast<ID3D11DeviceContext*>(rc->GetContextRHI());
+	const char* head = "D3D11::FPrimitiveGroup::Draw";
+	ID3D11DeviceContext* cxt = FRenderContext::GetDeviceContext(rc, head);
 	if (cxt == nullptr)
 	{
 		return;
@@ -52,11 +54,6 @@ void D3D11::FPrimitiveGroup::Draw(float sec, IRenderContext * rc)
 	cxt->DrawIndexed(IndexCount, 0, 0);
 }
 
-void * D3D11::FPrimitiveGroup::GetRHI()
-{
-	return nullptr;
-}
-
 bool D3D11::FPrimitiveGroup::SetPrimitive(const char * path)
 {
 	return false;
@@ -64,12 +61,8 @@ bool D3D11::FPrimitiveGroup::SetPrimitive(const char * path)
 
 bool D3D11::FPrimitiveGroup::ConstructVB(IRenderContext* rc, const void * buf, uint32 bytes, uint32 stride, bool bDynamic)
 {
-	if (rc == nullptr)
-	{
-		return false;
-	}
-
-	ID3D11Device* device = static_cast<ID3D11Device*>(rc->GetDeviceRHI());
+	const char* head = "D3D11::FPrimitiveGroup::ConstructVB";
+	ID3D11Device* device = FRenderContext::GetDevice(rc, head);
 	if (device == nullptr)
 	{
 		return false;
@@ -85,12 +78,8 @@ bool D3D11::FPrimitiveGroup::ConstructVB(IRenderContext* rc, const void * buf, u
 
 bool D3D11::FPrimitiveGroup::ConstructIB(IRenderContext* rc, const void * buf, uint32 bytes, uint32 stride, bool bDynamic)
 {
-	if (rc == nullptr)
-	{
-		return false;
-	}
-
-	ID3D11Device* device = static_cast<ID3D11Device*>(rc->GetDeviceRHI());
+	const char* head = "D3D11::FPrimitiveGroup::ConstructIB";
+	ID3D11Device* device = FRenderContext::GetDevice(rc, head);
 	if (device == nullptr)
 	{
 		return false;
@@ -116,7 +105,6 @@ bool D3D11::FPrimitiveGroup::ConstructIB(IRenderContext* rc, const void * buf, u
 void D3D11::FPrimitiveGroup::SetMaterial(IMaterial * mat)
 {
 	Material = mat;
-	assert(0);
 }
 
 const IMaterial * D3D11::FPrimitiveGroup::GetMaterial() const

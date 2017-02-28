@@ -14,19 +14,11 @@
 
 namespace LostCore
 {
-	enum class EMaterialID : uint8
-	{
-		Undefined,
-
-	};
 
 	class IMaterial : public IDrawable
 	{
 	public:
-		virtual void SetVertexShader(IShader* shader) = 0;
-		virtual const IShader* GetVertexShader() const = 0;
-
-		virtual void SetPixelShader(IShader* shader) = 0;
-		virtual const IShader* GetPixelShader() const = 0;
+		virtual bool LoadShader(const char* path) = 0;
+		virtual void UpdateMatrix_World(const FMatrix& mat) = 0;
 	};
 }

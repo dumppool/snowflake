@@ -19,6 +19,9 @@
 #pragma comment(lib, "d3dcompiler.lib")
 
 // utility includes
+#define MODULE_MSG_PREFIX "lostcore-d3d11-log"
+#define MODULE_WARN_PREFIX "lostcore-d3d11-warn"
+#define MODULE_ERR_PREFIX "lostcore-d3d11-error"
 #include "UtilitiesHeader.h"
 
 // math includes

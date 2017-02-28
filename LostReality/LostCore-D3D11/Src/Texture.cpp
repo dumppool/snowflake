@@ -9,6 +9,7 @@
 
 #include "stdafx.h"
 #include "Texture.h"
+#include "RenderContext.h"
 
 using namespace LostCore;
 
@@ -40,7 +41,9 @@ bool D3D11::FTexture2D::Construct(
 	bool bIsShaderResource,
 	bool bIsWritable)
 {
-	ID3D11Device* device = static_cast<ID3D11Device*>(rc != nullptr ? rc->GetDeviceRHI() : nullptr);
+
+	const char* head = "D3D11::FTexture2D::Construct";
+	ID3D11Device* device = FRenderContext::GetDevice(rc, head);
 	if (device == nullptr)
 	{
 		return false;

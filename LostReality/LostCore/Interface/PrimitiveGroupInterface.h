@@ -17,7 +17,7 @@ namespace LostCore
 	class IPrimitiveGroup  : public IDrawable
 	{
 	public:
-		virtual bool SetPrimitive(const char* path) = 0;
+		virtual bool LoadPrimitive(const char* path) = 0;
 		virtual bool ConstructVB(IRenderContext* rc, const void* buf, uint32 bytes, uint32 stride, bool bDynamic) = 0;
 		virtual bool ConstructIB(IRenderContext* rc, const void* buf, uint32 bytes, uint32 stride, bool bDynamic) = 0;
 

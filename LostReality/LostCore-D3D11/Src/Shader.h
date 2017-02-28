@@ -14,22 +14,27 @@
 
 namespace D3D11
 {
-	class FShader : public LostCore::IShader
+	class FShader
 	{
 	public:
-
-		// Í¨¹ý IShader ¼Ì³Ð
-		virtual void Tick(float sec) override;
-		virtual void Draw(float sec, LostCore::IRenderContext * rc) override;
-		virtual void * GetRHI() override;
-		virtual void SetShaderParameter(uint32 slot, LostCore::IShaderParameter * sp) override;
-		virtual void SetShaderResource(uint32 slot, LostCore::ITexture * tex) override;
-
-	protected:
-		virtual void BindShaderResources(LostCore::IRenderContext * rc, void* srvs, int32 count);
+		virtual void SetShaderParameter(uint32 slot, LostCore::IShaderParameter * sp);
+		virtual void SetShaderResource(uint32 slot, LostCore::ITexture * tex);
 
 	protected:
 		std::map<uint32, FShaderParameter*> Parameters;
 		std::map<uint32, FTexture2D*> ShaderResources;
+	};
+
+	class FVertexShader : public FShader
+	{
+	public:
+
+	private:
+		ID3D11InputLayout* IL;
+	};
+
+	class FPixelShader : public FShader
+	{
+
 	};
 }

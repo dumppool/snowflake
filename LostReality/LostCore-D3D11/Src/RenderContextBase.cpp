@@ -39,7 +39,7 @@ EReturnCode D3D11::CreateDevice(LostCore::EContextID id, ID3D11Device ** ppDevic
 	}
 	else
 	{
-		LVERROR(head, "intent to create unsupported device: %s", typeDesc);
+		LVERR(head, "intent to create unsupported device: %s", typeDesc);
 		return SErrorInternalError;
 	}
 
@@ -48,13 +48,13 @@ EReturnCode D3D11::CreateDevice(LostCore::EContextID id, ID3D11Device ** ppDevic
 	{
 		if (FAILED(factory->EnumAdapters(i, &adapter)))
 		{
-			LVERROR(head, "enum adapter ended at: %d, type: %s", i, typeDesc);
+			LVERR(head, "enum adapter ended at: %d, type: %s", i, typeDesc);
 			break;
 		}
 
 		if (FAILED(adapter->GetDesc(&adapterDesc)))
 		{
-			LVERROR(head, "failed get description for adapter at %d, type: %s", i, typeDesc);
+			LVERR(head, "failed get description for adapter at %d, type: %s", i, typeDesc);
 		}
 
 		D3D_FEATURE_LEVEL features[] = { D3D_FEATURE_LEVEL_11_0 };
@@ -73,7 +73,7 @@ EReturnCode D3D11::CreateDevice(LostCore::EContextID id, ID3D11Device ** ppDevic
 		}
 		else
 		{
-			LVERROR(head, "create device failed, enum: %d, adapter: %ls, type: %s", i, &adapterDesc.Description[0], typeDesc);
+			LVERR(head, "create device failed, enum: %d, adapter: %ls, type: %s", i, &adapterDesc.Description[0], typeDesc);
 			return SErrorInternalError;
 		}
 	}
@@ -118,28 +118,28 @@ EReturnCode D3D11::CreateSwapChain(ID3D11Device* d3dDevice, HWND wnd, bool bWind
 	hr = d3dDevice->QueryInterface(__uuidof(IDXGIDevice), (void**)device.GetInitReference());
 	if (FAILED(hr))
 	{
-		LVERROR(head, "get dxgi device failed, hr: 0x%x(%d)", hr, hr);
+		LVERR(head, "get dxgi device failed, hr: 0x%x(%d)", hr, hr);
 		return SErrorInternalError;
 	}
 
 	hr = device->GetParent(__uuidof(IDXGIAdapter), (void**)adapter.GetInitReference());
 	if (FAILED(hr))
 	{
-		LVERROR(head, "get dxgi adapter failed, hr: 0x%x(%d)", hr, hr);
+		LVERR(head, "get dxgi adapter failed, hr: 0x%x(%d)", hr, hr);
 		return SErrorInternalError;
 	}
 
 	hr = adapter->GetParent(__uuidof(IDXGIFactory), (void**)factory.GetInitReference());
 	if (FAILED(hr))
 	{
-		LVERROR(head, "get dxgi factory failed, hr: 0x%x(%d)", hr, hr);
+		LVERR(head, "get dxgi factory failed, hr: 0x%x(%d)", hr, hr);
 		return SErrorInternalError;
 	}
 
 	hr = factory->CreateSwapChain(device, &desc, ppSwapChain);
 	if (FAILED(hr))
 	{
-		LVERROR(head, "create swapchain failed, hr: 0x%x(%d)", hr, hr);
+		LVERR(head, "create swapchain failed, hr: 0x%x(%d)", hr, hr);
 		return SErrorInternalError;
 	}
 
@@ -152,7 +152,7 @@ EReturnCode D3D11::CompileShader(LPCWSTR file, LPCSTR entry, LPCSTR target, ID3D
 
 	if (!file || !entry || !target || !blob)
 	{
-		LVERROR(head, "invalid paramter: file(%ls), entry(%s), target(%s), blob(%x)", file, entry, target, blob);
+		LVERR(head, "invalid paramter: file(%ls), entry(%s), target(%s), blob(%x)", file, entry, target, blob);
 		return SErrorInvalidParameters;
 	}
 
@@ -164,7 +164,7 @@ EReturnCode D3D11::CompileShader(LPCWSTR file, LPCSTR entry, LPCSTR target, ID3D
 	HRESULT Res = D3DCompileFromFile(file, NULL, NULL, entry, target, Flag1, Flag2, shaderBlob.GetInitReference(), errorBlob.GetInitReference());
 	if (FAILED(Res))
 	{
-		LVERROR(head, "compile %ls(%s, %s) failed: %s", file, entry, target, errorBlob.IsValid() ? errorBlob->GetBufferPointer() : "");
+		LVERR(head, "compile %ls(%s, %s) failed: %s", file, entry, target, errorBlob.IsValid() ? errorBlob->GetBufferPointer() : "");
 		return SErrorInternalError;
 	}
 	else
@@ -227,19 +227,19 @@ EReturnCode D3D11::CreateTexture2D(D3D11_TEXTURE2D_DESC * pDesc, ID3D11Device * 
 
 	if (device == nullptr)
 	{
-		LVERROR(head, "null device");
+		LVERR(head, "null device");
 		return SErrorInvalidParameters;
 	}
 
 	if (ppTex == nullptr && ppSRV == nullptr && ppRTV == nullptr)
 	{
-		LVERROR(head, "no need to output");
+		LVERR(head, "no need to output");
 		return SErrorInvalidParameters;
 	}
 
 	if (pDesc == nullptr)
 	{
-		LVERROR(head, "null description");
+		LVERR(head, "null description");
 		return SErrorInvalidParameters;
 	}
 
@@ -249,7 +249,7 @@ EReturnCode D3D11::CreateTexture2D(D3D11_TEXTURE2D_DESC * pDesc, ID3D11Device * 
 	hr = device->CreateTexture2D(pDesc, nullptr, tex.GetInitReference());
 	if (FAILED(hr))
 	{
-		LVERROR(head, "create texture 2d failed: 0x%x(%d)", hr, hr);
+		LVERR(head, "create texture 2d failed: 0x%x(%d)", hr, hr);
 		return SErrorInternalError;
 	}
 
@@ -270,7 +270,7 @@ EReturnCode D3D11::CreateTexture2D(D3D11_TEXTURE2D_DESC * pDesc, ID3D11Device * 
 		hr = device->CreateShaderResourceView(tex, &srvDesc, &srv);
 		if (FAILED(hr))
 		{
-			LVERROR(head, "create shader resource view failed: 0x%x(%d)", hr, hr);
+			LVERR(head, "create shader resource view failed: 0x%x(%d)", hr, hr);
 			return SErrorInternalError;
 		}
 	}
@@ -284,13 +284,13 @@ EReturnCode D3D11::CreateShaderResourceView(ID3D11Texture2D * tex, ID3D11ShaderR
 
 	if (tex == nullptr)
 	{
-		LVERROR(head, "null source texture 2d");
+		LVERR(head, "null source texture 2d");
 		return SErrorInvalidParameters;
 	}
 
 	if (ppSRV == nullptr)
 	{
-		LVERROR(head, "null shader resource view output");
+		LVERR(head, "null shader resource view output");
 		return SErrorInvalidParameters;
 	}
 
@@ -298,7 +298,7 @@ EReturnCode D3D11::CreateShaderResourceView(ID3D11Texture2D * tex, ID3D11ShaderR
 	tex->GetDevice(dev.GetInitReference());
 	if (dev == nullptr)
 	{
-		LVERROR(head, "null device");
+		LVERR(head, "null device");
 		return SErrorInternalError;
 	}
 
@@ -313,7 +313,7 @@ EReturnCode D3D11::CreateShaderResourceView(ID3D11Texture2D * tex, ID3D11ShaderR
 	HRESULT hr = (dev->CreateShaderResourceView(tex, &sd, ppSRV));
 	if (FAILED(hr))
 	{
-		LVERROR(head, "create shader resource view failed: 0x%x(%d)", hr, hr);
+		LVERR(head, "create shader resource view failed: 0x%x(%d)", hr, hr);
 		return SErrorInternalError;
 	}
 
@@ -326,13 +326,13 @@ EReturnCode D3D11::CreateRenderTargetView(ID3D11Texture2D * tex, ID3D11RenderTar
 
 	if (ppRTV == nullptr)
 	{
-		LVERROR(head, "null rtv");
+		LVERR(head, "null rtv");
 		return SErrorInvalidParameters;
 	}
 
 	if (tex == nullptr)
 	{
-		LVERROR(head, "null tex input when there is no available internal buffer");
+		LVERR(head, "null tex input when there is no available internal buffer");
 		return SErrorInvalidParameters;
 	}
 
@@ -340,7 +340,7 @@ EReturnCode D3D11::CreateRenderTargetView(ID3D11Texture2D * tex, ID3D11RenderTar
 	tex->GetDevice(dev.GetInitReference());
 	if (dev == nullptr)
 	{
-		LVERROR(head, "null device");
+		LVERR(head, "null device");
 		return SErrorInternalError;
 	}
 
@@ -363,14 +363,14 @@ EReturnCode D3D11::CreateRenderTargetView(ID3D11Texture2D * tex, ID3D11RenderTar
 		}
 		else
 		{
-			LVERROR(head, "unsupported texture format: %d", td.Format);
+			LVERR(head, "unsupported texture format: %d", td.Format);
 			return SErrorInternalError;
 		}
 
 		hr = dev->CreateRenderTargetView(tex, &rtvd, ppRTV);
 		if (FAILED(hr))
 		{
-			LVERROR(head, "create render target view failed: 0x%x(%d)", hr, hr);
+			LVERR(head, "create render target view failed: 0x%x(%d)", hr, hr);
 			return SErrorInternalError;
 		}
 	}
@@ -384,19 +384,19 @@ EReturnCode D3D11::CreatePrimitiveVertex(ID3D11Device* device, const void* buf, 
 	
 	if (device == nullptr)
 	{
-		LVERROR(head, "null device");
+		LVERR(head, "null device");
 		return SErrorInvalidParameters;
 	}
 
 	if (buf == nullptr || bytes == 0)
 	{
-		LVERROR(head, "invalid input buf");
+		LVERR(head, "invalid input buf");
 		return SErrorInvalidParameters;
 	}
 
 	if (vb == nullptr)
 	{
-		LVERROR(head, "null output ptr");
+		LVERR(head, "null output ptr");
 		return SErrorInvalidParameters;
 	}
 
@@ -406,7 +406,7 @@ EReturnCode D3D11::CreatePrimitiveVertex(ID3D11Device* device, const void* buf, 
 	HRESULT hr = device->CreateBuffer(&desc, &data, vb);
 	if (FAILED(hr))
 	{
-		LVERROR(head, "failed to create vertex buffer: 0x%x(%d)", hr, hr);
+		LVERR(head, "failed to create vertex buffer: 0x%x(%d)", hr, hr);
 		return SErrorInternalError;
 	}
 
@@ -419,19 +419,19 @@ EReturnCode D3D11::CreatePrimitiveIndex(ID3D11Device* device, const void* buf, u
 
 	if (device == nullptr)
 	{
-		LVERROR(head, "null device");
+		LVERR(head, "null device");
 		return SErrorInvalidParameters;
 	}
 
 	if (buf == nullptr || bytes == 0)
 	{
-		LVERROR(head, "invalid input buf");
+		LVERR(head, "invalid input buf");
 		return SErrorInvalidParameters;
 	}
 
 	if (ib == nullptr)
 	{
-		LVERROR(head, "null output ptr");
+		LVERR(head, "null output ptr");
 		return SErrorInvalidParameters;
 	}
 
@@ -441,7 +441,7 @@ EReturnCode D3D11::CreatePrimitiveIndex(ID3D11Device* device, const void* buf, u
 	HRESULT hr = device->CreateBuffer(&desc, &data, ib);
 	if (FAILED(hr))
 	{
-		LVERROR(head, "failed to create vertex buffer: 0x%x(%d)", hr, hr);
+		LVERR(head, "failed to create vertex buffer: 0x%x(%d)", hr, hr);
 		return SErrorInternalError;
 	}
 
@@ -454,7 +454,7 @@ EReturnCode D3D11::CreateMesh_Rect(ID3D11Device* device, float width, float heig
 
 	if (device == nullptr)
 	{
-		LVERROR(head, "null device");
+		LVERR(head, "null device");
 		return SErrorInvalidParameters;
 	}
 
@@ -482,7 +482,7 @@ EReturnCode D3D11::CreateMesh_Rect(ID3D11Device* device, float width, float heig
 	hr = device->CreateBuffer(&vdesc, &data, vertexBuffer.GetInitReference());
 	if (FAILED(hr))
 	{
-		LVERROR(head, "failed to create vertex buffer: 0x%x(%d)", hr, hr);
+		LVERR(head, "failed to create vertex buffer: 0x%x(%d)", hr, hr);
 		return SErrorInternalError;
 	}
 
@@ -492,7 +492,7 @@ EReturnCode D3D11::CreateMesh_Rect(ID3D11Device* device, float width, float heig
 	hr = device->CreateBuffer(&idesc, &Data, indexBuffer.GetInitReference());
 	if (FAILED(hr))
 	{
-		LVERROR(head, "failed to create index buffer: 0x%x(%d)", hr, hr);
+		LVERR(head, "failed to create index buffer: 0x%x(%d)", hr, hr);
 		return SErrorInternalError;
 	}
 
@@ -517,20 +517,20 @@ EReturnCode D3D11::CreateBuffer(ID3D11Device* device, D3D11_BUFFER_DESC * pDesc,
 
 	if (device == nullptr)
 	{
-		LVERROR(head, "null device");
+		LVERR(head, "null device");
 		return SErrorInvalidParameters;
 	}
 
 	if (ppBuf == nullptr)
 	{
-		LVERROR(head, "null [out]buffer");
+		LVERR(head, "null [out]buffer");
 		return SErrorInvalidParameters;
 	}
 
 	HRESULT hr = device->CreateBuffer(pDesc, nullptr, ppBuf);
 	if (FAILED(hr))
 	{
-		LVERROR(head, "create buffer failed: 0x%x(%d)", hr, hr);
+		LVERR(head, "create buffer failed: 0x%x(%d)", hr, hr);
 		return SErrorInternalError;
 	}
 
@@ -543,13 +543,13 @@ EReturnCode D3D11::CreateBlendState_AlphaBlend(ID3D11Device* device, ID3D11Blend
 
 	if (device == nullptr)
 	{
-		LVERROR(head, "null device");
+		LVERR(head, "null device");
 		return SErrorInvalidParameters;
 	}
 
 	if (ppBS == nullptr)
 	{
-		LVERROR(head, "null [out]BS");
+		LVERR(head, "null [out]BS");
 		return SErrorInvalidParameters;
 	}
 
@@ -569,7 +569,7 @@ EReturnCode D3D11::CreateBlendState_AlphaBlend(ID3D11Device* device, ID3D11Blend
 	bd.RenderTarget[0].DestBlend = D3D11_BLEND_INV_DEST_ALPHA;
 	if (FAILED(hr = device->CreateBlendState(&bd, ppBS)))
 	{
-		LVERROR(head, "create blend state(add) failed: 0x%x(%d)", hr, hr);
+		LVERR(head, "create blend state(add) failed: 0x%x(%d)", hr, hr);
 		return SErrorInternalError;
 	}
 
@@ -582,13 +582,13 @@ EReturnCode D3D11::CreateBlendState_Add(ID3D11Device* device, ID3D11BlendState**
 
 	if (device == nullptr)
 	{
-		LVERROR(head, "null device");
+		LVERR(head, "null device");
 		return SErrorInvalidParameters;
 	}
 
 	if (ppBS == nullptr)
 	{
-		LVERROR(head, "null [out]BS");
+		LVERR(head, "null [out]BS");
 		return SErrorInvalidParameters;
 	}
 
@@ -608,7 +608,7 @@ EReturnCode D3D11::CreateBlendState_Add(ID3D11Device* device, ID3D11BlendState**
 	bd.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
 	if (FAILED(hr = device->CreateBlendState(&bd, ppBS)))
 	{
-		LVERROR(head, "create blend state(add) failed: 0x%x(%d)", hr, hr);
+		LVERR(head, "create blend state(add) failed: 0x%x(%d)", hr, hr);
 		return SErrorInternalError;
 	}
 
@@ -621,13 +621,13 @@ EReturnCode D3D11::CreateRasterizer(ID3D11Device * device, ID3D11RasterizerState
 
 	if (device == nullptr)
 	{
-		LVERROR(head, "null device");
+		LVERR(head, "null device");
 		return SErrorInvalidParameters;
 	}
 
 	if (ppRS == nullptr)
 	{
-		LVERROR(head, "null [out]RS");
+		LVERR(head, "null [out]RS");
 		return SErrorInvalidParameters;
 	}
 
@@ -646,7 +646,7 @@ EReturnCode D3D11::CreateRasterizer(ID3D11Device * device, ID3D11RasterizerState
 	HRESULT hr = device->CreateRasterizerState(&desc, ppRS);
 	if (FAILED(hr))
 	{
-		LVERROR(head, "create rasterizer failed: 0x%x(%d)", hr, hr);
+		LVERR(head, "create rasterizer failed: 0x%x(%d)", hr, hr);
 		return SErrorInternalError;
 	}
 

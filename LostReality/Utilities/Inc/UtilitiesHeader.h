@@ -128,14 +128,32 @@ inline static void log_cap_cnt(const CHAR* Prefix, const CHAR* cap, const CHAR* 
 	logfile.flush();
 }
 
-static const CHAR* SLogPrefixDefault = "Default";
-static const CHAR* SLogPrefixError = "ErrorReport";
 
 #define LVMSG_PREFIX(Prefix, Cap, ...) {\
 log_cap_cnt(Prefix, Cap, __VA_ARGS__);}
 
-#define LVMSG(Head, ...)	LVMSG_PREFIX(SLogPrefixDefault, Head, __VA_ARGS__)
-#define LVERROR(Head, ...)	LVMSG_PREFIX(SLogPrefixError, Head, __VA_ARGS__)
+//static const CHAR* SLogPrefixDefault = "Default";
+//static const CHAR* SLogPrefixError = "ErrorReport";
+//#define LVMSG(Head, ...)	LVMSG_PREFIX(SLogPrefixDefault, Head, __VA_ARGS__)
+//#define LVERROR(Head, ...)	LVMSG_PREFIX(SLogPrefixError, Head, __VA_ARGS__)
+
+#ifdef MODULE_MSG_PREFIX
+#define LVMSG(head, ...) LVMSG_PREFIX(MODULE_MSG_PREFIX, head, __VA_ARGS__)
+#else
+#error "MODULE_MSG_PREFIX not defined"
+#endif
+
+#ifdef MODULE_ERR_PREFIX
+#define LVERR(head, ...) LVMSG_PREFIX(MODULE_ERR_PREFIX, head, __VA_ARGS__)
+#else
+#error "MODULE_ERR_PREFIX not defined"
+#endif
+
+#ifdef MODULE_WARN_PREFIX
+#define LVWARN(head, ...) LVMSG_PREFIX(MODULE_WARN_PREFIX, head, __VA_ARGS__)
+#else
+#error "MODULE_WARN_PREFIX not defined"
+#endif
 
 #define LVASSERT_PREFIX(Prefix, Condition, Cap, ...) {\
 	if (!(Condition))\
@@ -148,44 +166,44 @@ log_cap_cnt(Prefix, Cap, __VA_ARGS__);}
 
 #define LVASSERT(Condition, Cap, ...) LVASSERT_PREFIX(SLogPrefixError, Condition, Cap, __VA_ARGS__)
 
-inline bool GetWndFromProcessID(DWORD pid, HWND hwnd[], UINT& nwnd)
-{
-	HWND temp = NULL;
-	nwnd = 0;
-	while ((temp = FindWindowEx(NULL, temp, NULL, NULL)) && sizeof(hwnd) > nwnd)
-	{
-		DWORD p;
-		GetWindowThreadProcessId(temp, &p);
-		if (pid == p)
-		{
-			hwnd[nwnd++] = temp;
-			//break;
-		}
-	}
-
-	HWND root = hwnd[nwnd - 1];
-	temp = root;
-	//nwnd = 1;
-
-	while ((temp = GetParent(temp)) != NULL)
-	{
-		DWORD p;
-		GetWindowThreadProcessId(temp, &p);
-		if (pid == p)
-		{
-			root = temp;
-		}
-		else
-		{
-			break;
-		}
-	}
-
-	LVMSG("GetWndFromProcessID", "last wnd: %x, root: %x", hwnd[nwnd - 1], root);
-	hwnd[0] = root;
-	nwnd = 1;
-	return true;
-}
+//inline bool GetWndFromProcessID(DWORD pid, HWND hwnd[], UINT& nwnd)
+//{
+//	HWND temp = NULL;
+//	nwnd = 0;
+//	while ((temp = FindWindowEx(NULL, temp, NULL, NULL)) && sizeof(hwnd) > nwnd)
+//	{
+//		DWORD p;
+//		GetWindowThreadProcessId(temp, &p);
+//		if (pid == p)
+//		{
+//			hwnd[nwnd++] = temp;
+//			//break;
+//		}
+//	}
+//
+//	HWND root = hwnd[nwnd - 1];
+//	temp = root;
+//	//nwnd = 1;
+//
+//	while ((temp = GetParent(temp)) != NULL)
+//	{
+//		DWORD p;
+//		GetWindowThreadProcessId(temp, &p);
+//		if (pid == p)
+//		{
+//			root = temp;
+//		}
+//		else
+//		{
+//			break;
+//		}
+//	}
+//
+//	LVMSG("GetWndFromProcessID", "last wnd: %x, root: %x", hwnd[nwnd - 1], root);
+//	hwnd[0] = root;
+//	nwnd = 1;
+//	return true;
+//}
 
 inline wstring UTF8ToWide(const string &utf8)
 {

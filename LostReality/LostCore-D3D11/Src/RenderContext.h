@@ -20,6 +20,8 @@ namespace D3D11
 		virtual ~FRenderContext() override;
 		virtual bool Init(HWND wnd, bool bWindowed, int32 width, int32 height) override;
 		virtual void Fini() override;
+		virtual bool EnableShadeModel(EShadeModel sm)override;
+		virtual EShadeModel GetShadeModel() const override;
 		virtual LostCore::FMatrix GetViewProjectMatrix() const override;
 		virtual void SetViewProjectMatrix(const LostCore::FMatrix & vp) override;
 		virtual LostCore::EContextID GetContextID() const override;
@@ -34,7 +36,7 @@ namespace D3D11
 			return Device.GetReference();
 		}
 
-		INLINE ID3D11DeviceContext* GetContext()
+		INLINE ID3D11DeviceContext* GetDeviceContext()
 		{
 			return Context.GetReference();
 		}
@@ -54,16 +56,48 @@ namespace D3D11
 			_mm_free(p);
 		}
 
-		INLINE static ID3D11Device* GetDevice(LostCore::IRenderContext* rc)
+		INLINE static ID3D11Device* GetDevice(LostCore::IRenderContext* rc, const char* head)
 		{
 			FRenderContext* crc = static_cast<FRenderContext*>(rc);
-			return crc != nullptr ? crc->GetDevice() : nullptr;
+			if (crc == nullptr)
+			{
+				if (head != nullptr)
+				{
+					LVERR(head, "null render context");
+				}
+
+				return nullptr;
+			}
+
+			ID3D11Device* dev = crc->GetDevice();
+			if (dev == nullptr && head != nullptr)
+			{
+				LVERR(head, "null d3d11 device, render context may not be initialized or failed");
+			}
+
+			return dev;
 		}
 
-		INLINE static ID3D11DeviceContext* GetContext(LostCore::IRenderContext* rc)
+		INLINE static ID3D11DeviceContext* GetDeviceContext(LostCore::IRenderContext* rc, const char* head)
 		{
 			FRenderContext* crc = static_cast<FRenderContext*>(rc);
-			return crc != nullptr ? crc->GetContext() : nullptr;
+			if (crc == nullptr)
+			{
+				if (head != nullptr)
+				{
+					LVERR(head, "null render context");
+				}
+				
+				return nullptr;
+			}
+
+			ID3D11DeviceContext* cxt = crc->GetDeviceContext();
+			if (cxt == nullptr && head != nullptr)
+			{
+				LVERR(head, "null d3d11 device context, render context may not be initialized or failed");
+			}
+
+			return cxt;
 		}
 
 	private:
@@ -72,5 +106,6 @@ namespace D3D11
 		TRefCountPtr<ID3D11DeviceContext>	Context;
 		TRefCountPtr<IDXGISwapChain>		SwapChain;
 		LostCore::FMatrix					ViewProject;
+		LostCore::EShadeModel				ShadeModel;
 	};
 }

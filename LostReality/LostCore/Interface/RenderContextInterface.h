@@ -20,6 +20,12 @@ namespace LostCore
 		D3D11_DXGI1,
 	};
 
+	enum class EShadeModel : uint8
+	{
+		Undefined,
+		SM5,
+	};
+
 	INLINE const char* GetContextDesc(EContextID id)
 	{
 		switch (id)
@@ -40,6 +46,9 @@ namespace LostCore
 
 		virtual bool Init(HWND wnd, bool bWindowed, int32 width, int32 height) = 0;
 		virtual void Fini() = 0;
+
+		virtual bool EnableShadeModel(EShadeModel sm) = 0;
+		virtual EShadeModel GetShadeModel() const = 0;
 
 		virtual FMatrix GetViewProjectMatrix() const = 0;
 		virtual void SetViewProjectMatrix(const FMatrix& vp) = 0;
