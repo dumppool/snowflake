@@ -150,13 +150,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Inc\LostCore-D3D11.h" />
+    <ClInclude Include="Src\BlendStateDef.h" />
     <ClInclude Include="Src\BufferDef.h" />
     <ClInclude Include="Src\Material.h" />
     <ClInclude Include="Src\PrimitiveGroup.h" />
+    <ClInclude Include="Src\RasterizerStateDef.h" />
     <ClInclude Include="Src\RenderContext.h" />
     <ClInclude Include="Src\RenderContextBase.h" />
-    <ClInclude Include="Src\Shader.h" />
-    <ClInclude Include="Src\ShaderParameter.h" />
     <ClInclude Include="Src\Texture.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -176,13 +176,14 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Src\BlendStateDef.cpp" />
+    <ClCompile Include="Src\BufferDef.cpp" />
     <ClCompile Include="Src\LostCore-D3D11.cpp" />
     <ClCompile Include="Src\Material.cpp" />
     <ClCompile Include="Src\PrimitiveGroup.cpp" />
+    <ClCompile Include="Src\RasterizerStateDef.cpp" />
     <ClCompile Include="Src\RenderContext.cpp" />
     <ClCompile Include="Src\RenderContextBase.cpp" />
-    <ClCompile Include="Src\Shader.cpp" />
-    <ClCompile Include="Src\ShaderParameter.cpp" />
     <ClCompile Include="Src\Texture.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

@@ -66,7 +66,6 @@ TESTCASE::FRenderSample::~FRenderSample()
 bool TESTCASE::FRenderSample::Init(HWND hwnd, bool bWindowed, int32 width, int32 height)
 {
 	assert(LastTick == 0x0badbeef);
-
 	return World->InitWindow("", hwnd, bWindowed, width, height);
 }
 
@@ -78,5 +77,5 @@ void TESTCASE::FRenderSample::Fini()
 void TESTCASE::FRenderSample::Tick()
 {
 	World->Tick(1);
-	World->Draw(1, nullptr);
+	World->Draw(nullptr, 1);
 }

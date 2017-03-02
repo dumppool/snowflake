@@ -10,7 +10,6 @@
 #pragma once
 
 #include "Drawable.h"
-#include "ShaderInterface.h"
 
 namespace LostCore
 {
@@ -18,7 +17,7 @@ namespace LostCore
 	class IMaterial : public IDrawable
 	{
 	public:
-		virtual bool LoadShader(const char* path) = 0;
-		virtual void UpdateMatrix_World(const FMatrix& mat) = 0;
+		virtual bool Initialize(LostCore::IRenderContext * rc, const char* path) = 0;
+		virtual void UpdateMatrix_World(LostCore::IRenderContext * rc, const FMatrix& mat) = 0;
 	};
 }

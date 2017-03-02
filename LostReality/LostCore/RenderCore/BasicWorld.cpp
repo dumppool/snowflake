@@ -51,7 +51,7 @@ void FBasicWorld::Tick(float sec)
 	}
 }
 
-void FBasicWorld::Draw(float sec, IRenderContext * rc)
+void FBasicWorld::Draw(IRenderContext * rc, float sec)
 {
 	if (GetRenderContext() == nullptr)
 	{
@@ -64,7 +64,7 @@ void FBasicWorld::Draw(float sec, IRenderContext * rc)
 	{
 		if (scene != nullptr)
 		{
-			scene->Draw(sec, GetRenderContext());
+			scene->Draw(GetRenderContext(), sec);
 		}
 	}
 

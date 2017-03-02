@@ -29,13 +29,17 @@
 #include "Math/Vector3.h"
 #include "Math/Matrix.h"
 
+// file system includes
+#include "File/json.hpp"
+using FJson = nlohmann::json;
+#include "File/DirectoryHelper.h"
+
 // interface indcludes
 #include "RenderContextInterface.h"
 #include "TextureInterface.h"
-#include "ShaderParameterInterface.h"
-#include "ShaderInterface.h"
 #include "MaterialInterface.h"
 #include "PrimitiveGroupInterface.h"
 
 // local includes
 #include "Src/RenderContextBase.h"
+#include "Src/RenderContext.h"

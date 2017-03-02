@@ -18,8 +18,7 @@ namespace D3D11
 		virtual ~FPrimitiveGroup() override;
 
 		// Í¨¹ý IPrimitiveGroup ¼Ì³Ð
-		virtual void Draw(float sec, LostCore::IRenderContext * rc) override;
-		virtual bool SetPrimitive(const char * path) override;
+		virtual void Draw(LostCore::IRenderContext * rc, float sec) override;
 		virtual bool ConstructVB(LostCore::IRenderContext* rc, const void * buf, uint32 bytes, uint32 stride, bool bDynamic) override;
 		virtual bool ConstructIB(LostCore::IRenderContext* rc, const void * buf, uint32 bytes, uint32 stride, bool bDynamic) override;
 		virtual void SetMaterial(LostCore::IMaterial * mat) override;

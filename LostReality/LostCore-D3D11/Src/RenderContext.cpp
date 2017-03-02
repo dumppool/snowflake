@@ -9,6 +9,8 @@
 
 #include "stdafx.h"
 #include "RenderContext.h"
+#include "BlendStateDef.h"
+#include "RasterizerStateDef.h"
 
 using namespace LostCore;
 
@@ -33,11 +35,20 @@ bool D3D11::FRenderContext::Init(HWND wnd, bool bWindowed, int32 width, int32 he
 {
 	D3D11::CreateDevice(ContextID, Device.GetInitReference(), Context.GetInitReference());
 	D3D11::CreateSwapChain(Device.GetReference(), wnd, bWindowed, width, height, SwapChain.GetInitReference());
+	if (Device.IsValid())
+	{
+		FBlendStateMap::Get()->Initialize(Device);
+		FRasterizerStateMap::Get()->Initialize(Device);
+	}
+
 	return (Device.GetReference() != nullptr) && (Context.GetReference() != nullptr) && (SwapChain.GetReference() != nullptr);
 }
 
 void D3D11::FRenderContext::Fini()
 {
+	FBlendStateMap::Get()->ReleaseComObjects();
+	FRasterizerStateMap::Get()->ReleaseComObjects();
+
 	SwapChain = nullptr;
 	Context = nullptr;
 	Device = nullptr;

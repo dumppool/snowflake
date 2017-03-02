@@ -21,6 +21,6 @@ namespace LostCore
 		virtual bool Init(const char* name, IRenderContext * rc) = 0;
 		virtual void Fini() = 0;
 		virtual void Tick(float sec) = 0;
-		virtual void Draw(float sec, IRenderContext * rc) = 0;
+		virtual void Draw(IRenderContext * rc, float sec) = 0;
 	};
 }

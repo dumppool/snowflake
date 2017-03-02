@@ -25,7 +25,7 @@ namespace LostCore
 		virtual bool Init(const char* name, IRenderContext * rc) override;
 		virtual void Fini() override;
 		virtual void Tick(float sec) override;
-		virtual void Draw(float sec, IRenderContext * rc) override;
+		virtual void Draw(IRenderContext * rc, float sec) override;
 
 		virtual void DrawPreScene(float sec);
 		virtual void DrawPostScene(float sec);

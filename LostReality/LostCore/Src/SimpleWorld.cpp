@@ -27,7 +27,7 @@ namespace LostCore
 		virtual ~FSimpleCamera();
 
 		virtual bool Init(const char* name, IRenderContext * rc) override;
-		virtual void Draw(float sec, IRenderContext* rc) override;
+		virtual void Draw(IRenderContext * rc, float sec) override;
 	};
 
 	FSimpleCamera::FSimpleCamera()
@@ -43,7 +43,7 @@ namespace LostCore
 		return true;
 	}
 
-	void FSimpleCamera::Draw(float sec, IRenderContext* rc)
+	void FSimpleCamera::Draw(IRenderContext * rc, float sec)
 	{
 		if (rc != nullptr)
 		{
@@ -192,7 +192,7 @@ namespace LostCore
 		}
 
 		RC->BeginFrame(sec);
-		Camera->Draw(sec, RC);
+		Camera->Draw(RC, sec);
 	}
 
 	void FSimpleWorld::DrawPostScene(float sec)

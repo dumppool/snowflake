@@ -24,13 +24,13 @@
     <ClInclude Include="Src\Material.h">
       <Filter>Src</Filter>
     </ClInclude>
-    <ClInclude Include="Src\Shader.h">
-      <Filter>Src</Filter>
-    </ClInclude>
     <ClInclude Include="Src\Texture.h">
       <Filter>Src</Filter>
     </ClInclude>
-    <ClInclude Include="Src\ShaderParameter.h">
+    <ClInclude Include="Src\BlendStateDef.h">
+      <Filter>Src</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\RasterizerStateDef.h">
       <Filter>Src</Filter>
     </ClInclude>
   </ItemGroup>
@@ -52,13 +52,16 @@
     <ClCompile Include="Src\Material.cpp">
       <Filter>Src</Filter>
     </ClCompile>
-    <ClCompile Include="Src\Shader.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
     <ClCompile Include="Src\Texture.cpp">
       <Filter>Src</Filter>
     </ClCompile>
-    <ClCompile Include="Src\ShaderParameter.cpp">
+    <ClCompile Include="Src\BufferDef.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\BlendStateDef.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\RasterizerStateDef.cpp">
       <Filter>Src</Filter>
     </ClCompile>
   </ItemGroup>

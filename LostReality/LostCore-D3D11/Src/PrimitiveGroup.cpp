@@ -9,7 +9,6 @@
 
 #include "stdafx.h"
 #include "PrimitiveGroup.h"
-#include "RenderContext.h"
 
 using namespace LostCore;
 
@@ -33,11 +32,11 @@ D3D11::FPrimitiveGroup::~FPrimitiveGroup()
 	IndexBuffer = nullptr;
 }
 
-void D3D11::FPrimitiveGroup::Draw(float sec, IRenderContext * rc)
+void D3D11::FPrimitiveGroup::Draw(LostCore::IRenderContext * rc, float sec)
 {
 	const char* head = "D3D11::FPrimitiveGroup::Draw";
-	ID3D11DeviceContext* cxt = FRenderContext::GetDeviceContext(rc, head);
-	if (cxt == nullptr)
+	TRefCountPtr<ID3D11DeviceContext> cxt = FRenderContext::GetDeviceContext(rc, head);
+	if (!cxt.IsValid())
 	{
 		return;
 	}
@@ -48,22 +47,17 @@ void D3D11::FPrimitiveGroup::Draw(float sec, IRenderContext * rc)
 
 	if (Material != nullptr)
 	{
-		Material->Draw(sec, rc);
+		Material->Draw(rc, sec);
 	}
 
 	cxt->DrawIndexed(IndexCount, 0, 0);
 }
 
-bool D3D11::FPrimitiveGroup::SetPrimitive(const char * path)
-{
-	return false;
-}
-
 bool D3D11::FPrimitiveGroup::ConstructVB(IRenderContext* rc, const void * buf, uint32 bytes, uint32 stride, bool bDynamic)
 {
 	const char* head = "D3D11::FPrimitiveGroup::ConstructVB";
-	ID3D11Device* device = FRenderContext::GetDevice(rc, head);
-	if (device == nullptr)
+	TRefCountPtr<ID3D11Device> device = FRenderContext::GetDevice(rc, head);
+	if (!device.IsValid())
 	{
 		return false;
 	}
@@ -73,14 +67,14 @@ bool D3D11::FPrimitiveGroup::ConstructVB(IRenderContext* rc, const void * buf, u
 	VertexBufferNum = 1;
 	VertexBufferOffset = 0;
 	VertexCount = bytes / stride;
-	return SSuccess == CreatePrimitiveVertex(device, buf, bytes, bDynamic, VertexBuffer.GetInitReference());
+	return SSuccess == CreatePrimitiveVertex(device.GetReference(), buf, bytes, bDynamic, VertexBuffer.GetInitReference());
 }
 
 bool D3D11::FPrimitiveGroup::ConstructIB(IRenderContext* rc, const void * buf, uint32 bytes, uint32 stride, bool bDynamic)
 {
 	const char* head = "D3D11::FPrimitiveGroup::ConstructIB";
-	ID3D11Device* device = FRenderContext::GetDevice(rc, head);
-	if (device == nullptr)
+	TRefCountPtr<ID3D11Device> device = FRenderContext::GetDevice(rc, head);
+	if (!device.IsValid())
 	{
 		return false;
 	}
@@ -99,7 +93,7 @@ bool D3D11::FPrimitiveGroup::ConstructIB(IRenderContext* rc, const void * buf, u
 
 	IndexBufferOffset = 0;
 	IndexCount = bytes / stride;
-	return SSuccess == CreatePrimitiveIndex(device, buf, bytes, bDynamic, IndexBuffer.GetInitReference());
+	return SSuccess == CreatePrimitiveIndex(device.GetReference(), buf, bytes, bDynamic, IndexBuffer.GetInitReference());
 }
 
 void D3D11::FPrimitiveGroup::SetMaterial(IMaterial * mat)

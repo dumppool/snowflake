@@ -20,8 +20,8 @@ namespace D3D11
 		virtual ~FRenderContext() override;
 		virtual bool Init(HWND wnd, bool bWindowed, int32 width, int32 height) override;
 		virtual void Fini() override;
-		virtual bool EnableShadeModel(EShadeModel sm)override;
-		virtual EShadeModel GetShadeModel() const override;
+		virtual bool EnableShadeModel(LostCore::EShadeModel sm)override;
+		virtual LostCore::EShadeModel GetShadeModel() const override;
 		virtual LostCore::FMatrix GetViewProjectMatrix() const override;
 		virtual void SetViewProjectMatrix(const LostCore::FMatrix & vp) override;
 		virtual LostCore::EContextID GetContextID() const override;
@@ -31,19 +31,19 @@ namespace D3D11
 
 	public:
 
-		INLINE ID3D11Device* GetDevice()
+		INLINE TRefCountPtr<ID3D11Device> GetDevice()
 		{
-			return Device.GetReference();
+			return Device;
 		}
 
-		INLINE ID3D11DeviceContext* GetDeviceContext()
+		INLINE TRefCountPtr<ID3D11DeviceContext> GetDeviceContext()
 		{
-			return Context.GetReference();
+			return Context;
 		}
 
-		INLINE IDXGISwapChain* GetSwapChain()
+		INLINE TRefCountPtr<IDXGISwapChain> GetSwapChain()
 		{
-			return SwapChain.GetReference();
+			return SwapChain;
 		}
 
 		void* operator new(size_t i)
@@ -56,7 +56,7 @@ namespace D3D11
 			_mm_free(p);
 		}
 
-		INLINE static ID3D11Device* GetDevice(LostCore::IRenderContext* rc, const char* head)
+		INLINE static TRefCountPtr<ID3D11Device> GetDevice(LostCore::IRenderContext* rc, const char* head)
 		{
 			FRenderContext* crc = static_cast<FRenderContext*>(rc);
 			if (crc == nullptr)
@@ -69,8 +69,8 @@ namespace D3D11
 				return nullptr;
 			}
 
-			ID3D11Device* dev = crc->GetDevice();
-			if (dev == nullptr && head != nullptr)
+			TRefCountPtr<ID3D11Device> dev = crc->GetDevice();
+			if (!dev.IsValid() && head != nullptr)
 			{
 				LVERR(head, "null d3d11 device, render context may not be initialized or failed");
 			}
@@ -78,7 +78,7 @@ namespace D3D11
 			return dev;
 		}
 
-		INLINE static ID3D11DeviceContext* GetDeviceContext(LostCore::IRenderContext* rc, const char* head)
+		INLINE static TRefCountPtr<ID3D11DeviceContext> GetDeviceContext(LostCore::IRenderContext* rc, const char* head)
 		{
 			FRenderContext* crc = static_cast<FRenderContext*>(rc);
 			if (crc == nullptr)
@@ -91,8 +91,8 @@ namespace D3D11
 				return nullptr;
 			}
 
-			ID3D11DeviceContext* cxt = crc->GetDeviceContext();
-			if (cxt == nullptr && head != nullptr)
+			TRefCountPtr<ID3D11DeviceContext> cxt = crc->GetDeviceContext();
+			if (!cxt.IsValid() && head != nullptr)
 			{
 				LVERR(head, "null d3d11 device context, render context may not be initialized or failed");
 			}

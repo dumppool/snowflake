@@ -41,7 +41,7 @@ void LostCore::FBasicCamera::Tick(float sec)
 
 }
 
-void LostCore::FBasicCamera::Draw(float sec, IRenderContext* rc)
+void LostCore::FBasicCamera::Draw(IRenderContext * rc, float sec)
 {
 
 }

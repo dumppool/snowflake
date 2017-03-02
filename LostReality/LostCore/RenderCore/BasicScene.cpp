@@ -34,13 +34,13 @@ void FBasicScene::Tick(float sec)
 	}
 }
 
-void FBasicScene::Draw(float sec, IRenderContext * rc)
+void FBasicScene::Draw(IRenderContext * rc, float sec)
 {
 	for (auto sm : StaticMeshArray)
 	{
 		if (sm != nullptr)
 		{
-			sm->Draw(sec, rc);
+			sm->Draw(rc, sec);
 		}
 	}
 }

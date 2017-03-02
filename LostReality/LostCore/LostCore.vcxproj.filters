@@ -14,12 +14,6 @@
     <ClInclude Include="Interface\TextureInterface.h">
       <Filter>Interface</Filter>
     </ClInclude>
-    <ClInclude Include="Interface\ShaderInterface.h">
-      <Filter>Interface</Filter>
-    </ClInclude>
-    <ClInclude Include="Interface\ShaderParameterInterface.h">
-      <Filter>Interface</Filter>
-    </ClInclude>
     <ClInclude Include="Interface\PrimitiveGroupInterface.h">
       <Filter>Interface</Filter>
     </ClInclude>
@@ -75,6 +69,12 @@
     <ClInclude Include="Inc\D3D11RenderContext.h">
       <Filter>D3D11</Filter>
     </ClInclude>
+    <ClInclude Include="Inc\File\json.hpp">
+      <Filter>Inc\File</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\File\DirectoryHelper.h">
+      <Filter>Inc\File</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
@@ -119,6 +119,9 @@
     </Filter>
     <Filter Include="Inc\Math">
       <UniqueIdentifier>{909fecc6-bb3a-4071-9a13-b1e68c02aa73}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Inc\File">
+      <UniqueIdentifier>{abc05cea-8f53-40ff-b3d6-473cbb51b686}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

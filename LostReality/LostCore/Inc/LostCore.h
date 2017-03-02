@@ -87,6 +87,7 @@ namespace LostCore
 #include "Math/Matrix.h"
 #include "Math/Transform.h"
 
-namespace LostCore
-{
-}
+#include "File/json.hpp"
+using FJson = nlohmann::json;
+
+#include "File/DirectoryHelper.h"

@@ -43,8 +43,8 @@ bool D3D11::FTexture2D::Construct(
 {
 
 	const char* head = "D3D11::FTexture2D::Construct";
-	ID3D11Device* device = FRenderContext::GetDevice(rc, head);
-	if (device == nullptr)
+	TRefCountPtr<ID3D11Device> device = FRenderContext::GetDevice(rc, head);
+	if (!device.IsValid())
 	{
 		return false;
 	}

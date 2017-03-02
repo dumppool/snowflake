@@ -21,32 +21,30 @@ namespace D3D11
 	class FMaterialShader
 	{
 	public:
-		bool LoadShader(FRenderContext* rc, const char* path, uint32 idMask);
+		bool Initialize(LostCore::IRenderContext* rc, const FJson& config);
 
-		TRefCountPtr<ID3D11InputLayout> GetInputLayout()
+		INLINE TRefCountPtr<ID3D11InputLayout> GetInputLayout()
 		{
 			return IL;
 		}
 
-		template<typename T> bool GetShader(uint32 idMask, TRefCountPtr<T>& shader)
+		INLINE TRefCountPtr<ID3D11VertexShader> GetVertexShader()
 		{
-			if (idMask == SShaderID_Vertex && VS.IsValid())
-			{
-				shader = VS;
-				return true;
-			}
-			else if (idMask == SShaderID_Pixel && PS.IsValid())
-			{
-				shader = PS;
-				return true;
-			}
-			else
-			{
-				return false;
-			}
+			return VS;
+		}
+
+		INLINE TRefCountPtr<ID3D11PixelShader> GetPixelShader()
+		{
+			return PS;
 		}
 
 	private:
+		// @param vertexName		see Src/BufferDef.h for details
+		bool LoadShader(LostCore::IRenderContext* rc, const std::string& path, uint32 idMask,
+			const std::string& entry, const std::string& target, const std::string& vertexName = "");
+
+		void Reset();
+
 		TRefCountPtr<ID3D11VertexShader>		VS;
 		TRefCountPtr<ID3D11PixelShader>			PS;
 		TRefCountPtr<ID3D11InputLayout>			IL;
@@ -55,11 +53,12 @@ namespace D3D11
 	class FMaterial : public LostCore::IMaterial
 	{
 	public:
+		virtual ~FMaterial() override;
 
 		// Í¨¹ý IMaterial ¼Ì³Ð
 		virtual void Draw(LostCore::IRenderContext * rc, float sec) override;
-		virtual bool LoadShader(const char* path) override;
-		virtual void UpdateMatrix_World(const FMatrix& mat) override;
+		virtual bool Initialize(LostCore::IRenderContext * rc, const char* path) override;
+		virtual void UpdateMatrix_World(LostCore::IRenderContext * rc, const LostCore::FMatrix& mat) override;
 
 	private:
 		FMaterialShader*				MaterialShader;

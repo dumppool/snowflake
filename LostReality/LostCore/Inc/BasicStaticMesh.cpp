@@ -44,13 +44,13 @@ void LostCore::FBasicStaticMesh::Tick(float sec)
 	}
 }
 
-void LostCore::FBasicStaticMesh::Draw(float sec, IRenderContext * rc)
+void LostCore::FBasicStaticMesh::Draw(IRenderContext * rc, float sec)
 {
 	for (auto pg : PrimitiveGroups)
 	{
 		if (pg != nullptr)
 		{
-			pg->Draw(sec, rc);
+			pg->Draw(rc, sec);
 		}
 	}
 }
