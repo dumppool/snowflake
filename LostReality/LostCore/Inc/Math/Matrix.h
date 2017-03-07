@@ -15,7 +15,7 @@
 
 namespace LostCore
 {
-	class FMatrixNonVectorized
+	ALIGNED_LR(16) class FMatrixNonVectorized
 	{
 	public:
 		__declspec(align(16)) float M[4][4];
@@ -110,6 +110,20 @@ namespace LostCore
 			}
 
 			return result;
+		}
+
+		INLINE FMatrixNonVectorized GetTranspose() const
+		{
+			FMatrixNonVectorized ret;
+			for (int32 i = 0; i < 4; ++i)
+			{
+				for (int32 j = 0; j < 4; ++j)
+				{
+					ret.M[i][j] = this->M[j][i];
+				}
+			}
+
+			return ret;
 		}
 	};
 

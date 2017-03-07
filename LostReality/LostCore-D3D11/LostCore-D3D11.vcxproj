@@ -152,6 +152,7 @@
     <ClInclude Include="Inc\LostCore-D3D11.h" />
     <ClInclude Include="Src\BlendStateDef.h" />
     <ClInclude Include="Src\BufferDef.h" />
+    <ClInclude Include="Src\DepthStencilStateDef.h" />
     <ClInclude Include="Src\Material.h" />
     <ClInclude Include="Src\PrimitiveGroup.h" />
     <ClInclude Include="Src\RasterizerStateDef.h" />
@@ -178,6 +179,7 @@
     </ClCompile>
     <ClCompile Include="Src\BlendStateDef.cpp" />
     <ClCompile Include="Src\BufferDef.cpp" />
+    <ClCompile Include="Src\DepthStencilStateDef.cpp" />
     <ClCompile Include="Src\LostCore-D3D11.cpp" />
     <ClCompile Include="Src\Material.cpp" />
     <ClCompile Include="Src\PrimitiveGroup.cpp" />

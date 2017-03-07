@@ -33,6 +33,9 @@
     <ClInclude Include="Src\RasterizerStateDef.h">
       <Filter>Src</Filter>
     </ClInclude>
+    <ClInclude Include="Src\DepthStencilStateDef.h">
+      <Filter>Src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
@@ -62,6 +65,9 @@
       <Filter>Src</Filter>
     </ClCompile>
     <ClCompile Include="Src\RasterizerStateDef.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\DepthStencilStateDef.cpp">
       <Filter>Src</Filter>
     </ClCompile>
   </ItemGroup>

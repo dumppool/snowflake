@@ -16,15 +16,15 @@ namespace LostCore
 	public:
 		virtual ~ITexture() {}
 
-		virtual bool Construct(
-			IRenderContext* rc,
-			uint32 width, 
-			uint32 height, 
-			uint32 format, 
-			bool bIsDepthStencil, 
-			bool bIsRenderTarget, 
-			bool bIsShaderResource,
-			bool bIsWritable) = 0;
+		//virtual bool Construct(
+		//	IRenderContext* rc,
+		//	uint32 width, 
+		//	uint32 height, 
+		//	uint32 format, 
+		//	bool bIsDepthStencil, 
+		//	bool bIsRenderTarget, 
+		//	bool bIsShaderResource,
+		//	bool bIsWritable) = 0;
 
 		//virtual bool IsRenderTarget() const = 0;
 		//virtual void BindShaderResource(IRenderContext* rc, uint32 slot) = 0;

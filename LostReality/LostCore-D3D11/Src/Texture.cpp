@@ -106,6 +106,24 @@ bool D3D11::FTexture2D::Construct(
 	return true;
 }
 
+bool D3D11::FTexture2D::ConstructFromSwapChain(const TRefCountPtr<IDXGISwapChain>& swapChain)
+{
+	const char* head = "D3D11::FTexture2D::ConstructFromSwapChain";
+
+	HRESULT hr;
+
+	BindFlags = D3D11_BIND_RENDER_TARGET;
+	assert(SUCCEEDED(swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)Texture.GetInitReference())));
+
+	TRefCountPtr<ID3D11Device> device;
+	assert(SUCCEEDED(swapChain->GetDevice(__uuidof(ID3D11Device), (void**)device.GetInitReference())));
+
+	CD3D11_RENDER_TARGET_VIEW_DESC cdesc(Texture.GetReference(), D3D11_RTV_DIMENSION_TEXTURE2D);
+	assert(SUCCEEDED(device->CreateRenderTargetView(Texture.GetReference(), &cdesc, RenderTarget.GetInitReference())));
+
+	return true;
+}
+
 bool D3D11::FTexture2D::IsRenderTarget() const
 {
 	return (BindFlags & D3D11_BIND_RENDER_TARGET) != 0;

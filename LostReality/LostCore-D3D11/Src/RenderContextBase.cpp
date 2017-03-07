@@ -102,7 +102,7 @@ EReturnCode D3D11::CreateSwapChain(ID3D11Device* d3dDevice, HWND wnd, bool bWind
 	desc.BufferCount = 1;
 	desc.BufferDesc.Width = width;
 	desc.BufferDesc.Height = height;
-	desc.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+	desc.BufferDesc.Format = SSwapChainFormat;
 	desc.BufferDesc.RefreshRate.Numerator = 0;
 	desc.BufferDesc.RefreshRate.Denominator = 1;
 	desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;

@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include "BufferDef.h"
+
 namespace D3D11
 {
 	static const uint32 SShaderID_Vertex = 0x1 << 0;
@@ -53,6 +55,7 @@ namespace D3D11
 	class FMaterial : public LostCore::IMaterial
 	{
 	public:
+		FMaterial();
 		virtual ~FMaterial() override;
 
 		// Í¨¹ý IMaterial ¼Ì³Ð
@@ -62,6 +65,6 @@ namespace D3D11
 
 	private:
 		FMaterialShader*				MaterialShader;
-		TRefCountPtr<ID3D11Buffer>		World;
+		FConstantBufferOneMatrix		World;
 	};
 }

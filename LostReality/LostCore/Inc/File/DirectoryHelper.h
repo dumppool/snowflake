@@ -11,6 +11,15 @@
 
 namespace LostCore
 {
+	static void ReplaceChar(std::string& target, const char* replaceFrom, const char* replaceTo)
+	{
+		auto pos = std::string::npos;
+		while ((pos = target.find(replaceFrom)) != std::string::npos)
+		{
+			target.replace(pos, 1, replaceTo);
+		}
+	}
+
 	class FDirectoryHelper
 	{
 	public:
@@ -30,15 +39,17 @@ namespace LostCore
 			RootDirectory.resize(RootDirectory.rfind('\\') + 1);
 
 			// hard coded path file name
-			RootDirectory.append("paths.json");
+			std::string pathFilePath = RootDirectory + "paths.json";
+
+			//RootDirectory.append("paths.json");
 
 			std::ifstream file;
-			file.open(RootDirectory.c_str());
+			file.open(pathFilePath.c_str());
 			if (file.fail())
 			{
 				char errstr[128];
 				strerror_s(errstr, errno);
-				LVERR(head, "open path file(%s) failed: %s", RootDirectory.c_str(), errstr);
+				LVERR(head, "open path file(%s) failed: %s", pathFilePath.c_str(), errstr);
 			}
 
 			FJson j;
@@ -46,13 +57,15 @@ namespace LostCore
 
 			for (FJson::iterator it = j.begin(); it != j.end(); ++it)
 			{  
+				auto pkey = it.key();
+				auto pval = it.value();
 				if (DirectoryMap.find(it.key()) == DirectoryMap.end())
 				{
 					DirectoryMap[it.key()] = std::vector<std::string>();
 				}
 
 				DirectoryMap[it.key()].push_back(it.value());
-				LVMSG(head, "found path, %s: %s", it.key(), it.value());
+				LVMSG(head, "found path, %s: %s", it.key().c_str(), DirectoryMap[it.key()].back().c_str());
 			}
 		}
 
@@ -62,6 +75,8 @@ namespace LostCore
 			for (auto& dir : dirs)
 			{
 				std::string absPath(RootDirectory + dir + relativePath);
+				ReplaceChar(absPath, "/", "\\");
+
 				std::ifstream file;
 				file.open(absPath);
 				if (file.fail())
@@ -83,6 +98,8 @@ namespace LostCore
 			for (auto& dir : dirs)
 			{
 				std::string absPath(RootDirectory + dir + relativePath);
+				ReplaceChar(absPath, "/", "\\");
+
 				std::ifstream file;
 				file.open(absPath);
 				if (file.fail())

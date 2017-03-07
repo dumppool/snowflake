@@ -43,6 +43,8 @@ typedef DirectX::XMFLOAT4 LVVec;
 typedef DirectX::XMVECTOR LVQuat;
 typedef DirectX::XMMATRIX LVMatrix;
 
+#define ALIGNED_LR(x) __declspec(align(x))
+
 #ifndef SAFE_RELEASE
 #define SAFE_RELEASE(p) \
   do                    \

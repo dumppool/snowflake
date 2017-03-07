@@ -70,118 +70,6 @@ namespace D3D11 {
 		return SModuleHandle;
 	}
 
-	//enum class EDeviceType : uint8
-	//{
-	//	Undefined,
-	//	DXGI0,
-	//	DXGI1,
-	//	DXGI2,
-	//};
-
-	//extern "C" LOSTCORED3D11_API EReturnCode CreateDevice(
-	//	D3D11::EDeviceType type,
-	//	ID3D11Device** ppDevice,
-	//	ID3D11DeviceContext** ppContext);
-	//static TExportFuncWrapper<
-	//	D3D11::EDeviceType,
-	//	ID3D11Device**,
-	//	ID3D11DeviceContext**> WrappedCreateDevice("CreateDevice", GetModule_LostCoreD3D11);
-
-	//extern "C" LOSTCORED3D11_API EReturnCode CreateSwapChain(
-	//	ID3D11Device* d3dDevice,
-	//	HWND wnd,
-	//	bool bWindowed,
-	//	UINT width,
-	//	UINT height,
-	//	IDXGISwapChain** ppSwapChain);
-	//static TExportFuncWrapper<
-	//	ID3D11Device*,
-	//	HWND,
-	//	bool,
-	//	UINT,
-	//	UINT,
-	//	IDXGISwapChain**> WrappedCreateSwapChain("CreateSwapChain", GetModule_LostCoreD3D11);
-
-	//extern "C" LOSTCORED3D11_API EReturnCode CompileShader(LPCWSTR file, LPCSTR entry, LPCSTR target, ID3DBlob ** blob);
-	//static TExportFuncWrapper<LPCWSTR, LPCSTR, LPCSTR, ID3DBlob**> WrappedCompileShader("CompileShader", GetModule_LostCoreD3D11);
-
-	//extern "C" LOSTCORED3D11_API EReturnCode GetDesc_DefaultTexture2D(D3D11_TEXTURE2D_DESC* pDesc);
-	//static TExportFuncWrapper<D3D11_TEXTURE2D_DESC*> WrappedGetDesc_DefaultTexture2D("GetDesc_DefaultTexture2D", GetModule_LostCoreD3D11);
-
-	//extern "C" LOSTCORED3D11_API EReturnCode GetDesc_DefaultBuffer(D3D11_BUFFER_DESC* pDesc);
-	//static TExportFuncWrapper<D3D11_BUFFER_DESC*> WrappedGetDesc_DefaultBuffer("GetDesc_DefaultBuffer", GetModule_LostCoreD3D11);
-
-	//extern "C" LOSTCORED3D11_API EReturnCode CreateTexture2D(
-	//	D3D11_TEXTURE2D_DESC* pDesc,
-	//	ID3D11Device* device,
-	//	ID3D11Texture2D** ppTex,
-	//	ID3D11ShaderResourceView** ppSRV,
-	//	ID3D11RenderTargetView** ppRTV);
-	//static TExportFuncWrapper<
-	//	D3D11_TEXTURE2D_DESC*,
-	//	ID3D11Device*,
-	//	ID3D11Texture2D**,
-	//	ID3D11ShaderResourceView**,
-	//	ID3D11RenderTargetView**> WrappedCreateTexture2D("CreateTexture2D", GetModule_LostCoreD3D11);
-
-	//extern "C" LOSTCORED3D11_API EReturnCode CreateShaderResourceView(
-	//	ID3D11Texture2D* tex,
-	//	ID3D11ShaderResourceView** ppSRV);
-	//static TExportFuncWrapper<
-	//	ID3D11Texture2D*,
-	//	ID3D11ShaderResourceView**> WrappedCreateShaderResourceView("CreateShaderResourceView", GetModule_LostCoreD3D11);
-
-	//extern "C" LOSTCORED3D11_API EReturnCode CreateRenderTargetView(
-	//	ID3D11Texture2D* tex,
-	//	ID3D11RenderTargetView** ppRTV);
-	//static TExportFuncWrapper<
-	//	ID3D11Texture2D*,
-	//	ID3D11RenderTargetView**> WrappedCreateRenderTargetView("CreateRenderTargetView", GetModule_LostCoreD3D11);
-
-	//extern "C" LOSTCORED3D11_API EReturnCode CreateMesh_Rect(
-	//	ID3D11Device* device,
-	//	float width,
-	//	float height,
-	//	UINT vertexSize,
-	//	ID3D11Buffer** ppVB,
-	//	ID3D11Buffer** ppIB);
-	//static TExportFuncWrapper<
-	//	ID3D11Device*,
-	//	float,
-	//	float,
-	//	UINT,
-	//	ID3D11Buffer**,
-	//	ID3D11Buffer**> WrappedCreateMesh_Rect("CreateMesh_Rect", GetModule_LostCoreD3D11);
-
-	//extern "C" LOSTCORED3D11_API EReturnCode CreateBuffer(
-	//	ID3D11Device* device,
-	//	D3D11_BUFFER_DESC* pDesc,
-	//	ID3D11Buffer** ppBuf);
-	//static TExportFuncWrapper<
-	//	ID3D11Device*,
-	//	D3D11_BUFFER_DESC*,
-	//	ID3D11Buffer**> WrappedCreateBuffer("CreateBuffer", GetModule_LostCoreD3D11);
-
-	//extern "C" LOSTCORED3D11_API EReturnCode CreateBlendState_AlphaBlend(
-	//	ID3D11Device* device,
-	//	ID3D11BlendState** ppBS);
-	//static TExportFuncWrapper<
-	//	ID3D11Device*,
-	//	ID3D11BlendState**> WrappedCreateBlendState_AlphaBlend("CreateBlendState_AlphaBlend", GetModule_LostCoreD3D11);
-
-	//extern "C" LOSTCORED3D11_API EReturnCode CreateBlendState_Add(
-	//	ID3D11Device* device,
-	//	ID3D11BlendState** ppBS);
-	//static TExportFuncWrapper<
-	//	ID3D11Device*,
-	//	ID3D11BlendState**> WrappedCreateBlendState_Add("CreateBlendState_Add", GetModule_LostCoreD3D11);
-
-	//extern "C" LOSTCORED3D11_API EReturnCode CreateRasterizer(ID3D11Device* device, ID3D11RasterizerState** ppRS);
-	//static TExportFuncWrapper<ID3D11Device*, ID3D11RasterizerState**> WrappedCreateRasterizer("CreateRasterizer", GetModule_LostCoreD3D11);
-
-	//extern EReturnCode GetDeviceTypeString(EDeviceType type, char** desc);
-	//static TExportFuncWrapper<EDeviceType, const char**> WrappedGetDeviceTypeString("GetDeviceTypeString", GetModule_LostCoreD3D11);
-
 	extern "C" LOSTCORED3D11_API EReturnCode CreateRenderContext(LostCore::EContextID id, LostCore::IRenderContext** context);
 	static TExportFuncWrapper<LostCore::EContextID, LostCore::IRenderContext**> WrappedCreateRenderContext("CreateRenderContext", GetModule_LostCoreD3D11);
 
@@ -193,4 +81,10 @@ namespace D3D11 {
 
 	extern "C" LOSTCORED3D11_API EReturnCode DestroyPrimitiveGroup(LostCore::IPrimitiveGroup* pg);
 	static TExportFuncWrapper<LostCore::IPrimitiveGroup*> WrappedDestroyPrimitiveGroup("DestroyPrimitiveGroup", GetModule_LostCoreD3D11);
+
+	extern "C" LOSTCORED3D11_API EReturnCode CreateMaterial(LostCore::IMaterial** material);
+	static TExportFuncWrapper<LostCore::IMaterial**> WrappedCreateMaterial("CreateMaterial", GetModule_LostCoreD3D11);
+
+	extern "C" LOSTCORED3D11_API EReturnCode DestroyMaterial(LostCore::IMaterial* material);
+	static TExportFuncWrapper<LostCore::IMaterial*> WrappedDestroyMaterial("DestroyMaterial", GetModule_LostCoreD3D11);
 }

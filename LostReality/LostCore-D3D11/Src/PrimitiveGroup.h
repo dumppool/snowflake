@@ -21,6 +21,7 @@ namespace D3D11
 		virtual void Draw(LostCore::IRenderContext * rc, float sec) override;
 		virtual bool ConstructVB(LostCore::IRenderContext* rc, const void * buf, uint32 bytes, uint32 stride, bool bDynamic) override;
 		virtual bool ConstructIB(LostCore::IRenderContext* rc, const void * buf, uint32 bytes, uint32 stride, bool bDynamic) override;
+		virtual void SetTopology(LostCore::EPrimitiveTopology topo) override;
 		virtual void SetMaterial(LostCore::IMaterial * mat) override;
 		virtual const LostCore::IMaterial * GetMaterial() const override;
 
@@ -32,9 +33,10 @@ namespace D3D11
 		uint32 VertexStride;
 		uint32 VertexBufferOffset;
 		uint32 VertexCount;
-		DXGI_FORMAT IndexFormat;
 		uint32 IndexBufferOffset;
 		uint32 IndexCount;
+		DXGI_FORMAT IndexFormat;
+		D3D11_PRIMITIVE_TOPOLOGY Topology;
 
 		LostCore::IMaterial* Material;
 	};

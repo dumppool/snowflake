@@ -9,11 +9,8 @@
 
 #pragma once
 
-
-#define ALIGNED_LOSTVR(x) __declspec(align(x))
-
 // Vertex data for a colored cube.
-ALIGNED_LOSTVR(16) struct MeshVertex
+ALIGNED_LR(16) struct MeshVertex
 {
 	LostCore::FVec3 Position;
 	LostCore::FVec2 Texcoord;
@@ -21,7 +18,7 @@ ALIGNED_LOSTVR(16) struct MeshVertex
 	MeshVertex(LostCore::FVec3 p, LostCore::FVec2 t) : Position(p), Texcoord(t) { }
 };
 
-ALIGNED_LOSTVR(16) struct FrameBufferWVP
+ALIGNED_LR(16) struct FrameBufferWVP
 {
 	LVMatrix W;
 	LVMatrix V;
@@ -33,7 +30,7 @@ ALIGNED_LOSTVR(16) struct FrameBufferWVP
 
 namespace D3D11
 {
-	ALIGNED_LOSTVR(16) struct FVertex_XYZUV
+	ALIGNED_LR(16) struct FVertex_XYZUV
 	{
 		LostCore::FVec3 XYZ;
 		LostCore::FVec2 UV;
@@ -82,6 +79,39 @@ namespace D3D11
 			}
 
 			return std::make_pair(nullptr, 0);
+		}
+	};
+
+	struct FConstantBuffer
+	{
+		FConstantBuffer(int32 byteWidth, bool dynamic, int32 slot)
+			: ByteWidth(byteWidth)
+			, bDynamic(dynamic)
+			, Slot(slot)
+			, Buffer(nullptr)
+		{
+		}
+
+		~FConstantBuffer()
+		{
+			Buffer = nullptr;
+		}
+
+		bool Initialize(const TRefCountPtr<ID3D11Device>& device);
+		void UpdateBuffer(const TRefCountPtr<ID3D11DeviceContext>& cxt, const void* buf, int32 sz);
+		void Bind(const TRefCountPtr<ID3D11DeviceContext>& cxt);
+
+	private:
+		int32		ByteWidth;
+		bool		bDynamic;
+		int32		Slot;
+		TRefCountPtr<ID3D11Buffer> Buffer;
+	};
+
+	struct FConstantBufferOneMatrix : public FConstantBuffer
+	{
+		FConstantBufferOneMatrix(bool dynamic, int32 slot) : FConstantBuffer(sizeof(LostCore::FMatrix), dynamic, slot)
+		{
 		}
 	};
 }

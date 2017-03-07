@@ -57,18 +57,33 @@ namespace LostCore
 		FSimpleScene();
 		virtual ~FSimpleScene() override;
 
+		virtual void Draw(IRenderContext * rc, float sec) override;
 		virtual bool Init(const char* name, IRenderContext * rc) override;
 		virtual void Fini() override;
 
 	private:
+		IPrimitiveGroup*	APrimitiveGroup;
+		IMaterial*			AMaterial;
 	};
 
 	FSimpleScene::FSimpleScene()
+		: APrimitiveGroup(nullptr)
+		, AMaterial(nullptr)
 	{
 	}
 
 	FSimpleScene::~FSimpleScene()
 	{
+		//assert(APrimitiveGroup == nullptr);
+		//assert(AMaterial == nullptr);
+	}
+
+	void FSimpleScene::Draw(IRenderContext * rc, float sec)
+	{
+		FTransform world(FVec3(0.f, 0.f, 5.f));
+		AMaterial->UpdateMatrix_World(rc, world.ToMatrix());
+
+		FBasicScene::Draw(rc, sec);
 	}
 
 	bool FSimpleScene::Init(const char * name, IRenderContext * rc)
@@ -76,38 +91,65 @@ namespace LostCore
 		FBasicStaticMesh* geo = new FBasicStaticMesh;
 		AddStaticMesh(geo);
 
-		IPrimitiveGroup* pg = nullptr;
-		if (SSuccess == WrappedCreatePrimitiveGroup(&pg))
+		if (SSuccess != WrappedCreatePrimitiveGroup(&APrimitiveGroup))
 		{
-			__declspec(align(16)) struct _Vertex { FVec3 XYZ; FVec2 UV; };
-			float scaler = 1.f;
-
-			// Mesh vertices
-			const _Vertex vertices[] =
-			{
-				{ FVec3(0, 0, scaler),	FVec2(0.0f, 1.0f) },			// bottom left
-				{ FVec3(0, 0, 0),	FVec2(0.0f, 0.0f) },			// top left
-				{ FVec3(scaler, 0, 0),	FVec2(1.0f, 0.0f) },			// top right
-				{ FVec3(0, scaler, 0),	FVec2(1.0f, 1.0f) },			// bottom right
-			};
-
-			// Mesh indices
-			const uint16 indices[] = { 0, 2, 1, 1, 3, 2, 3, 1, 0, 3, 0, 2 };
-
-			if (pg->ConstructVB(rc, vertices, sizeof(vertices), sizeof(_Vertex), false) &&
-				pg->ConstructIB(rc, indices, sizeof(indices), sizeof(uint16), false))
-			{
-				geo->AddPrimitiveGroup(pg);
-				return true;
-			}
+			return false;
 		}
-		
-		return false;
+
+		__declspec(align(16)) struct _Vertex { FVec3 XYZ; FVec2 UV; };
+		float scaler = 1.f;
+
+		// Mesh vertices
+		const _Vertex vertices[] =
+		{
+			{ FVec3(0, 0, scaler),	FVec2(0.0f, 1.0f) },			// bottom left
+			{ FVec3(0, 0, 0),		FVec2(0.0f, 0.0f) },			// top left
+			{ FVec3(scaler, 0, 0),	FVec2(1.0f, 0.0f) },			// top right
+			{ FVec3(0, scaler, 0),	FVec2(1.0f, 1.0f) },			// bottom right
+		};
+
+		// Mesh indices
+		const uint16 indices[] = { 0, 2, 1, 1, 3, 2, 3, 1, 0, 3, 0, 2 };
+
+		if (!APrimitiveGroup->ConstructVB(rc, vertices, sizeof(vertices), sizeof(_Vertex), false) ||
+			!APrimitiveGroup->ConstructIB(rc, indices, sizeof(indices), sizeof(uint16), false))
+		{
+			return false;
+		}
+
+		if (SSuccess != WrappedCreateMaterial(&AMaterial) ||
+			!AMaterial->Initialize(rc, "dummy.json"))
+		{
+			return false;
+		}
+
+		APrimitiveGroup->SetMaterial(AMaterial);
+		geo->AddPrimitiveGroup(APrimitiveGroup);
+		return true;
 	}
 
 	void FSimpleScene::Fini()
 	{
-		ClearStaticMesh([](FBasicStaticMesh* p) { delete p; });
+		ClearStaticMesh([](FBasicStaticMesh* p) 
+		{ 
+			if (p != nullptr)
+			{
+				p->Fini();
+				delete p;
+			}
+		});
+
+		//if (APrimitiveGroup != nullptr)
+		//{
+		//	WrappedDestroyPrimitiveGroup(std::forward<IPrimitiveGroup*>(APrimitiveGroup));
+		//	APrimitiveGroup = nullptr;
+		//}
+
+		//if (AMaterial != nullptr)
+		//{
+		//	WrappedDestroyMaterial(std::forward<IMaterial*>(AMaterial));
+		//	AMaterial = nullptr;
+		//}
 	}
 
 	class FSimpleWorld : public FBasicWorld
@@ -162,7 +204,14 @@ namespace LostCore
 	 
 	void FSimpleWorld::Fini()
 	{
-		ClearScene([](FBasicScene* p) { delete p; });
+		ClearScene([](FBasicScene* p)
+		{ 
+			if (p != nullptr)
+			{
+				p->Fini();
+				delete p;
+			} 
+		});
 
 		if (RC != nullptr)
 		{

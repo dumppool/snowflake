@@ -46,13 +46,13 @@ bool D3D11::FMaterialShader::LoadShader(LostCore::IRenderContext * rc, const str
 
 	if (FAILED(hr) || !shaderBlob.IsValid())
 	{
-		LVERR(head, "compile %ls(%s, %s) failed: %s", path.c_str(), entry.c_str(), target.c_str(),
+		LVERR(head, "compile %s(%s, %s) failed: %s", path.c_str(), entry.c_str(), target.c_str(),
 			errorBlob.IsValid() ? errorBlob->GetBufferPointer() : "[empty]");
 		return false;
 	}
 	else
 	{
-		LVMSG(head, "compile %ls(%s, %s) succeeded", path.c_str(), entry.c_str(), target.c_str());
+		LVMSG(head, "compile %s(%s, %s) succeeded", path.c_str(), entry.c_str(), target.c_str());
 	}
 
 	auto desc = FInputElementDescMap::Get()->GetDesc(vertexName);
@@ -62,7 +62,7 @@ bool D3D11::FMaterialShader::LoadShader(LostCore::IRenderContext * rc, const str
 			nullptr, VS.GetInitReference());
 		if (FAILED(hr))
 		{
-			LVERR(head, "create vertex shader(%ls) failed: 0x08x(%d)", path.c_str(), hr, hr);
+			LVERR(head, "create vertex shader(%s) failed: 0x08x(%d)", path.c_str(), hr, hr);
 			return false;
 		}
 
@@ -70,7 +70,7 @@ bool D3D11::FMaterialShader::LoadShader(LostCore::IRenderContext * rc, const str
 			shaderBlob->GetBufferSize(), IL.GetInitReference());
 		if (FAILED(hr))
 		{
-			LVERR(head, "create input layout(%ls) failed: 0x08x(%d)", path.c_str(), hr, hr);
+			LVERR(head, "create input layout(%s) failed: 0x08x(%d)", path.c_str(), hr, hr);
 			return false;
 		}
 	}
@@ -80,7 +80,7 @@ bool D3D11::FMaterialShader::LoadShader(LostCore::IRenderContext * rc, const str
 			nullptr, PS.GetInitReference());
 		if (FAILED(hr))
 		{
-			LVERR(head, "create pixel shader(%ls) failed: 0x08x(%d)", path, hr, hr);
+			LVERR(head, "create pixel shader(%s) failed: 0x08x(%d)", path, hr, hr);
 			return false;
 		}
 	}
@@ -132,6 +132,11 @@ void D3D11::FMaterialShader::Reset()
 }
 
 
+D3D11::FMaterial::FMaterial()
+	: World(false, 1)
+{
+}
+
 D3D11::FMaterial::~FMaterial()
 {
 	if (MaterialShader != nullptr)
@@ -156,10 +161,10 @@ void D3D11::FMaterial::Draw(IRenderContext * rc, float sec)
 	if (vs.IsValid() && ps.IsValid() && il.IsValid())
 	{
 		cxt->VSSetShader(vs.GetReference(), nullptr, 0);
-		auto ref = World.GetReference();
-		cxt->VSSetConstantBuffers(0, 1, &ref);
 		cxt->IASetInputLayout(il.GetReference());
 		cxt->PSSetShader(ps.GetReference(), nullptr, 0);
+
+		World.Bind(cxt);
 	}
 }
 
@@ -172,24 +177,14 @@ bool D3D11::FMaterial::Initialize(LostCore::IRenderContext * rc, const char * pa
 		return false;
 	}
 
-	FJson config;
-	if (!FDirectoryHelper::Get()->GetMaterialJson(path, config))
+	if (!World.Initialize(device))
 	{
 		return false;
 	}
 
-	D3D11_BUFFER_DESC desc;
-	memset(&desc, 0, sizeof(desc));
-	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-
-	// does not consider immutable
-	desc.Usage = false ? D3D11_USAGE_DYNAMIC : D3D11_USAGE_DEFAULT;
-	desc.CPUAccessFlags = false ? D3D11_CPU_ACCESS_WRITE : 0;
-	desc.ByteWidth = sizeof(FMatrix);
-
-	if (FAILED(device->CreateBuffer(&desc, nullptr, World.GetInitReference())))
+	FJson config;
+	if (!FDirectoryHelper::Get()->GetMaterialJson(path, config))
 	{
-		LVERR(head, "create buffer failed");
 		return false;
 	}
 
@@ -210,5 +205,6 @@ void D3D11::FMaterial::UpdateMatrix_World(LostCore::IRenderContext * rc, const F
 		return;
 	}
 
-	cxt->UpdateSubresource(World, 0, nullptr, &mat, 0, 0);
+	FMatrix m = mat.GetTranspose();
+	World.UpdateBuffer(cxt, &m, sizeof(FMatrix));
 }

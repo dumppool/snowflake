@@ -19,7 +19,7 @@ namespace D3D11
 			return SName;
 		}
 
-		INLINE static TRefCountPtr<ID3D11BlendState> GetDesc(const TRefCountPtr<ID3D11Device>& device = nullptr, bool bDestroy = false)
+		INLINE static TRefCountPtr<ID3D11BlendState> GetState(const TRefCountPtr<ID3D11Device>& device = nullptr, bool bDestroy = false)
 		{
 			static TRefCountPtr<ID3D11BlendState> SState;
 			static bool SCreated = false;
@@ -36,7 +36,7 @@ namespace D3D11
 				HRESULT hr = device->CreateBlendState(&desc, SState.GetInitReference());
 				if (FAILED(hr))
 				{
-					LVERR("FBlendState_Solid::GetDesc", "create blend state failed: 0x%08x(%d)", hr, hr);
+					LVERR("FBlendState_Solid::GetState", "create blend state failed: 0x%08x(%d)", hr, hr);
 				}
 			}
 
@@ -58,7 +58,7 @@ namespace D3D11
 			return SName;
 		}
 
-		INLINE static TRefCountPtr<ID3D11BlendState> GetDesc(const TRefCountPtr<ID3D11Device>& device = nullptr, bool bDestroy = false)
+		INLINE static TRefCountPtr<ID3D11BlendState> GetState(const TRefCountPtr<ID3D11Device>& device = nullptr, bool bDestroy = false)
 		{
 			static TRefCountPtr<ID3D11BlendState> SState;
 			static bool SCreated = false;
@@ -81,7 +81,7 @@ namespace D3D11
 				HRESULT hr = device->CreateBlendState(&desc, SState.GetInitReference());
 				if (FAILED(hr))
 				{
-					LVERR("FBlendState_Add::GetDesc", "create blend state failed: 0x%08x(%d)", hr, hr);
+					LVERR("FBlendState_Add::GetState", "create blend state failed: 0x%08x(%d)", hr, hr);
 				}
 			}
 
@@ -107,20 +107,20 @@ namespace D3D11
 
 		void Initialize(const TRefCountPtr<ID3D11Device>& device)
 		{
-			StateMap.insert(std::make_pair(FBlendState_Solid::GetName(), FBlendState_Solid::GetDesc(device)));
-			StateMap.insert(std::make_pair(FBlendState_Add::GetName(), FBlendState_Add::GetDesc(device)));
+			StateMap.insert(std::make_pair(FBlendState_Solid::GetName(), FBlendState_Solid::GetState(device)));
+			StateMap.insert(std::make_pair(FBlendState_Add::GetName(), FBlendState_Add::GetState(device)));
 		}
 
 		void ReleaseComObjects()
 		{
 			bool bDestroy = true;
-			FBlendState_Solid::GetDesc(nullptr, bDestroy);
-			FBlendState_Add::GetDesc(nullptr, bDestroy);
+			FBlendState_Solid::GetState(nullptr, bDestroy);
+			FBlendState_Add::GetState(nullptr, bDestroy);
 
 			StateMap.clear();
 		}
 
-		INLINE TRefCountPtr<ID3D11BlendState> GetDesc(const std::string& key)
+		INLINE TRefCountPtr<ID3D11BlendState> GetState(const std::string& key)
 		{
 			for (auto element : StateMap)
 			{

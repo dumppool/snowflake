@@ -98,3 +98,32 @@ LOSTCORED3D11_API EReturnCode D3D11::DestroyPrimitiveGroup(LostCore::IPrimitiveG
 
 	return SSuccess;
 }
+
+#include "Material.h"
+
+LOSTCORED3D11_API EReturnCode D3D11::CreateMaterial(LostCore::IMaterial ** material)
+{
+	if (material == nullptr)
+	{
+		return SErrorInvalidParameters;
+	}
+
+	auto obj = new FMaterial;
+	if (obj == nullptr)
+	{
+		return SErrorOutOfMemory;
+	}
+
+	*material = obj;
+	return SSuccess;
+}
+
+LOSTCORED3D11_API EReturnCode D3D11::DestroyMaterial(LostCore::IMaterial * material)
+{
+	if (material != nullptr)
+	{
+		delete material;
+	}
+
+	return SSuccess;
+}

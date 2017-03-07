@@ -10,6 +10,11 @@
 #pragma once
 
 namespace D3D11 {
+
+	static const DXGI_FORMAT SSwapChainFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
+	static const DXGI_FORMAT SSwapChainTextureFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
+	static const DXGI_FORMAT SDepthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+
 	enum class EDeviceType : uint8
 	{
 		Undefined,

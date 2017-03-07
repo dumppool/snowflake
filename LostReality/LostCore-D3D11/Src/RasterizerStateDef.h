@@ -15,11 +15,11 @@ namespace D3D11
 	{
 		INLINE static std::string GetName()
 		{
-			static std::string SName = "Solid";
+			static std::string SName = "SOLID";
 			return SName;
 		}
 
-		INLINE static TRefCountPtr<ID3D11RasterizerState> GetDesc(const TRefCountPtr<ID3D11Device>& device = nullptr, bool bDestroy = false)
+		INLINE static TRefCountPtr<ID3D11RasterizerState> GetState(const TRefCountPtr<ID3D11Device>& device = nullptr, bool bDestroy = false)
 		{
 			static TRefCountPtr<ID3D11RasterizerState> SState;
 			static bool SCreated = false;
@@ -42,7 +42,7 @@ namespace D3D11
 				HRESULT hr = device->CreateRasterizerState(&desc, SState.GetInitReference());
 				if (FAILED(hr))
 				{
-					LVERR("FRasterizerState_Solid::GetDesc", "create rasterizer state failed: 0x%08x(%d)", hr, hr);
+					LVERR("FRasterizerState_Solid::GetState", "create rasterizer state failed: 0x%08x(%d)", hr, hr);
 				}
 			}
 
@@ -60,11 +60,11 @@ namespace D3D11
 	{
 		INLINE static std::string GetName()
 		{
-			static std::string SName = "Solid";
+			static std::string SName = "WIREFRAME";
 			return SName;
 		}
 
-		INLINE static TRefCountPtr<ID3D11RasterizerState> GetDesc(const TRefCountPtr<ID3D11Device>& device = nullptr, bool bDestroy = false)
+		INLINE static TRefCountPtr<ID3D11RasterizerState> GetState(const TRefCountPtr<ID3D11Device>& device = nullptr, bool bDestroy = false)
 		{
 			static TRefCountPtr<ID3D11RasterizerState> SState;
 			static bool SCreated = false;
@@ -87,7 +87,7 @@ namespace D3D11
 				HRESULT hr = device->CreateRasterizerState(&desc, SState.GetInitReference());
 				if (FAILED(hr))
 				{
-					LVERR("FRasterizerState_Wireframe::GetDesc", "create rasterizer state failed: 0x%08x(%d)", hr, hr);
+					LVERR("FRasterizerState_Wireframe::GetState", "create rasterizer state failed: 0x%08x(%d)", hr, hr);
 				}
 			}
 
@@ -113,20 +113,20 @@ namespace D3D11
 
 		void Initialize(const TRefCountPtr<ID3D11Device>& device)
 		{
-			StateMap.insert(std::make_pair(FRasterizerState_Solid::GetName(), FRasterizerState_Solid::GetDesc(device)));
-			StateMap.insert(std::make_pair(FRasterizerState_Wireframe::GetName(), FRasterizerState_Wireframe::GetDesc(device)));
+			StateMap.insert(std::make_pair(FRasterizerState_Solid::GetName(), FRasterizerState_Solid::GetState(device)));
+			StateMap.insert(std::make_pair(FRasterizerState_Wireframe::GetName(), FRasterizerState_Wireframe::GetState(device)));
 		}
 
 		void ReleaseComObjects()
 		{
 			bool bDestroy = true;
-			FRasterizerState_Solid::GetDesc(nullptr, bDestroy);
-			FRasterizerState_Wireframe::GetDesc(nullptr, bDestroy);
+			FRasterizerState_Solid::GetState(nullptr, bDestroy);
+			FRasterizerState_Wireframe::GetState(nullptr, bDestroy);
 
 			StateMap.clear();
 		}
 
-		INLINE TRefCountPtr<ID3D11RasterizerState> GetDesc(const std::string& key)
+		INLINE TRefCountPtr<ID3D11RasterizerState> GetState(const std::string& key)
 		{
 			for (auto element : StateMap)
 			{

@@ -9,12 +9,15 @@
 
 #pragma once
 
+#include "Texture.h"
+#include "BufferDef.h"
+
 namespace D3D11
 {
 	class FRenderContext : public LostCore::IRenderContext
 	{
 	public:
-		FRenderContext(LostCore::EContextID);
+		FRenderContext(LostCore::EContextID id);
 
 		// Í¨¹ý IRenderContext ¼Ì³Ð
 		virtual ~FRenderContext() override;
@@ -54,6 +57,11 @@ namespace D3D11
 		void operator delete(void* p)
 		{
 			_mm_free(p);
+		}
+
+		void EnableWireframe(bool bEnable)
+		{
+			bWireframe = bEnable;
 		}
 
 		INLINE static TRefCountPtr<ID3D11Device> GetDevice(LostCore::IRenderContext* rc, const char* head)
@@ -105,7 +113,12 @@ namespace D3D11
 		TRefCountPtr<ID3D11Device>			Device;
 		TRefCountPtr<ID3D11DeviceContext>	Context;
 		TRefCountPtr<IDXGISwapChain>		SwapChain;
-		LostCore::FMatrix					ViewProject;
 		LostCore::EShadeModel				ShadeModel;
+		bool								bWireframe;
+		FTexture2D*							RenderTarget;
+		FTexture2D*							DepthStencil;
+		D3D11_VIEWPORT						Viewport;
+		LostCore::FMatrix					ViewProjectMatrix;
+		FConstantBufferOneMatrix			ViewProjectBuffer;
 	};
 }
