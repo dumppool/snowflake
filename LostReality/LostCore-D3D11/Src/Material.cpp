@@ -165,6 +165,11 @@ void D3D11::FMaterial::Draw(IRenderContext * rc, float sec)
 		cxt->PSSetShader(ps.GetReference(), nullptr, 0);
 
 		World.Bind(cxt);
+
+		cxt->HSSetShader(nullptr, nullptr, 0);
+		cxt->DSSetShader(nullptr, nullptr, 0);
+		cxt->GSSetShader(nullptr, nullptr, 0);
+		cxt->CSSetShader(nullptr, nullptr, 0);
 	}
 }
 

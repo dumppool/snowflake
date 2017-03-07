@@ -5,6 +5,7 @@
 #include "RealityWindow.h"
 
 #include "TestCase.h"
+using namespace LostCore;
 
 #define MAX_LOADSTRING 100
 
@@ -42,24 +43,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_REALITYWINDOW));
 
-    MSG msg;
+	MSG msg = {0};
 
     // 主消息循环: 
-    while (GetMessage(&msg, nullptr, 0, 0))
+    while (msg.message != WM_QUIT)
     {
-        if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
-        {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
-
 		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 		{
-			if (msg.message == WM_QUIT)
-			{
-				break;
-			}
-
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
@@ -126,7 +116,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    ShowWindow(hWnd, nCmdShow);
    UpdateWindow(hWnd);
 
-   assert(TESTCASE::TestCase_LostCore_VirtualCall(hWnd));
+   //assert(TESTCASE::TestCase_LostCore_VirtualCall(hWnd));
 
    TESTCASE::GetRenderSampleInstance()->Init(hWnd, true, 1280, 720);
 
@@ -145,8 +135,40 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+	static bool bMouseDown = false;
+	static FVec3 s_rotate = FVec3::GetZero();
+
     switch (message)
     {
+	case WM_MOUSEMOVE:
+	{
+		FVec3 rotate;
+		float move_x = LOWORD(lParam);
+		float move_y = HIWORD(lParam);
+		const float factor = 0.01f;
+
+		if (s_rotate == FVec3::GetZero())
+		{
+			s_rotate.Yaw = move_x * factor;
+			s_rotate.Pitch = move_y * factor;
+			rotate = s_rotate;
+		}
+		else
+		{
+			rotate.Yaw = move_x * factor;
+			rotate.Pitch = move_y * factor;
+		}
+
+		int button = LOWORD(wParam);
+		if (button == MK_RBUTTON)
+		{
+			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddEuler(rotate-s_rotate);
+		}
+
+		s_rotate = rotate;
+
+		break;
+	}
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);
@@ -178,6 +200,30 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 		break;
 	}
+	case WM_KEYDOWN:
+	{
+		int key = LOWORD(wParam);
+		switch (key)
+		{
+		case 'W':
+			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddPosition(FVec3(0.f, 0.f, 0.1f));
+			break;
+		case 'S':
+			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddPosition(FVec3(0.f, 0.f, -0.1f));
+			break;
+		case 'A':
+			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddPosition(FVec3(-0.1f, 0.f, 0.f));
+			break;
+		case 'D':
+			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddPosition(FVec3(0.1f, 0.f, 0.1f));
+			break;
+		default:
+			break;
+		}
+
+		break;
+	}
+
     case WM_PAINT:
         {
             PAINTSTRUCT ps;

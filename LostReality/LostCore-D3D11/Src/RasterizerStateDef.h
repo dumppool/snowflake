@@ -31,9 +31,10 @@ namespace D3D11
 				ZeroMemory(&desc, sizeof(desc));
 				desc.AntialiasedLineEnable = FALSE;
 				desc.CullMode = D3D11_CULL_NONE;
+				//desc.CullMode = D3D11_CULL_BACK;
 				desc.DepthBias = 0;
 				desc.DepthBiasClamp = 0.0f;
-				desc.DepthClipEnable = FALSE;
+				desc.DepthClipEnable = TRUE;
 				desc.FillMode = D3D11_FILL_SOLID;
 				desc.FrontCounterClockwise = FALSE;
 				desc.MultisampleEnable = FALSE;

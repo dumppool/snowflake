@@ -196,9 +196,9 @@ namespace LostCore
 		SinCos(SY, CY, euler.Yaw * halfD2R);
 		SinCos(SR, CR, euler.Roll * halfD2R);
 
-		X = CR*SP*SY - SR*CP*CY;
-		Y = -CR*SP*CY - SR*CP*SY;
-		Z = CR*CP*SY - SR*SP*CY;
+		Z = CR*SP*SY - SR*CP*CY;
+		X = -CR*SP*CY - SR*CP*SY;
+		Y = CR*CP*SY - SR*SP*CY;
 		W = CR*CP*CY + SR*SP*SY;
 
 		return *this;

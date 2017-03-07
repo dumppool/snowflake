@@ -79,3 +79,8 @@ void TESTCASE::FRenderSample::Tick()
 	World->Tick(1);
 	World->Draw(nullptr, 1);
 }
+
+LostCore::FBasicCamera * TESTCASE::FRenderSample::GetCamera()
+{
+	return World->GetCamera();
+}

@@ -78,6 +78,9 @@ namespace LostCore
 }
 
 #include "ExportTest.h"
+#include "BasicCamera.h"
+#include "BasicStaticMesh.h"
+#include "BasicScene.h"
 #include "SimpleWorld.h"
 
 #include "Math/Vector2.h"

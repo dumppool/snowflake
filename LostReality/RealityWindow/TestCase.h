@@ -15,6 +15,8 @@ namespace TESTCASE {
 
 		void Tick();
 
+		LostCore::FBasicCamera* GetCamera();
+
 	protected:
 		LostCore::FBasicWorld* World;
 		double LastTick;

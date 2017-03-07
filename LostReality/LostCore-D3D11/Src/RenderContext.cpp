@@ -132,9 +132,9 @@ void D3D11::FRenderContext::BeginFrame(float sec)
 	{
 		auto rtv = RenderTarget->GetRenderTargetRHI().GetReference();
 		auto dsv = DepthStencil->GetDepthStencilRHI().GetReference();
-		FLOAT clearColor[] = { 0.f, 1.f, 1.f, 1.f };
+		FLOAT clearColor[] = { 0.01f, 0.051f, 0.2f, 1.f };
 		Context->ClearRenderTargetView(rtv, clearColor);
-		Context->ClearDepthStencilView(dsv, 0, 1.f, 0xff);
+		Context->ClearDepthStencilView(dsv, D3D11_CLEAR_DEPTH, 1.f, 0xff);
 		Context->OMSetRenderTargets(1, &rtv, dsv);
 
 		Context->RSSetViewports(1, &Viewport);
