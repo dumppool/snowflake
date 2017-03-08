@@ -146,7 +146,7 @@ void D3D11::FRenderContext::BeginFrame(float sec)
 		Context->OMSetDepthStencilState(FDepthStencilStateMap::Get()->GetState("Z_ENABLE_WRITE"), 0);
 
 		FMatrix m = ViewProjectMatrix.GetTranspose();
-		ViewProjectBuffer.UpdateBuffer(Context, &m, sizeof(FMatrix));
+		ViewProjectBuffer.UpdateBuffer(Context, &ViewProjectMatrix, sizeof(FMatrix));
 		ViewProjectBuffer.Bind(Context);
 	}
 }

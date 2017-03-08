@@ -161,27 +161,27 @@ namespace LostCore
 	{
 		FVec3 euler;
 
-		const float singularity = Z*X - W*Y;
-		const float yawY = 2.f * (W*Z + X*Y);
-		const float yawX = (1.f - 2.f*(Y*Y + Z*Z));
+		const float singularity = Y*Z - W*X;
+		const float yawY = 2.f * (W*Y + Z*X);
+		const float yawX = (1.f - 2.f*(X*X + Y*Y));
 		const float threshold = 0.4999995f;
 		if (singularity < -threshold)
 		{
 			euler.Pitch = -90.f;
 			euler.Yaw = std::atan2(yawY, yawX) * SR2DConstant;
-			euler.Roll = ClampAngle(-euler.Yaw - (2.f * std::atan2(X, W) * SR2DConstant));
+			euler.Roll = ClampAngle(-euler.Yaw - (2.f * std::atan2(Z, W) * SR2DConstant));
 		}
 		else if (singularity > threshold)
 		{
 			euler.Pitch = 90.f;
 			euler.Yaw = Atan2(yawY, yawX) * SR2DConstant;
-			euler.Roll = ClampAngle(euler.Yaw - (2.f * Atan2(X, W) * SR2DConstant));
+			euler.Roll = ClampAngle(euler.Yaw - (2.f * Atan2(Z, W) * SR2DConstant));
 		}
 		else
 		{
 			euler.Pitch = Asin(2.f * singularity) * SR2DConstant;
 			euler.Yaw = Atan2(yawY, yawX) * SR2DConstant;
-			euler.Roll = Atan2(-2.f * (W*X + Y*Z), (1.f - 2.f*(X*X + Y*Y))) * SR2DConstant;
+			euler.Roll = Atan2(-2.f * (W*Z + X*Y), (1.f - 2.f*(Z*Z + X*X))) * SR2DConstant;
 		}
 
 		return euler;
@@ -266,17 +266,17 @@ namespace LostCore
 
 	INLINE FVec3 FQuatNonVectorized::GetForwardVector() const
 	{
-		return RotateVector(FVec3(1.f, 0.f, 0.f));
+		return RotateVector(FVec3(0.f, 0.f, 1.f));
 	}
 
 	INLINE FVec3 FQuatNonVectorized::GetUpVector() const
 	{
-		return RotateVector(FVec3(0.f, 0.f, 1.f));
+		return RotateVector(FVec3(0.f, 1.f, 0.f));
 	}
 
 	INLINE FVec3 FQuatNonVectorized::GetRightVector() const
 	{
-		return RotateVector(FVec3(0.f, 1.f, 0.f));
+		return RotateVector(FVec3(1.f, 0.f, 0.f));
 	}
 
 #ifdef TYPEDEF_DECL_FQUAT

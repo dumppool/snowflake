@@ -96,29 +96,41 @@ namespace LostCore
 			return false;
 		}
 
-		__declspec(align(16)) struct _Vertex { FVec3 XYZ; FVec2 UV; };
-		float scaler = 1.f;
+		__declspec(align(16)) struct _Vertex { FVec3 RGB; FVec3 XYZ; FVec3 N; FVec2 UV; };
+		float scaler = 0.5f;
 
 		// Mesh vertices
 		const _Vertex vertices[] =
 		{
-			{ FVec3(0, 0, scaler),	FVec2(0.0f, 1.0f) },			// bottom left
-			{ FVec3(0, 0, 0),		FVec2(0.0f, 0.0f) },			// top left
-			{ FVec3(scaler, 0, 0),	FVec2(1.0f, 0.0f) },			// top right
-			{ FVec3(0, scaler, 0),	FVec2(1.0f, 1.0f) },			// bottom right
+			{ FVec3(1.f, 0.f, 0.f),	FVec3(0.f, 0.f, -scaler),	FVec3(0.5f, -0.5f, -0.5f), FVec2(0.0f, 1.0f) },				// center
+			{ FVec3(1.f, 0.f, 0.f),	FVec3(0.f, scaler, 0.f),	FVec3(0.5f, -0.5f, -0.5f),	FVec2(0.0f, 0.0f) },			// top
+			{ FVec3(1.f, 0.f, 0.f),	FVec3(scaler, -scaler, 0.f),FVec3(0.5f, -0.5f, -0.5f), FVec2(1.0f, 0.0f) },		// bottom right
+
+			{ FVec3(0.f, 0.f, 0.f),	FVec3(0.f, scaler, 0.f),	FVec3(0.f, 0.f, 1.f),	FVec2(0.0f, 0.0f) },			// top
+			{ FVec3(0.f, 0.f, 0.f),	FVec3(scaler, -scaler, 0.f),FVec3(0.f, 0.f, 1.f), FVec2(1.0f, 0.0f) },		// bottom right
+			{ FVec3(0.f, 0.f, 0.f),	FVec3(-scaler, -scaler, 0), FVec3(0.f, 0.f, 1.f), FVec2(1.0f, 1.0f) },		// bottom left
+
+			{ FVec3(0.f, 1.f, 0.f),	FVec3(0.f, scaler, 0.f),	FVec3(-0.5f, -0.5f, -0.5f),	FVec2(0.0f, 0.0f) },			// top
+			{ FVec3(0.f, 1.f, 0.f),	FVec3(0.f, 0.f, -scaler),	FVec3(-0.5f, -0.5f, -0.5f), FVec2(0.0f, 1.0f) },				// center
+			{ FVec3(0.f, 1.f, 0.f),	FVec3(-scaler, -scaler, 0), FVec3(-0.5f, -0.5f, -0.5f), FVec2(1.0f, 1.0f) },		// bottom left
+
+			{ FVec3(0.f, 0.f, 1.f),	FVec3(-scaler, -scaler, 0), FVec3(0.f, -0.5f, -0.5f), FVec2(1.0f, 1.0f) },		// bottom left
+			{ FVec3(0.f, 0.f, 1.f),	FVec3(0.f, 0.f, -scaler),	FVec3(0.f, -0.5f, -0.5f), FVec2(0.0f, 1.0f) },				// center
+			{ FVec3(0.f, 0.f, 1.f),	FVec3(scaler, -scaler, 0.f),FVec3(0.f, -0.5f, -0.5f), FVec2(1.0f, 0.0f) },		// bottom right
 		};
 
 		// Mesh indices
-		const uint16 indices[] = { 0, 2, 1, 1, 3, 2, 3, 1, 0, 3, 0, 2 };
+		const uint16 indices[] = { 0, 1, 2, 1, 3, 2, 3, 1, 0, 3, 0, 2 };
 
-		if (!APrimitiveGroup->ConstructVB(rc, vertices, sizeof(vertices), sizeof(_Vertex), false) ||
-			!APrimitiveGroup->ConstructIB(rc, indices, sizeof(indices), sizeof(uint16), false))
+		if (!APrimitiveGroup->ConstructVB(rc, vertices, sizeof(vertices), sizeof(_Vertex), false))
+			//||
+			//!APrimitiveGroup->ConstructIB(rc, indices, sizeof(indices), sizeof(uint16), false))
 		{
 			return false;
 		}
 
 		if (SSuccess != WrappedCreateMaterial(&AMaterial) ||
-			!AMaterial->Initialize(rc, "dummy.json"))
+			!AMaterial->Initialize(rc, "dummy_normal.json"))
 		{
 			return false;
 		}

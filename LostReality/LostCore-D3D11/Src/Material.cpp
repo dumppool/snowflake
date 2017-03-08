@@ -211,5 +211,5 @@ void D3D11::FMaterial::UpdateMatrix_World(LostCore::IRenderContext * rc, const F
 	}
 
 	FMatrix m = mat.GetTranspose();
-	World.UpdateBuffer(cxt, &m, sizeof(FMatrix));
+	World.UpdateBuffer(cxt, &mat, sizeof(FMatrix));
 }

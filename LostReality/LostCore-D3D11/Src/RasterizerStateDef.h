@@ -30,8 +30,8 @@ namespace D3D11
 				D3D11_RASTERIZER_DESC desc;
 				ZeroMemory(&desc, sizeof(desc));
 				desc.AntialiasedLineEnable = FALSE;
-				desc.CullMode = D3D11_CULL_NONE;
-				//desc.CullMode = D3D11_CULL_BACK;
+				//desc.CullMode = D3D11_CULL_NONE;
+				desc.CullMode = D3D11_CULL_BACK;
 				desc.DepthBias = 0;
 				desc.DepthBiasClamp = 0.0f;
 				desc.DepthClipEnable = TRUE;

@@ -30,7 +30,7 @@ ALIGNED_LR(16) struct FrameBufferWVP
 
 namespace D3D11
 {
-	ALIGNED_LR(16) struct FVertex_XYZUV
+	ALIGNED_LR(16) struct FVertex_0
 	{
 		LostCore::FVec3 XYZ;
 		LostCore::FVec2 UV;
@@ -45,8 +45,60 @@ namespace D3D11
 		{
 			static D3D11_INPUT_ELEMENT_DESC SDesc[] =
 			{
-				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_XYZUV, XYZ), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, offsetof(FVertex_XYZUV, UV),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_0, XYZ), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, offsetof(FVertex_0, UV),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			};
+
+			return std::make_pair(SDesc, ARRAYSIZE(SDesc));
+		}
+	};
+
+	ALIGNED_LR(16) struct FVertex_1
+	{
+		LostCore::FVec3 XYZ;
+		LostCore::FVec3 N;
+		LostCore::FVec2 UV;
+
+		INLINE static std::string GetName()
+		{
+			static std::string SName = "XYZNUV";
+			return SName;
+		}
+
+		INLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
+		{
+			static D3D11_INPUT_ELEMENT_DESC SDesc[] =
+			{
+				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_1, XYZ), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_1, N), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, offsetof(FVertex_1, UV),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			};
+
+			return std::make_pair(SDesc, ARRAYSIZE(SDesc));
+		}
+	};
+
+	ALIGNED_LR(16) struct FVertex_2
+	{
+		LostCore::FVec3 RGB;
+		LostCore::FVec3 XYZ;
+		LostCore::FVec3 N;
+		LostCore::FVec2 UV;
+
+		INLINE static std::string GetName()
+		{
+			static std::string SName = "RGBXYZNUV";
+			return SName;
+		}
+
+		INLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
+		{
+			static D3D11_INPUT_ELEMENT_DESC SDesc[] =
+			{
+				{ "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_2, RGB), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_2, XYZ), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_2, N), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, offsetof(FVertex_2, UV),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
 			};
 
 			return std::make_pair(SDesc, ARRAYSIZE(SDesc));
@@ -65,7 +117,9 @@ namespace D3D11
 
 		FInputElementDescMap()
 		{
-			DescMap.insert(std::make_pair(FVertex_XYZUV::GetName(), FVertex_XYZUV::GetDesc()));
+			DescMap.insert(std::make_pair(FVertex_0::GetName(), FVertex_0::GetDesc()));
+			DescMap.insert(std::make_pair(FVertex_1::GetName(), FVertex_1::GetDesc()));
+			DescMap.insert(std::make_pair(FVertex_2::GetName(), FVertex_2::GetDesc()));
 		}
 
 		INLINE std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc(const std::string& key)

@@ -53,7 +53,14 @@ void D3D11::FPrimitiveGroup::Draw(LostCore::IRenderContext * rc, float sec)
 		Material->Draw(rc, sec);
 	}
 
-	cxt->DrawIndexed(IndexCount, 0, 0);
+	if (IndexBuffer.IsValid())
+	{
+		cxt->DrawIndexed(IndexCount, 0, 0);
+	}
+	else
+	{
+		cxt->Draw(VertexCount, 0);
+	}
 }
 
 bool D3D11::FPrimitiveGroup::ConstructVB(IRenderContext* rc, const void * buf, uint32 bytes, uint32 stride, bool bDynamic)

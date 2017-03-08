@@ -14,10 +14,40 @@ struct VertexIn
     float2 tco : TEXCOORD;
 };
 
+struct VertexNormalIn
+{
+	float3 pos : POSITION;
+	float3 normal : NORMAL;
+	float2 tco : TEXCOORD;
+};
+
+struct VertexRGBNormalIn
+{
+	float3 rgb : COLOR;
+	float3 pos : POSITION;
+	float3 normal : NORMAL;
+	float2 tco : TEXCOORD;
+};
+
 struct VertexOut
 {
+	float4 pos : SV_POSITION;
     float2 tco : TEXCOORD;
-    float4 pos : SV_POSITION;
+};
+
+struct VertexNormalOut
+{
+	float4 pos : SV_POSITION;
+	float3 normal : NORMAL;
+	float2 tco : TEXCOORD;
+};
+
+struct VertexRGBNormalOut
+{
+	float4 pos : SV_POSITION;
+	float3 rgb : COLOR;
+	float3 normal : NORMAL;
+	float2 tco : TEXCOORD;
 };
 
 struct VertexOut2
@@ -30,7 +60,6 @@ sampler   Sampler : register(s0);
 
 VertexOut vs_main(VertexIn Input)
 {
-
 	float4 Vec = float4(Input.pos, 1.0f);
 	float4x4 wvp;
 	if (1)
@@ -51,12 +80,37 @@ VertexOut vs_main(VertexIn Input)
     return Output;
 }
 
+VertexRGBNormalOut vs_normal_main(VertexRGBNormalIn Input)
+{
+	float4 Vec = float4(Input.pos, 1.0f);
+	//Vec = mul(Vec, transpose(World));
+	//Vec = mul(Vec, transpose(ViewProject));
+	Vec = mul(Vec, mul(ViewProject, World));
+	VertexRGBNormalOut Output;
+	Output.pos = Vec;
+	Output.normal = Input.normal;
+	Output.tco = Input.tco;
+	Output.rgb = Input.rgb;
+	return Output;
+}
+
 float4 ps_main(VertexOut in_data) : SV_TARGET
 {
 	//return float4(1.5f, 0.8f, 0.280f, 1.0f);
 	//return float4(in_data.tco, 0.f, 1.f);
 	//return Texture.Sample(Sampler, in_data.tco);
 	return float4(1.f, 1.f, 0.f, 1.f);
+}
+
+float4 ps_normal_main(VertexRGBNormalOut in_data) : SV_TARGET
+{
+	const float3 Ambient = {0.4f, 0.3f, 0.2f};
+	const float3 LightColor = {1.f, 1.f, 1.f};
+	const float3 LightDir = { -0.3f, -1.f, 0.6f };
+	float4 final;
+	final.xyz = (Ambient + dot(normalize(LightDir), normalize(in_data.normal))) * LightColor * in_data.rgb;
+	//final.xyz = Ambient * in_data.rgb;
+	return final;
 }
 
 float4 ps_main_cursor(VertexOut in_data) : SV_TARGET
