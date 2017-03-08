@@ -83,9 +83,9 @@ VertexOut vs_main(VertexIn Input)
 VertexRGBNormalOut vs_normal_main(VertexRGBNormalIn Input)
 {
 	float4 Vec = float4(Input.pos, 1.0f);
-	//Vec = mul(Vec, transpose(World));
-	//Vec = mul(Vec, transpose(ViewProject));
-	Vec = mul(Vec, mul(ViewProject, World));
+	Vec = mul(Vec, World);
+	Vec = mul(Vec, ViewProject);
+	//Vec = mul(Vec, mul(ViewProject, World));
 	VertexRGBNormalOut Output;
 	Output.pos = Vec;
 	Output.normal = Input.normal;
