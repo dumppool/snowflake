@@ -1,0 +1,176 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="FbxSamples">
+      <UniqueIdentifier>{0cc40f71-8742-4262-b256-c0f37c318bac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FbxSamples\Common">
+      <UniqueIdentifier>{6644f929-7003-4a43-9752-aa4a741fe8eb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FbxSamples\ImportScene">
+      <UniqueIdentifier>{efea04b4-6618-466d-a8a3-17b3efc35b4a}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="targetver.h" />
+    <ClInclude Include="Importer.h" />
+    <ClInclude Include="FbxSamples\ImportScene\DisplayAnimation.h">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayCache.h">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayCamera.h">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayCommon.h">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayGenericInfo.h">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayGlobalSettings.h">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayHierarchy.h">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayLight.h">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayLink.h">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayLodGroup.h">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayMarker.h">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayMaterial.h">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayMesh.h">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayNurb.h">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayPatch.h">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayPivotsAndLimits.h">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayPose.h">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayShape.h">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplaySkeleton.h">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayTexture.h">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayUserProperties.h">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\Common\AnimationUtility.h">
+      <Filter>FbxSamples\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\Common\Common.h">
+      <Filter>FbxSamples\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\Common\GeometryUtility.h">
+      <Filter>FbxSamples\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Keywords.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="FbxConverter.cpp" />
+    <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="Importer.cpp" />
+    <ClCompile Include="FbxSamples\ImportScene\DisplayAnimation.cxx">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayCache.cxx">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayCamera.cxx">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayCommon.cxx">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayGenericInfo.cxx">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayGlobalSettings.cxx">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayHierarchy.cxx">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayLight.cxx">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayLink.cxx">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayLodGroup.cxx">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayMarker.cxx">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayMaterial.cxx">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayMesh.cxx">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayNurb.cxx">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayPatch.cxx">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayPivotsAndLimits.cxx">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayPose.cxx">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayShape.cxx">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplaySkeleton.cxx">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayTexture.cxx">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayUserProperties.cxx">
+      <Filter>FbxSamples\ImportScene</Filter>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\Common\AnimationUtility.cxx">
+      <Filter>FbxSamples\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\Common\Common.cxx">
+      <Filter>FbxSamples\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\Common\GeometryUtility.cxx">
+      <Filter>FbxSamples\Common</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

@@ -47,7 +47,7 @@ static void WriteRGB(FJson& output, const FbxColor& color)
 {
 	if (color.IsValid())
 	{
-		vector<float> rgb;
+		vector<double> rgb;
 		rgb.push_back(color.mRed);
 		rgb.push_back(color.mGreen);
 		rgb.push_back(color.mBlue);
@@ -59,7 +59,7 @@ static void WriteRGBA(FJson& output, const FbxColor& color)
 {
 	if (color.IsValid())
 	{
-		vector<float> rgba;
+		vector<double> rgba;
 		rgba.push_back(color.mRed);
 		rgba.push_back(color.mGreen);
 		rgba.push_back(color.mBlue);
@@ -70,7 +70,7 @@ static void WriteRGBA(FJson& output, const FbxColor& color)
 
 static void WriteFloat2(FJson& output, const FbxDouble2& value)
 {
-	vector<float> f2;
+	vector<double> f2;
 	f2.push_back(value[0]);
 	f2.push_back(value[1]);
 	output = f2;
@@ -78,7 +78,7 @@ static void WriteFloat2(FJson& output, const FbxDouble2& value)
 
 static void WriteFloat3(FJson& output, const FbxDouble3& value)
 {
-	vector<float> f3;
+	vector<double> f3;
 	f3.push_back(value[0]);
 	f3.push_back(value[1]);
 	f3.push_back(value[2]);
@@ -87,7 +87,7 @@ static void WriteFloat3(FJson& output, const FbxDouble3& value)
 
 static void WriteFloat3(FJson& output, const FbxVector4& value)
 {
-	vector<float> f3;
+	vector<double> f3;
 	f3.push_back(value[0]);
 	f3.push_back(value[1]);
 	f3.push_back(value[2]);
@@ -96,7 +96,7 @@ static void WriteFloat3(FJson& output, const FbxVector4& value)
 
 static void WriteFloat4x4(FJson& output, const FbxMatrix& matrix)
 {
-	vector<float> f4x4;
+	vector<double> f4x4;
 	for (int row = 0; row < 4; ++row)
 	{
 		FbxVector4 vec = matrix.GetRow(row);
@@ -357,6 +357,26 @@ static void ParsePolygons(FJson& output, FbxMesh* mesh)
 	}
 }
 
+static void ParseLink(std::function<FJson&()> outputGetter, FbxMesh* mesh)
+{
+	if (mesh == nullptr)
+	{
+		return;
+	}
+
+	int skinCount = mesh->GetDeformerCount(FbxDeformer::eSkin);
+	FJson& output = outputGetter();
+	output[K_COUNT] = skinCount;
+	for (int i = 0; i < skinCount; ++i)
+	{
+		int clusterCount = ((FbxSkin*)mesh->GetDeformer(i, FbxDeformer::eSkin))->GetClusterCount();
+		for (int j = 0; j < clusterCount; ++j)
+		{
+
+		}
+	}
+}
+
 static void ParsePose(FJson& output, FbxScene* scene)
 {
 	int count = scene->GetPoseCount();
@@ -402,91 +422,88 @@ static void ParsePose(FJson& output, FbxScene* scene)
 	}
 }
 
-static int InterpolationFlagToIndex(int flags)
+static void InterpolationFlagToIndex(std::function<FJson&()> outputGetter, int flags)
 {
-	if ((flags & FbxAnimCurveDef::eInterpolationConstant) == FbxAnimCurveDef::eInterpolationConstant) return (int)EInterpolation::Constant;
-	if ((flags & FbxAnimCurveDef::eInterpolationLinear) == FbxAnimCurveDef::eInterpolationLinear) return (int)EInterpolation::Linear;
-	if ((flags & FbxAnimCurveDef::eInterpolationCubic) == FbxAnimCurveDef::eInterpolationCubic) return (int)EInterpolation::Cubic;
-	return FLAG_UNKNOWN;
+	if ((flags & FbxAnimCurveDef::eInterpolationConstant) == FbxAnimCurveDef::eInterpolationConstant) outputGetter() = (int)EInterpolation::Constant;
+	if ((flags & FbxAnimCurveDef::eInterpolationLinear) == FbxAnimCurveDef::eInterpolationLinear) outputGetter() = (int)EInterpolation::Linear;
+	if ((flags & FbxAnimCurveDef::eInterpolationCubic) == FbxAnimCurveDef::eInterpolationCubic) outputGetter() = (int)EInterpolation::Cubic;
 }
 
-static int ConstantModeFlagToIndex(int flags)
+static void ConstantModeFlagToIndex(std::function<FJson&()> outputGetter, int flags)
 {
-	if ((flags & FbxAnimCurveDef::eConstantStandard) == FbxAnimCurveDef::eConstantStandard) return (int)EConstantMode::Standard;
-	if ((flags & FbxAnimCurveDef::eConstantNext) == FbxAnimCurveDef::eConstantNext) return (int)EConstantMode::Next;
-	return FLAG_UNKNOWN;
+	if ((flags & FbxAnimCurveDef::eConstantStandard) == FbxAnimCurveDef::eConstantStandard) outputGetter() = (int)EConstantMode::Standard;
+	if ((flags & FbxAnimCurveDef::eConstantNext) == FbxAnimCurveDef::eConstantNext) outputGetter() = (int)EConstantMode::Next;
 }
 
-static int TangentModeFlagToIndex(int flags)
+static void TangentModeFlagToIndex(std::function<FJson&()> outputGetter, int flags)
 {
-	if ((flags & FbxAnimCurveDef::eTangentAuto) == FbxAnimCurveDef::eTangentAuto) return (int)ECubicMode::Auto;
-	if ((flags & FbxAnimCurveDef::eTangentAutoBreak) == FbxAnimCurveDef::eTangentAutoBreak) return (int)ECubicMode::AutoBreak;
-	if ((flags & FbxAnimCurveDef::eTangentTCB) == FbxAnimCurveDef::eTangentTCB) return (int)ECubicMode::Tcb;
-	if ((flags & FbxAnimCurveDef::eTangentUser) == FbxAnimCurveDef::eTangentUser) return (int)ECubicMode::User;
-	return FLAG_UNKNOWN;
+	if ((flags & FbxAnimCurveDef::eTangentAuto) == FbxAnimCurveDef::eTangentAuto) outputGetter() = (int)ECubicMode::Auto;
+	if ((flags & FbxAnimCurveDef::eTangentAutoBreak) == FbxAnimCurveDef::eTangentAutoBreak) outputGetter() = (int)ECubicMode::AutoBreak;
+	if ((flags & FbxAnimCurveDef::eTangentTCB) == FbxAnimCurveDef::eTangentTCB) outputGetter() = (int)ECubicMode::Tcb;
+	if ((flags & FbxAnimCurveDef::eTangentUser) == FbxAnimCurveDef::eTangentUser) outputGetter() = (int)ECubicMode::User;
 }
 
-static int TangentWeightFlagToIndex(int flags)
+static void TangentWeightFlagToIndex(std::function<FJson&()> outputGetter, int flags)
 {
-	if ((flags & FbxAnimCurveDef::eWeightedNone) == FbxAnimCurveDef::eWeightedNone) return (int)ETangentWVMode::None;
-	if ((flags & FbxAnimCurveDef::eWeightedRight) == FbxAnimCurveDef::eWeightedRight) return (int)ETangentWVMode::Right;
-	if ((flags & FbxAnimCurveDef::eWeightedNextLeft) == FbxAnimCurveDef::eWeightedNextLeft) return (int)ETangentWVMode::NextLeft;
-	return FLAG_UNKNOWN;
+	//if ((flags & FbxAnimCurveDef::eWeightedNone) == FbxAnimCurveDef::eWeightedNone) outputGetter() = (int)ETangentWVMode::None;
+	if ((flags & FbxAnimCurveDef::eWeightedRight) == FbxAnimCurveDef::eWeightedRight) outputGetter() = (int)ETangentWVMode::Right;
+	if ((flags & FbxAnimCurveDef::eWeightedNextLeft) == FbxAnimCurveDef::eWeightedNextLeft) outputGetter() = (int)ETangentWVMode::NextLeft;
 }
 
-static int TangentVelocityFlagToIndex(int flags)
+static void TangentVelocityFlagToIndex(std::function<FJson&()> outputGetter, int flags)
 {
-	if ((flags & FbxAnimCurveDef::eVelocityNone) == FbxAnimCurveDef::eVelocityNone) return (int)ETangentWVMode::None;
-	if ((flags & FbxAnimCurveDef::eVelocityRight) == FbxAnimCurveDef::eVelocityRight) return (int)ETangentWVMode::Right;
-	if ((flags & FbxAnimCurveDef::eVelocityNextLeft) == FbxAnimCurveDef::eVelocityNextLeft) return (int)ETangentWVMode::NextLeft;
-	return FLAG_UNKNOWN;
+	//if ((flags & FbxAnimCurveDef::eVelocityNone) == FbxAnimCurveDef::eVelocityNone) outputGetter() = (int)ETangentWVMode::None;
+	if ((flags & FbxAnimCurveDef::eVelocityRight) == FbxAnimCurveDef::eVelocityRight) outputGetter() = (int)ETangentWVMode::Right;
+	if ((flags & FbxAnimCurveDef::eVelocityNextLeft) == FbxAnimCurveDef::eVelocityNextLeft) outputGetter() = (int)ETangentWVMode::NextLeft;
 }
 
-static void ParseCurveKeys(FJson& output, FbxAnimCurve* curve)
+static void ParseCurveKeys(std::function<FJson&()> outputGetter, FbxAnimCurve* curve)
 {
 	if (curve == nullptr)
 	{
 		return;
 	}
 
+	FJson& out = outputGetter();
 	int count = curve->KeyGetCount();
-	output[K_COUNT] = count;
+	out[K_COUNT] = count;
 	for (int i = 0; i < count; ++i)
 	{
-		output[K_CURVE_KEY].push_back(FJson());
-		auto it = output[K_CURVE_KEY].end() - 1;
+		out[K_CURVE_KEY].push_back(FJson());
+		auto it = out[K_CURVE_KEY].end() - 1;
 		float value = static_cast<float>(curve->KeyGetValue(i));
 		FbxTime time = curve->KeyGetTime(i);
 		(*it)[K_KEY_TIME] = time.GetSecondDouble();
 		(*it)[K_VALUE] = value;
-		(*it)[K_INTERPOLATION] = InterpolationFlagToIndex(curve->KeyGetInterpolation(i));
+		InterpolationFlagToIndex([&]()->FJson& {return (*it)[K_INTERPOLATION]; }, curve->KeyGetInterpolation(i));
 		int flags = curve->KeyGetInterpolation(i);
-if ((flags & FbxAnimCurveDef::eInterpolationConstant) == FbxAnimCurveDef::eInterpolationConstant)
-{
-	(*it)[K_CONSTANT_MODE] = ConstantModeFlagToIndex(flags);
-}
-else if ((flags & FbxAnimCurveDef::eInterpolationCubic) == FbxAnimCurveDef::eInterpolationCubic)
-{
-	(*it)[K_CUBIC_MODE] = TangentModeFlagToIndex(flags);
-	(*it)[K_TANGENT_WEIGHT] = TangentWeightFlagToIndex(curve->KeyGet(i).GetTangentWeightMode());
-	(*it)[K_TANGENT_VELOCITY] = TangentVelocityFlagToIndex(curve->KeyGet(i).GetTangentVelocityMode());
-}
+		if ((flags & FbxAnimCurveDef::eInterpolationConstant) == FbxAnimCurveDef::eInterpolationConstant)
+		{
+			ConstantModeFlagToIndex([&]()->FJson& {return (*it)[K_CONSTANT_MODE]; }, flags);
+		}
+		else if ((flags & FbxAnimCurveDef::eInterpolationCubic) == FbxAnimCurveDef::eInterpolationCubic)
+		{
+			TangentModeFlagToIndex([&]()->FJson& {return (*it)[K_CUBIC_MODE]; }, flags);
+			TangentWeightFlagToIndex([&]()->FJson& {return (*it)[K_TANGENT_WEIGHT]; }, curve->KeyGet(i).GetTangentWeightMode());
+			TangentVelocityFlagToIndex([&]()->FJson& {return (*it)[K_TANGENT_VELOCITY]; }, curve->KeyGet(i).GetTangentVelocityMode());
+		}
 	}
 }
 
-static void ParseListCurveKeys(FJson& output, FbxAnimCurve* curve, FbxProperty* prop)
+static void ParseListCurveKeys(std::function<FJson&()> outputGetter, FbxAnimCurve* curve, FbxProperty* prop)
 {
 	if (curve == nullptr || prop == nullptr)
 	{
 		return;
 	}
 
+	FJson& out = outputGetter();
 	int count = curve->KeyGetCount();
-	output[K_COUNT] = count;
+	out[K_COUNT] = count;
 	for (int i = 0; i < count; ++i)
 	{
-		output[K_CURVE_LIST].push_back(FJson());
-		auto it = output[K_CURVE_LIST].end() - 1;
+		out[K_CURVE_LIST].push_back(FJson());
+		auto it = out[K_CURVE_LIST].end() - 1;
 		int value = static_cast<int>(curve->KeyGetValue(i));
 		FbxTime keyTime = curve->KeyGetTime(i);
 		(*it)[K_KEY_TIME] = keyTime.GetSecondDouble();
@@ -498,46 +515,48 @@ static void ParseListCurveKeys(FJson& output, FbxAnimCurve* curve, FbxProperty* 
 static void ParseChannels(FJson& output,
 	FbxNode* node,
 	FbxAnimLayer* layer,
-	void(*DisplayCurve)(FJson&, FbxAnimCurve*),
-	void(*DisplayListCurve)(FJson&, FbxAnimCurve*, FbxProperty*), bool bIsSwitcher)
+	std::function<void(std::function<FJson&()>, FbxAnimCurve*)> DisplayCurve,
+	std::function<void(std::function<FJson&()>, FbxAnimCurve*, FbxProperty*)> DisplayListCurve,
+	bool bIsSwitcher)
 {
 	if (!bIsSwitcher)
 	{
-		DisplayCurve(output[K_TRANSLATE_X], node->LclTranslation.GetCurve(layer, FBXSDK_CURVENODE_COMPONENT_X));
-		DisplayCurve(output[K_TRANSLATE_Y], node->LclTranslation.GetCurve(layer, FBXSDK_CURVENODE_COMPONENT_Y));
-		DisplayCurve(output[K_TRANSLATE_Z], node->LclTranslation.GetCurve(layer, FBXSDK_CURVENODE_COMPONENT_Z));
-		DisplayCurve(output[K_ROTATE_X], node->LclRotation.GetCurve(layer, FBXSDK_CURVENODE_COMPONENT_X));
-		DisplayCurve(output[K_ROTATE_Y], node->LclRotation.GetCurve(layer, FBXSDK_CURVENODE_COMPONENT_Y));
-		DisplayCurve(output[K_ROTATE_Z], node->LclRotation.GetCurve(layer, FBXSDK_CURVENODE_COMPONENT_Z));
-		DisplayCurve(output[K_SCALE_X], node->LclScaling.GetCurve(layer, FBXSDK_CURVENODE_COMPONENT_X));
-		DisplayCurve(output[K_SCALE_Y], node->LclScaling.GetCurve(layer, FBXSDK_CURVENODE_COMPONENT_Y));
-		DisplayCurve(output[K_SCALE_Z], node->LclScaling.GetCurve(layer, FBXSDK_CURVENODE_COMPONENT_Z));
+		DisplayCurve([&]()->FJson& {return output[K_TRANSLATE_X]; }, node->LclTranslation.GetCurve(layer, FBXSDK_CURVENODE_COMPONENT_X));
+		DisplayCurve([&]()->FJson& {return output[K_TRANSLATE_Y]; }, node->LclTranslation.GetCurve(layer, FBXSDK_CURVENODE_COMPONENT_Y));
+		DisplayCurve([&]()->FJson& {return output[K_TRANSLATE_Z]; }, node->LclTranslation.GetCurve(layer, FBXSDK_CURVENODE_COMPONENT_Z));
+		DisplayCurve([&]()->FJson& {return output[K_ROTATE_X]; }, node->LclRotation.GetCurve(layer, FBXSDK_CURVENODE_COMPONENT_X));
+		DisplayCurve([&]()->FJson& {return output[K_ROTATE_Y]; }, node->LclRotation.GetCurve(layer, FBXSDK_CURVENODE_COMPONENT_Y));
+		DisplayCurve([&]()->FJson& {return output[K_ROTATE_Z]; }, node->LclRotation.GetCurve(layer, FBXSDK_CURVENODE_COMPONENT_Z));
+		DisplayCurve([&]()->FJson& {return output[K_SCALE_X]; }, node->LclScaling.GetCurve(layer, FBXSDK_CURVENODE_COMPONENT_X));
+		DisplayCurve([&]()->FJson& {return output[K_SCALE_Y]; }, node->LclScaling.GetCurve(layer, FBXSDK_CURVENODE_COMPONENT_Y));
+		DisplayCurve([&]()->FJson& {return output[K_SCALE_Z]; }, node->LclScaling.GetCurve(layer, FBXSDK_CURVENODE_COMPONENT_Z));
 	}
+
 
 	FbxNodeAttribute* attr = node->GetNodeAttribute();
 	if (attr != nullptr)
 	{
-		DisplayCurve(output[K_RED], attr->Color.GetCurve(layer, FBXSDK_CURVENODE_COLOR_RED));
-		DisplayCurve(output[K_GREEN], attr->Color.GetCurve(layer, FBXSDK_CURVENODE_COLOR_GREEN));
-		DisplayCurve(output[K_BLUE], attr->Color.GetCurve(layer, FBXSDK_CURVENODE_COLOR_BLUE));
+		DisplayCurve([&]()->FJson& {return output[K_RED]; }, attr->Color.GetCurve(layer, FBXSDK_CURVENODE_COLOR_RED));
+		DisplayCurve([&]()->FJson& {return output[K_GREEN]; }, attr->Color.GetCurve(layer, FBXSDK_CURVENODE_COLOR_GREEN));
+		DisplayCurve([&]()->FJson& {return output[K_BLUE]; }, attr->Color.GetCurve(layer, FBXSDK_CURVENODE_COLOR_BLUE));
 
 		auto light = node->GetLight();
 		if (light != nullptr)
 		{
-			DisplayCurve(output[K_INTENSITY], light->Intensity.GetCurve(layer));
-			DisplayCurve(output[K_OUTER_ANGLE], light->OuterAngle.GetCurve(layer));
-			DisplayCurve(output[K_FOG], light->Fog.GetCurve(layer));
+			DisplayCurve([&]()->FJson& {return output[K_INTENSITY]; }, light->Intensity.GetCurve(layer));
+			DisplayCurve([&]()->FJson& {return output[K_OUTER_ANGLE]; }, light->OuterAngle.GetCurve(layer));
+			DisplayCurve([&]()->FJson& {return output[K_FOG]; }, light->Fog.GetCurve(layer));
 		}
 
 		auto camera = node->GetCamera();
 		if (camera != nullptr)
 		{
-			DisplayCurve(output[K_FOV], camera->FieldOfView.GetCurve(layer));
-			DisplayCurve(output[K_FOV_X], camera->FieldOfViewX.GetCurve(layer));
-			DisplayCurve(output[K_FOV_Y], camera->FieldOfViewY.GetCurve(layer));
-			DisplayCurve(output[K_OPTICAL_CENTERX], camera->OpticalCenterX.GetCurve(layer));
-			DisplayCurve(output[K_OPTICAL_CENTERY], camera->OpticalCenterY.GetCurve(layer));
-			DisplayCurve(output[K_ROLL], camera->Roll.GetCurve(layer));
+			DisplayCurve([&]()->FJson& {return output[K_FOV]; }, camera->FieldOfView.GetCurve(layer));
+			DisplayCurve([&]()->FJson& {return output[K_FOV_X]; }, camera->FieldOfViewX.GetCurve(layer));
+			DisplayCurve([&]()->FJson& {return output[K_FOV_Y]; }, camera->FieldOfViewY.GetCurve(layer));
+			DisplayCurve([&]()->FJson& {return output[K_OPTICAL_CENTERX]; }, camera->OpticalCenterX.GetCurve(layer));
+			DisplayCurve([&]()->FJson& {return output[K_OPTICAL_CENTERY]; }, camera->OpticalCenterY.GetCurve(layer));
+			DisplayCurve([&]()->FJson& {return output[K_ROLL]; }, camera->Roll.GetCurve(layer));
 		}
 
 		if (attr->GetAttributeType() == FbxNodeAttribute::eMesh ||
@@ -554,7 +573,7 @@ static void ParseChannels(FJson& output,
 				{
 					auto channel = shape->GetBlendShapeChannel(j);
 					output[K_SHAPE_CHANNEL][K_NAME] = channel->GetName();
-					DisplayCurve(output[K_SHAPE_CHANNEL], geo->GetShapeChannel(i, j, layer, true));
+					DisplayCurve([&]()->FJson& {return output[K_SHAPE_CHANNEL];}, geo->GetShapeChannel(i, j, layer, true));
 				}
 			}
 		}
@@ -563,10 +582,10 @@ static void ParseChannels(FJson& output,
 	auto prop = node->GetFirstProperty();
 	while (prop.IsValid())
 	{
-		output[K_PROPERTY].push_back(FJson());
-		auto it = output[K_PROPERTY].end() - 1;
 		if (prop.GetFlag(FbxPropertyFlags::eUserDefined))
 		{
+			output[K_PROPERTY].push_back(FJson());
+			auto it = output[K_PROPERTY].end() - 1;
 			auto name = prop.GetName();
 			auto curveNode = prop.GetCurveNode(layer);
 			if (curveNode == nullptr)
@@ -586,9 +605,9 @@ static void ParseChannels(FJson& output,
 				(*it)[K_COUNT] = curveNode->GetCurveCount(0U);
 				for (int i = 0; i < curveNode->GetCurveCount(0U); ++i)
 				{
-					output[K_CURVE].push_back(FJson());
-					auto it2 = output[K_CURVE].end() - 1;
-					DisplayCurve(*it2, curveNode->GetCurve(0U, i));
+					(*it)[K_CURVE].push_back(FJson());
+					auto it2 = (*it)[K_CURVE].end() - 1;
+					DisplayCurve([&]()->FJson& {return *it2; }, curveNode->GetCurve(0U, i));
 				}
 			}
 			else if (
@@ -610,26 +629,26 @@ static void ParseChannels(FJson& output,
 
 				for (int i = 0; i < curveNode->GetCurveCount(0U); ++i)
 				{
-					output[K_CURVE].push_back(FJson());
-					auto it2 = output[K_CURVE].end() - 1;
+					(*it)[K_CURVE].push_back(FJson());
+					auto it2 = (*it)[K_CURVE].end() - 1;
 					(*it2)[K_NAME] = name1;
-					DisplayCurve(*it2, curveNode->GetCurve(0U, i));
+					DisplayCurve([&]()->FJson& {return *it2; }, curveNode->GetCurve(0U, i));
 				}
 
 				for (int i = 0; i < curveNode->GetCurveCount(1U); ++i)
 				{
-					output[K_CURVE].push_back(FJson());
-					auto it2 = output[K_CURVE].end() - 1;
+					(*it)[K_CURVE].push_back(FJson());
+					auto it2 = (*it)[K_CURVE].end() - 1;
 					(*it2)[K_NAME] = name2;
-					DisplayCurve(*it2, curveNode->GetCurve(1U, i));
+					DisplayCurve([&]()->FJson& {return *it2; }, curveNode->GetCurve(1U, i));
 				}
 
 				for (int i = 0; i < curveNode->GetCurveCount(2U); ++i)
 				{
-					output[K_CURVE].push_back(FJson());
-					auto it2 = output[K_CURVE].end() - 1;
+					(*it)[K_CURVE].push_back(FJson());
+					auto it2 = (*it)[K_CURVE].end() - 1;
 					(*it2)[K_NAME] = name3;
-					DisplayCurve(*it2, curveNode->GetCurve(2U, i));
+					DisplayCurve([&]()->FJson& {return *it2; }, curveNode->GetCurve(2U, i));
 				}
 			}
 			else if (dataType.GetType() == eFbxEnum)
@@ -639,7 +658,7 @@ static void ParseChannels(FJson& output,
 				(*it)[K_COUNT] = curveNode->GetCurveCount(0U);
 				for (int i = 0; i < curveNode->GetCurveCount(0U); ++i)
 				{
-					DisplayListCurve((*it)[K_CURVE_LIST], curveNode->GetCurve(0U, i), &prop);
+					DisplayListCurve([&]()->FJson& {return (*it)[K_CURVE_LIST]; }, curveNode->GetCurve(0U, i), &prop);
 				}
 			}
 		}
@@ -656,8 +675,8 @@ static void ParseAnimationLayer(FJson& output, FbxAnimLayer* layer, FbxNode* nod
 
 	for (int i = 0; i < node->GetChildCount(); ++i)
 	{
-		output[K_LAYER2].push_back(FJson());
-		auto it = output[K_LAYER2].end() - 1;
+		output[K_LAYER].push_back(FJson());
+		auto it = output[K_LAYER].end() - 1;
 		ParseAnimationLayer(*it, layer, node->GetChild(i), bIsSwitcher);
 	}
 }
@@ -687,7 +706,7 @@ static void ParseAnimation(FJson& output, FbxScene* scene)
 		auto it = output[K_STACK].end() - 1;
 		auto stack = scene->GetSrcObject<FbxAnimStack>(i);
 		//ParseAnimationStack(*it, stack, scene->GetRootNode(), false);
-		ParseAnimationStack(*it, stack, scene->GetRootNode(), true);
+		ParseAnimationStack(*it, stack, scene->GetRootNode(), false);
 	}
 }
 
@@ -742,7 +761,11 @@ static void ParseSkeleton(FJson& output, FbxNode* node)
 	output[K_NAME] = node->GetName();
 	ParseMetaDataConnections(output[K_METADATA_CONNECTION], skeleton);
 
+#ifdef USE_READABLE_KEY
 	const char* skeletonTypes[] = { K_ROOT, K_LIMB, K_LIMBNODE, K_EFFECTOR };
+#else
+	int skeletonTypes[] = { K_ROOT, K_LIMB, K_LIMBNODE, K_EFFECTOR };
+#endif
 	output[K_TYPE] = skeletonTypes[skeleton->GetSkeletonType()];
 
 	switch (skeleton->GetSkeletonType())
@@ -816,10 +839,10 @@ public:
 		file.open(ConvertFile, ios::out);
 
 		FJson json;
-		json.push_back(MetaData);
-		json.push_back(NodeData);
-		json.push_back(PoseData);
-		json.push_back(AnimData);
+		json[K_META] = MetaData;
+		json[K_NODE] = NodeData;
+		json[K_POSE] = PoseData;
+		json[K_ANIMATION] = AnimData;
 
 		file << json << endl;
 
@@ -832,12 +855,12 @@ public:
 		FbxDocumentInfo* info = SdkScene->GetSceneInfo();
 		if (info != nullptr)
 		{
-			MetaData[K_META][K_TITLE] = info->mTitle.Buffer();
-			MetaData[K_META][K_SUBJECT] = info->mSubject.Buffer();
-			MetaData[K_META][K_AUTHOR] = info->mAuthor.Buffer();
-			MetaData[K_META][K_COMMENT] = info->mComment.Buffer();
-			MetaData[K_META][K_KEYWORDS] = info->mKeywords.Buffer();
-			MetaData[K_META][K_REVISION] = info->mRevision.Buffer();
+			MetaData[K_TITLE] = info->mTitle.Buffer();
+			MetaData[K_SUBJECT] = info->mSubject.Buffer();
+			MetaData[K_AUTHOR] = info->mAuthor.Buffer();
+			MetaData[K_COMMENT] = info->mComment.Buffer();
+			MetaData[K_KEYWORDS] = info->mKeywords.Buffer();
+			MetaData[K_REVISION] = info->mRevision.Buffer();
 
 			FbxThumbnail* thumbnail = info->GetSceneThumbnail();
 			if (thumbnail != nullptr)
@@ -845,10 +868,10 @@ public:
 				switch (thumbnail->GetDataFormat())
 				{
 				case FbxThumbnail::eRGB_24:
-					MetaData[K_META][K_THUMBNAIL][K_FORMAT] = (int)EThumbnailFormat::RGB;
+					MetaData[K_THUMBNAIL][K_FORMAT] = (int)EThumbnailFormat::RGB;
 					break;
 				case FbxThumbnail::eRGBA_32:
-					MetaData[K_META][K_THUMBNAIL][K_FORMAT] = (int)EThumbnailFormat::RGBA;
+					MetaData[K_THUMBNAIL][K_FORMAT] = (int)EThumbnailFormat::RGBA;
 				default:
 					break;
 				}
@@ -856,13 +879,13 @@ public:
 				switch (thumbnail->GetSize())
 				{
 				case FbxThumbnail::eNotSet:
-					MetaData[K_META][K_THUMBNAIL][K_DIM_UNKNOW] = thumbnail->GetSizeInBytes();
+					MetaData[K_THUMBNAIL][K_DIM_UNKNOW] = thumbnail->GetSizeInBytes();
 					break;
 				case FbxThumbnail::e64x64:
-					MetaData[K_META][K_THUMBNAIL][K_DIM_64] = thumbnail->GetSizeInBytes();
+					MetaData[K_THUMBNAIL][K_DIM_64] = thumbnail->GetSizeInBytes();
 					break;
 				case FbxThumbnail::e128x128:
-					MetaData[K_META][K_THUMBNAIL][K_DIM_128] = thumbnail->GetSizeInBytes();
+					MetaData[K_THUMBNAIL][K_DIM_128] = thumbnail->GetSizeInBytes();
 					break;
 				default:
 					break;
@@ -873,7 +896,8 @@ public:
 
 	void ImportNode(FbxNode* node)
 	{
-		NodeData.clear();
+		NodeData.push_back(FJson());
+		auto it = NodeData.end() - 1;
 
 		FbxNodeAttribute::EType attrType;
 		if (node->GetNodeAttribute() != nullptr)
@@ -882,28 +906,36 @@ public:
 			switch (attrType)
 			{
 			case FbxNodeAttribute::eMarker:
-				ParseMarker(NodeData[K_MARKER], node);
+				(*it)[K_TYPE] = K_MARKER;
+				ParseMarker(*it, node);
 				break;
 			case FbxNodeAttribute::eSkeleton:
-				ParseSkeleton(NodeData[K_SKELETON], node);
+				(*it)[K_TYPE] = K_SKELETON;
+				ParseSkeleton(*it, node);
 				break;
 			case FbxNodeAttribute::eMesh:
-				ParseMesh(NodeData[K_MESH], node);
+				(*it)[K_TYPE] = K_MESH;
+				ParseMesh(*it, node);
 				break;
 			case FbxNodeAttribute::eNurbs:
-				ParseNurbs(NodeData[K_NURBS], node);
+				(*it)[K_TYPE] = K_NURBS;
+				ParseNurbs(*it, node);
 				break;
 			case FbxNodeAttribute::ePatch:
-				ParsePatch(NodeData[K_PATCH], node);
+				(*it)[K_TYPE] = K_PATCH;
+				ParsePatch(*it, node);
 				break;
 			case FbxNodeAttribute::eCamera:
-				ParseCamera(NodeData[K_CAMERA], node);
+				(*it)[K_TYPE] = K_CAMERA;
+				ParseCamera(*it, node);
 				break;
 			case FbxNodeAttribute::eLight:
-				ParseLight(NodeData[K_LIGHT], node);
+				(*it)[K_TYPE] = K_LIGHT;
+				ParseLight(*it, node);
 				break;
 			case FbxNodeAttribute::eLODGroup:
-				ParseLODGroup(NodeData[K_LODGROUP], node);
+				(*it)[K_TYPE] = K_LODGROUP;
+				ParseLODGroup(*it, node);
 				break;
 			default:
 				break;
