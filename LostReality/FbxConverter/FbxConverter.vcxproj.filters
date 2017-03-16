@@ -172,5 +172,6 @@
     <ClCompile Include="FbxSamples\Common\GeometryUtility.cxx">
       <Filter>FbxSamples\Common</Filter>
     </ClCompile>
+    <ClCompile Include="Importer2.cpp" />
   </ItemGroup>
 </Project>

@@ -21,4 +21,12 @@
 
 using namespace std;
 
-// TODO:  在此处引用程序需要的其他头文件
+// internal includes
+#include "Keywords.h"
+#include "json.hpp"
+using FJson = nlohmann::json;
+
+// sdk includes
+#include <fbxsdk.h>
+
+#include "FbxSamples/Common/Common.h"

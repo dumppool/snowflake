@@ -30,7 +30,7 @@ int main(int argc, char** argv)
 
 	if (!src.empty() && !dst.empty())
 	{
-		Importer::ImportScene(src, dst);
+		Importer::ImportScene2(src, dst);
 	}
 
     return 0;

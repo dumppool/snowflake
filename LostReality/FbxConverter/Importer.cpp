@@ -10,11 +10,9 @@
 #include "stdafx.h"
 #include "Importer.h"
 
-// sdk includes
-#include <fbxsdk.h>
+using namespace Importer;
 
 // improt sample code includes
-#include "FbxSamples/Common/Common.h"
 #include "FbxSamples/ImportScene/DisplayCommon.h"
 #include "FbxSamples/ImportScene/DisplayHierarchy.h"
 #include "FbxSamples/ImportScene/DisplayAnimation.h"
@@ -32,10 +30,6 @@
 #include "FbxSamples/ImportScene/DisplayUserProperties.h"
 #include "FbxSamples/ImportScene/DisplayGenericInfo.h"
 
-// internal includes
-#include "Keywords.h"
-#include "json.hpp"
-using FJson = nlohmann::json;
 
 static const string SSeperator("--------------------------------");
 static const string SIndent("\t\t");
@@ -43,74 +37,14 @@ static const string SIndent("\t\t");
 /************************************************************************************/
 // parser
 
-static void WriteRGB(FJson& output, const FbxColor& color)
+static void ParseControlsPoints(std::function<FJson&()> outputGetter, FbxMesh* mesh)
 {
-	if (color.IsValid())
+	if (mesh == nullptr)
 	{
-		vector<double> rgb;
-		rgb.push_back(color.mRed);
-		rgb.push_back(color.mGreen);
-		rgb.push_back(color.mBlue);
-		output = rgb;
-	}
-}
-
-static void WriteRGBA(FJson& output, const FbxColor& color)
-{
-	if (color.IsValid())
-	{
-		vector<double> rgba;
-		rgba.push_back(color.mRed);
-		rgba.push_back(color.mGreen);
-		rgba.push_back(color.mBlue);
-		rgba.push_back(color.mAlpha);
-		output = rgba;
-	}
-}
-
-static void WriteFloat2(FJson& output, const FbxDouble2& value)
-{
-	vector<double> f2;
-	f2.push_back(value[0]);
-	f2.push_back(value[1]);
-	output = f2;
-}
-
-static void WriteFloat3(FJson& output, const FbxDouble3& value)
-{
-	vector<double> f3;
-	f3.push_back(value[0]);
-	f3.push_back(value[1]);
-	f3.push_back(value[2]);
-	output = f3;
-}
-
-static void WriteFloat3(FJson& output, const FbxVector4& value)
-{
-	vector<double> f3;
-	f3.push_back(value[0]);
-	f3.push_back(value[1]);
-	f3.push_back(value[2]);
-	output = f3;
-}
-
-static void WriteFloat4x4(FJson& output, const FbxMatrix& matrix)
-{
-	vector<double> f4x4;
-	for (int row = 0; row < 4; ++row)
-	{
-		FbxVector4 vec = matrix.GetRow(row);
-		for (int col = 0; col < 4; ++col)
-		{
-			f4x4.push_back(vec[col]);
-		}
+		return;
 	}
 
-	output = f4x4;
-}
-
-static void ParseControlsPoints(FJson& output, FbxMesh* mesh)
-{
+	FJson& output = outputGetter();
 	int count = mesh->GetControlPointsCount();
 	FbxVector4* controlPoints = mesh->GetControlPoints();
 	for (int i = 0; i < count; ++i)
@@ -133,10 +67,18 @@ static void ParseControlsPoints(FJson& output, FbxMesh* mesh)
 	}
 }
 
-static void ParsePolygons(FJson& output, FbxMesh* mesh)
+static void ParsePolygons(std::function<FJson&()> outputGetter, FbxMesh* mesh)
 {
+	if (mesh == nullptr)
+	{
+		return;
+	}
+
+	FJson& output = outputGetter();
 	int count = mesh->GetPolygonCount();
 	FbxVector4* controlPoints = mesh->GetControlPoints();
+	FbxGeometryElementUV* uv0 = mesh->GetElementUV(0);
+	int uvCount0 = uv0->GetDirectArray().GetCount();
 	int vertexid = 0;
 	for (int i = 0; i < count; ++i)
 	{
@@ -220,7 +162,8 @@ static void ParsePolygons(FJson& output, FbxMesh* mesh)
 				}
 			}
 
-			for (int k = 0; k < mesh->GetElementUVCount(); ++k)
+			int kcount = mesh->GetElementUVCount();
+			for (int k = 0; k < kcount; ++k)
 			{
 				(*it2)[K_UV].push_back(FJson());
 				auto it3 = (*it2)[K_UV].end() - 1;
@@ -369,10 +312,29 @@ static void ParseLink(std::function<FJson&()> outputGetter, FbxMesh* mesh)
 	output[K_COUNT] = skinCount;
 	for (int i = 0; i < skinCount; ++i)
 	{
+		output[K_SKIN].push_back(FJson());
+		auto it = output[K_SKIN].end() - 1;
 		int clusterCount = ((FbxSkin*)mesh->GetDeformer(i, FbxDeformer::eSkin))->GetClusterCount();
 		for (int j = 0; j < clusterCount; ++j)
 		{
+			static const char* SModes[] = {K_NORMALIZE, K_ADDITIVE, K_TOTAL};
+			(*it)[K_CLUSTER].push_back(FJson());
+			auto it2 = (*it)[K_CLUSTER].end() - 1;
 
+			auto cluster = ((FbxSkin*)mesh->GetDeformer(i, FbxDeformer::eSkin))->GetCluster(j);
+			if (cluster->GetLink() != nullptr)
+			{
+				(*it2)[K_NAME] = cluster->GetLink()->GetName();
+			}
+
+			int cpIndexCount = cluster->GetControlPointIndicesCount();
+			int* indices = cluster->GetControlPointIndices();
+			double* weights = cluster->GetControlPointWeights();
+			for (int k = 0; k < cpIndexCount; ++k)
+			{
+				(*it2)[K_LINK_INDICES].push_back(indices[k]);
+				(*it2)[K_WEIGHT_VALUES].push_back(weights[k]);
+			}
 		}
 	}
 }
@@ -710,8 +672,14 @@ static void ParseAnimation(FJson& output, FbxScene* scene)
 	}
 }
 
-static void ParseMetaDataConnections(FJson& output, FbxObject* object)
+static void ParseMetaDataConnections(std::function<FJson&()> outputGetter, FbxObject* object)
 {
+	if (object == nullptr)
+	{
+		return;
+	}
+
+	FJson& output = outputGetter();
 	int count = object->GetSrcObjectCount<FbxObjectMetaData>();
 	vector<string> names;
 	for (int i = 0; i < count; ++i)
@@ -732,7 +700,7 @@ static void ParseMarker(FJson& output, FbxNode* node)
 	}
 
 	output[K_NAME] = node->GetName();
-	ParseMetaDataConnections(output[K_METADATA_CONNECTION], marker);
+	ParseMetaDataConnections([&]()->FJson& {return output[K_METADATA_CONNECTION]; }, marker);
 
 	switch (marker->GetType())
 	{
@@ -759,13 +727,9 @@ static void ParseSkeleton(FJson& output, FbxNode* node)
 {
 	FbxSkeleton* skeleton = (FbxSkeleton*)node->GetNodeAttribute();
 	output[K_NAME] = node->GetName();
-	ParseMetaDataConnections(output[K_METADATA_CONNECTION], skeleton);
+	ParseMetaDataConnections([&]()->FJson& {return output[K_METADATA_CONNECTION]; }, skeleton);
 
-#ifdef USE_READABLE_KEY
 	const char* skeletonTypes[] = { K_ROOT, K_LIMB, K_LIMBNODE, K_EFFECTOR };
-#else
-	int skeletonTypes[] = { K_ROOT, K_LIMB, K_LIMBNODE, K_EFFECTOR };
-#endif
 	output[K_TYPE] = skeletonTypes[skeleton->GetSkeletonType()];
 
 	switch (skeleton->GetSkeletonType())
@@ -782,9 +746,10 @@ static void ParseMesh(FJson& output, FbxNode* node)
 {
 	FbxMesh* mesh = (FbxMesh*)node->GetNodeAttribute();
 	output[K_NAME] = node->GetName();
-	ParseMetaDataConnections(output[K_METADATA_CONNECTION], mesh);
-	ParseControlsPoints(output[K_CONTROLPOINT], mesh);
-	ParsePolygons(output[K_POLYGON], mesh);
+	ParseMetaDataConnections([&]()->FJson& {return output[K_METADATA_CONNECTION]; }, mesh);
+	ParseControlsPoints([&]()->FJson& {return output[K_CONTROLPOINT]; }, mesh);
+	ParsePolygons([&]()->FJson& {return output[K_POLYGON]; }, mesh);
+	ParseLink([&]()->FJson& {return output[K_LINK]; }, mesh);
 }
 
 static void ParseNurbs(FJson& output, FbxNode* node)
@@ -940,6 +905,11 @@ public:
 			default:
 				break;
 			}
+		}
+
+		for (int i = 0; i < node->GetChildCount(); ++i)
+		{
+			ImportNode(node->GetChild(i));
 		}
 	}
 
