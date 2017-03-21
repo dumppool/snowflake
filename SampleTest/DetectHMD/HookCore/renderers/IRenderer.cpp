@@ -11,6 +11,7 @@
 #include "input/InputDevice.h"
 
 using namespace lostvr;
+using namespace std;
 
 const CHAR* SLogPrefix = "LostVR";
 
@@ -127,20 +128,110 @@ void LostVR::OnPresent_Direct3D9Ex(IDirect3DDevice9Ex* device)
 	//PollInputDevice(nullptr);
 }
 
+//static const int SCameraBack = 1;
+//static const int SCameraFront = 2;
+//static const int SSwitchMouseMove = 3;
+//static const int SSwitchMouseButtonHold = 4;
+//static const int SSwitchJoystick = 5;
+
+#define SCameraBack				string("lenspull")
+#define SCameraFront			string("closerview")
+#define SSwitchMouseMove		string("ctrlview")
+#define SSwitchMouseButtonHold	string("ctrlmouse")
+#define SSwitchJoystick			string("openhandle")
+
+#define SJoystickButtonA		string("A")
+#define SJoystickButtonB		string("B")
+#define SJoystickButtonX		string("X")
+#define SJoystickButtonY		string("Y")
+#define SJoystickButtonLB		string("LB")
+#define SJoystickButtonRB		string("RB")
+#define SJoystickButtonLT		string("LT")
+#define SJoystickButtonRT		string("RT")
+
+// only accept lower-case character
+static int CharToDIK(char c)
+{
+	return MapVirtualKeyA(VkKeyScanA(c), 0);
+}
+
+// only accept lower-case key
+// only return true if is not a modifier
+static bool CustomCharToDIK(const string& key, int& output)
+{
+	static map<string, int> SDIKMap;
+	if (SDIKMap.empty())
+	{
+		SDIKMap["pagedown"] = (DIK_PGDN);
+		SDIKMap["pageup"] = (DIK_PGUP);
+		SDIKMap["home"] = (DIK_HOME);
+		SDIKMap["end"] = (DIK_END);
+		SDIKMap["left"] = (DIK_LEFT);
+		SDIKMap["right"] = (DIK_RIGHT);
+		SDIKMap["up"] = (DIK_UP);
+		SDIKMap["down"] = (DIK_DOWN);
+	}
+
+	if (SDIKMap.find(key) != SDIKMap.end())
+	{
+		output = SDIKMap[key];
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+// only return true if is a modifier
+static bool ModifierToDIK(const string& key, vector<int>& output)
+{
+	static map<string, vector<int>> SDIKMap;
+	if (SDIKMap.empty())
+	{
+		SDIKMap["ctrl"].push_back(DIK_LCONTROL);
+		SDIKMap["ctrl"].push_back(DIK_RCONTROL);
+		SDIKMap["shift"].push_back(DIK_LSHIFT);
+		SDIKMap["shift"].push_back(DIK_RSHIFT);
+		SDIKMap["alt"].push_back(DIK_LALT);
+		SDIKMap["alt"].push_back(DIK_RALT);
+	}
+
+	if (SDIKMap.find(key) != SDIKMap.end())
+	{
+		output = SDIKMap[key];
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+static int GetDIJOYSTATEOffset(const string& key)
+{
+	static map<string, int> SDIJOYSTATEMap;
+	if (SDIJOYSTATEMap.empty())
+	{
+		SDIJOYSTATEMap["LT"] = ((DIJOYSTATE*)0)->lZ;
+	}
+}
+
 class FInputEventHandler : IInputDeviceCallback
 {
 	uint8			KeyStates[256];
 	EInputAction	KeyEvents[256];
 	bool			bHasKeyInput;
 
+	int				Z0;
+	int				Z1;
+
 	DIJOYSTATE		JoyStates;
 	EInputAction	ButtonEvents[32];
+	bool			ButtonPressed[12];
 	bool			bHasButtonInput;
 
 	bool			bIsCounting;
-	double			Count;
-	double			CountMax;
-	HighFrequencyCounter	Counter;
 
 	EInputAction ConsumeKeyAction(int key)
 	{
@@ -207,6 +298,324 @@ class FInputEventHandler : IInputDeviceCallback
 		OutputDebugStringA(info);
 	}
 
+private:
+	struct FKeysAction
+	{
+		string ID;
+		int Key;
+		vector<vector<int>> Modifiers;
+		function<void()> Action;
+
+		FKeysAction(const string& id, int key, const vector<vector<int>>& modifiers)
+			: ID(id)
+			, Key(key)
+			, Modifiers(modifiers)
+			, Action(nullptr)
+		{
+			static map<string, function<void()>> SActionMap;
+			if (SActionMap.empty())
+			{
+				SActionMap[SCameraBack] = []() {
+					auto dev = LostVR::Get()->GetDevice();
+					if (dev != nullptr)
+					{
+						dev->AddMovement(EMovement::CameraBack);
+					}};
+				SActionMap[SCameraFront] = []() {
+					auto dev = LostVR::Get()->GetDevice();
+					if (dev != nullptr)
+					{
+						dev->AddMovement(EMovement::CameraFront);
+					}};
+				SActionMap[SSwitchMouseButtonHold] = []() {
+					SGlobalSharedDataInst.SetBHoldWhenMoving(!SGlobalSharedDataInst.GetBHoldWhenMoving()); };
+				SActionMap[SSwitchMouseMove] = []() {
+					SGlobalSharedDataInst.SetBFakeMouseMove(!SGlobalSharedDataInst.GetBFakeMouseMove()); };
+				SActionMap[SSwitchJoystick] = []() {
+					SGlobalSharedDataInst.SetBEnableJoystick(!SGlobalSharedDataInst.GetBEnableJoystick()); };
+			}
+
+			if (SActionMap.find(ID) == SActionMap.end())
+			{
+				LVERROR("FKeysAction", "invalid id: %s", id.c_str());
+			}
+			else
+			{
+				Action = SActionMap[ID];
+			}
+		}
+
+		bool IsValid() const
+		{
+			return Key > 0 && !ID.empty() && Action != nullptr;
+		}
+
+	private:
+
+		FKeysAction()
+			: ID("")
+			, Key(-1)
+		{
+			Modifiers.clear();
+		}
+	};
+
+	struct FJoystickButtonAction
+	{
+		string ID;
+		int Button;
+		int KeyCode;
+
+		FJoystickButtonAction(const string& id, int keyCode)
+			: ID(id)
+			, Button(-1)
+			, KeyCode(keyCode)
+		{
+			static map<string, int> SButtonMap;
+			if (SButtonMap.empty())
+			{
+				SButtonMap[SJoystickButtonA] = 0;
+				SButtonMap[SJoystickButtonB] = 1;
+				SButtonMap[SJoystickButtonX] = 2;
+				SButtonMap[SJoystickButtonY] = 3;
+				SButtonMap[SJoystickButtonLB] = 4;
+				SButtonMap[SJoystickButtonRB] = 5;
+			}
+
+			if (SButtonMap.find(id) != SButtonMap.end())
+			{
+				Button = SButtonMap[id];
+			}
+			else
+			{
+				LVERROR("FJoystickButtonAction", "invalid id: %s", id.c_str());
+			}
+		}
+
+		bool IsValid() const
+		{
+			return !ID.empty() && Button >= 0 && KeyCode >= 0;
+		}
+
+	private:
+		FJoystickButtonAction()
+			: ID("")
+			, Button(-1)
+			, KeyCode(-1)
+		{
+		}
+	};
+
+	vector<FKeysAction> GeneralActions;
+	vector<FJoystickButtonAction> JoystickButtonAction;
+
+	void SetupGeneralAction(const FKeysAction& inAction)
+	{
+		bool bFound = false;
+		for (auto& action : GeneralActions)
+		{
+			if (action.ID == inAction.ID)
+			{
+				action = inAction;
+				bFound = true;
+				break;
+			}
+		}
+
+		if (!bFound)
+		{
+			GeneralActions.push_back(inAction);
+		}
+	}
+
+	void UpdateGeneralAction()
+	{
+		for (auto& action : GeneralActions)
+		{
+			if (!action.IsValid())
+			{
+				continue;
+			}
+
+			if (ConsumeKeyAction(action.Key) == EInputAction::Released)
+			{
+				bool bMissed = false;
+				for (auto m : action.Modifiers)
+				{
+					bool bPressed = false;
+					for (auto n : m)
+					{
+						if (IsKeyDown(n))
+						{
+							bPressed = true;
+							break;
+						}
+					}
+
+					if (!bPressed)
+					{
+						bMissed = true;
+						break;
+					}
+				}
+
+				if (!bMissed)
+				{
+					action.Action();
+				}
+			}
+		}
+	}
+
+	void SetupJoystickButtonAction(const FJoystickButtonAction& inAction)
+	{
+		bool bFound = false;
+		for (auto& action : JoystickButtonAction)
+		{
+			if (action.ID == inAction.ID)
+			{
+				action = inAction;
+				bFound = true;
+				break;
+			}
+		}
+
+		if (!bFound)
+		{
+			JoystickButtonAction.push_back(inAction);
+		}
+	}
+
+	void UpdateJoystickButtonAction()
+	{
+		for (auto& action : JoystickButtonAction)
+		{
+			if (!action.IsValid())
+			{
+				continue;
+			}
+
+			EInputAction state;
+
+			state = ConsumeButtonAction(action.Button);
+			if (state == EInputAction::Pressed)
+			{
+				FakeKeyPress(action.KeyCode);
+			}
+			else if (state == EInputAction::Released)
+			{
+				FakeKeyRelease(action.KeyCode);
+			}
+		}
+	}
+
+	void ParseInputSettings_General(const FJson& settings)
+	{
+		static vector<string> SGeneralIDs;
+		if (SGeneralIDs.empty())
+		{
+			SGeneralIDs.push_back(SCameraBack);
+			SGeneralIDs.push_back(SCameraFront);
+			SGeneralIDs.push_back(SSwitchMouseMove);
+			SGeneralIDs.push_back(SSwitchMouseButtonHold);
+			SGeneralIDs.push_back(SSwitchJoystick);
+		}
+
+		for (const auto& id : SGeneralIDs)
+		{
+			if (settings.find(id) != settings.end())
+			{
+				string content = settings[id];
+				transform(content.begin(), content.end(), content.begin(), LowerChar);
+
+				content = SubChar(content, ' ');
+				auto keys = SplitChar(content, '+');
+				int mainKey;
+				vector<vector<int>> modKeys;
+				for (auto& k : keys)
+				{
+					vector<int> modKey;
+					if (ModifierToDIK(k, modKey))
+					{
+						modKeys.push_back(modKey);
+					}
+					else if (CustomCharToDIK(k, mainKey))
+					{
+					}
+					else if (k.size() > 0)
+					{
+						mainKey = CharToDIK(k[0]);
+					}
+				}
+
+				SetupGeneralAction(FKeysAction(id, mainKey, modKeys));
+			}
+		}
+	}
+
+	void ParseInputSettings_Joystick(const FJson& settings)
+	{
+		static vector<string> SJoystickButtons;
+		if (SJoystickButtons.empty())
+		{
+			SJoystickButtons.push_back(SJoystickButtonA);
+			SJoystickButtons.push_back(SJoystickButtonB);
+			SJoystickButtons.push_back(SJoystickButtonX);
+			SJoystickButtons.push_back(SJoystickButtonY);
+			SJoystickButtons.push_back(SJoystickButtonLB);
+			SJoystickButtons.push_back(SJoystickButtonRB);
+		}
+
+		for (const auto& id : SJoystickButtons)
+		{
+			if (settings.find(id) != settings.end())
+			{
+				string content = settings[id];
+				transform(content.begin(), content.end(), content.begin(), UpperChar);
+
+				content = SubChar(content, ' ');
+				if (content.size() < 1)
+				{
+					continue;
+				}
+
+				SetupJoystickButtonAction(FJoystickButtonAction(id, content[0]));
+			}
+		}
+
+		if (settings.find(SJoystickButtonLT) != settings.end())
+		{
+			string content = settings[SJoystickButtonLT];
+			transform(content.begin(), content.end(), content.begin(), UpperChar);
+			content = SubChar(content, ' ');
+			if (content.size() > 0)
+			{
+				Z0 = content[0];
+			}
+		}
+
+		if (settings.find(SJoystickButtonRT) != settings.end())
+		{
+			string content = settings[SJoystickButtonRT];
+			transform(content.begin(), content.end(), content.begin(), UpperChar);
+			content = SubChar(content, ' ');
+			if (content.size() > 0)
+			{
+				Z1 = content[0];
+			}
+		}
+	}
+
+	void ParseInputSettings(const char* buf, int sz)
+	{
+		auto settings = FJson::parse(buf);
+		assert(settings.find("common") != settings.end() && "can not find section: common");
+		assert(settings.find("key") != settings.end() && "can not find section: key");
+
+		ParseInputSettings_General(settings["common"]);
+		ParseInputSettings_Joystick(settings["key"]);
+	}
+
 public:
 	virtual void CALLBACK OnKeyboardAction(int key, EInputAction value) override
 	{
@@ -263,302 +672,152 @@ public:
 
 	virtual void CALLBACK OnInputEnd() override
 	{
-		//double elapsed = 0.0;
-		//if (Counter.Started())
-		//{
-		//	elapsed = Counter.Count();
-		//}
-		//else
-		//{
-		//	bIsCounting = false;
-		//	Count = 0;
-		//	CountMax = 100;
-		//	Counter.Start();
-		//}
-
-		//if (bIsCounting)
-		//{
-		//	Count += elapsed;
-		//	if (Count >= CountMax)
-		//	{
-		//		bIsCounting = false;
-		//		FakeKeyRelease(VK_RSHIFT);
-		//	}
-		//}
-
 		if (bHasKeyInput)
 		{
-			if (ConsumeKeyAction(DIK_S) == EInputAction::Released && (IsKeyDown(DIK_LSHIFT) || IsKeyDown(DIK_RSHIFT)))
-			{
-				auto dev = LostVR::Get()->GetDevice();
-				if (dev != nullptr)
-				{
-					dev->AddMovement(EMovement::CameraBack);
-				}
-			}
-			
-			if (ConsumeKeyAction(DIK_W) == EInputAction::Released && (IsKeyDown(DIK_LSHIFT) || IsKeyDown(DIK_RSHIFT)))
-			{
-				auto dev = LostVR::Get()->GetDevice();
-				if (dev != nullptr)
-				{
-					dev->AddMovement(EMovement::CameraFront);
-				}
-			}
-			
-			if (ConsumeKeyAction(DIK_M) == EInputAction::Released && (IsKeyDown(DIK_LSHIFT) || IsKeyDown(DIK_RSHIFT)))
-			{
-				SGlobalSharedDataInst.SetBFakeMouseMove(!SGlobalSharedDataInst.GetBFakeMouseMove());
-			}
-
-
-			if (ConsumeKeyAction(DIK_J) == EInputAction::Released && (IsKeyDown(DIK_LSHIFT) || IsKeyDown(DIK_RSHIFT)))
-			{
-				SGlobalSharedDataInst.SetBEnableJoystick(!SGlobalSharedDataInst.GetBEnableJoystick());
-			}
-
-
-			if (ConsumeKeyAction(DIK_N) == EInputAction::Released && (IsKeyDown(DIK_LSHIFT) || IsKeyDown(DIK_RSHIFT)))
-			{
-				SGlobalSharedDataInst.SetBHoldWhenMoving(!SGlobalSharedDataInst.GetBHoldWhenMoving());
-			}
+			UpdateGeneralAction();
 		}
 
 		if (SGlobalSharedDataInst.GetBEnableJoystick())
 		{
 			if (bHasButtonInput)
 			{
-				EInputAction action;
-				//action = ConsumeButtonAction(7);
-				//if (action == EInputAction::Pressed)
-				//{
-				//	FakeMousePress(true);
-				//}
-				//else if (action == EInputAction::Released)
-				//{
-				//	FakeMouseRelease(true);
-				//}
-
-				action = ConsumeButtonAction(0);
-				if (action == EInputAction::Pressed)
-				{
-					FakeKeyPress('1');
-				}
-				else if (action == EInputAction::Released)
-				{
-					FakeKeyRelease('1');
-				}
-
-				action = ConsumeButtonAction(1);
-				if (action == EInputAction::Pressed)
-				{
-					FakeKeyPress('2');
-				}
-				else if (action == EInputAction::Released)
-				{
-					FakeKeyRelease('2');
-				}
-
-				action = ConsumeButtonAction(2);
-				if (action == EInputAction::Pressed)
-				{
-					FakeKeyPress('3');
-				}
-				else if (action == EInputAction::Released)
-				{
-					FakeKeyRelease('3');
-				}
-
-				action = ConsumeButtonAction(3);
-				if (action == EInputAction::Pressed)
-				{
-					FakeKeyPress('4');
-				}
-				else if (action == EInputAction::Released)
-				{
-					FakeKeyRelease('4');
-				}
-
-				action = ConsumeButtonAction(4);
-				if (action == EInputAction::Pressed)
-				{
-					FakeKeyPress('5');
-				}
-				else if (action == EInputAction::Released)
-				{
-					FakeKeyRelease('5');
-				}
-
-				action = ConsumeButtonAction(5);
-				if (action == EInputAction::Pressed)
-				{
-					FakeKeyPress('6');
-				}
-				else if (action == EInputAction::Released)
-				{
-					FakeKeyRelease('6');
-				}
-
-				action = ConsumeButtonAction(6);
-				if (action == EInputAction::Pressed)
-				{
-					FakeKeyPress(VK_ESCAPE);
-				}
-				else if (action == EInputAction::Released)
-				{
-					FakeKeyRelease(VK_ESCAPE);
-				}
-
-				action = ConsumeButtonAction(7);
-				if (action == EInputAction::Pressed)
-				{
-					FakeKeyPress(VK_RETURN);
-				}
-				else if (action == EInputAction::Released)
-				{
-					FakeKeyRelease(VK_RETURN);
-				}
+				UpdateJoystickButtonAction();
 			}
 
 			const uint32 THRESHOLD_SMALL = 1 << 12;
 			const uint32 THRESHOLD_LARGE = (1 << 15) | (1 << 14);
-			static bool SPressed[] = { false,false,false,false,false,false,
-				false,false,false,false,false,false, };
-			static bool SX1 = false;
-			static bool SY0 = false;
-			static bool SY1 = false;
 			if (JoyStates.lX < THRESHOLD_SMALL)
 			{
-				if (!SPressed[0])
+				if (!ButtonPressed[0])
 				{
-					SPressed[0] = true;
+					ButtonPressed[0] = true;
 					FakeKeyPress('A');
 				}
 			}
 			else
 			{
-				if (SPressed[0])
+				if (ButtonPressed[0])
 				{
-					SPressed[0] = false;
+					ButtonPressed[0] = false;
 					FakeKeyRelease('A');
 				}
 			}
 
 			if (JoyStates.lX > THRESHOLD_LARGE)
 			{
-				if (!SPressed[1])
+				if (!ButtonPressed[1])
 				{
-					SPressed[1] = true;
+					ButtonPressed[1] = true;
 					FakeKeyPress('D');
 				}
 			}
 			else
 			{
-				if (SPressed[1])
+				if (ButtonPressed[1])
 				{
-					SPressed[1] = false;
+					ButtonPressed[1] = false;
 					FakeKeyRelease('D');
 				}
 			}
 
 			if (JoyStates.lY < THRESHOLD_SMALL)
 			{
-				if (!SPressed[2])
+				if (!ButtonPressed[2])
 				{
-					SPressed[2] = true;
+					ButtonPressed[2] = true;
 					FakeKeyPress('W');
 				}
 			}
 			else
 			{
-				if (SPressed[2])
+				if (ButtonPressed[2])
 				{
-					SPressed[2] = false;
+					ButtonPressed[2] = false;
 					FakeKeyRelease('W');
 				}
 			}
 
 			if (JoyStates.lY > THRESHOLD_LARGE)
 			{
-				if (!SPressed[3])
+				if (!ButtonPressed[3])
 				{
-					SPressed[3] = true;
+					ButtonPressed[3] = true;
 					FakeKeyPress('S');
 				}
 			}
 			else
 			{
-				if (SPressed[3])
+				if (ButtonPressed[3])
 				{
-					SPressed[3] = false;
+					ButtonPressed[3] = false;
 					FakeKeyRelease('S');
 				}
 			}
 
 			if (JoyStates.lRx < THRESHOLD_SMALL)
 			{
-				if (!SPressed[4])
+				if (!ButtonPressed[4])
 				{
-					SPressed[4] = true;
+					ButtonPressed[4] = true;
 					FakeKeyPress('7');
 				}
 			}
 			else
 			{
-				if (SPressed[4])
+				if (ButtonPressed[4])
 				{
-					SPressed[4] = false;
+					ButtonPressed[4] = false;
 					FakeKeyRelease('7');
 				}
 			}
 
 			if (JoyStates.lRx > THRESHOLD_LARGE)
 			{
-				if (!SPressed[5])
+				if (!ButtonPressed[5])
 				{
-					SPressed[5] = true;
+					ButtonPressed[5] = true;
 					FakeKeyPress('8');
 				}
 			}
 			else
 			{
-				if (SPressed[5])
+				if (ButtonPressed[5])
 				{
-					SPressed[5] = false;
+					ButtonPressed[5] = false;
 					FakeKeyRelease('8');
 				}
 			}
 
 			if (JoyStates.lRy < THRESHOLD_SMALL)
 			{
-				if (!SPressed[6])
+				if (!ButtonPressed[6])
 				{
-					SPressed[6] = true;
+					ButtonPressed[6] = true;
 					FakeKeyPress('9');
 				}
 			}
 			else
 			{
-				if (SPressed[6])
+				if (ButtonPressed[6])
 				{
-					SPressed[6] = false;
+					ButtonPressed[6] = false;
 					FakeKeyRelease('9');
 				}
 			}
 
 			if (JoyStates.lRy > THRESHOLD_LARGE)
 			{
-				if (!SPressed[7])
+				if (!ButtonPressed[7])
 				{
-					SPressed[7] = true;
+					ButtonPressed[7] = true;
 					FakeKeyPress('0');
 				}
 			}
 			else
 			{
-				if (SPressed[7])
+				if (ButtonPressed[7])
 				{
-					SPressed[7] = false;
+					ButtonPressed[7] = false;
 					FakeKeyRelease('0');
 				}
 			}
@@ -566,69 +825,69 @@ public:
 			int32 pov = JoyStates.rgdwPOV[0];
 			if (pov >= 31500 || (pov >= 0 && 4500 >= pov))
 			{
-				if (!SPressed[8])
+				if (!ButtonPressed[8])
 				{
-					SPressed[8] = true;
+					ButtonPressed[8] = true;
 					FakeKeyPress(VK_SPACE);
 				}
 			}
 			else
 			{
-				if (SPressed[8])
+				if (ButtonPressed[8])
 				{
-					SPressed[8] = false;
+					ButtonPressed[8] = false;
 					FakeKeyRelease(VK_SPACE);
 				}
 			}
 
 			if (pov >= 13500 && 22500 >= pov)
 			{
-				if (!SPressed[9])
+				if (!ButtonPressed[9])
 				{
-					SPressed[9] = true;
+					ButtonPressed[9] = true;
 					FakeKeyPress(VK_TAB);
 				}
 			}
 			else
 			{
-				if (SPressed[9])
+				if (ButtonPressed[9])
 				{
-					SPressed[9] = false;
+					ButtonPressed[9] = false;
 					FakeKeyRelease(VK_TAB);
 				}
 			}
 
 			if (JoyStates.lZ < THRESHOLD_SMALL)
 			{
-				if (!SPressed[10])
+				if (!ButtonPressed[10])
 				{
-					SPressed[10] = true;
-					FakeKeyPress(VK_CONTROL);
+					ButtonPressed[10] = true;
+					FakeKeyPress(Z0);
 				}
 			}
 			else
 			{
-				if (SPressed[10])
+				if (ButtonPressed[10])
 				{
-					SPressed[10] = false;
-					FakeKeyRelease(VK_CONTROL);
+					ButtonPressed[10] = false;
+					FakeKeyRelease(Z0);
 				}
 			}
 
 			if (JoyStates.lZ > THRESHOLD_LARGE)
 			{
-				if (!SPressed[11])
+				if (!ButtonPressed[11])
 				{
-					SPressed[11] = true;
-					FakeKeyPress(VK_LSHIFT);
+					ButtonPressed[11] = true;
+					FakeKeyPress(Z1);
 				}
 			}
 			else
 			{
-				if (SPressed[11])
+				if (ButtonPressed[11])
 				{
-					SPressed[11] = false;
-					FakeKeyRelease(VK_LSHIFT);
+					ButtonPressed[11] = false;
+					FakeKeyRelease(Z1);
 				}
 			}
 		}
@@ -638,9 +897,45 @@ public:
 
 	void Register()
 	{
+		bool bSet = false;
+		int nargs = 0;
+		auto argv = CommandLineToArgvW(GetCommandLineW(), &nargs);
+		for (int i = 0; i < nargs; ++i)
+		{
+			auto arg = WideToUTF8(argv[i]);
+			size_t pos = arg.find("-gamekeyset=");
+			if (pos != string::npos)
+			{
+				string jsonString(arg.begin() + pos + 12, arg.end());
+				ParseInputSettings(jsonString.c_str(), jsonString.size());
+				bSet = true;
+				break;
+			}
+		}
+
+		if (!bSet)
+		{
+			SetupGeneralAction(FKeysAction(SCameraBack, DIK_S, { { DIK_LCONTROL, DIK_RCONTROL } }));
+			SetupGeneralAction(FKeysAction(SCameraFront, DIK_W, { { DIK_LCONTROL, DIK_RCONTROL } }));
+			SetupGeneralAction(FKeysAction(SSwitchMouseButtonHold, DIK_N, { { DIK_LCONTROL, DIK_RCONTROL } }));
+			SetupGeneralAction(FKeysAction(SSwitchMouseMove, DIK_M, { { DIK_LCONTROL, DIK_RCONTROL } }));
+			SetupGeneralAction(FKeysAction(SSwitchJoystick, DIK_J, { { DIK_LCONTROL, DIK_RCONTROL } }));
+
+			SetupJoystickButtonAction(FJoystickButtonAction(SJoystickButtonA, '1'));
+			SetupJoystickButtonAction(FJoystickButtonAction(SJoystickButtonB, '2'));
+			SetupJoystickButtonAction(FJoystickButtonAction(SJoystickButtonX, '3'));
+			SetupJoystickButtonAction(FJoystickButtonAction(SJoystickButtonY, '4'));
+			SetupJoystickButtonAction(FJoystickButtonAction(SJoystickButtonLB, '5'));
+			SetupJoystickButtonAction(FJoystickButtonAction(SJoystickButtonRB, '6'));
+
+			Z0 = '7';
+			Z1 = '8';
+		}
+
 		memset(KeyStates, 0, sizeof(KeyStates));
 		memset(KeyEvents, 0, sizeof(KeyEvents));
 		memset(&JoyStates, 0, sizeof(JoyStates));
+		memset(ButtonPressed, 0, sizeof(ButtonPressed));
 		memset(ButtonEvents, 0, sizeof(ButtonEvents));
 		RegisterInputCallback(this);
 	}

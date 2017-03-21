@@ -11,13 +11,19 @@
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 // Windows Header Files:
 #include <windows.h>
+#include <shellapi.h>
 
 //#pragma warning(disable : 4996)
 #include <assert.h>
 #include <vector>
 #include <map>
+#include <set>
 #include <string>
 #include <iostream>
+#include <algorithm>
+
+#include "json.hpp"
+using FJson = nlohmann::json;
 //#include <functional>
 
 //#define INCLUDE_DIRECTXTK
@@ -235,6 +241,80 @@ inline string WideToUTF8(const wstring &wide) {
 	string result(buf);
 	delete[] buf;
 	return result;
+}
+
+inline char LowerChar(char c)
+{
+	if (c >= 'A' && 'Z' >= c) 
+	{ 
+		return c - ('A' - 'a');
+	}
+	
+	return c;
+}
+
+inline char UpperChar(char c)
+{
+	if (c >= 'a' && 'z' >= c)
+	{
+		return c + ('A' - 'a');
+	}
+
+	return c;
+}
+
+inline string SubChar(const string& src, char c)
+{
+	string dst(src);
+	auto it = dst.begin();
+	while (it != dst.end())
+	{
+		if ((*it) == c)
+		{
+			it = dst.erase(it);
+			continue;
+		}
+
+		++it;
+	}
+
+	return dst;
+}
+
+inline vector<string> SplitChar(const string& src, char sep)
+{
+	vector<string> dst;
+	string copy(src);
+	auto it = copy.begin();
+	auto it2 = copy.begin();
+	while (1)
+	{
+		if ((*it) == sep)
+		{
+			if (it != it2)
+			{
+				dst.push_back(string(it2, it));
+			}
+
+			it = it2 = it + 1;
+		}
+		else
+		{
+			++it;
+		}
+
+		if (it == copy.end())
+		{
+			if (it != it2)
+			{
+				dst.push_back(string(it2, it));
+			}
+
+			break;
+		}
+	}
+
+	return dst;
 }
 
 
