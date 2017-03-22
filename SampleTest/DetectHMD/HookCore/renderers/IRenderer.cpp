@@ -208,12 +208,29 @@ static bool ModifierToDIK(const string& key, vector<int>& output)
 	}
 }
 
-static int GetDIJOYSTATEOffset(const string& key)
+static bool CustomCharToVK(const string& key, int& output)
 {
-	static map<string, int> SDIJOYSTATEMap;
-	if (SDIJOYSTATEMap.empty())
+	static map<string, int> SVKMap;
+	if (SVKMap.empty())
 	{
-		SDIJOYSTATEMap["LT"] = ((DIJOYSTATE*)0)->lZ;
+		SVKMap["pagedown"] = (VK_NEXT);
+		SVKMap["pageup"] = (VK_PRIOR);
+		SVKMap["home"] = (VK_HOME);
+		SVKMap["end"] = (VK_END);
+		SVKMap["left"] = (VK_LEFT);
+		SVKMap["right"] = (VK_RIGHT);
+		SVKMap["up"] = (VK_UP);
+		SVKMap["down"] = (VK_DOWN);
+	}
+
+	if (SVKMap.find(key) != SVKMap.end())
+	{
+		output = SVKMap[key];
+		return true;
+	}
+	else
+	{
+		return false;
 	}
 }
 
@@ -574,12 +591,14 @@ private:
 				transform(content.begin(), content.end(), content.begin(), UpperChar);
 
 				content = SubChar(content, ' ');
-				if (content.size() < 1)
+
+				int key;
+				if (!CustomCharToVK(content, key) && content.size() > 0)
 				{
-					continue;
+					key = content[0];
 				}
 
-				SetupJoystickButtonAction(FJoystickButtonAction(id, content[0]));
+				SetupJoystickButtonAction(FJoystickButtonAction(id, key));
 			}
 		}
 
