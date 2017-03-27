@@ -625,9 +625,8 @@ private:
 		}
 	}
 
-	void ParseInputSettings(const char* buf, int sz)
+	void ParseInputSettings(const FJson& settings)
 	{
-		auto settings = FJson::parse(buf);
 		assert(settings.find("common") != settings.end() && "can not find section: common");
 		assert(settings.find("key") != settings.end() && "can not find section: key");
 
@@ -881,7 +880,7 @@ public:
 				if (!ButtonPressed[10])
 				{
 					ButtonPressed[10] = true;
-					FakeKeyPress(Z0);
+					FakeKeyPress(Z1);
 				}
 			}
 			else
@@ -889,7 +888,7 @@ public:
 				if (ButtonPressed[10])
 				{
 					ButtonPressed[10] = false;
-					FakeKeyRelease(Z0);
+					FakeKeyRelease(Z1);
 				}
 			}
 
@@ -898,7 +897,7 @@ public:
 				if (!ButtonPressed[11])
 				{
 					ButtonPressed[11] = true;
-					FakeKeyPress(Z1);
+					FakeKeyPress(Z0);
 				}
 			}
 			else
@@ -906,7 +905,7 @@ public:
 				if (ButtonPressed[11])
 				{
 					ButtonPressed[11] = false;
-					FakeKeyRelease(Z1);
+					FakeKeyRelease(Z0);
 				}
 			}
 		}
@@ -916,6 +915,8 @@ public:
 
 	void Register()
 	{
+		const char* head = "FInputEventHandler::Register";
+
 		bool bSet = false;
 		int nargs = 0;
 		auto argv = CommandLineToArgvW(GetCommandLineW(), &nargs);
@@ -925,8 +926,28 @@ public:
 			size_t pos = arg.find("-gamekeyset=");
 			if (pos != string::npos)
 			{
-				string jsonString(arg.begin() + pos + 12, arg.end());
-				ParseInputSettings(jsonString.c_str(), jsonString.size());
+				string filePath(arg.begin() + pos + 12, arg.end());
+				//filePath = "C:\\Users\\Administrator\\AppData\\Local\\Temp\\gamekeyset2.tmp";
+
+				ifstream cmdFile;
+				cmdFile.open(filePath);
+				if (cmdFile.fail())
+				{
+					char errstr[128];
+					strerror_s(errstr, errno);
+					LVERROR(head, "open path file(%s) failed: %s", filePath.c_str(), errstr);
+				}
+				else
+				{
+					FJson settings;
+					cmdFile >> settings;
+
+					LVMSG(head, "settings(%s)", filePath.c_str());
+
+					cmdFile.close();
+					ParseInputSettings(settings);
+				}
+
 				bSet = true;
 				break;
 			}
