@@ -223,33 +223,19 @@ void FLostMediaDecoder::Update_DecodeThread()
 			elapsed += dt;
 			if (elapsed > FrameTime)
 			{
-				double dp = 0.0;
-				bool bContinueDrop = true;
-				while (elapsed > 1.5 * FrameTime && bContinueDrop)
+				while (elapsed > 1.5 * FrameTime)
 				{
-					dp = PlayPos;
-					bContinueDrop = Decode_DecodeThread(FrameTime, true);
-					dp = PlayPos - dp;
+					Decode_DecodeThread(true);
 					elapsed -= FrameTime;
-					//IDecodeCallback* p = ConvertPtr(DecodeCallback);
-					//if (p != nullptr)
-					//{
-					//	p->OnEvent(EDecodeEvent::DroppedOneFrame);
-					//}
-
-					//char msg[128];
-					//snprintf(msg, 128, "drop: %f\n", dp);
-					//OutputDebugStringA(msg);
+					IDecodeCallback* p = ConvertPtr(DecodeCallback);
+					if (p != nullptr)
+					{
+						p->OnEvent(EDecodeEvent::DroppedOneFrame);
+					}
 				}
 
-				dp = PlayPos;
-				Decode_DecodeThread(FrameTime);
-				dp = PlayPos - dp;
+				Decode_DecodeThread();
 				elapsed -= FrameTime;
-
-				char msg[128];
-				snprintf(msg, 128, "play: %f, %f\n", FrameTime, dp);
-				OutputDebugStringA(msg);
 			}
 			else
 			{
@@ -258,10 +244,10 @@ void FLostMediaDecoder::Update_DecodeThread()
 				std::this_thread::sleep_for(sleeptime);
 			}
 		}
-		//else
-		//{
-		//	std::this_thread::sleep_for(std::chrono::milliseconds(int32(FrameTime * 1000)));
-		//}
+		else
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(int32(FrameTime * 1000)));
+		}
 	}
 
 	Close_DecodeThread();
@@ -351,7 +337,9 @@ bool FLostMediaDecoder::Open_DecodeThread(const char * url)
 		MediaInfo.AudioParamsDst.Format = AV_SAMPLE_FMT_S16;
 		MediaInfo.AudioCodecID = AudioDecoder->id;
 		snprintf(MediaInfo.AudioCodecShortName, 255, "%s", AudioDecoder->name);
+		//snprintf(MediaInfo.AudioCodecLongName, 255, "%s", AudioDecoder->name);
 		MediaInfo.AudioParamsDst.Channels = AudioContext->channels;
+		//MediaInfo.AudioParamsDst.SampleRate = 44100;
 		MediaInfo.AudioParamsDst.SampleRate = AudioContext->sample_rate;
 		MediaInfo.AudioParamsDst.ChannelLayout = AudioContext->channel_layout;
 		MediaInfo.AudioParamsDst.FrameSize = av_samples_get_buffer_size(nullptr, MediaInfo.AudioParamsDst.Channels,
@@ -424,7 +412,7 @@ void FLostMediaDecoder::Close_DecodeThread()
 	//}
 }
 
-bool FLostMediaDecoder::Decode_DecodeThread(double& secondsFromLastFrame, bool bDrop)
+bool FLostMediaDecoder::Decode_DecodeThread(bool bDrop)
 {
 	static AVPacket packet;
 
@@ -441,7 +429,7 @@ bool FLostMediaDecoder::Decode_DecodeThread(double& secondsFromLastFrame, bool b
 	int32 h2 = h / 2;
 
 	IDecodeCallback* ptr = ConvertPtr(DecodeCallback);
-	if ((ptr != nullptr && !ptr->NeedNewFrame(w, h + h2, 61)))
+	if (bDrop || (ptr != nullptr && !ptr->NeedNewFrame(w, h + h2, 61)))
 	{
 		return false;
 	}
@@ -454,17 +442,12 @@ bool FLostMediaDecoder::Decode_DecodeThread(double& secondsFromLastFrame, bool b
 	{
 		av_init_packet(&packet);
 		av_read_frame(MediaFormat, &packet);
-
 		if (VideoStreamIndex == packet.stream_index)
 		{
 			ret = avcodec_decode_video2(VideoContext, VideoFrame, &vdecoded, &packet);
 			if (vdecoded > 0)
 			{
-				//char msg[128];
-				//snprintf(msg, 128, "decode: %f\n", av_frame_get_pkt_pos(VideoFrame) / 1000000.0 - PlayPos);
-				//OutputDebugStringA(msg);
-				PlayPos = av_frame_get_pkt_pos(VideoFrame) / 1000000.0;
-				//PlayPos += 1.0 / MediaInfo.VideoFrameRate;
+				PlayPos += 1.0 / MediaInfo.VideoFrameRate;
 				if (!bDrop)
 				{
 					uint8* p = YUVBuffer;
@@ -631,11 +614,17 @@ OnFailed:
 		Swr = nullptr;
 		return -1;
 	}
-}
 
-int32 FLostMediaDecoder::AudioResample_DecodeThread2(AVFrame * aframe)
-{
-	return int32();
+	//OnWarning:
+	//	{
+	//		IDecodeCallback* ptr = ConvertPtr(DecodeCallback);
+	//		if (ptr != nullptr)
+	//		{
+	//			ptr->OnMessage(EDecodeMsgLv::Info, warn, strlen(warn));
+	//		}
+	//
+	//		return resampledsize;
+	//	}
 }
 
 DecoderHandle DecodeMedia(IDecodeCallbackWeakPtr callback, const char * url)

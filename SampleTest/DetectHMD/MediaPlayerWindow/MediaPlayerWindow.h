@@ -15,16 +15,16 @@ namespace lostvr
 		FScopedLock(std::mutex* lock) : Lock(lock)
 		{
 			Lock->lock();
-			//char msg[128];
-			//snprintf(msg, 127, "%d, lock\n", GetCurrentThreadId());
-			//OutputDebugStringA(msg);
+			char msg[128];
+			snprintf(msg, 127, "%d, lock\n", GetCurrentThreadId());
+			OutputDebugStringA(msg);
 		}
 
 		~FScopedLock()
 		{
-			//char msg[128];
-			//snprintf(msg, 127, "%d, unlock\n", GetCurrentThreadId());
-			//OutputDebugStringA(msg);
+			char msg[128];
+			snprintf(msg, 127, "%d, unlock\n", GetCurrentThreadId());
+			OutputDebugStringA(msg);
 			Lock->unlock();
 		}
 	};
@@ -333,7 +333,6 @@ namespace lostvr
 
 		ID3D11ShaderResourceView* Read()
 		{
-			//return nullptr;
 			FScopedLock guard(&BufferLock);
 			if (CanRead())
 			{

@@ -15,8 +15,6 @@
 #define LOSTMEDIA_API __declspec(dllimport)
 #endif
 
-#define USE_AUDIOBUFFER2
-
 extern "C"
 {
 #include <libavcodec/avcodec.h>
@@ -181,13 +179,9 @@ protected:
 	void Close_DecodeThread();
 
 	// return true if a video frame has been decoded
-	bool Decode_DecodeThread(double& secondsFromLastFrame, bool bDrop = false);
+	bool Decode_DecodeThread(bool bDrop = false);
 
 	int32 AudioResample_DecodeThread(AVFrame* aframe);
-
-#ifdef USE_AUDIOBUFFER2
-	int32 AudioResample_DecodeThread2(AVFrame* aframe);
-#endif
 
 	AVFormatContext*	MediaFormat;
 
@@ -207,11 +201,6 @@ protected:
 	uint8*				YUVBuffer;
 	uint8*				AudioBuffer;
 	uint32				AudioBufferSize;
-
-#ifdef USE_AUDIOBUFFER2
-	uint8**				AudioBuffer2;
-	uint32				AudioBufferSize2;
-#endif
 
 	std::string			UrlToPlay;
 

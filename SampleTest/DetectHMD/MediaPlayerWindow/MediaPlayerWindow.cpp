@@ -27,24 +27,20 @@ HWND hWindow;
 static int SURLIndex = -1;
 static const char* SURLs[] = {
 	"file://f:/User/VRMp4/showcase.mp4",
-	"http://down.video.vronline.com/dev/meisaidesibenchi.mp4",
-	"http://down.video.vronline.com/dev/dijiugesizhe.mp4",
-	"http://down.video.vronline.com/dev/Video11.mp4",
-	"http://down.video.vronline.com/dev/yaogunxueyuanshishenghaichang.mp4",
-	"http://down.video.vronline.com/dev/hongsejingjiekongzhongjuedou.mp4",
-	"http://down.video.vronline.com/dev/meiguicheng.mp4",
-	"http://down.video.vronline.com/dev/Video11.mp4",
-	"http://down.video.vronline.com/dev/948191cd4b137312348114a1d99c4ee6.mp4",
-	"http://down.video.vronline.com/dev/meisaidesibenchi.mp4",
-	"http://down.video.vronline.com/dev/yuehangyuanxunlianrichang.mp4",
-	"http://down.video.vronline.com/dev/ed72804f371a166d26aecacd0a5ab69c.mp4",
+	"http://down.video.vronline.com/dev/2c34cf5a90b845c32081a60cf4c66bfb.mp4",
 	"http://down.video.vronline.com/dev/Video3.mp4",
 	"http://down.video.vronline.com/dev/49058022ea364643715d501e3c9657db.mp4",
-	"http://live.hkstv.hk.lxdns.com/live/hks/playlist.m3u8",
-	"http://down.video.vronline.com/dev/2c34cf5a90b845c32081a60cf4c66bfb.mp4",
 	"http://down.video.vronline.com/dev/c66a1ea0a5cf04e74537aa83a92a8065.mp4",
+	"http://down.video.vronline.com/dev/ed72804f371a166d26aecacd0a5ab69c.mp4",
+	"http://down.video.vronline.com/dev/948191cd4b137312348114a1d99c4ee6.mp4",
+	"http://down.video.vronline.com/dev/yaogunxueyuanshishenghaichang.mp4",
+	"http://down.video.vronline.com/dev/hongsejingjiekongzhongjuedou.mp4",
+	"http://down.video.vronline.com/dev/meisaidesibenchi.mp4",
+	"http://down.video.vronline.com/dev/yuehangyuanxunlianrichang.mp4",
 	"http://down.video.vronline.com/dev/Video13.mp4",
+	"http://down.video.vronline.com/dev/Video11.mp4",
 	"http://down.video.vronline.com/dev/nanjidalu.mp4",
+	"http://down.video.vronline.com/dev/meiguicheng.mp4",
 };
 
 class ADecodeCallback : public IDecodeCallback
