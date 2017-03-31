@@ -16,12 +16,14 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="Renderer.h" />
+    <ClInclude Include="LMediaDecoder.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LostMediaDecoder.cpp" />
     <ClCompile Include="MediaPlayerWindow.cpp" />
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="LMediaDecoder.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="MediaPlayerWindow.rc">

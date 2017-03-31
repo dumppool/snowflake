@@ -74,8 +74,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)ffmpeg/include;$(ProjectDir)openal/include;</IncludePath>
-    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;$(ProjectDir)ffmpeg/lib;$(ProjectDir)openal/libs/Win64;</LibraryPath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)ffmpeg/include;$(ProjectDir)openal/include;$(ProjectDir)SDL2-2.0.5/include;</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;$(ProjectDir)ffmpeg/lib;$(ProjectDir)openal/libs/Win64;$(ProjectDir)SDL2-2.0.5/lib;</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -148,6 +148,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="LMediaDecoder.h" />
     <ClInclude Include="LostMediaDecoder.h" />
     <ClInclude Include="MediaPlayerWindow.h" />
     <ClInclude Include="Renderer.h" />
@@ -156,6 +157,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="LMediaDecoder.cpp" />
     <ClCompile Include="LostMediaDecoder.cpp" />
     <ClCompile Include="MediaPlayerWindow.cpp" />
     <ClCompile Include="Renderer.cpp" />

@@ -312,7 +312,7 @@ namespace lostvr
 
 		bool Write(const uint8* buf, UINT sz = 0)
 		{
-			FScopedLock guard(&BufferLock);
+			//FScopedLock guard(&BufferLock);
 			if (CanWrite() && (sz == 0 || sz == BufferSize))
 			{
 				memcpy(FrameBuffer[NextWriteIndex], buf, BufferSize);
@@ -333,7 +333,7 @@ namespace lostvr
 
 		ID3D11ShaderResourceView* Read()
 		{
-			FScopedLock guard(&BufferLock);
+			//FScopedLock guard(&BufferLock);
 			if (CanRead())
 			{
 				ID3D11Device* dev;
@@ -514,7 +514,7 @@ bool LostMediaPlayer::CanWrite(UINT w, UINT h, DXGI_FORMAT format)
 	if (Frames != nullptr)
 		//&& Frames->BufferLock.try_lock())
 	{
-		FScopedLock guard(&Frames->BufferLock);
+		//FScopedLock guard(&Frames->BufferLock);
 		if (!Frames->IsMatch(w, h, format))
 		{
 			delete Frames;

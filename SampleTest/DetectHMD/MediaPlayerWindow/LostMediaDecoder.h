@@ -149,11 +149,11 @@ inline IDecodeCallback* ConvertPtr(IDecodeCallbackWeakPtr ptr)
 	return ptr;
 }
 
-class FLostMediaDecoder
+class FLMediaDecoder
 {
 public:
-	FLostMediaDecoder();
-	~FLostMediaDecoder();
+	FLMediaDecoder();
+	~FLMediaDecoder();
 
 	bool OpenUrl(const char* url);
 
@@ -179,7 +179,7 @@ protected:
 	void Close_DecodeThread();
 
 	// return true if a video frame has been decoded
-	bool Decode_DecodeThread(bool bDrop = false);
+	bool Decode_DecodeThread(double& decodeTime, bool bDrop = false);
 
 	int32 AudioResample_DecodeThread(AVFrame* aframe);
 
@@ -222,7 +222,7 @@ protected:
 	std::thread			BackgroundTask;
 };
 
-typedef std::shared_ptr<FLostMediaDecoder> DecoderHandle;
+typedef std::shared_ptr<FLMediaDecoder> DecoderHandle;
 
 LOSTMEDIA_API DecoderHandle DecodeMedia(IDecodeCallbackWeakPtr callback, const char* url);
 LOSTMEDIA_API void ReleaseDecoder(DecoderHandle* handle);

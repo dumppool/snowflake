@@ -26,6 +26,9 @@ HWND hWindow;
 
 static int SURLIndex = -1;
 static const char* SURLs[] = {
+	"http://down.video.vronline.com/dev/meisaidesibenchi.mp4",
+	"http://down.video.vronline.com/dev/Video11.mp4",
+	"http://down.video.vronline.com/dev/dijiugesizhe.mp4",
 	"file://f:/User/VRMp4/showcase.mp4",
 	"http://down.video.vronline.com/dev/2c34cf5a90b845c32081a60cf4c66bfb.mp4",
 	"http://down.video.vronline.com/dev/Video3.mp4",
