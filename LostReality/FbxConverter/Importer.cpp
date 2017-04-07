@@ -180,7 +180,7 @@ static void ParsePolygons(std::function<FJson&()> outputGetter, FbxMesh* mesh)
 					case FbxGeometryElement::eIndexToDirect:
 					{
 						int id = uv->GetIndexArray().GetAt(index);
-						WriteFloat2(*it3, uv->GetDirectArray().GetAt(index));
+						WriteFloat2(*it3, uv->GetDirectArray().GetAt(id));
 						break;
 					}
 					default:
@@ -333,7 +333,7 @@ static void ParseLink(std::function<FJson&()> outputGetter, FbxMesh* mesh)
 			for (int k = 0; k < cpIndexCount; ++k)
 			{
 				(*it2)[K_LINK_INDICES].push_back(indices[k]);
-				(*it2)[K_WEIGHT_VALUES].push_back(weights[k]);
+				(*it2)[K_WEIGHT].push_back(weights[k]);
 			}
 		}
 	}

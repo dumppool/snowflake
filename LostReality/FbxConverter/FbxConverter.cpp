@@ -3,6 +3,7 @@
 
 #include "stdafx.h"
 #include "Importer.h"
+#include "MeshLoader.h"
 
 int main(int argc, char** argv)
 {
@@ -32,6 +33,8 @@ int main(int argc, char** argv)
 	{
 		Importer::ImportScene2(src, dst);
 	}
+
+	LostCore::LoadResource(dst.c_str());
 
     return 0;
 }

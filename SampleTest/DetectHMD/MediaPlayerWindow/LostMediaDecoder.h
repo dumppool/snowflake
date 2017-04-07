@@ -149,11 +149,11 @@ inline IDecodeCallback* ConvertPtr(IDecodeCallbackWeakPtr ptr)
 	return ptr;
 }
 
-class FLMediaDecoder
+class FLostMediaDecoder
 {
 public:
-	FLMediaDecoder();
-	~FLMediaDecoder();
+	FLostMediaDecoder();
+	~FLostMediaDecoder();
 
 	bool OpenUrl(const char* url);
 
@@ -222,7 +222,7 @@ protected:
 	std::thread			BackgroundTask;
 };
 
-typedef std::shared_ptr<FLMediaDecoder> DecoderHandle;
+typedef std::shared_ptr<FLostMediaDecoder> DecoderHandle;
 
 LOSTMEDIA_API DecoderHandle DecodeMedia(IDecodeCallbackWeakPtr callback, const char* url);
 LOSTMEDIA_API void ReleaseDecoder(DecoderHandle* handle);

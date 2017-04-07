@@ -1,5 +1,5 @@
 /*
-* file FLMediaDecoder.h
+* file FLMediaDecoderPrivate.h
 *
 * author luoxw
 * date 2017/3/31
@@ -26,9 +26,17 @@ extern "C"
 #include <libswresample/swresample.h>
 #include <libavutil/opt.h>
 #include <libavutil/imgutils.h>
+#include <libavutil/time.h>
 #include <SDL.h>
 #include <SDL_thread.h>
 }
+
+#include <thread>
+#include <functional>
+#include <chrono>
+#include <string>
+#include <deque>
+#include <mutex>
 
 #ifdef LOSTMEDIA
 #pragma comment(lib, "avcodec.lib")
@@ -37,7 +45,7 @@ extern "C"
 #pragma comment(lib, "avfilter.lib")
 #pragma comment(lib, "swscale.lib")
 #pragma comment(lib, "swresample.lib")
-#pragma comment(lib, "SDL.lib")
+#pragma comment(lib, "SDL2.lib")
 #endif
 
 //#include <thread>
@@ -95,6 +103,14 @@ namespace LDecoder
 		int32* QueueSerial;
 	};
 
+	struct FImage
+	{
+		int32 Width;
+		int32 Height;
+		uint8* Data;
+		int32 Pitches[3];
+	};
+
 	struct FFrame
 	{
 		AVFrame* Frame;
@@ -104,7 +120,7 @@ namespace LDecoder
 		double Pts;
 		double Duration;
 		int64 Pos;
-		//SDL_Overlay* Bmp;
+		FImage Bmp;
 		bool bAllocated;
 		bool bReallocate;
 		int32 Width;
@@ -134,30 +150,43 @@ namespace LDecoder
 		FPacketQueue* Queue;
 		AVCodecContext* AvCtx;
 		int32 PacketSerial;
-		bool bFinished;
+		int32 Finished;
 		bool bPacketPending;
 		SDL_cond* EmptyQueueCond;
 		int64 StartPts;
 		AVRational StartPtsTb;
 		int64 NextPts;
 		AVRational NextPtsTb;
-		SDL_Thread* DecoderTID;
+		std::thread DecoderTID;
+	};
+
+	enum EShowMode
+	{
+		SHOW_MODE_NONE = -1,
+		SHOW_MODE_VIDEO = 0,
+		SHOW_MODE_WAVES,
+		SHOW_MODE_RDFT,
+		SHOW_MODE_NB
 	};
 
 	struct FVideoState
 	{
-		SDL_Thread* ReadTID;
+		std::thread ReadTID;
 		AVInputFormat* InputFormat;
+		AVFormatContext* Ic;
+
 		bool bAbort;
 		bool bForceRefresh;
 		bool bPaused;
 		bool bLastPaused;
 		bool bQueueAttachmentsReq;
 		bool bSeekReq;
+		bool bRealtime;
+		int32 ReadPauseReturn;
 		int32 SeekFlags;
 		int64 SeekPos;
 		int64 SeekRel;
-		bool bRealtime;
+
 
 		FClock AudioClock;
 		FClock VideoClock;
@@ -174,11 +203,11 @@ namespace LDecoder
 		int32 VideoDecWidth;
 		int32 VideoDecHeight;
 
-		int32 AudioStream;
+		int32 AudioStreamIndex;
 
 		int32 AvSyncType;
 
-		double AudioClock;
+		double AudioClockValue;
 		int32 AudioClockSerial;
 		double AudioDiffCum;
 		double AudioDiffAvgCoef;
@@ -201,15 +230,6 @@ namespace LDecoder
 		SwrContext* SwrCtx;
 		int32 FrameDropsEarly;
 		int32 FrameDropsLate;
-
-		enum EShowMode
-		{
-			SHOW_MODE_NONE = -1,
-			SHOW_MODE_VIDEO = 0,
-			SHOW_MODE_WAVES,
-			SHOW_MODE_RDFT,
-			SHOW_MODE_NB
-		};
 
 		EShowMode ShowMode;
 		int16 SampleArray[SSampleArraySize];
@@ -242,17 +262,64 @@ namespace LDecoder
 		int32 YTop;
 		int32 Step;
 
-		int32 LastVideoStream;
-		int32 LastAudioStream;
-		int32 LastSubtitleStream;
+		int32 LastVideoStreamIndex;
+		int32 LastAudioStreamIndex;
+		int32 LastSubtitleStreamIndex;
 
 		SDL_cond* ContinueReadThread;
 	};
 
-	class FLMediaDecoder
-	{
-		AVPacket FlushPacket;
+	enum {
+		AV_SYNC_AUDIO_MASTER, /* default choice */
+		AV_SYNC_VIDEO_MASTER,
+		AV_SYNC_EXTERNAL_CLOCK, /* synchronize to an external clock */
+	};
 
+	class FLMediaDecoderPrivate
+	{
+	private:
+		uint32 SwsFlags;
+		AVDictionary *SwsDict;
+		AVDictionary *SwrOpts;
+		AVDictionary *FmtOpts;
+		AVDictionary *CodecOpts;
+		AVDictionary *ResampleOpts;
+
+		AVPacket FlushPacket;
+		const char* InputFileName;
+		const char* WindowTitle;
+		int32 FSScreenWidth;
+		int32 FSScreenHeight;
+		int32 DefaultWidth;
+		int32 DefaultHeight;
+		int32 ScreenWidth;
+		int32 ScreenHeight;
+		bool bAudioDisable;
+		bool bVideoDisable;
+		bool bSubtitleDisable;
+		bool bDisplayDisable;
+		bool bFast;
+		bool bLowres;
+		bool bAutoexit;
+		bool bSeekByBytes;
+		bool bShowStatus;
+		const char* WantedStreamSpec[AVMEDIA_TYPE_NB];
+		int32 AvSyncType;
+		int64 StartTime;
+		int64 Duration;
+		int32 DecoderReorderPts;
+		int32 Loop;
+		int32 Framedrop;
+		int32 InfiniteBuffer;
+		EShowMode ShowMode;
+		const char* AudioCodecName;
+		const char* SubtitleCodecName;
+		const char* VideoCodecName;
+		double RdftSpeed;
+		int64 CursorLastShown;
+		int64 AudioCallbackTime;
+
+	private:
 		int32 PacketQueuePutPrivate(FPacketQueue* q, AVPacket* pkt);
 		int32 PacketQueuePut(FPacketQueue* q, AVPacket* pkt);
 		int32 PacketQueuePutNull(FPacketQueue* q, int32 streamIndex);
@@ -261,7 +328,7 @@ namespace LDecoder
 		void PacketQueueDestroy(FPacketQueue* q);
 		void PacketQueueAbort(FPacketQueue* q);
 		void PacketQueueStart(FPacketQueue* q);
-		int32 PacketQueueGet(FPacketQueue* q, AVPacket* pkt, int32 block, int32* serial);
+		int32 PacketQueueGet(FPacketQueue* q, AVPacket* pkt, bool block, int32* serial);
 
 		void DecoderInit(FDecoder* d, AVCodecContext* avctx, FPacketQueue* queue, SDL_cond* emptyQueueCond);
 		int32 DecoderDecodeFrame(FDecoder* d, AVFrame* frame, AVSubtitle* sub);
@@ -274,7 +341,7 @@ namespace LDecoder
 		FFrame* FrameQueuePeek(FFrameQueue* f);
 		FFrame* FrameQueuePeekNext(FFrameQueue* f);
 		FFrame* FrameQueuePeekLast(FFrameQueue* f);
-		FFrame* FrameQueuePeekWriteable(FFrameQueue* f);
+		FFrame* FrameQueuePeekWritable(FFrameQueue* f);
 		FFrame* FrameQueuePeekReadable(FFrameQueue* f);
 		void FrameQueuePush(FFrameQueue* f);
 		void FrameQueueNext(FFrameQueue* f);
@@ -283,7 +350,82 @@ namespace LDecoder
 		int64 FrameQueueLastPos(FFrameQueue* f);
 
 		void DecoderAbort(FDecoder* d, FFrameQueue* fq);
+
+		//fill_rectangle
+		//fill_border
+		//ablend_subrect
+		//calculate_display_rect
+		void AllocPicture(FVideoState *is);
+		void FreePicture(FFrame* vp);
+
+		int32 ComputeMod(int32 a, int32 b)
+		{
+			return a < 0 ? a % b + b : a % b;
+		}
+
+		void VideoImageDisplay(FVideoState* is);
+		void VideoAudioDisplay(FVideoState* is);
+		void VideoDisplay(FVideoState* is);
+
+		void StreamComponentClose(FVideoState* is, int32 streamIndex);
+		void StreamClose(FVideoState* is);
+		void DoExit(FVideoState* is);
+
+		int32 VideoOpen(FVideoState* is, bool bForceSetVideoMode, FFrame* vp);
+
+		double GetClock(FClock* c);
+		void SetClockAt(FClock* c, double pts, int32 serial, double time);
+		void SetClock(FClock* c, double pts, int32 serial);
+		void SetClockSpeed(FClock* c, double speed);
+		void InitClock(FClock* c, int32* queueSerial);
+		void SyncClockToSlave(FClock* c, FClock* slave);
+		int32 GetMasterSyncType(FVideoState* is);
+		double GetMasterClock(FVideoState* is);
+		void CheckExternalClockSpeed(FVideoState* is);
+
+		void StreamSeek(FVideoState* is, int64 pos, int64 rel, bool seekByBytes);
+		void StreamTogglePause(FVideoState* is);
+		void TogglePause(FVideoState* is);
+		void ToggleMute(FVideoState* is);
+
+		void StepToNextFrame(FVideoState* is);
+		double ComputeTargetDelay(double delay, FVideoState* is);
+		double VpDuration(FVideoState* is, FFrame* vp, FFrame* nextVp);
+
+		void UpdateVideoPts(FVideoState* is, double pts, int64 pos, int32 serial);
+		void VideoRefresh(void* opaque, double* remainingTime);
+
+		int32 QueuePicture(FVideoState* is, AVFrame* srcFrame, double pts, double duration, int64 pos, int32 serial);
+		int32 GetVideoFrame(FVideoState* is, AVFrame* frame);
+
+		int32 AudioThread(void* arg);
+		int32 DecoderStart(FDecoder* d, std::function<void()> func);
+		int32 VideoThread(void* arg);
+		int32 SubtitleThread(void* arg);
+		void UpdateSampleDisplay(FVideoState* is, short* samples, int32 samplesSize);
+		int32 SynchronizeAudio(FVideoState* is, int32 nbSamples);
+		int32 AudioDecodeFrame(FVideoState* is);
+
+		void XdlAudioCallback(void* opaque, uint8* stream, int32 len);
+
+		int32 AudioOpen(void* opaque, int64 wantedChannelLayout, int32 wantedNbChannels, int32 wantedSampleRate, FAudioAttribute* audioHwParams);
+		int32 StreamComponentOpen(FVideoState* is, int32 streamIndex);
+		int32 DecodeInterruptCb(void* ctx);
+		bool IsRealtime(AVFormatContext* s);
+
+		int32 ReadThread(void* arg);
+		FVideoState* StreamOpen(const char* filename, AVInputFormat* iformat);
+		void StreamCycleChannel(FVideoState* is, int32 codecType);
+		void ToggleAudioDisplay(FVideoState* is);
+
+		void SeekChapter(FVideoState* is, int32 incr);
+		void DoSeek(FVideoState* is, int32 incr);
+
+	public:
+		FLMediaDecoderPrivate();
+		~FLMediaDecoderPrivate();
 	};
+
 }
 
 enum class EDecodeCommand : uint8
@@ -383,9 +525,6 @@ public:
 	virtual void OnMessage(EDecodeMsgLv level, const CHAR* buf, uint32 sz) = 0;
 };
 
-//typedef std::shared_ptr<IDecodeCallback> IDecodeCallbackPtr;
-//typedef std::weak_ptr<IDecodeCallback> IDecodeCallbackWeakPtr;
-
 typedef IDecodeCallback* IDecodeCallbackPtr;
 typedef IDecodeCallback* IDecodeCallbackWeakPtr;
 
@@ -394,16 +533,15 @@ inline IDecodeCallback* ConvertPtr(IDecodeCallbackWeakPtr ptr)
 	return ptr;
 }
 
-class FLostMediaDecoder
+class FLMediaDecoder
 {
 public:
-	FLostMediaDecoder();
-	~FLostMediaDecoder();
+	FLMediaDecoder();
+	~FLMediaDecoder();
 
 	bool OpenUrl(const char* url);
 
 	void EnqueueCommand(EDecodeCommand cmd);
-	EDecodeCommand DequeueCommand();
 	void SetCallback(IDecodeCallbackWeakPtr callback);
 
 	void SetRate(float rate);
@@ -419,64 +557,20 @@ public:
 	FLostMediaInfo* GetMediaInfo();
 
 protected:
-	void Update_DecodeThread();
-	bool Open_DecodeThread(const char* url);
-	void Close_DecodeThread();
-
-	// return true if a video frame has been decoded
-	bool Decode_DecodeThread(double& secondsFromLastFrame, bool bDrop = false);
-
-	int32 AudioResample_DecodeThread(AVFrame* aframe);
-
-#ifdef USE_AUDIOBUFFER2
-	int32 AudioResample_DecodeThread2(AVFrame* aframe);
-#endif
-
-	AVFormatContext*	MediaFormat;
-
-	AVCodec*			VideoDecoder;
-	AVCodecContext*		VideoContext;
-	AVStream*			VideoStream;
-	AVFrame*			VideoFrame;
-	int32				VideoStreamIndex;
-
-	AVCodec*			AudioDecoder;
-	AVCodecContext*		AudioContext;
-	AVStream*			AudioStream;
-	AVFrame*			AudioFrame;
-	int32				AudioStreamIndex;
-	SwrContext*			Swr;
-
-	uint8*				YUVBuffer;
-	uint8*				AudioBuffer;
-	uint32				AudioBufferSize;
-
-#ifdef USE_AUDIOBUFFER2
-	uint8**				AudioBuffer2;
-	uint32				AudioBufferSize2;
-#endif
+	void Update();
 
 	std::string			UrlToPlay;
 
 	FLostMediaInfo		MediaInfo;
 	IDecodeCallbackWeakPtr DecodeCallback;
 
-	//std::deque<EDecodeCommand> Commands;
-	//std::mutex			CommandLock;
-
 	EDecodeState		State;
-	bool				bLooping;
+	float Rate;
 
-	bool				bQuit;
-	bool				bRunning;
-
-	double				PlayPos;
-	double				FrameTime;
-
-	std::thread			BackgroundTask;
+	LDecoder::FLMediaDecoderPrivate* PrivateDecoder;
 };
 
-typedef std::shared_ptr<FLostMediaDecoder> DecoderHandle;
+typedef std::shared_ptr<FLMediaDecoder> DecoderHandle;
 
 LOSTMEDIA_API DecoderHandle DecodeMedia(IDecodeCallbackWeakPtr callback, const char* url);
 LOSTMEDIA_API void ReleaseDecoder(DecoderHandle* handle);

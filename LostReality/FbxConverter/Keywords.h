@@ -25,9 +25,12 @@
 #define K_LIGHT							"Light"
 #define K_LODGROUP						"LODGroup"
 #define K_POSE							"Pose"
+#define K_POSES							"Poses"
 
 #define K_CONTROLPOINT					"ControlPoint"
 #define K_POLYGON						"Polygon"
+#define K_POLYGONS						"Polygons"
+#define K_POLYGON_GROUP					"PolygonGroup"
 #define K_GROUPID						"GroupID"
 
 #define K_METADATA_CONNECTION			"MetaDataConnection"
@@ -49,6 +52,7 @@
 #define K_IKPIVOT						"IKPivot"
 #define K_VERTEXCOLOR					"VertexColor"
 #define K_UV							"UV"
+#define K_TEXTUREUV						"TextureUV"
 #define K_VISIBILITY					"Visibility"
 #define K_EDGE							"Edge"
 #define K_EDGE_VISIBILITY				"EdgeVisibility"
@@ -78,6 +82,7 @@
 
 #define K_ISBIND						"IsBind"
 #define K_COUNT							"Count"
+#define K_COUNT2						"Count2"
 #define K_CHARACTER_POSE				"CharacterPose"
 #define K_ANIMATION						"Animation"
 #define K_STACK							"Stack"
@@ -116,10 +121,24 @@
 #define K_ADDITIVE						"Additive"
 #define K_TOTAL							"Total"
 #define K_LINK_INDICES					"LinkIndices"
-#define K_WEIGHT_VALUES					"WeightValues"
+#define K_WEIGHT						"Weight"
 #define K_LINK							"Link"
 #define K_CLUSTER						"Cluster"
 #define K_SKIN							"Skin"
+#define K_BONE							"Bone"
+
+#define K_CHILDREN						"Children"
+#define K_MATERIAL						"Material"
+#define K_ELEMENT						"Element"
+#define K_VERTEX_ELEMENT				"VertexElement"
+#define K_VERTEX						"Vertex"
+
+#define K_MESSAGE						"Message"
+#define K_MESSAGE2						"Message2"
+#define K_MESSAGE3						"Message3"
+#define K_MESSAGE4						"Message4"
+#define K_MESSAGE5						"Message5"
+#define K_MESSAGE6						"Message6"
 
 #define FLAG_UNKNOWN					0x0badfffa
 
@@ -190,4 +209,14 @@ enum ETangentWVMode
 	None,
 	Right,
 	NextLeft,
+};
+
+enum EVertexElement
+{
+	Coordinate			= 0x1,
+	UV					= 0x2,
+	Normal				= 0x4,
+	Tangent				= 0x8,
+	Binormal			= 0x10,
+	VertexColor			= 0x20,
 };
