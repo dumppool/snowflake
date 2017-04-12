@@ -48,7 +48,11 @@ void LostCore::FBasicCamera::Draw(IRenderContext * rc, float sec)
 
 void LostCore::FBasicCamera::AddPosition(const FVec3& pos)
 {
-	ViewPosition += pos;
+	FQuat orientation;
+	orientation.FromEuler(ViewEuler);
+
+	FTransform world(orientation, ViewPosition);
+	ViewPosition = world.TransformPosition(pos);
 }
 
 void LostCore::FBasicCamera::AddEuler(const FVec3& euler)
@@ -107,18 +111,23 @@ FMatrix LostCore::FBasicCamera::GetViewMatrix() const
 
 FMatrix LostCore::FBasicCamera::GetProjectMatrix() const
 {
-	float wfov = Fov;
-	float hfov = wfov / AspectRatio;
-	float w = 1.f / std::tan(wfov * 0.5f);
-	float h = 1.f / std::tan(hfov * 0.5f);
+	float htan = std::tan(Fov * 0.5f);
+	if (IsEqual(0.f, htan))
+	{
+		htan = 0.001f;
+	}
+
+	float h = 1 / htan;
+	float w = h / AspectRatio;
 	float q = FarPlane / (FarPlane - NearPlane);
 	FMatrix result;
 	memset(&result, 0, sizeof(result));
 	result.M[0][0] = w;
 	result.M[1][1] = h;
 	result.M[2][2] = q;
-	result.M[3][2] = -q * NearPlane;
 	result.M[2][3] = 1.f;
+	result.M[3][2] = -q * NearPlane;
+
 	return result;
 }
 

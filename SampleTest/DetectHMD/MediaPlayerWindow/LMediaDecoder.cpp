@@ -611,6 +611,12 @@ int64 LDecoder::FLMediaDecoderPrivate::FrameQueueLastPos(FFrameQueue * f)
 		return -1;
 }
 
+void LDecoder::FLMediaDecoderPrivate::PushCommand(const std::function<void()>& cmd)
+{
+	std::lock_guard<std::mutex> guard(CmdsLock);
+	Cmds.push_front(cmd);
+}
+
 void LDecoder::FLMediaDecoderPrivate::DecoderAbort(FDecoder * d, FFrameQueue * fq)
 {
 	PacketQueueAbort(d->Queue);
@@ -624,9 +630,12 @@ void LDecoder::FLMediaDecoderPrivate::AllocPicture(FVideoState *is)
 	FFrame* vp;
 	int64 bufferdiff;
 	vp = &is->PicQueue.Queue[is->PicQueue.WriteIndex];
-	vp->Bmp.Width = is->Width;
-	vp->Bmp.Height = is->Height * 1.5;
-	vp->Bmp.Data = (uint8*)av_mallocz(vp->Bmp.Width * vp->Bmp.Height);
+	FreePicture(vp);
+
+	vp->Bmp.Width = is->VideoDecWidth;
+	vp->Bmp.Height = is->VideoDecHeight;
+	vp->Bmp.Size = vp->Bmp.Width * vp->Bmp.Height * 1.5;
+	vp->Bmp.Data = (uint8*)av_mallocz(vp->Bmp.Size);
 
 	SDL_LockMutex(is->PicQueue.Mutex);
 	vp->bAllocated = true;
@@ -636,12 +645,58 @@ void LDecoder::FLMediaDecoderPrivate::AllocPicture(FVideoState *is)
 
 void LDecoder::FLMediaDecoderPrivate::FreePicture(FFrame* vp)
 {
-	av_freep(vp->Bmp.Data); 
-	vp->Bmp.Data = nullptr;
+	if (vp->Bmp.Data != NULL)
+		av_freep(vp->Bmp.Data);
 }
 
 void LDecoder::FLMediaDecoderPrivate::VideoImageDisplay(FVideoState * is)
 {
+	FFrame *vp;
+	FFrame *sp;
+	SDL_Rect rect;
+	int i;
+
+	vp = FrameQueuePeek(&is->PicQueue);
+	if (vp->Bmp.Data != nullptr) {
+		//if (is->subtitle_st) {
+		//	if (frame_queue_nb_remaining(&is->subpq) > 0) {
+		//		sp = frame_queue_peek(&is->subpq);
+
+		//		if (vp->pts >= sp->pts + ((float)sp->sub.start_display_time / 1000)) {
+		//			uint8_t *data[4];
+		//			int linesize[4];
+
+		//			SDL_LockYUVOverlay(vp->bmp);
+
+		//			data[0] = vp->bmp->pixels[0];
+		//			data[1] = vp->bmp->pixels[2];
+		//			data[2] = vp->bmp->pixels[1];
+
+		//			linesize[0] = vp->bmp->pitches[0];
+		//			linesize[1] = vp->bmp->pitches[2];
+		//			linesize[2] = vp->bmp->pitches[1];
+
+		//			for (i = 0; i < sp->sub.num_rects; i++)
+		//				blend_subrect(data, linesize, sp->subrects[i],
+		//					vp->bmp->w, vp->bmp->h);
+
+		//			SDL_UnlockYUVOverlay(vp->bmp);
+		//		}
+		//	}
+		//}
+		if (is->DecodeCB->NeedNewFrame(vp->Bmp.Width, vp->Bmp.Height, 61))
+			is->DecodeCB->ProcessVideoFrame(vp->Bmp.Data, 0);
+
+		//calculate_display_rect(&rect, is->xleft, is->ytop, is->width, is->height, vp->width, vp->height, vp->sar);
+
+		//SDL_DisplayYUVOverlay(vp->bmp, &rect);
+
+		//if (rect.x != is->last_display_rect.x || rect.y != is->last_display_rect.y || rect.w != is->last_display_rect.w || rect.h != is->last_display_rect.h || is->force_refresh) {
+		//	int bgcolor = SDL_MapRGB(screen->format, 0x00, 0x00, 0x00);
+		//	fill_border(is->xleft, is->ytop, is->width, is->height, rect.x, rect.y, rect.w, rect.h, bgcolor, 1);
+		//	is->LastBmp = rect;
+		//}
+	}
 }
 
 void LDecoder::FLMediaDecoderPrivate::VideoAudioDisplay(FVideoState * is)
@@ -718,7 +773,11 @@ void LDecoder::FLMediaDecoderPrivate::StreamClose(FVideoState * is)
 {
 	/* XXX: use a special url_shutdown call to abort parse cleanly */
 	is->bAbort = true;
-	is->ReadTID.join();
+	if (is->ReadThreadId.joinable())
+		is->ReadThreadId.join();
+
+	if (is->LoopThreadId.joinable())
+		is->LoopThreadId.join();
 
 	/* close each stream */
 	if (is->AudioStreamIndex >= 0)
@@ -751,12 +810,12 @@ void LDecoder::FLMediaDecoderPrivate::DoExit(FVideoState * is)
 		StreamClose(is);
 	}
 
-	av_lockmgr_register(NULL);
+	av_lockmgr_register(nullptr);
 	//uninit_opts();
 	avformat_network_deinit();
-	SDL_Quit();
-	av_log(NULL, AV_LOG_QUIET, "%s", "");
-	exit(0);
+	//SDL_Quit();
+	//av_log(NULL, AV_LOG_QUIET, "%s", "");
+	//exit(0);
 }
 
 int32 LDecoder::FLMediaDecoderPrivate::VideoOpen(FVideoState * is, bool bForceSetVideoMode, FFrame * vp)
@@ -1152,10 +1211,11 @@ int32 LDecoder::FLMediaDecoderPrivate::QueuePicture(FVideoState * is, AVFrame * 
 		//event.user.data1 = is;
 		//SDL_PushEvent(&event);
 
+		PushCommand([&]() {AllocPicture(is); });
+
 		/* wait until the picture is allocated */
 		SDL_LockMutex(is->PicQueue.Mutex);
 		while (!vp->bAllocated && !is->VideoQueue.bAbort) {
-			//AllocPicture(is);
 			SDL_CondWait(is->PicQueue.Cond, is->PicQueue.Mutex);
 		}
 		/* if the queue is aborted, we have to pop the pending ALLOC event or wait for the allocation to complete */
@@ -1171,64 +1231,73 @@ int32 LDecoder::FLMediaDecoderPrivate::QueuePicture(FVideoState * is, AVFrame * 
 	}
 
 	/* if the frame is not skipped, then display it */
-//	if (vp->Bmp.Data) {
-//		uint8_t *data[4];
-//		int linesize[4];
-//
-//		/* get a pointer on the bitmap */
-//		SDL_LockYUVOverlay(vp->bmp);
-//
-//		data[0] = vp->bmp->pixels[0];
-//		data[1] = vp->bmp->pixels[2];
-//		data[2] = vp->bmp->pixels[1];
-//
-//		linesize[0] = vp->bmp->pitches[0];
-//		linesize[1] = vp->bmp->pitches[2];
-//		linesize[2] = vp->bmp->pitches[1];
-//
-//#if CONFIG_AVFILTER
-//		// FIXME use direct rendering
-//		av_image_copy(data, linesize, (const uint8_t **)srcFrame->data, srcFrame->linesize,
-//			srcFrame->format, vp->width, vp->height);
-//#else
-//		{
-//			AVDictionaryEntry *e = av_dict_get(SwsDict, "sws_flags", NULL, 0);
-//			if (e) {
-//				const AVClass *class = sws_get_class();
-//				const AVOption    *o = av_opt_find(&class, "sws_flags", NULL, 0,
-//					AV_OPT_SEARCH_FAKE_OBJ);
-//				int ret = av_opt_eval_flags(&class, o, e->value, &sws_flags);
-//				if (ret < 0)
-//					exit(1);
-//			}
-//		}
-//
-//		is->img_convert_ctx = sws_getCachedContext(is->img_convert_ctx,
-//			vp->width, vp->height, srcFrame->format, vp->width, vp->height,
-//			AV_PIX_FMT_YUV420P, sws_flags, NULL, NULL, NULL);
-//		if (!is->img_convert_ctx) {
-//			av_log(NULL, AV_LOG_FATAL, "Cannot initialize the conversion context\n");
-//			exit(1);
-//		}
-//		sws_scale(is->img_convert_ctx, srcFrame->data, srcFrame->linesize,
-//			0, vp->height, data, linesize);
-//#endif
-//
-//
-//
-//		/* workaround SDL PITCH_WORKAROUND */
-//		duplicate_right_border_pixels(vp->bmp);
-//		/* update the bitmap content */
-//		SDL_UnlockYUVOverlay(vp->bmp);
-//
-//		vp->pts = pts;
-//		vp->duration = duration;
-//		vp->pos = pos;
-//		vp->serial = serial;
-//
-//		/* now we can update the picture count */
-//		frame_queue_push(&is->pictq);
-	//}
+	if (vp->Bmp.Data) {
+		//uint8_t *data[4];
+		//int linesize[4];
+
+		/* get a pointer on the bitmap */
+		//SDL_LockYUVOverlay(vp->bmp);
+
+		//data[0] = vp->bmp->pixels[0];
+		//data[1] = vp->bmp->pixels[2];
+		//data[2] = vp->bmp->pixels[1];
+
+		//linesize[0] = vp->bmp->pitches[0];
+		//linesize[1] = vp->bmp->pitches[2];
+		//linesize[2] = vp->bmp->pitches[1];
+
+		//{
+		//	AVDictionaryEntry *e = av_dict_get(SwsDict, "sws_flags", NULL, 0);
+		//	if (e) {
+		//		const AVClass *class = sws_get_class();
+		//		const AVOption    *o = av_opt_find(&class, "sws_flags", NULL, 0,
+		//			AV_OPT_SEARCH_FAKE_OBJ);
+		//		int ret = av_opt_eval_flags(&class, o, e->value, &sws_flags);
+		//		if (ret < 0)
+		//			exit(1);
+		//	}
+		//}
+
+		//is->img_convert_ctx = sws_getCachedContext(is->img_convert_ctx,
+		//	vp->width, vp->height, srcFrame->format, vp->width, vp->height,
+		//	AV_PIX_FMT_YUV420P, sws_flags, NULL, NULL, NULL);
+		//if (!is->img_convert_ctx) {
+		//	av_log(NULL, AV_LOG_FATAL, "Cannot initialize the conversion context\n");
+		//	exit(1);
+		//}
+		//sws_scale(is->img_convert_ctx, srcFrame->data, srcFrame->linesize,
+		//	0, vp->height, data, linesize);
+
+
+
+		///* workaround SDL PITCH_WORKAROUND */
+		//duplicate_right_border_pixels(vp->bmp);
+		///* update the bitmap content */
+		//SDL_UnlockYUVOverlay(vp->bmp);
+
+		int32 w = vp->Bmp.Width;
+		int32 w2 = w / 2;
+		int32 h = vp->Bmp.Height;
+		int32 h2 = h / 2;
+		for (int i = 0; i < h; ++i)
+		{
+			memcpy(vp->Bmp.Data + i * w, srcFrame->data[0] + i * srcFrame->linesize[0], w);
+		}
+
+		for (int i = 0; i < h2; ++i)
+		{
+			memcpy(vp->Bmp.Data + (i + h) * w, srcFrame->data[1] + i * srcFrame->linesize[1], w2);
+			memcpy(vp->Bmp.Data + (i + h) * w + w2, srcFrame->data[2] + i * srcFrame->linesize[2], w2);
+		}
+
+		vp->Pts = pts;
+		vp->Duration = duration;
+		vp->Pos = pos;
+		vp->Serial = serial;
+
+		/* now we can update the picture count */
+		FrameQueuePush(&is->PicQueue);
+	}
 	return 0;
 }
 
@@ -1250,13 +1319,16 @@ int32 LDecoder::FLMediaDecoderPrivate::GetVideoFrame(FVideoState * is, AVFrame *
 		is->VideoDecWidth = frame->width;
 		is->VideoDecHeight = frame->height;
 
-		if (Framedrop>0 || (Framedrop && GetMasterSyncType(is) != AV_SYNC_VIDEO_MASTER)) {
-			if (frame->pts != AV_NOPTS_VALUE) {
+		if (Framedrop>0 || (Framedrop && GetMasterSyncType(is) != AV_SYNC_VIDEO_MASTER)) 
+		{
+			if (frame->pts != AV_NOPTS_VALUE) 
+			{
 				double diff = dpts - GetMasterClock(is);
 				if (!isnan(diff) && fabs(diff) < AV_NOSYNC_THRESHOLD &&
 					diff - is->FrameLastFilterDelay < 0 &&
 					is->VideoDec.PacketSerial == is->VideoClock.Serial &&
-					is->VideoQueue.Num) {
+					is->VideoQueue.Num)
+				{
 					is->FrameDropsEarly++;
 					av_frame_unref(frame);
 					got_picture = 0;
@@ -1592,9 +1664,11 @@ int32 LDecoder::FLMediaDecoderPrivate::AudioDecodeFrame(FVideoState * is)
 	return resampled_data_size;
 }
 
-void LDecoder::FLMediaDecoderPrivate::XdlAudioCallback(void * opaque, uint8 * stream, int32 len)
+void LDecoder::FLMediaDecoderPrivate::Execute_AudioThread(void * arg)
 {
-	FVideoState *is = (FVideoState *)opaque;
+	FVideoState *is = (FVideoState *)arg;
+	uint8 * stream;
+	int32 len;
 	int audio_size, len1;
 
 	AudioCallbackTime = av_gettime_relative();
@@ -1865,7 +1939,7 @@ bool LDecoder::FLMediaDecoderPrivate::IsRealtime(AVFormatContext * s)
 	return 0;
 }
 
-int32 LDecoder::FLMediaDecoderPrivate::ReadThread(void * arg)
+int32 LDecoder::FLMediaDecoderPrivate::Execute_ReadThread(void * arg)
 {
 	FVideoState *is = (FVideoState *)arg;
 	AVFormatContext *ic = nullptr;
@@ -1906,7 +1980,23 @@ int32 LDecoder::FLMediaDecoderPrivate::ReadThread(void * arg)
 		scan_all_pmts_set = 1;
 	}
 	err = avformat_open_input(&ic, is->Filename, is->InputFormat, &FmtOpts);
+
+	//AVFormatContext* ic2 = nullptr;
+	//int ret2 = avformat_open_input(&ic2, is->Filename, nullptr, nullptr);
+	//if (ret2 < 0)
+	//{
+	//	av_log(NULL, AV_LOG_ERROR, "failed, %d", ret2);
+	//}
+
 	if (err < 0) {
+		{
+			char errbuf[128];
+
+			if (av_strerror(err, errbuf, sizeof(errbuf)) < 0)
+				strerror_s(errbuf, 128, AVUNERROR(err));
+
+			av_log(NULL, AV_LOG_ERROR, "%s: %s\n", is->Filename, errbuf);
+		}
 		//print_error(is->Filename, err);
 		ret = -1;
 		goto fail;
@@ -2194,9 +2284,55 @@ fail:
 	return 0;
 }
 
+int32 LDecoder::FLMediaDecoderPrivate::Execute_LoopThread(void * arg)
+{
+	FVideoState *is = (FVideoState *)arg;
+	double remaining = 0.0;
+	while (!is->bAbort)
+	{
+		{
+			std::lock_guard<std::mutex> guard(CmdsLock);
+			auto it = Cmds.begin();
+			while (it != Cmds.end())
+			{
+				(*it++)();
+			}
+
+			Cmds.clear();
+		}
+
+		Refresh_LoopThread(is, &remaining);
+	}
+
+	StreamClose(is);
+
+	return 0;
+}
+
+void LDecoder::FLMediaDecoderPrivate::Refresh_LoopThread(FVideoState * is, double* remaining)
+{
+	if (*remaining > 0.0)
+	{
+		av_usleep(*remaining * 1000000.0);
+	}
+
+	*remaining = 0.008;
+	if (is->ShowMode != SHOW_MODE_NONE && (!is->bPaused || is->bForceRefresh))
+	{
+		VideoRefresh(is, remaining);
+	}
+}
+
 FVideoState * LDecoder::FLMediaDecoderPrivate::StreamOpen(const char * filename, AVInputFormat * iformat)
 {
 	FVideoState *is;
+
+	//auto ta = std::thread([]() {int ret = 0; int i = 10000; OutputDebugStringA("ta begin\n"); while (i-- > 0) ret += i; OutputDebugStringA(std::to_string(ret).c_str()); OutputDebugStringA("\nta end\n"); });
+	//ta.detach();
+	//auto tb = std::thread([]() {int ret = 0; int i = 5000; OutputDebugStringA("tb begin\n"); while (i-- > 0) ret += i; OutputDebugStringA(std::to_string(ret).c_str()); OutputDebugStringA("\ntb end\n"); });
+	//tb.detach();
+	//auto tc = std::thread([]() {int ret = 0; int i = 1000; OutputDebugStringA("tc begin\n"); while (i-- > 0) ret += i; OutputDebugStringA(std::to_string(ret).c_str()); OutputDebugStringA("\ntc end\n"); });
+	//tc.detach();
 
 	is = (FVideoState *)av_mallocz(sizeof(FVideoState));
 	if (!is)
@@ -2233,12 +2369,14 @@ FVideoState * LDecoder::FLMediaDecoderPrivate::StreamOpen(const char * filename,
 	is->AudioVolume = SDL_MIX_MAXVOLUME;
 	is->bMuted = 0;
 	is->AvSyncType = AvSyncType;
-	is->ReadTID = std::thread([&]() {return this->ReadThread(is); });
+	is->ReadThreadId = std::thread([&]() {return this->Execute_ReadThread(is); });
+	is->LoopThreadId = std::thread([&]() {return this->Execute_LoopThread(is); });
+	is->AudioThreadId = std::thread([&]() {return this->Execute_LoopThread(is); });
 	return is;
 
 	fail:
 		StreamClose(is);
-		return NULL;
+		return nullptr;
 }
 
 void LDecoder::FLMediaDecoderPrivate::StreamCycleChannel(FVideoState * is, int32 codecType)
@@ -2394,7 +2532,45 @@ void LDecoder::FLMediaDecoderPrivate::DoSeek(FVideoState * is, int32 incr)
 }
 
 LDecoder::FLMediaDecoderPrivate::FLMediaDecoderPrivate()
+	: SwsFlags(SWS_BICUBIC)
+	, SwsDict(nullptr)
+	, SwrOpts(nullptr)
+	, FmtOpts(nullptr)
+	, CodecOpts(nullptr)
+	, ResampleOpts(nullptr)
+	, InputFileName(nullptr)
+	, WindowTitle(nullptr)
+	, ScreenWidth(-1)
+	, ScreenHeight(-1)
+	, bAudioDisable(false)
+	, bVideoDisable(false)
+	, bSubtitleDisable(false)
+	, bDisplayDisable(false)
+	, bFast(false)
+	, bLowres(false)
+	, bAutoexit(false)
+	, bSeekByBytes(false)
+	, AvSyncType(AV_SYNC_AUDIO_MASTER)
+	, StartTime(AV_NOPTS_VALUE)
+	, Duration(AV_NOPTS_VALUE)
+	, DecoderReorderPts(-1)
+	, Loop(1)
+	, Framedrop(-1)
+	, InfiniteBuffer(-1)
+	, ShowMode(SHOW_MODE_VIDEO)
+	, AudioCodecName(nullptr)
+	, SubtitleCodecName(nullptr)
+	, VideoCodecName(nullptr)
+	, RdftSpeed(0.02)
+	, AudioCallbackTime(0)
 {
+	av_register_all();
+	avformat_network_init();
+
+	for (int32 i = 0; i < AVMEDIA_TYPE_NB; ++i)
+	{
+		WantedStreamSpec[i] = nullptr;
+	}
 }
 
 LDecoder::FLMediaDecoderPrivate::~FLMediaDecoderPrivate()
@@ -2403,6 +2579,7 @@ LDecoder::FLMediaDecoderPrivate::~FLMediaDecoderPrivate()
 
 FLMediaDecoder::FLMediaDecoder()
 	: PrivateDecoder(nullptr)
+	, DecodeCallback(nullptr)
 {
 	PrivateDecoder = new LDecoder::FLMediaDecoderPrivate;
 }
@@ -2419,7 +2596,9 @@ FLMediaDecoder::~FLMediaDecoder()
 bool FLMediaDecoder::OpenUrl(const char * url)
 {
 	UrlToPlay = url;
-	return PrivateDecoder;
+	LDecoder::FVideoState* is = PrivateDecoder->StreamOpen(url, nullptr);
+	is->DecodeCB = DecodeCallback;
+	return true;
 }
 
 void FLMediaDecoder::EnqueueCommand(EDecodeCommand cmd)
@@ -2471,4 +2650,20 @@ FLostMediaInfo * FLMediaDecoder::GetMediaInfo()
 
 void FLMediaDecoder::Update()
 {
+}
+
+DecoderHandle DecodeMedia(IDecodeCallbackWeakPtr callback, const char* url)
+{
+	DecoderHandle handle(new FLMediaDecoder);
+	handle->SetCallback(callback);
+	handle->OpenUrl(url);
+	return handle;
+}
+
+void ReleaseDecoder(DecoderHandle* handle)
+{
+	if (handle != nullptr)
+	{
+		*handle = nullptr;
+	}
 }
