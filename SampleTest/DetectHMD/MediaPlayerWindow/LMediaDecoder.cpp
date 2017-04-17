@@ -779,6 +779,9 @@ void LDecoder::FLMediaDecoderPrivate::StreamClose(FVideoState * is)
 	if (is->LoopThreadId.joinable())
 		is->LoopThreadId.join();
 
+	if (is->AudioThreadId.joinable())
+		is->AudioThreadId.join();
+
 	/* close each stream */
 	if (is->AudioStreamIndex >= 0)
 		StreamComponentClose(is, is->AudioStreamIndex);
@@ -1666,48 +1669,67 @@ int32 LDecoder::FLMediaDecoderPrivate::AudioDecodeFrame(FVideoState * is)
 
 void LDecoder::FLMediaDecoderPrivate::Execute_AudioThread(void * arg)
 {
-	FVideoState *is = (FVideoState *)arg;
-	uint8 * stream;
-	int32 len;
-	int audio_size, len1;
+	const int32 constlen = 512 * 1024;
+	uint8 * stream = (uint8 *)av_mallocz(constlen);
 
-	AudioCallbackTime = av_gettime_relative();
+	while (1)
+	{
+		FVideoState *is = (FVideoState *)arg;
+		int32 len = constlen;
+		int audio_size, len1;
 
-	while (len > 0) {
-		if (is->AudioBufIndex >= is->AudioBuf1Size) {
-			audio_size = AudioDecodeFrame(is);
-			if (audio_size < 0) {
-				/* if error, just output silence */
-				is->AudioBuf = is->SilenceBuf;
-				is->AudioBufSize = sizeof(is->SilenceBuf) / is->AudioTgt.FrameSize * is->AudioTgt.FrameSize;
+		AudioCallbackTime = av_gettime_relative();
+
+		while (len > 0) {
+			if (is->AudioBufIndex >= is->AudioBuf1Size) {
+				audio_size = AudioDecodeFrame(is);
+				if (audio_size < 0) {
+					/* if error, just output silence */
+					is->AudioBuf = is->SilenceBuf;
+					is->AudioBufSize = sizeof(is->SilenceBuf) / is->AudioTgt.FrameSize * is->AudioTgt.FrameSize;
+				}
+				else {
+					if (is->ShowMode != SHOW_MODE_VIDEO)
+						UpdateSampleDisplay(is, (int16_t *)is->AudioBuf, audio_size);
+					is->AudioBufSize = audio_size;
+				}
+				is->AudioBufIndex = 0;
 			}
+			len1 = is->AudioBufSize - is->AudioBufIndex;
+
+			if (len1 > len)
+			{
+				len1 = len;
+			}
+			else if (len1 == 0)
+			{
+				av_usleep(1000.0);
+				continue;
+			}
+
+			if (!is->bMuted && is->AudioVolume == SDL_MIX_MAXVOLUME)
+				memcpy(stream, (uint8_t *)is->AudioBuf + is->AudioBufIndex, len1);
 			else {
-				if (is->ShowMode != SHOW_MODE_VIDEO)
-					UpdateSampleDisplay(is, (int16_t *)is->AudioBuf, audio_size);
-				is->AudioBufSize = audio_size;
+				memset(stream, is->SilenceBuf[0], len1);
+				if (!is->bMuted)
+					SDL_MixAudio(stream, (uint8_t *)is->AudioBuf + is->AudioBufIndex, len1, is->AudioVolume);
 			}
-			is->AudioBufIndex = 0;
+
+			is->DecodeCB->ProcessAudioFrame(stream, len1, is->AudioTgt.BytesPerSec);
+			len -= len1;
+			stream += len1;
+			is->AudioBufIndex += len1;
 		}
-		len1 = is->AudioBufSize - is->AudioBufIndex;
-		if (len1 > len)
-			len1 = len;
-		if (!is->bMuted && is->AudioVolume == SDL_MIX_MAXVOLUME)
-			memcpy(stream, (uint8_t *)is->AudioBuf + is->AudioBufIndex, len1);
-		else {
-			memset(stream, is->SilenceBuf[0], len1);
-			if (!is->bMuted)
-				SDL_MixAudio(stream, (uint8_t *)is->AudioBuf + is->AudioBufIndex, len1, is->AudioVolume);
+		//DecodeCB->ProcessAudioFrame(stream, constlen, is->)
+		is->AudioWriteBufSize = is->AudioBufSize - is->AudioBufIndex;
+		/* Let's assume the audio driver that is used by SDL has two periods. */
+		if (!isnan(is->AudioClockValue)) {
+			SetClockAt(&is->AudioClock, is->AudioClockValue - (double)(2 * is->AudioHwBufSize + is->AudioWriteBufSize) / is->AudioTgt.BytesPerSec, is->AudioClockSerial, AudioCallbackTime / 1000000.0);
+			SyncClockToSlave(&is->ExternClock, &is->AudioClock);
 		}
-		len -= len1;
-		stream += len1;
-		is->AudioBufIndex += len1;
 	}
-	is->AudioWriteBufSize = is->AudioBufSize - is->AudioBufIndex;
-	/* Let's assume the audio driver that is used by SDL has two periods. */
-	if (!isnan(is->AudioClockValue)) {
-		SetClockAt(&is->AudioClock, is->AudioClockValue - (double)(2 * is->AudioHwBufSize + is->AudioWriteBufSize) / is->AudioTgt.BytesPerSec, is->AudioClockSerial, AudioCallbackTime / 1000000.0);
-		SyncClockToSlave(&is->ExternClock, &is->AudioClock);
-	}
+
+	av_freep(stream);
 }
 
 int32 LDecoder::FLMediaDecoderPrivate::AudioOpen(void * opaque, int64 wantedChannelLayout, int32 wantedNbChannels, int32 wantedSampleRate, FAudioAttribute * audioHwParams)
@@ -1727,13 +1749,14 @@ int32 LDecoder::FLMediaDecoderPrivate::AudioOpen(void * opaque, int64 wantedChan
 		wantedChannelLayout = av_get_default_channel_layout(wantedNbChannels);
 		wantedChannelLayout &= ~AV_CH_LAYOUT_STEREO_DOWNMIX;
 	}
-	wantedNbChannels = av_get_channel_layout_nb_channels(wantedChannelLayout);
-	wanted_spec.channels = wantedNbChannels;
-	wanted_spec.freq = wantedSampleRate;
-	if (wanted_spec.freq <= 0 || wanted_spec.channels <= 0) {
-		av_log(NULL, AV_LOG_ERROR, "Invalid sample rate or channel count!\n");
-		return -1;
-	}
+	//wantedNbChannels = av_get_channel_layout_nb_channels(wantedChannelLayout);
+	//wanted_spec.channels = wantedNbChannels;
+	//wanted_spec.freq = wantedSampleRate;
+	//if (wanted_spec.freq <= 0 || wanted_spec.channels <= 0) {
+	//	av_log(NULL, AV_LOG_ERROR, "Invalid sample rate or channel count!\n");
+	//	return -1;
+	//}
+
 	//while (next_sample_rate_idx && next_sample_rates[next_sample_rate_idx] >= wanted_spec.freq)
 	//	next_sample_rate_idx--;
 	//wanted_spec.format = AUDIO_S16SYS;
@@ -1770,18 +1793,17 @@ int32 LDecoder::FLMediaDecoderPrivate::AudioOpen(void * opaque, int64 wantedChan
 	//	}
 	//}
 
-	//audio_hw_params->fmt = AV_SAMPLE_FMT_S16;
-	//audio_hw_params->freq = spec.freq;
-	//audio_hw_params->channel_layout = wantedChannelLayout;
-	//audio_hw_params->channels = spec.channels;
-	//audio_hw_params->frame_size = av_samples_get_buffer_size(NULL, audio_hw_params->channels, 1, audio_hw_params->fmt, 1);
-	//audio_hw_params->bytes_per_sec = av_samples_get_buffer_size(NULL, audio_hw_params->channels, audio_hw_params->freq, audio_hw_params->fmt, 1);
-	//if (audio_hw_params->bytes_per_sec <= 0 || audio_hw_params->frame_size <= 0) {
-	//	av_log(NULL, AV_LOG_ERROR, "av_samples_get_buffer_size failed\n");
-	//	return -1;
-	//}
-	//return spec.size;
-	return 0;
+	audioHwParams->Format = AV_SAMPLE_FMT_S16;
+	audioHwParams->Freq = 44100;
+	audioHwParams->ChannelLayout = wantedChannelLayout;
+	audioHwParams->Channels = wantedNbChannels;
+	audioHwParams->FrameSize = av_samples_get_buffer_size(NULL, audioHwParams->Channels, 1, audioHwParams->Format, 1);
+	audioHwParams->BytesPerSec = av_samples_get_buffer_size(NULL, audioHwParams->Channels, audioHwParams->Freq, audioHwParams->Format, 1);
+	if (audioHwParams->BytesPerSec <= 0 || audioHwParams->FrameSize <= 0) {
+		av_log(NULL, AV_LOG_ERROR, "av_samples_get_buffer_size failed\n");
+		return -1;
+	}
+	return wantedSampleRate;
 }
 
 int32 LDecoder::FLMediaDecoderPrivate::StreamComponentOpen(FVideoState * is, int32 streamIndex)
@@ -1885,7 +1907,9 @@ int32 LDecoder::FLMediaDecoderPrivate::StreamComponentOpen(FVideoState * is, int
 		}
 		if ((ret = DecoderStart(&is->AudioDec, [&]() {return this->AudioThread(is); })) < 0)
 			goto fail;
-		SDL_PauseAudio(0);
+		//SDL_PauseAudio(0);
+
+		is->AudioThreadId = std::thread([&]() {return this->Execute_AudioThread(is); });
 		break;
 	case AVMEDIA_TYPE_VIDEO:
 		is->VideoStreamIndex = streamIndex;
@@ -2320,6 +2344,7 @@ void LDecoder::FLMediaDecoderPrivate::Refresh_LoopThread(FVideoState * is, doubl
 	if (is->ShowMode != SHOW_MODE_NONE && (!is->bPaused || is->bForceRefresh))
 	{
 		VideoRefresh(is, remaining);
+		//Execute_AudioThread(is);
 	}
 }
 
@@ -2371,7 +2396,6 @@ FVideoState * LDecoder::FLMediaDecoderPrivate::StreamOpen(const char * filename,
 	is->AvSyncType = AvSyncType;
 	is->ReadThreadId = std::thread([&]() {return this->Execute_ReadThread(is); });
 	is->LoopThreadId = std::thread([&]() {return this->Execute_LoopThread(is); });
-	is->AudioThreadId = std::thread([&]() {return this->Execute_LoopThread(is); });
 	return is;
 
 	fail:
