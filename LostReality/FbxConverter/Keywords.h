@@ -19,6 +19,7 @@
 #define K_MARKER						"Marker"
 #define K_SKELETON						"Skeleton"
 #define K_MESH							"Mesh"
+#define K_MESHES						"Meshes"
 #define K_NURBS							"Nurbs"
 #define K_PATCH							"Patch"
 #define K_CAMERA						"Camera"
