@@ -42,23 +42,18 @@ bool OculusVR::Startup()
 
 	if (detectResult.IsOculusServiceRunning && detectResult.IsOculusHMDConnected)
 	{
-		static bool s_first = true;
-		WCHAR curr[MAX_PATH];
-		if (!s_first)
-		{
-			LVMSG(head, "we've failed once, about to use our runtime");
-			GetCurrentDirectoryW(MAX_PATH, curr);
-			SetCurrentDirectory(SGlobalSharedDataInst.GetDependencyDirectory());
-		}
-
 		ovrInitParams initParams;
 		memset(&initParams, 0, sizeof(initParams));
 		initParams.Flags = ovrInit_RequestVersion;
 		initParams.RequestedMinorVersion = OVR_MINOR_VERSION;
 		initParams.LogCallback = OvrLogCallback;
 		result = ovr_Initialize(&initParams);
-		s_first = false;
-		SetCurrentDirectoryW(curr);
+
+		if (result == ovrError_LibLoad)
+		{
+			SetCurrentDirectory(SGlobalSharedDataInst.GetDependencyDirectory());
+			result = ovr_Initialize(&initParams);
+		}
 	}
 	else
 	{
