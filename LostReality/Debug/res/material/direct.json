@@ -1,14 +1,14 @@
 {
-	"vertex":"XYZUV",
+	"vertex":"XYZ",
 	"vs":
 	{
-		"path":"dummy.fx",
+		"path":"direct.fx",
 		"entry":"vs_main",
 		"target":"vs_5_0"
 	},
 	"ps":
 	{
-		"path":"dummy.fx",
+		"path":"direct.fx",
 		"entry":"ps_main",
 		"target":"ps_5_0"
 	}
