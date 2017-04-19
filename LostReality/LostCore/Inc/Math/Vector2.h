@@ -34,6 +34,9 @@ namespace LostCore
 		INLINE FVec2NonVectorized operator*=(const FVec2NonVectorized& vec);
 		INLINE FVec2NonVectorized operator/=(const FVec2NonVectorized& vec);
 
+		INLINE FVec2NonVectorized operator*(float scaler) const;
+		INLINE FVec2NonVectorized operator*=(float scaler);
+
 		INLINE bool operator==(const FVec2NonVectorized& vec) const;
 		INLINE bool operator!=(const FVec2NonVectorized& vec) const;
 
@@ -107,6 +110,18 @@ namespace LostCore
 	{
 		X /= vec.X;
 		Y /= vec.Y;
+		return *this;
+	}
+
+	INLINE FVec2NonVectorized FVec2NonVectorized::operator*(float scaler) const
+	{
+		return FVec2NonVectorized(X * scaler, Y * scaler);
+	}
+
+	INLINE FVec2NonVectorized FVec2NonVectorized::operator*=(float scaler)
+	{
+		X *= scaler;
+		Y *= scaler;
 		return *this;
 	}
 

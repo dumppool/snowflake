@@ -43,9 +43,11 @@ void FBasicScene::Draw(IRenderContext * rc, float sec)
 			sm->Draw(rc, sec);
 		}
 	}
+
+	GUIRoot;
 }
 
-bool FBasicScene::Init(const char * name, IRenderContext * rc)
+bool FBasicScene::Init(IRenderContext * rc)
 {
 	return false;
 }

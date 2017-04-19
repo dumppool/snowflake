@@ -21,7 +21,7 @@ namespace LostCore
 		FBasicStaticMesh();
 		virtual ~FBasicStaticMesh() override;
 
-		virtual bool Init(const char* name, IRenderContext * rc) override;
+		virtual bool Init(IRenderContext * rc) override;
 		virtual void Fini() override;
 		virtual void Tick(float sec) override;
 		virtual void Draw(IRenderContext * rc, float sec) override;

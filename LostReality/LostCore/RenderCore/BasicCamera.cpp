@@ -26,7 +26,7 @@ LostCore::FBasicCamera::~FBasicCamera()
 {
 }
 
-bool FBasicCamera::Init(const char* name, IRenderContext * rc)
+bool FBasicCamera::Init(IRenderContext * rc)
 {
 	return true;
 }

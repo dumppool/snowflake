@@ -110,8 +110,6 @@ bool D3D11::FTexture2D::ConstructFromSwapChain(const TRefCountPtr<IDXGISwapChain
 {
 	const char* head = "D3D11::FTexture2D::ConstructFromSwapChain";
 
-	HRESULT hr;
-
 	BindFlags = D3D11_BIND_RENDER_TARGET;
 	assert(SUCCEEDED(swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)Texture.GetInitReference())));
 

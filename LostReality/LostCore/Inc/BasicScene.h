@@ -11,6 +11,7 @@
 
 #include "BasicInterface.h"
 #include "BasicStaticMesh.h"
+#include "BasicGUI.h"
 
 namespace LostCore
 {
@@ -22,7 +23,7 @@ namespace LostCore
 
 		virtual void Tick(float sec) override;
 		virtual void Draw(IRenderContext * rc, float sec) override;
-		virtual bool Init(const char* name, IRenderContext * rc) override;
+		virtual bool Init(IRenderContext * rc) override;
 		virtual void Fini() override;
 
 		virtual void AddStaticMesh(FBasicStaticMesh * sm);
@@ -31,5 +32,6 @@ namespace LostCore
 
 	protected:
 		std::vector<FBasicStaticMesh*> StaticMeshArray;
+		FRect* GUIRoot;
 	};
 }

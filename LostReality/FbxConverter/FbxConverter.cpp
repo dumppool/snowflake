@@ -31,10 +31,11 @@ int main(int argc, char** argv)
 
 	if (!src.empty() && !dst.empty())
 	{
-		Importer::ImportScene2(src, dst);
+		//Importer::ImportScene2(src, dst);
+		Importer::ImportSceneMeshes(src, dst);
 	}
 
-	LostCore::LoadResource(dst.c_str());
+	//LostCore::LoadResource(dst.c_str());
 
     return 0;
 }

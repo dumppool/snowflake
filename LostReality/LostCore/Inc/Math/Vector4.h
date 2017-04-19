@@ -20,6 +20,9 @@ namespace LostCore
 		float Y;
 		float Z;
 		float W;
+
+		FVec4NonVectorized(float x, float y, float z, float w)
+			: X(x), Y(y), Z(z), W(w) {}
 	};
 
 #ifdef TYPEDEF_DECL_FVEC4

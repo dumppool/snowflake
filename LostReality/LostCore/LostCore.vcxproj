@@ -150,6 +150,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Inc\BasicCamera.h" />
+    <ClInclude Include="Inc\BasicGUI.h" />
     <ClInclude Include="Inc\BasicInterface.h" />
     <ClInclude Include="Inc\BasicScene.h" />
     <ClInclude Include="Inc\BasicStaticMesh.h" />
@@ -193,6 +194,7 @@
     <ClCompile Include="Inc\BasicStaticMesh.cpp" />
     <ClCompile Include="Inc\D3D11RenderContext.cpp" />
     <ClCompile Include="RenderCore\BasicCamera.cpp" />
+    <ClCompile Include="RenderCore\BasicGUI.cpp" />
     <ClCompile Include="RenderCore\BasicScene.cpp" />
     <ClCompile Include="RenderCore\BasicWorld.cpp" />
     <ClCompile Include="Src\LostCore.cpp" />

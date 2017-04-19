@@ -24,7 +24,7 @@ FBasicWorld::~FBasicWorld()
 	assert(SceneArray.size() == 0);
 }
 
-bool FBasicWorld::Init(const char * name, IRenderContext * rc)
+bool FBasicWorld::Init(IRenderContext * rc)
 {
 	return false;
 }

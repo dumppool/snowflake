@@ -75,6 +75,9 @@
     <ClInclude Include="Inc\File\DirectoryHelper.h">
       <Filter>Inc\File</Filter>
     </ClInclude>
+    <ClInclude Include="Inc\BasicGUI.h">
+      <Filter>Inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
@@ -99,6 +102,9 @@
     </ClCompile>
     <ClCompile Include="Inc\D3D11RenderContext.cpp">
       <Filter>D3D11</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderCore\BasicGUI.cpp">
+      <Filter>RenderCore</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

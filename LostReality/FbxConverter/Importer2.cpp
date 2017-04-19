@@ -32,23 +32,25 @@ static void ParseLink(function<FJson&()> outputGetter, FJson& vertices, FbxMesh*
 
 	int skinIndex = 0;
 	int skinCount = mesh->GetDeformerCount(FbxDeformer::eSkin);
+
+	assert(skinCount <= 1 && "skinCount is bigger than 1");
+
 	FJson& output = outputGetter();
 	for (int i = 0; i < skinCount; ++i)
 	{
-		int clusterCount = ((FbxSkin*)mesh->GetDeformer(i, FbxDeformer::eSkin))->GetClusterCount();
+		auto deformer = mesh->GetDeformer(i, FbxDeformer::eSkin);
+		FJson & vertj = output[K_VERTEX];
+		int clusterCount = ((FbxSkin*)deformer)->GetClusterCount();
 		for (int j = 0; j < clusterCount; ++j)
 		{
-			output.push_back(FJson());
-			FJson& j0 = *(output.end() - 1);
-
-			auto cluster = ((FbxSkin*)mesh->GetDeformer(i, FbxDeformer::eSkin))->GetCluster(j);
+			auto cluster = ((FbxSkin*)deformer)->GetCluster(j);
 			if (cluster->GetLink() != nullptr)
 			{
-				j0.push_back(cluster->GetLink()->GetName());
+				output[K_SKIN].push_back(cluster->GetLink()->GetName());
 			}
 			else
 			{
-				j0.push_back(string("unamed").append(to_string(skinIndex)).c_str());
+				output[K_SKIN].push_back(string("unamed").append(to_string(skinIndex)).c_str());
 			}
 
 			int cpIndexCount = cluster->GetControlPointIndicesCount();
@@ -59,8 +61,8 @@ static void ParseLink(function<FJson&()> outputGetter, FJson& vertices, FbxMesh*
 				int cpIndex = indices[k];
 				if (controlPointToVertexMap.empty())
 				{
-					vertices[cpIndex][K_SKIN].push_back(FJson());
-					FJson& j1 = *(vertices[cpIndex][K_SKIN].end() - 1);
+					vertj[cpIndex][K_SKIN].push_back(FJson());
+					FJson& j1 = *(vertj[cpIndex][K_SKIN].end() - 1);
 					j1[K_BONE] = skinIndex;
 					j1[K_WEIGHT] = weights[k];
 				}
@@ -68,8 +70,8 @@ static void ParseLink(function<FJson&()> outputGetter, FJson& vertices, FbxMesh*
 				{
 					for (auto vertexIndex : controlPointToVertexMap.at(cpIndex))
 					{
-						vertices[vertexIndex][K_SKIN].push_back(FJson());
-						FJson& j1 = *(vertices[vertexIndex][K_SKIN].end() - 1);
+						vertj[vertexIndex][K_SKIN].push_back(FJson());
+						FJson& j1 = *(vertj[vertexIndex][K_SKIN].end() - 1);
 						j1[K_BONE] = skinIndex;
 						j1[K_WEIGHT] = weights[k];
 					}
@@ -801,12 +803,10 @@ static void ParseMesh(std::function<FJson&()> outputGetter, FbxNode* node)
 	FJson& output = outputGetter();
 	output[K_NAME] = node->GetName();
 
-	FJson& json0 = output;
-
 	map<int, vector<int>> ControlPointToVertexMap;
-	ParseVertices([&]()->FJson& {return json0; }, mesh, ControlPointToVertexMap);
-	ParseLink([&]()->FJson& {return json0[K_SKIN]; }, json0[K_VERTEX], mesh, ControlPointToVertexMap);
-	ParsePolygons([&]()->FJson& {return json0[K_POLYGONS]; }, mesh);
+	ParseVertices([&]()->FJson& {return output; }, mesh, ControlPointToVertexMap);
+	ParseLink([&]()->FJson& {return output; }, output, mesh, ControlPointToVertexMap);
+	ParsePolygons([&]()->FJson& {return output[K_POLYGONS]; }, mesh);
 }
 
 class FFbxImporter2
@@ -822,24 +822,38 @@ public:
 	FFbxImporter2()
 		: SdkManager(nullptr)
 		, SdkScene(nullptr)
+		, bExportScene(false)
 	{
 		InitializeSdkObjects(SdkManager, SdkScene);
 	}
 
 	void OutputToStream()
 	{
-		ofstream file;
-		file.open(ConvertFile, ios::out);
+		if (bExportScene)
+		{
+			ofstream file;
+			file.open(ConvertPath, ios::out);
 
-		FJson json;
-		json[K_META] = MetaData;
-		json[K_NODE] = NodeData;
-		json[K_POSE] = PoseData;
-		json[K_ANIMATION] = AnimData;
+			FJson json;
+			json[K_META] = MetaData;
+			json[K_NODE] = NodeData;
+			json[K_POSE] = PoseData;
+			json[K_ANIMATION] = AnimData;
 
-		file << json << endl;
+			file << json << endl;
 
-		file.close();
+			file.close();
+		}
+		else
+		{
+			for (auto it = MeshData.begin(); it != MeshData.end(); ++it)
+			{
+				ofstream file;
+				file.open(ConvertPath + it.key() + ".xpt", ios::out);
+				file << it.value();
+				file.close();
+			}
+		}
 	}
 
 	void ImportMetaData()
@@ -906,7 +920,14 @@ public:
 				ParseSkeleton([&]()->FJson& {output[K_TYPE] = K_SKELETON; return output; }, node);
 				break;
 			case FbxNodeAttribute::eMesh:
-				ParseMesh([&]()->FJson& {output[K_TYPE] = K_MESH; return output; }, node);
+				if (bExportScene)
+				{
+					ParseMesh([&]()->FJson& {output[K_TYPE] = K_MESH; return output; }, node);
+				}
+				else
+				{
+					ParseMesh([&]()->FJson& {return output[node->GetName()]; }, node);
+				}
 				break;
 			default:
 				break;
@@ -915,7 +936,7 @@ public:
 
 		for (int i = 0; i < node->GetChildCount(); ++i)
 		{
-			ImportNode([&]()->FJson& {output[K_CHILDREN].push_back(FJson()); return *(output[K_CHILDREN].end() - 1); }, node->GetChild(i));
+			ImportNode(outputGetter, node->GetChild(i));
 		}
 	}
 
@@ -926,14 +947,28 @@ public:
 		{
 			for (int i = 0; i < node->GetChildCount(); ++i)
 			{
-				ImportNode([&]()->FJson& {NodeData[K_CHILDREN].push_back(FJson()); return *(NodeData[K_CHILDREN].end() - 1); }, node->GetChild(i));
+				if (bExportScene)
+				{
+					ImportNode([&]()->FJson& {NodeData[K_CHILDREN].push_back(FJson()); return *(NodeData[K_CHILDREN].end() - 1); }, node->GetChild(i));
+				}
+				else
+				{
+					ImportNode([&]()->FJson& {return MeshData; }, node->GetChild(i));
+				}
 			}
 		}
 	}
 
 	void ImportPose()
 	{
-		ParsePose([&]()->FJson& {return PoseData; }, SdkScene);
+		if (bExportScene)
+		{
+			ParsePose([&]()->FJson& {return PoseData; }, SdkScene);
+		}
+		else
+		{
+			ParsePose([&]()->FJson& {return MeshData; }, SdkScene);
+		}
 	}
 
 	void ImportAnimation()
@@ -944,7 +979,8 @@ public:
 	bool ImportScene(const string& importSrc, const string& convertDst)
 	{
 		ImportPath = importSrc;
-		ConvertFile = convertDst;
+		ConvertPath = convertDst;
+		bExportScene = true;
 		bool result = LoadScene(SdkManager, SdkScene, importSrc.c_str());
 
 		if (result)
@@ -957,7 +993,43 @@ public:
 
 		OutputToStream();
 
-		return false;
+		return true;
+	}
+
+	bool ImportSceneMeshes(const string& importSrc, const string& convertDst)
+	{
+		ImportPath = importSrc;
+
+		// format path, find out the correct directory path
+		ConvertPath = convertDst;
+		auto pos = std::string::npos;
+		while ((pos = ConvertPath.find("/")) != std::string::npos)
+		{
+			ConvertPath.replace(pos, 1, "\\");
+		}
+
+		auto lastSlash = ConvertPath.rfind("\\");
+		auto lastDot = ConvertPath.rfind(".");
+		bool isDir = (lastDot == string::npos) || (lastDot < lastSlash);
+		if (!isDir)
+		{
+			ConvertPath.resize(lastSlash + 1);
+		}
+
+		bExportScene = false;
+
+		bool result = LoadScene(SdkManager, SdkScene, importSrc.c_str());
+
+		if (result)
+		{
+			ImportMetaData();
+			ImportContent();
+			ImportPose();
+			ImportAnimation();
+		}
+
+		OutputToStream();
+		return true;
 	}
 
 private:
@@ -965,15 +1037,24 @@ private:
 	FbxScene*			SdkScene;
 
 	string				ImportPath;
-	string				ConvertFile;
+	string				ConvertPath;
 
 	FJson				MetaData;
 	FJson				NodeData;
 	FJson				PoseData;
 	FJson				AnimData;
+	FJson				MeshData;
+
+	bool				bExportScene;
+	vector<string>		MeshFiles;
 };
 
 bool Importer::ImportScene2(const string& importSrc, const string& convertDst)
 {
 	return FFbxImporter2::Get()->ImportScene(importSrc, convertDst);
+}
+
+bool Importer::ImportSceneMeshes(const string& importSrc, const string& convertDst)
+{
+	return FFbxImporter2::Get()->ImportSceneMeshes(importSrc, convertDst);
 }

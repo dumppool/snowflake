@@ -26,7 +26,7 @@ namespace LostCore
 		FSimpleCamera();
 		virtual ~FSimpleCamera();
 
-		virtual bool Init(const char* name, IRenderContext * rc) override;
+		virtual bool Init(IRenderContext * rc) override;
 		virtual void Draw(IRenderContext * rc, float sec) override;
 	};
 
@@ -38,7 +38,7 @@ namespace LostCore
 	{
 	}
 
-	bool FSimpleCamera::Init(const char * name, IRenderContext * rc)
+	bool FSimpleCamera::Init(IRenderContext * rc)
 	{
 		return true;
 	}
@@ -58,7 +58,7 @@ namespace LostCore
 		virtual ~FSimpleScene() override;
 
 		virtual void Draw(IRenderContext * rc, float sec) override;
-		virtual bool Init(const char* name, IRenderContext * rc) override;
+		virtual bool Init(IRenderContext * rc) override;
 		virtual void Fini() override;
 
 	private:
@@ -86,8 +86,10 @@ namespace LostCore
 		FBasicScene::Draw(rc, sec);
 	}
 
-	bool FSimpleScene::Init(const char * name, IRenderContext * rc)
+	bool FSimpleScene::Init(IRenderContext * rc)
 	{
+		/**************************************/
+		// hard coded static mesh creation.
 		FBasicStaticMesh* geo = new FBasicStaticMesh;
 		AddStaticMesh(geo);
 
@@ -102,21 +104,21 @@ namespace LostCore
 		// Mesh vertices
 		const _Vertex vertices[] =
 		{
-			{ FVec3(1.f, 0.f, 0.f),	FVec3(0.f, 0.f, -scaler),	FVec3(0.5f, -0.5f, -0.5f), FVec2(0.0f, 1.0f) },				// center
-			{ FVec3(1.f, 0.f, 0.f),	FVec3(0.f, scaler, 0.f),	FVec3(0.5f, -0.5f, -0.5f),	FVec2(0.0f, 0.0f) },			// top
-			{ FVec3(1.f, 0.f, 0.f),	FVec3(scaler, -scaler, 0.f),FVec3(0.5f, -0.5f, -0.5f), FVec2(1.0f, 0.0f) },		// bottom right
+			{ FVec3(1.f, 0.f, 0.f),	FVec3(0.f, 0.f, -scaler),	FVec3(0.5f, -0.5f, -0.5f),	FVec2(0.0f, 1.0f) },		// center
+			{ FVec3(1.f, 0.f, 0.f),	FVec3(0.f, scaler, 0.f),	FVec3(0.5f, -0.5f, -0.5f),	FVec2(0.0f, 0.0f) },		// top
+			{ FVec3(1.f, 0.f, 0.f),	FVec3(scaler, -scaler, 0.f),FVec3(0.5f, -0.5f, -0.5f),	FVec2(1.0f, 0.0f) },		// bottom right
 
-			{ FVec3(0.f, 0.f, 0.f),	FVec3(0.f, scaler, 0.f),	FVec3(0.f, 0.f, 1.f),	FVec2(0.0f, 0.0f) },			// top
-			{ FVec3(0.f, 0.f, 0.f),	FVec3(-scaler, -scaler, 0), FVec3(0.f, 0.f, 1.f), FVec2(1.0f, 1.0f) },		// bottom left
-			{ FVec3(0.f, 0.f, 0.f),	FVec3(scaler, -scaler, 0.f),FVec3(0.f, 0.f, 1.f), FVec2(1.0f, 0.0f) },		// bottom right
+			{ FVec3(0.f, 0.f, 0.f),	FVec3(0.f, scaler, 0.f),	FVec3(0.f, 0.f, 1.f),		FVec2(0.0f, 0.0f) },		// top
+			{ FVec3(0.f, 0.f, 0.f),	FVec3(-scaler, -scaler, 0), FVec3(0.f, 0.f, 1.f),		FVec2(1.0f, 1.0f) },		// bottom left
+			{ FVec3(0.f, 0.f, 0.f),	FVec3(scaler, -scaler, 0.f),FVec3(0.f, 0.f, 1.f),		FVec2(1.0f, 0.0f) },		// bottom right
 
-			{ FVec3(0.f, 1.f, 0.f),	FVec3(0.f, scaler, 0.f),	FVec3(-0.5f, -0.5f, -0.5f),	FVec2(0.0f, 0.0f) },			// top
-			{ FVec3(0.f, 1.f, 0.f),	FVec3(0.f, 0.f, -scaler),	FVec3(-0.5f, -0.5f, -0.5f), FVec2(0.0f, 1.0f) },				// center
+			{ FVec3(0.f, 1.f, 0.f),	FVec3(0.f, scaler, 0.f),	FVec3(-0.5f, -0.5f, -0.5f),	FVec2(0.0f, 0.0f) },		// top
+			{ FVec3(0.f, 1.f, 0.f),	FVec3(0.f, 0.f, -scaler),	FVec3(-0.5f, -0.5f, -0.5f), FVec2(0.0f, 1.0f) },		// center
 			{ FVec3(0.f, 1.f, 0.f),	FVec3(-scaler, -scaler, 0), FVec3(-0.5f, -0.5f, -0.5f), FVec2(1.0f, 1.0f) },		// bottom left
 
-			{ FVec3(0.f, 0.f, 1.f),	FVec3(-scaler, -scaler, 0), FVec3(0.f, -0.5f, -0.5f), FVec2(1.0f, 1.0f) },		// bottom left
-			{ FVec3(0.f, 0.f, 1.f),	FVec3(0.f, 0.f, -scaler),	FVec3(0.f, -0.5f, -0.5f), FVec2(0.0f, 1.0f) },				// center
-			{ FVec3(0.f, 0.f, 1.f),	FVec3(scaler, -scaler, 0.f),FVec3(0.f, -0.5f, -0.5f), FVec2(1.0f, 0.0f) },		// bottom right
+			{ FVec3(0.f, 0.f, 1.f),	FVec3(-scaler, -scaler, 0), FVec3(0.f, -0.5f, -0.5f),	FVec2(1.0f, 1.0f) },		// bottom left
+			{ FVec3(0.f, 0.f, 1.f),	FVec3(0.f, 0.f, -scaler),	FVec3(0.f, -0.5f, -0.5f),	FVec2(0.0f, 1.0f) },		// center
+			{ FVec3(0.f, 0.f, 1.f),	FVec3(scaler, -scaler, 0.f),FVec3(0.f, -0.5f, -0.5f),	FVec2(1.0f, 0.0f) },		// bottom right
 		};
 
 		// Mesh indices
@@ -170,7 +172,7 @@ namespace LostCore
 		FSimpleWorld();
 		virtual ~FSimpleWorld() override;
 
-		virtual bool Init(const char* name, IRenderContext * rc) override;
+		virtual bool Init(IRenderContext * rc) override;
 		virtual void Fini() override;
 		virtual void DrawPreScene(float sec) override;
 		virtual void DrawPostScene(float sec) override;
@@ -194,16 +196,16 @@ namespace LostCore
 		assert(Camera == nullptr);
 	}
 
-	bool FSimpleWorld::Init(const char* name, IRenderContext * rc)
+	bool FSimpleWorld::Init(IRenderContext * rc)
 	{
 		Camera = new FSimpleCamera;
-		if (!Camera->Init(name, rc))
+		if (!Camera->Init(rc))
 		{
 			return false;
 		}
 
 		auto scene = new FSimpleScene;
-		if (scene->Init(name, rc))
+		if (scene->Init(rc))
 		{
 			AddScene(scene);
 			return true;
@@ -270,7 +272,7 @@ namespace LostCore
 	{
 		auto ret = WrappedCreateRenderContext(EContextID::D3D11_DXGI0, &RC);
 		assert(SSuccess == ret);
-		if (RC != nullptr && RC->Init(wnd, bWindowed, width, height) && Init(name, RC))
+		if (RC != nullptr && RC->Init(wnd, bWindowed, width, height) && Init(RC))
 		{
 			return true;
 		}

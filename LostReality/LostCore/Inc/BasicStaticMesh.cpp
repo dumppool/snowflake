@@ -23,7 +23,7 @@ LostCore::FBasicStaticMesh::~FBasicStaticMesh()
 	assert(PrimitiveGroups.size() == 0);
 }
 
-bool LostCore::FBasicStaticMesh::Init(const char* name, IRenderContext * rc)
+bool LostCore::FBasicStaticMesh::Init(IRenderContext * rc)
 {
 	return false;
 }
