@@ -31,6 +31,8 @@ namespace D3D11
 		virtual const char * GetContextString() const override;
 		virtual void BeginFrame(float sec) override;
 		virtual void EndFrame(float sec) override;
+		virtual float GetWidth() const override;
+		virtual float GetHeight() const override;
 
 	public:
 
@@ -109,16 +111,16 @@ namespace D3D11
 		}
 
 	private:
-		LostCore::EContextID				ContextID;
-		TRefCountPtr<ID3D11Device>			Device;
+		LostCore::EContextID								ContextID;
+		TRefCountPtr<ID3D11Device>				Device;
 		TRefCountPtr<ID3D11DeviceContext>	Context;
-		TRefCountPtr<IDXGISwapChain>		SwapChain;
-		LostCore::EShadeModel				ShadeModel;
-		bool								bWireframe;
-		FTexture2D*							RenderTarget;
-		FTexture2D*							DepthStencil;
-		D3D11_VIEWPORT						Viewport;
-		LostCore::FMatrix					ViewProjectMatrix;
-		FConstantBufferOneMatrix			ViewProjectBuffer;
+		TRefCountPtr<IDXGISwapChain>			SwapChain;
+		LostCore::EShadeModel							ShadeModel;
+		bool															bWireframe;
+		FTexture2D*											RenderTarget;
+		FTexture2D*											DepthStencil;
+		D3D11_VIEWPORT									Viewport;
+		FConstantBufferRegister0::FParam			Param;
+		FConstantBufferRegister0						CB0;
 	};
 }

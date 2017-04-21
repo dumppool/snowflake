@@ -51,3 +51,25 @@ void D3D11::FConstantBuffer::Bind(const TRefCountPtr<ID3D11DeviceContext>& cxt)
 	auto ref = Buffer.GetReference();
 	cxt->VSSetConstantBuffers(Slot, 1, &ref);
 }
+
+void D3D11::FConstantBufferRegister0::UpdateBuffer(const TRefCountPtr<ID3D11DeviceContext>& cxt, const void * buf, int32 sz)
+{
+	assert(sz == GetByteWidth());
+	assert(GetBufferRHI().IsValid());
+
+	FParam p;
+	memcpy(&p, buf, GetByteWidth());
+	p.ViewProject = p.ViewProject.GetTranspose();
+	cxt->UpdateSubresource(GetBufferRHI().GetReference(), 0, nullptr, &p, 0, 0);
+}
+
+void D3D11::FConstantBufferMatrix::UpdateBuffer(const TRefCountPtr<ID3D11DeviceContext>& cxt, const void * buf, int32 sz)
+{
+	assert(sz == GetByteWidth());
+	assert(GetBufferRHI().IsValid());
+
+	FParam p;
+	memcpy(&p, buf, GetByteWidth());
+	p.Mat = p.Mat.GetTranspose();
+	cxt->UpdateSubresource(GetBufferRHI().GetReference(), 0, nullptr, &p, 0, 0);
+}

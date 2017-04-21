@@ -50,21 +50,113 @@ namespace D3D11
 		TRefCountPtr<ID3D11VertexShader>		VS;
 		TRefCountPtr<ID3D11PixelShader>			PS;
 		TRefCountPtr<ID3D11InputLayout>			IL;
+
+		std::string								ShaderPath;
 	};
 
+	template<typename T>
 	class FMaterial : public LostCore::IMaterial
 	{
 	public:
-		FMaterial();
-		virtual ~FMaterial() override;
+		FMaterial()
+			: MaterialShader(nullptr)
+			, Param()
+		{}
+
+		virtual ~FMaterial() override
+		{
+			if (MaterialShader != nullptr)
+			{
+				delete MaterialShader;
+				MaterialShader = nullptr;
+			}
+		}
 
 		// Í¨¹ý IMaterial ¼Ì³Ð
-		virtual void Draw(LostCore::IRenderContext * rc, float sec) override;
-		virtual bool Initialize(LostCore::IRenderContext * rc, const char* path) override;
-		virtual void UpdateMatrix_World(LostCore::IRenderContext * rc, const LostCore::FMatrix& mat) override;
+		virtual void Draw(LostCore::IRenderContext * rc, float sec) override
+		{
+			const char* head = "D3D11::FMaterial::Draw";
+			auto cxt = FRenderContext::GetDeviceContext(rc, head);
+			if (!cxt.IsValid())
+			{
+				return;
+			}
+
+			auto shader = GetMaterialShader();
+			if (shader == nullptr)
+			{
+				return;
+			}
+
+			TRefCountPtr<ID3D11VertexShader> vs = shader->GetVertexShader();
+			TRefCountPtr<ID3D11PixelShader> ps = shader->GetPixelShader();
+			TRefCountPtr<ID3D11InputLayout> il = shader->GetInputLayout();
+			if (vs.IsValid() && ps.IsValid() && il.IsValid())
+			{
+				cxt->VSSetShader(vs.GetReference(), nullptr, 0);
+				cxt->IASetInputLayout(il.GetReference());
+				cxt->PSSetShader(ps.GetReference(), nullptr, 0);
+
+				cxt->HSSetShader(nullptr, nullptr, 0);
+				cxt->DSSetShader(nullptr, nullptr, 0);
+				cxt->GSSetShader(nullptr, nullptr, 0);
+				cxt->CSSetShader(nullptr, nullptr, 0);
+
+				Param.Bind(cxt);
+			}
+		}
+
+		virtual bool Initialize(LostCore::IRenderContext * rc, const char* path) override
+		{
+			const char* head = "D3D11::FMaterial::LoadShader";
+			auto device = FRenderContext::GetDevice(rc, head);
+			if (!device.IsValid())
+			{
+				return false;
+			}
+
+			if (!Param.Initialize(device))
+			{
+				return false;
+			}
+
+			FJson config;
+			if (!LostCore::FDirectoryHelper::Get()->GetMaterialJson(path, config))
+			{
+				return false;
+			}
+
+			if (MaterialShader != nullptr)
+			{
+				delete MaterialShader;
+				MaterialShader = nullptr;
+			}
+
+			MaterialShader = new FMaterialShader;
+			return MaterialShader->Initialize(rc, config);
+		}
+
+		virtual void UpdateConstantBuffer(LostCore::IRenderContext* rc, const void* buf, int32 sz) override
+		{
+			const char* head = "D3D11::FMaterial<T>::UpdateConstantBuffer";
+			auto cxt = FRenderContext::GetDeviceContext(rc, head);
+			if (!cxt.IsValid())
+			{
+				return;
+			}
+
+			Param.UpdateBuffer(cxt, buf, sz);
+		}
+
+
+	protected:
+		FMaterialShader* GetMaterialShader()
+		{
+			return MaterialShader;
+		}
 
 	private:
-		FMaterialShader*				MaterialShader;
-		FConstantBufferOneMatrix		World;
+		FMaterialShader* MaterialShader;
+		T Param;
 	};
 }

@@ -24,6 +24,8 @@ bool D3D11::FMaterialShader::LoadShader(LostCore::IRenderContext * rc, const str
 		return false;
 	}
 
+	ShaderPath = path;
+
 	UINT flag1 = 0;
 	UINT flag2 = 0;
 	TRefCountPtr<ID3DBlob> shaderBlob;
@@ -129,87 +131,4 @@ void D3D11::FMaterialShader::Reset()
 	VS = nullptr;
 	PS = nullptr;
 	IL = nullptr;
-}
-
-
-D3D11::FMaterial::FMaterial()
-	: World(false, 1)
-{
-}
-
-D3D11::FMaterial::~FMaterial()
-{
-	if (MaterialShader != nullptr)
-	{
-		delete MaterialShader;
-		MaterialShader = nullptr;
-	}
-}
-
-void D3D11::FMaterial::Draw(IRenderContext * rc, float sec)
-{
-	const char* head = "D3D11::FMaterial::Draw";
-	auto cxt = FRenderContext::GetDeviceContext(rc, head);
-	if (!cxt.IsValid())
-	{
-		return;
-	}
-
-	TRefCountPtr<ID3D11VertexShader> vs = MaterialShader->GetVertexShader();
-	TRefCountPtr<ID3D11PixelShader> ps = MaterialShader->GetPixelShader();
-	TRefCountPtr<ID3D11InputLayout> il = MaterialShader->GetInputLayout();
-	if (vs.IsValid() && ps.IsValid() && il.IsValid())
-	{
-		cxt->VSSetShader(vs.GetReference(), nullptr, 0);
-		cxt->IASetInputLayout(il.GetReference());
-		cxt->PSSetShader(ps.GetReference(), nullptr, 0);
-
-		World.Bind(cxt);
-
-		cxt->HSSetShader(nullptr, nullptr, 0);
-		cxt->DSSetShader(nullptr, nullptr, 0);
-		cxt->GSSetShader(nullptr, nullptr, 0);
-		cxt->CSSetShader(nullptr, nullptr, 0);
-	}
-}
-
-bool D3D11::FMaterial::Initialize(LostCore::IRenderContext * rc, const char * path)
-{
-	const char* head = "D3D11::FMaterial::LoadShader";
-	auto device = FRenderContext::GetDevice(rc, head);
-	if (!device.IsValid())
-	{
-		return false;
-	}
-
-	if (!World.Initialize(device))
-	{
-		return false;
-	}
-
-	FJson config;
-	if (!FDirectoryHelper::Get()->GetMaterialJson(path, config))
-	{
-		return false;
-	}
-
-	if (MaterialShader == nullptr)
-	{
-		MaterialShader = new FMaterialShader;
-	}
-
-	return MaterialShader->Initialize(rc, config);
-}
-
-void D3D11::FMaterial::UpdateMatrix_World(LostCore::IRenderContext * rc, const FMatrix& mat)
-{
-	const char* head = "D3D11::FMaterial::UpdateMatrix_World";
-	auto cxt = FRenderContext::GetDeviceContext(rc, head);
-	if (!cxt.IsValid())
-	{
-		return;
-	}
-
-	FMatrix m = mat.GetTranspose();
-	World.UpdateBuffer(cxt, &m, sizeof(FMatrix));
 }

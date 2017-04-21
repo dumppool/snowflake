@@ -113,7 +113,7 @@ namespace D3D11
 
 		INLINE static std::string GetName()
 		{
-			static std::string SName = "RGBAUV";
+			static std::string SName = "RGBAXY";
 			return SName;
 		}
 
@@ -179,6 +179,15 @@ namespace D3D11
 		bool Initialize(const TRefCountPtr<ID3D11Device>& device);
 		void UpdateBuffer(const TRefCountPtr<ID3D11DeviceContext>& cxt, const void* buf, int32 sz);
 		void Bind(const TRefCountPtr<ID3D11DeviceContext>& cxt);
+		int32 GetByteWidth() const
+		{
+			return ByteWidth;
+		}
+
+		TRefCountPtr<ID3D11Buffer> GetBufferRHI()
+		{
+			return Buffer;
+		}
 
 	private:
 		int32		ByteWidth;
@@ -187,9 +196,59 @@ namespace D3D11
 		TRefCountPtr<ID3D11Buffer> Buffer;
 	};
 
-	struct FConstantBufferOneMatrix : public FConstantBuffer
+	/*
+	cbuffer ViewProject : register(b0)
 	{
-		FConstantBufferOneMatrix(bool dynamic, int32 slot) : FConstantBuffer(sizeof(LostCore::FMatrix), dynamic, slot)
+		float ScreenWidth;
+		float ScreenHeight;
+		float ScreenWidthRcp;
+		float ScreenHeightRcp;
+		float4x4 ViewProject;
+	};
+	*/
+	struct FConstantBufferRegister0 : public FConstantBuffer
+	{
+		struct FParam
+		{
+			float ScreenWidth;
+			float ScreenHeight;
+			float ScreenWidthRcp;
+			float ScreenHeightRcp;
+			LostCore::FMatrix ViewProject;
+		};
+
+		FConstantBufferRegister0() : FConstantBuffer(sizeof(FParam), false, 0)
+		{
+		}
+
+		void UpdateBuffer(const TRefCountPtr<ID3D11DeviceContext>& cxt, const void* buf, int32 sz);
+	};
+
+	struct FConstantBufferMatrix : public FConstantBuffer
+	{
+		struct FParam
+		{
+			LostCore::FMatrix Mat;
+		};
+
+		FConstantBufferMatrix() : FConstantBuffer(sizeof(FParam), false, 1)
+		{
+		}
+
+		FConstantBufferMatrix(bool dynamic, int32 slot) : FConstantBuffer(sizeof(FParam), dynamic, slot)
+		{
+		}
+
+		void UpdateBuffer(const TRefCountPtr<ID3D11DeviceContext>& cxt, const void* buf, int32 sz);
+	};
+
+	struct FConstantBufferFloat4 : public FConstantBuffer
+	{
+		FConstantBufferFloat4() : FConstantBuffer(sizeof(float) * 4, false, 1)
+		{
+		}
+
+		FConstantBufferFloat4(bool dynamic, int32 slot) : FConstantBuffer(sizeof(float) * 4, dynamic, slot)
 		{
 		}
 	};

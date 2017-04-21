@@ -77,12 +77,6 @@ namespace LostCore
 	}
 }
 
-#include "ExportTest.h"
-#include "BasicCamera.h"
-#include "BasicStaticMesh.h"
-#include "BasicScene.h"
-#include "SimpleWorld.h"
-
 #include "Math/Vector2.h"
 #include "Math/Vector3.h"
 #include "Math/Vector4.h"
@@ -94,3 +88,10 @@ namespace LostCore
 using FJson = nlohmann::json;
 
 #include "File/DirectoryHelper.h"
+
+#include "ExportTest.h"
+#include "BasicCamera.h"
+#include "BasicStaticMesh.h"
+#include "BasicGUI.h"
+#include "BasicScene.h"
+#include "SimpleWorld.h"

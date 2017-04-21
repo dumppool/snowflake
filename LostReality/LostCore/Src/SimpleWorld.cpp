@@ -81,7 +81,8 @@ namespace LostCore
 	void FSimpleScene::Draw(IRenderContext * rc, float sec)
 	{
 		FTransform world(FVec3(0.f, 0.f, 5.f));
-		AMaterial->UpdateMatrix_World(rc, world.ToMatrix());
+		FMatrix mat = world.ToMatrix();
+		AMaterial->UpdateConstantBuffer(rc, (const void*)&mat, sizeof(FMatrix));
 
 		FBasicScene::Draw(rc, sec);
 	}
@@ -131,7 +132,12 @@ namespace LostCore
 			return false;
 		}
 
-		if (SSuccess != WrappedCreateMaterial(&AMaterial) ||
+		if (AMaterial != nullptr)
+		{
+			WrappedDestroyMaterial_SceneObject(std::forward<IMaterial*>(AMaterial));
+		}
+
+		if (SSuccess != WrappedCreateMaterial_SceneObject(&AMaterial) ||
 			!AMaterial->Initialize(rc, "dummy_normal.json"))
 		{
 			return false;

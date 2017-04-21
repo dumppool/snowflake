@@ -24,7 +24,7 @@ D3D11::FRenderContext::FRenderContext(LostCore::EContextID id)
 	, bWireframe(false)
 	, RenderTarget(nullptr)
 	, DepthStencil(nullptr)
-	, ViewProjectBuffer(false, 0)
+	, CB0()
 {
 }
 
@@ -66,7 +66,12 @@ bool D3D11::FRenderContext::Init(HWND wnd, bool bWindowed, int32 width, int32 he
 	Viewport.MinDepth = 0.f;
 	Viewport.MaxDepth = 1.f;
 
-	return Device.IsValid() && Context.IsValid() && SwapChain.IsValid() && ViewProjectBuffer.Initialize(Device);
+	Param.ScreenWidth = (float)width;
+	Param.ScreenHeight = (float)height;
+	Param.ScreenWidthRcp = (float)1.f / width;
+	Param.ScreenHeightRcp = (float)1.f / height;
+
+	return Device.IsValid() && Context.IsValid() && SwapChain.IsValid() && CB0.Initialize(Device);
 }
 
 void D3D11::FRenderContext::Fini()
@@ -108,12 +113,12 @@ EShadeModel D3D11::FRenderContext::GetShadeModel() const
 
 FMatrix D3D11::FRenderContext::GetViewProjectMatrix() const
 {
-	return ViewProjectMatrix;
+	return Param.ViewProject;
 }
 
 void D3D11::FRenderContext::SetViewProjectMatrix(const FMatrix & vp)
 {
-	ViewProjectMatrix = vp;
+	Param.ViewProject = vp;
 }
 
 EContextID D3D11::FRenderContext::GetContextID() const
@@ -145,9 +150,8 @@ void D3D11::FRenderContext::BeginFrame(float sec)
 
 		Context->OMSetDepthStencilState(FDepthStencilStateMap::Get()->GetState("Z_ENABLE_WRITE"), 0);
 
-		FMatrix m = ViewProjectMatrix.GetTranspose();
-		ViewProjectBuffer.UpdateBuffer(Context, &m, sizeof(FMatrix));
-		ViewProjectBuffer.Bind(Context);
+		CB0.UpdateBuffer(Context, &Param, sizeof(Param));
+		CB0.Bind(Context);
 	}
 }
 
@@ -157,4 +161,14 @@ void D3D11::FRenderContext::EndFrame(float sec)
 	{
 		SwapChain->Present(0, 0);
 	}
+}
+
+float D3D11::FRenderContext::GetWidth() const
+{
+	return Param.ScreenWidth;
+}
+
+float D3D11::FRenderContext::GetHeight() const
+{
+	return Param.ScreenHeight;
 }

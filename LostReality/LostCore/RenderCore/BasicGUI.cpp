@@ -10,6 +10,7 @@
 #include "stdafx.h"
 #include "BasicGUI.h"
 #include "PrimitiveGroupInterface.h"
+#include "RenderContextInterface.h"
 
 #include "LostCore-D3D11.h"
 using namespace D3D11;
@@ -17,9 +18,7 @@ using namespace D3D11;
 using namespace LostCore;
 
 LostCore::FRect::FRect()
-	: Origin(0.f, 0.f)
-	, Size(0.f, 0.f)
-	, Scale(1.f)
+	: Size(0.f, 0.f)
 	, Depth(1.f)
 	, Parent(nullptr)
 	, RectPrimitive(nullptr)
@@ -28,28 +27,48 @@ LostCore::FRect::FRect()
 {
 }
 
+void LostCore::FRect::SetOrigin(const FVec2 & origin)
+{
+	Param.Origin = origin;
+}
+
 FVec2 LostCore::FRect::GetOrigin() const
 {
 	if (Parent == nullptr)
 	{
-		return Origin;
+		return Param.Origin;
 	}
 	else
 	{
-		Parent->GetOrigin() + Origin;
+		return Parent->GetOrigin() + Param.Origin;
 	}
+}
+
+void LostCore::FRect::SetScale(float val)
+{
+	Param.Scale = val;
 }
 
 float LostCore::FRect::GetScale() const
 {
 	if (Parent == nullptr)
 	{
-		return Scale;
+		return Param.Scale;
 	}
 	else
 	{
-		Parent->GetScale() * Scale;
+		return Parent->GetScale() * Param.Scale;
 	}
+}
+
+void LostCore::FRect::SetSize(const FVec2 & size)
+{
+	Size = size;
+}
+
+FVec2 LostCore::FRect::GetSize() const
+{
+	return Size;
 }
 
 bool LostCore::FRect::HitTest(const FVec2 & ppos, FRect** result) const
@@ -115,20 +134,43 @@ void LostCore::FRect::Clear()
 
 void LostCore::FRect::Draw(IRenderContext * rc, float sec)
 {
-	if (RectPrimitive != nullptr)
+	DrawPrivate(rc, sec);
+	for (auto it = Children.rbegin(); it != Children.rend(); ++it)
 	{
-		RectPrimitive->Draw(rc, sec);
+		if (*it != nullptr)
+		{
+			(*it)->Draw(rc, sec);
+		}
 	}
 }
 
 void LostCore::FRect::ReconstructPrimitive(IRenderContext * rc)
 {
-	if (RectPrimitive != nullptr && Size != RectPrimitiveSize)
+	bool bNeedReconstruct = false;
+	if (Size != RectPrimitiveSize)
 	{
-		WrappedDestroyPrimitiveGroup(std::forward<IPrimitiveGroup*>(RectPrimitive));
+		if (RectPrimitive != nullptr)
+		{
+			WrappedDestroyPrimitiveGroup(std::forward<IPrimitiveGroup*>(RectPrimitive));
+			RectPrimitive = nullptr;
+		}
+
+		if (RectMaterial != nullptr)
+		{
+			WrappedDestroyMaterial_UIObject(std::forward<IMaterial*>(RectMaterial));
+			RectMaterial = nullptr;
+		}
+
+		RectPrimitiveSize.X = 0.f;
+		RectPrimitiveSize.Y = 0.f;
+
+		if (!Size.IsZero())
+		{
+			bNeedReconstruct = true;
+		}
 	}
 
-	if (RectPrimitive == nullptr && !Size.IsZero())
+	if (bNeedReconstruct)
 	{
 		if (SSuccess != WrappedCreatePrimitiveGroup(&RectPrimitive))
 		{
@@ -149,12 +191,15 @@ void LostCore::FRect::ReconstructPrimitive(IRenderContext * rc)
 			{ FVec4(1.f, 1.f, 1.f, 0.7f), FVec2(Size.X, Size.Y) },		// bottom right
 		};
 
-		if (!RectPrimitive->ConstructVB(rc, vertices, sizeof(vertices), sizeof(_Vertex), false))
+		const int32 indices[] = {0, 1, 2, 1, 3, 2};
+
+		if (!RectPrimitive->ConstructVB(rc, vertices, sizeof(vertices), sizeof(_Vertex), false) ||
+			!RectPrimitive->ConstructIB(rc, indices, sizeof(indices), sizeof(int32), false))
 		{
 			return;
 		}
 
-		if (SSuccess != WrappedCreateMaterial(&RectMaterial) ||
+		if (SSuccess != WrappedCreateMaterial_UIObject(&RectMaterial) ||
 			!RectMaterial->Initialize(rc, "gui.material"))
 		{
 			return;
@@ -175,6 +220,18 @@ bool LostCore::FRect::HitTestPrivate(const FVec2 & ppos, FRect** result) const
 
 void LostCore::FRect::GetLocalPosition(const FVec2 & ppos, FVec2 & cpos) const
 {
-	cpos = (ppos - Origin);
-	cpos *= Scale;
+	cpos = (ppos - Param.Origin);
+	cpos *= Param.Scale;
+}
+
+void LostCore::FRect::DrawPrivate(IRenderContext * rc, float sec)
+{
+	ReconstructPrimitive(rc);
+
+	if (RectPrimitive != nullptr && RectMaterial != nullptr)
+	{
+		RectMaterial->UpdateConstantBuffer(rc, (const void*)&Param, sizeof(Param));
+		RectPrimitive->Draw(rc, sec);
+	}
+
 }

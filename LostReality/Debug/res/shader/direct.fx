@@ -5,6 +5,10 @@ cbuffer World : register(b1)
 
 cbuffer ViewProject : register(b0)
 {
+	float ScreenWidth;
+	float ScreenHeight;
+	float ScreenWidthRcp;
+	float ScreenHeightRcp;
 	float4x4 ViewProject;
 };
 

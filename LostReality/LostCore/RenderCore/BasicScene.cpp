@@ -14,6 +14,7 @@
 using namespace LostCore;
 
 FBasicScene::FBasicScene()
+	: GUIRoot(nullptr)
 {
 	StaticMeshArray.clear();
 }
@@ -44,7 +45,18 @@ void FBasicScene::Draw(IRenderContext * rc, float sec)
 		}
 	}
 
-	GUIRoot;
+	// ÁÙÊ±´úÂë
+	if (GUIRoot == nullptr)
+	{
+		GUIRoot = new FRect;
+		GUIRoot->SetOrigin(FVec2(0.f, 50.f));
+		GUIRoot->SetSize(FVec2(300.f, 600.f));
+	}
+
+	if (GUIRoot != nullptr)
+	{
+		GUIRoot->Draw(rc, sec);
+	}
 }
 
 bool FBasicScene::Init(IRenderContext * rc)

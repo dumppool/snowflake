@@ -101,14 +101,14 @@ LOSTCORED3D11_API EReturnCode D3D11::DestroyPrimitiveGroup(LostCore::IPrimitiveG
 
 #include "Material.h"
 
-LOSTCORED3D11_API EReturnCode D3D11::CreateMaterial(LostCore::IMaterial ** material)
+LOSTCORED3D11_API EReturnCode D3D11::CreateMaterial_SceneObject(LostCore::IMaterial ** material)
 {
 	if (material == nullptr)
 	{
 		return SErrorInvalidParameters;
 	}
 
-	auto obj = new FMaterial;
+	auto obj = new FMaterial<FConstantBufferMatrix>;
 	if (obj == nullptr)
 	{
 		return SErrorOutOfMemory;
@@ -118,7 +118,34 @@ LOSTCORED3D11_API EReturnCode D3D11::CreateMaterial(LostCore::IMaterial ** mater
 	return SSuccess;
 }
 
-LOSTCORED3D11_API EReturnCode D3D11::DestroyMaterial(LostCore::IMaterial * material)
+LOSTCORED3D11_API EReturnCode D3D11::DestroyMaterial_SceneObject(LostCore::IMaterial * material)
+{
+	if (material != nullptr)
+	{
+		delete material;
+	}
+
+	return SSuccess;
+}
+
+LOSTCORED3D11_API EReturnCode D3D11::CreateMaterial_UIObject(LostCore::IMaterial ** material)
+{
+	if (material == nullptr)
+	{
+		return SErrorInvalidParameters;
+	}
+
+	auto obj = new FMaterial<FConstantBufferFloat4>;
+	if (obj == nullptr)
+	{
+		return SErrorOutOfMemory;
+	}
+
+	*material = obj;
+	return SSuccess;
+}
+
+LOSTCORED3D11_API EReturnCode D3D11::DestroyMaterial_UIObject(LostCore::IMaterial * material)
 {
 	if (material != nullptr)
 	{

@@ -58,5 +58,8 @@ namespace LostCore
 
 		virtual void BeginFrame(float sec) = 0;
 		virtual void EndFrame(float sec) = 0;
+
+		virtual float GetWidth() const = 0;
+		virtual float GetHeight() const = 0;
 	};
 }

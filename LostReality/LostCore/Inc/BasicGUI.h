@@ -14,15 +14,34 @@
 namespace LostCore
 {
 	class IPrimitiveGroup;
+	class IMaterial;
 
 	class FRect
 	{
-	public:
+		struct FParam
+		{
+			// 相对父面板的位置，单位，像素
+			FVec2 Origin;
 
+			// 相对父面板的缩放，(0.f, 1.f]
+			float Scale;
+
+			float Unused;
+
+			FParam() : Origin(0.f, 0.f), Scale(1.f) { assert(sizeof(FParam) == 4 * sizeof(float)); }
+		};
+
+	public:
 		FRect();
 
+		void SetOrigin(const FVec2& origin);
 		FVec2 GetOrigin() const;
+
+		void SetScale(float val);
 		float GetScale() const;
+
+		void SetSize(const FVec2& size);
+		FVec2 GetSize() const;
 
 		//************************************
 		// Method:    HitTest 点击测试
@@ -62,15 +81,12 @@ namespace LostCore
 	private:
 		bool HitTestPrivate(const FVec2& ppos, FRect** result) const;
 		void GetLocalPosition(const FVec2& ppos, FVec2& cpos) const;
+		void DrawPrivate(IRenderContext* rc, float sec);
 
-		// 相对父面板的位置，单位，像素
-		FVec2 Origin;
+		FParam Param;
 
 		// 绝对尺寸，单位，像素
 		FVec2 Size;
-
-		// 相对父面板的缩放，(0.f, 1.f]
-		float Scale;
 
 		// 深度，越小越靠前
 		float Depth;

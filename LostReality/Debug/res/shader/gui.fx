@@ -1,4 +1,12 @@
 
+cbuffer Constant0 : register(b0)
+{
+	float ScreenWidth;
+	float ScreenHeight;
+	float ScreenWidthRcp;
+	float ScreenHeightRcp;
+}
+
 cbuffer Constant : register(b1)
 {
 	float2 Origin;
@@ -23,9 +31,11 @@ VertexOut vs_main(VertexIn Input)
 	pos *= Scale;
 	pos += Origin;
 
+	pos = 2 * pos * float2(ScreenWidthRcp, -ScreenHeightRcp) + float2(-1.0, 1.0);
+
 	VertexOut Output;
 	Output.col = Input.col;
-	Output.pos = float4(pos, 1.f, 1.f);
+	Output.pos = float4(pos, 0.1f, 1.f);
     return Output;
 }
 

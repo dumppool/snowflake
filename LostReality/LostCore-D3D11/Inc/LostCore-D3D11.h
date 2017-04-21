@@ -82,9 +82,15 @@ namespace D3D11 {
 	extern "C" LOSTCORED3D11_API EReturnCode DestroyPrimitiveGroup(LostCore::IPrimitiveGroup* pg);
 	static TExportFuncWrapper<LostCore::IPrimitiveGroup*> WrappedDestroyPrimitiveGroup("DestroyPrimitiveGroup", GetModule_LostCoreD3D11);
 
-	extern "C" LOSTCORED3D11_API EReturnCode CreateMaterial(LostCore::IMaterial** material);
-	static TExportFuncWrapper<LostCore::IMaterial**> WrappedCreateMaterial("CreateMaterial", GetModule_LostCoreD3D11);
+	extern "C" LOSTCORED3D11_API EReturnCode CreateMaterial_SceneObject(LostCore::IMaterial** material);
+	static TExportFuncWrapper<LostCore::IMaterial**> WrappedCreateMaterial_SceneObject("CreateMaterial_SceneObject", GetModule_LostCoreD3D11);
 
-	extern "C" LOSTCORED3D11_API EReturnCode DestroyMaterial(LostCore::IMaterial* material);
-	static TExportFuncWrapper<LostCore::IMaterial*> WrappedDestroyMaterial("DestroyMaterial", GetModule_LostCoreD3D11);
+	extern "C" LOSTCORED3D11_API EReturnCode DestroyMaterial_SceneObject(LostCore::IMaterial* material);
+	static TExportFuncWrapper<LostCore::IMaterial*> WrappedDestroyMaterial_SceneObject("DestroyMaterial_SceneObject", GetModule_LostCoreD3D11);
+
+	extern "C" LOSTCORED3D11_API EReturnCode CreateMaterial_UIObject(LostCore::IMaterial** material);
+	static TExportFuncWrapper<LostCore::IMaterial**> WrappedCreateMaterial_UIObject("CreateMaterial_UIObject", GetModule_LostCoreD3D11);
+
+	extern "C" LOSTCORED3D11_API EReturnCode DestroyMaterial_UIObject(LostCore::IMaterial* material);
+	static TExportFuncWrapper<LostCore::IMaterial*> WrappedDestroyMaterial_UIObject("DestroyMaterial_UIObject", GetModule_LostCoreD3D11);
 }

@@ -18,6 +18,6 @@ namespace LostCore
 	{
 	public:
 		virtual bool Initialize(LostCore::IRenderContext * rc, const char* path) = 0;
-		virtual void UpdateMatrix_World(LostCore::IRenderContext * rc, const FMatrix& mat) = 0;
+		virtual void UpdateConstantBuffer(IRenderContext* rc, const void* buf, int32 sz) = 0;
 	};
 }
