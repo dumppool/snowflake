@@ -12,6 +12,7 @@
 #include "BlendStateDef.h"
 #include "RasterizerStateDef.h"
 #include "DepthStencilStateDef.h"
+#include "SamplerStateDef.h"
 
 using namespace LostCore;
 
@@ -44,6 +45,7 @@ bool D3D11::FRenderContext::Init(HWND wnd, bool bWindowed, int32 width, int32 he
 		FBlendStateMap::Get()->Initialize(Device);
 		FRasterizerStateMap::Get()->Initialize(Device);
 		FDepthStencilStateMap::Get()->Initialize(Device);
+		FSamplerStateMap::Get()->Initialize(Device);
 	}
 
 	assert(RenderTarget == nullptr);
@@ -56,7 +58,7 @@ bool D3D11::FRenderContext::Init(HWND wnd, bool bWindowed, int32 width, int32 he
 	assert(DepthStencil == nullptr);
 	{
 		DepthStencil = new FTexture2D;
-		DepthStencil->Construct(this, width, height, SDepthStencilFormat, true, false, false, false);
+		DepthStencil->Construct(this, width, height, SDepthStencilFormat, true, false, false, false, nullptr, 0);
 	}
 
 	Viewport.Width = (FLOAT)width;
@@ -70,6 +72,16 @@ bool D3D11::FRenderContext::Init(HWND wnd, bool bWindowed, int32 width, int32 he
 	Param.ScreenHeight = (float)height;
 	Param.ScreenWidthRcp = (float)1.f / width;
 	Param.ScreenHeightRcp = (float)1.f / height;
+	
+	// push & initialize ascii chars
+	const int32 sz = 127 - '!';
+	WCHAR chars[sz];
+	for (int32 i = 0; i < sz; ++i)
+	{
+		chars[i] = 127 + i;
+	}
+	
+	Font.Initialize(this, LostCore::FFontConfig(), chars, sz);
 
 	return Device.IsValid() && Context.IsValid() && SwapChain.IsValid() && CB0.Initialize(Device);
 }
@@ -79,9 +91,12 @@ void D3D11::FRenderContext::Fini()
 	ShadeModel = EShadeModel::Undefined;
 	bWireframe = false;
 
+	Font.Destroy();
+
 	FBlendStateMap::Get()->ReleaseComObjects();
 	FRasterizerStateMap::Get()->ReleaseComObjects();
 	FDepthStencilStateMap::Get()->ReleaseComObjects();
+	FSamplerStateMap::Get()->ReleaseComObjects();
 
 	if (RenderTarget != nullptr)
 	{

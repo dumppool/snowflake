@@ -14,6 +14,7 @@
 #include <windows.h>
 
 #include <assert.h>
+#include <set>
 #include <vector>
 #include <map>
 #include <string>

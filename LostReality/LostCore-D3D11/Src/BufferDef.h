@@ -129,6 +129,31 @@ namespace D3D11
 		}
 	};
 
+	ALIGNED_LR(16) struct FVertex_4
+	{
+		LostCore::FVec4 Color;
+		LostCore::FVec2 XY;
+		LostCore::FVec2 UV;
+
+		INLINE static std::string GetName()
+		{
+			static std::string SName = "RGBAXYUV";
+			return SName;
+		}
+
+		INLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
+		{
+			static D3D11_INPUT_ELEMENT_DESC SDesc[] =
+			{
+				{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(FVertex_4, Color), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, offsetof(FVertex_4, XY), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, offsetof(FVertex_4, UV), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			};
+
+			return std::make_pair(SDesc, ARRAYSIZE(SDesc));
+		}
+	};
+
 	struct FInputElementDescMap
 	{
 		static FInputElementDescMap* Get()
@@ -145,6 +170,7 @@ namespace D3D11
 			DescMap.insert(std::make_pair(FVertex_1::GetName(), FVertex_1::GetDesc()));
 			DescMap.insert(std::make_pair(FVertex_2::GetName(), FVertex_2::GetDesc()));
 			DescMap.insert(std::make_pair(FVertex_3::GetName(), FVertex_3::GetDesc()));
+			DescMap.insert(std::make_pair(FVertex_4::GetName(), FVertex_4::GetDesc()));
 		}
 
 		INLINE std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc(const std::string& key)

@@ -14,7 +14,7 @@
 
 using namespace LostCore;
 
-FBasicWorld::FBasicWorld()
+FBasicWorld::FBasicWorld() : GUIRoot(nullptr)
 {
 	SceneArray.clear();
 }
@@ -26,12 +26,16 @@ FBasicWorld::~FBasicWorld()
 
 bool FBasicWorld::Init(IRenderContext * rc)
 {
-	return false;
+	assert(GUIRoot == nullptr);
+	assert(SceneArray.size() == 0);
+
+	GUIRoot = new FBasicGUI;
+	return GUIRoot->Init(rc);
 }
 
 void FBasicWorld::Fini()
 {
-	assert(0);
+	GUIRoot->Fini();
 }
 
 void FBasicWorld::Tick(float sec)
@@ -48,6 +52,11 @@ void FBasicWorld::Tick(float sec)
 		{
 			scene->Tick(sec);
 		}
+	}
+
+	if (GUIRoot != nullptr)
+	{
+		GUIRoot->Tick(sec);
 	}
 }
 
@@ -108,6 +117,7 @@ void FBasicWorld::ClearScene(std::function<void(FBasicScene*)> func)
 
 	SceneArray.clear();
 }
+
 bool LostCore::FBasicWorld::InitWindow(const char* name, HWND wnd, bool bWindowed, int32 width, int32 height)
 {
 	return false;
@@ -125,8 +135,29 @@ FBasicCamera * LostCore::FBasicWorld::GetCamera()
 
 void FBasicWorld::DrawPreScene(float sec)
 {
+	auto rc = GetRenderContext();
+
+	if (rc == nullptr)
+	{
+		return;
+	}
+
+	rc->BeginFrame(sec);
 }
 
 void FBasicWorld::DrawPostScene(float sec)
 {
+	auto rc = GetRenderContext();
+
+	if (rc == nullptr)
+	{
+		return;
+	}
+
+	if (GUIRoot != nullptr)
+	{
+		GUIRoot->Draw(rc, sec);
+	}
+
+	rc->EndFrame(sec);
 }

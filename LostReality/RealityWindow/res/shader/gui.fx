@@ -13,16 +13,21 @@ cbuffer Constant : register(b1)
 	float  Scale;
 }
 
+Texture2D ColorTexture : register(t0);
+sampler ColorSampler : register(s0);
+
 struct VertexIn
 {
 	float4 col : COLOR;
     float2 pos : POSITION;
+	float2 tc  : TEXCOORD;
 };
 
 struct VertexOut
 {
 	float4 col : COLOR;
 	float4 pos : SV_POSITION;
+	float2 tc  : TEXCOORD;
 };
 
 VertexOut vs_main(VertexIn Input)
@@ -36,10 +41,12 @@ VertexOut vs_main(VertexIn Input)
 	VertexOut Output;
 	Output.col = Input.col;
 	Output.pos = float4(pos, 0.1f, 1.f);
+	Output.tc = Input.tc;
     return Output;
 }
 
 float4 ps_main(VertexOut Input) : SV_TARGET
 {
-	return Input.col;
+	float4 col = ColorTexture.Sample(ColorSampler, Input.tc);
+	return Input.col * col;
 }

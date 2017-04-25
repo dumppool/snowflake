@@ -27,7 +27,19 @@ namespace D3D11
 			bool bIsDepthStencil, 
 			bool bIsRenderTarget, 
 			bool bIsShaderResource,
-			bool bIsWritable);
+			bool bIsWritable,
+			void* initialData, 
+			uint32 initialPitch);
+
+		virtual int32 GetWidth() const override
+		{
+			return Width;
+		}
+
+		virtual int32 GetHeight() const override
+		{
+			return Height;
+		}
 
 		virtual bool ConstructFromSwapChain(const TRefCountPtr<IDXGISwapChain>& swapChain);
 
@@ -41,6 +53,8 @@ namespace D3D11
 		bool IsDepthStencil() const;
 		TRefCountPtr<ID3D11DepthStencilView> GetDepthStencilRHI();
 
+		TRefCountPtr<ID3D11SamplerState> GetSamplerRHI();
+
 		bool IsWritable() const;
 		bool IsReadable() const;
 
@@ -49,8 +63,12 @@ namespace D3D11
 		TRefCountPtr<ID3D11ShaderResourceView>	ShaderResource;
 		TRefCountPtr<ID3D11RenderTargetView>	RenderTarget;
 		TRefCountPtr<ID3D11DepthStencilView>	DepthStencil;
+		TRefCountPtr<ID3D11SamplerState>		Sampler;
 
 		uint32 BindFlags;
 		uint32 AccessFlags;
+
+		int32 Width;
+		int32 Height;
 	};
 }

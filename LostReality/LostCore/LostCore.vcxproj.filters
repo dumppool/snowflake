@@ -78,6 +78,12 @@
     <ClInclude Include="Inc\BasicGUI.h">
       <Filter>Inc</Filter>
     </ClInclude>
+    <ClInclude Include="Interface\FontInterface.h">
+      <Filter>Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderCore\FontProvider.h">
+      <Filter>RenderCore</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
@@ -104,6 +110,9 @@
       <Filter>D3D11</Filter>
     </ClCompile>
     <ClCompile Include="RenderCore\BasicGUI.cpp">
+      <Filter>RenderCore</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderCore\FontProvider.cpp">
       <Filter>RenderCore</Filter>
     </ClCompile>
   </ItemGroup>

@@ -154,3 +154,32 @@ LOSTCORED3D11_API EReturnCode D3D11::DestroyMaterial_UIObject(LostCore::IMateria
 
 	return SSuccess;
 }
+
+#include "GdiFont.h"
+
+LOSTCORED3D11_API EReturnCode D3D11::CreateGdiFont(LostCore::IFontInterface ** font)
+{
+	if (font == nullptr)
+	{
+		return SErrorInvalidParameters;
+	}
+
+	auto obj = new FGdiFont;
+	if (obj == nullptr)
+	{
+		return SErrorOutOfMemory;
+	}
+
+	*font = obj;
+	return SSuccess;
+}
+
+LOSTCORED3D11_API EReturnCode D3D11::DestroyGdiFont(LostCore::IFontInterface * font)
+{
+	if (font != nullptr)
+	{
+		delete font;
+	}
+
+	return SSuccess;
+}

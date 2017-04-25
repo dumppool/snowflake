@@ -11,6 +11,7 @@
 #include "BasicGUI.h"
 #include "PrimitiveGroupInterface.h"
 #include "RenderContextInterface.h"
+#include "FontProvider.h"
 
 #include "LostCore-D3D11.h"
 using namespace D3D11;
@@ -144,6 +145,14 @@ void LostCore::FRect::Draw(IRenderContext * rc, float sec)
 	}
 }
 
+void LostCore::FRect::SetColorTexture(ITexture * tex)
+{
+	if (RectMaterial != nullptr)
+	{
+		RectMaterial->UpdateTexture(nullptr, tex, 0);
+	}
+}
+
 void LostCore::FRect::ReconstructPrimitive(IRenderContext * rc)
 {
 	bool bNeedReconstruct = false;
@@ -179,16 +188,16 @@ void LostCore::FRect::ReconstructPrimitive(IRenderContext * rc)
 
 		RectPrimitiveSize = Size;
 
-		__declspec(align(16)) struct _Vertex { FVec4 RGBA; FVec2 XY; };
+		__declspec(align(16)) struct _Vertex { FVec4 RGBA; FVec2 XY; FVec2 Texcoord; };
 		float scaler = 0.5f;
 
 		// Mesh vertices
 		const _Vertex vertices[] =
 		{
-			{ FVec4(1.f, 1.f, 1.f, 0.7f), FVec2(0.f, 0.f)		},		// top left
-			{ FVec4(1.f, 1.f, 1.f, 0.7f), FVec2(Size.X, 0.f)	},		// top right
-			{ FVec4(1.f, 1.f, 1.f, 0.7f), FVec2(0.f, Size.Y)	},		// bottom left
-			{ FVec4(1.f, 1.f, 1.f, 0.7f), FVec2(Size.X, Size.Y) },		// bottom right
+			{ FVec4(1.f, 1.f, 1.f, 0.7f), FVec2(0.f, 0.f),		FVec2(0.f, 0.f)	},		// top left
+			{ FVec4(1.f, 1.f, 1.f, 0.7f), FVec2(Size.X, 0.f),	FVec2(1.f, 0.f)	},		// top right
+			{ FVec4(1.f, 1.f, 1.f, 0.7f), FVec2(0.f, Size.Y),	FVec2(0.f, 1.f)	},		// bottom left
+			{ FVec4(1.f, 1.f, 1.f, 0.7f), FVec2(Size.X, Size.Y),FVec2(1.f, 1.f) },		// bottom right
 		};
 
 		const int32 indices[] = {0, 1, 2, 1, 3, 2};
@@ -206,6 +215,9 @@ void LostCore::FRect::ReconstructPrimitive(IRenderContext * rc)
 		}
 
 		RectPrimitive->SetMaterial(RectMaterial);
+
+		// 临时代码，查看字体贴图
+		RectMaterial->UpdateTexture(rc, FFontProvider::Get()->GetGdiFont()->GetFontTextures()[0], 0);
 	}
 
 	return;
@@ -234,4 +246,39 @@ void LostCore::FRect::DrawPrivate(IRenderContext * rc, float sec)
 		RectPrimitive->Draw(rc, sec);
 	}
 
+}
+
+LostCore::FBasicGUI::FBasicGUI() : Font(nullptr)
+{
+}
+
+LostCore::FBasicGUI::~FBasicGUI()
+{
+}
+
+void LostCore::FBasicGUI::Tick(float sec)
+{
+}
+
+void LostCore::FBasicGUI::Draw(IRenderContext * rc, float sec)
+{
+	Root.Draw(rc, sec);
+}
+
+bool LostCore::FBasicGUI::Init(IRenderContext * rc)
+{
+	FFontProvider::Get()->Init(rc);
+
+	// 临时代码
+	Root.SetOrigin(FVec2(0.f, 0.f));
+	Root.SetSize(FVec2(
+		FFontProvider::Get()->GetGdiFont()->GetFontTextures()[0]->GetWidth(),
+		FFontProvider::Get()->GetGdiFont()->GetFontTextures()[0]->GetHeight()));
+	Root.SetScale(1.f);
+	return true;
+}
+
+void LostCore::FBasicGUI::Fini()
+{
+	FFontProvider::Get()->Fini();
 }

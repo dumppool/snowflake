@@ -32,6 +32,5 @@ namespace LostCore
 
 	protected:
 		std::vector<FBasicStaticMesh*> StaticMeshArray;
-		FRect* GUIRoot;
 	};
 }

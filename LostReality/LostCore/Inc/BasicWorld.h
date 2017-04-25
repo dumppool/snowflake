@@ -11,6 +11,7 @@
 
 #include "BasicInterface.h"
 #include "BasicScene.h"
+#include "BasicGUI.h"
 
 namespace LostCore
 {
@@ -40,5 +41,6 @@ namespace LostCore
 
 	private:
 		std::vector<FBasicScene*> SceneArray;
+		FBasicGUI* GUIRoot;
 	};
 }

@@ -9,6 +9,12 @@
 
 #pragma once
 
+#include "MaterialInterface.h"
+#include "FontInterface.h"
+#include "TextureInterface.h"
+#include "RenderContextInterface.h"
+#include "PrimitiveGroupInterface.h"
+
 #ifdef LOSTCORED3D11_EXPORTS
 #define LOSTCORED3D11_API __declspec(dllexport)
 #else
@@ -70,27 +76,33 @@ namespace D3D11 {
 		return SModuleHandle;
 	}
 
-	extern "C" LOSTCORED3D11_API EReturnCode CreateRenderContext(LostCore::EContextID id, LostCore::IRenderContext** context);
+	extern "C" LOSTCORED3D11_API int32 CreateRenderContext(LostCore::EContextID id, LostCore::IRenderContext** context);
 	static TExportFuncWrapper<LostCore::EContextID, LostCore::IRenderContext**> WrappedCreateRenderContext("CreateRenderContext", GetModule_LostCoreD3D11);
 
-	extern "C" LOSTCORED3D11_API EReturnCode DestroyRenderContext(LostCore::IRenderContext* context);
+	extern "C" LOSTCORED3D11_API int32 DestroyRenderContext(LostCore::IRenderContext* context);
 	static TExportFuncWrapper<LostCore::IRenderContext*> WrappedDestroyRenderContext("DestroyRenderContext", GetModule_LostCoreD3D11);
 
-	extern "C" LOSTCORED3D11_API EReturnCode CreatePrimitiveGroup(LostCore::IPrimitiveGroup** pg);
+	extern "C" LOSTCORED3D11_API int32 CreatePrimitiveGroup(LostCore::IPrimitiveGroup** pg);
 	static TExportFuncWrapper<LostCore::IPrimitiveGroup**> WrappedCreatePrimitiveGroup("CreatePrimitiveGroup", GetModule_LostCoreD3D11);
 
-	extern "C" LOSTCORED3D11_API EReturnCode DestroyPrimitiveGroup(LostCore::IPrimitiveGroup* pg);
+	extern "C" LOSTCORED3D11_API int32 DestroyPrimitiveGroup(LostCore::IPrimitiveGroup* pg);
 	static TExportFuncWrapper<LostCore::IPrimitiveGroup*> WrappedDestroyPrimitiveGroup("DestroyPrimitiveGroup", GetModule_LostCoreD3D11);
 
-	extern "C" LOSTCORED3D11_API EReturnCode CreateMaterial_SceneObject(LostCore::IMaterial** material);
+	extern "C" LOSTCORED3D11_API int32 CreateMaterial_SceneObject(LostCore::IMaterial** material);
 	static TExportFuncWrapper<LostCore::IMaterial**> WrappedCreateMaterial_SceneObject("CreateMaterial_SceneObject", GetModule_LostCoreD3D11);
 
-	extern "C" LOSTCORED3D11_API EReturnCode DestroyMaterial_SceneObject(LostCore::IMaterial* material);
+	extern "C" LOSTCORED3D11_API int32 DestroyMaterial_SceneObject(LostCore::IMaterial* material);
 	static TExportFuncWrapper<LostCore::IMaterial*> WrappedDestroyMaterial_SceneObject("DestroyMaterial_SceneObject", GetModule_LostCoreD3D11);
 
-	extern "C" LOSTCORED3D11_API EReturnCode CreateMaterial_UIObject(LostCore::IMaterial** material);
+	extern "C" LOSTCORED3D11_API int32 CreateMaterial_UIObject(LostCore::IMaterial** material);
 	static TExportFuncWrapper<LostCore::IMaterial**> WrappedCreateMaterial_UIObject("CreateMaterial_UIObject", GetModule_LostCoreD3D11);
 
-	extern "C" LOSTCORED3D11_API EReturnCode DestroyMaterial_UIObject(LostCore::IMaterial* material);
+	extern "C" LOSTCORED3D11_API int32 DestroyMaterial_UIObject(LostCore::IMaterial* material);
 	static TExportFuncWrapper<LostCore::IMaterial*> WrappedDestroyMaterial_UIObject("DestroyMaterial_UIObject", GetModule_LostCoreD3D11);
+
+	extern "C" LOSTCORED3D11_API int32 CreateGdiFont(LostCore::IFontInterface** font);
+	static TExportFuncWrapper<LostCore::IFontInterface**> WrappedCreateGdiFont("CreateGdiFont", GetModule_LostCoreD3D11);
+
+	extern "C" LOSTCORED3D11_API int32 DestroyGdiFont(LostCore::IFontInterface* font);
+	static TExportFuncWrapper<LostCore::IFontInterface*> WrappedDestroyGdiFont("DestroyGdiFont", GetModule_LostCoreD3D11);
 }

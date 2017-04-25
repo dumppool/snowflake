@@ -1,5 +1,5 @@
 {
-	"vertex":"RGBAXY",
+	"vertex":"RGBAXYUV",
 	"vs":
 	{
 		"path":"gui.fx",

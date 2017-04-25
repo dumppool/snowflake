@@ -13,6 +13,8 @@
 
 namespace LostCore
 {
+	class ITexture;
+
 	enum class EContextID : uint8
 	{
 		Undefined,

@@ -10,11 +10,14 @@
 #pragma once
 
 #include "BasicInterface.h"
+//#include "FontInterface.h"
 
 namespace LostCore
 {
+	class IFontInterface;
 	class IPrimitiveGroup;
 	class IMaterial;
+	class ITexture;
 
 	class FRect
 	{
@@ -70,11 +73,14 @@ namespace LostCore
 		void Clear();
 
 		//************************************
-		// Method:    DelChild 删除子面板
-		// FullName:  lostvr::FRect::DelChild
+		// Method:    Draw 绘制
+		// FullName:  lostvr::FRect::Draw
 		// Access:    public 
-		// Parameter: FRect* child 子面板，为空或者父面板不为this无法成功删除
+		// Parameter: IRenderContext * rc
+		// Parameter: float sec 
 		void Draw(IRenderContext * rc, float sec);
+
+		void SetColorTexture(ITexture* tex);
 
 		virtual void ReconstructPrimitive(IRenderContext * rc);
 
@@ -102,15 +108,19 @@ namespace LostCore
 		IMaterial* RectMaterial;
 	};
 
-	//class FBasicGUI : public IBasicInterface
-	//{
-	//public:
-	//	FBasicGUI();
-	//	virtual ~FBasicGUI() override;
+	class FBasicGUI : public IBasicInterface
+	{
+	public:
+		FBasicGUI();
+		virtual ~FBasicGUI() override;
 
-	//	virtual void Tick(float sec) override;
-	//	virtual void Draw(IRenderContext * rc, float sec) override;
-	//	virtual bool Init(const char* name, IRenderContext * rc) override;
-	//	virtual void Fini() override;
-	//};
+		virtual void Tick(float sec) override;
+		virtual void Draw(IRenderContext * rc, float sec) override;
+		virtual bool Init(IRenderContext * rc) override;
+		virtual void Fini() override;
+
+	private:
+		FRect Root;
+		IFontInterface* Font;
+	};
 }

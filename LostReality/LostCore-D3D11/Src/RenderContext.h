@@ -11,6 +11,7 @@
 
 #include "Texture.h"
 #include "BufferDef.h"
+#include "GdiFont.h"
 
 namespace D3D11
 {
@@ -122,5 +123,7 @@ namespace D3D11
 		D3D11_VIEWPORT									Viewport;
 		FConstantBufferRegister0::FParam			Param;
 		FConstantBufferRegister0						CB0;
+
+		FGdiFont Font;
 	};
 }

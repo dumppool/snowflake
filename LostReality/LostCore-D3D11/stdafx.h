@@ -18,6 +18,9 @@
 #include <d3dcompiler.h>
 #pragma comment(lib, "d3dcompiler.lib")
 
+#include <gdiplus.h>
+#pragma comment(lib, "gdiplus.lib")
+
 // utility includes
 #define MODULE_MSG_PREFIX "lostcore-d3d11-log"
 #define MODULE_WARN_PREFIX "lostcore-d3d11-warn"
@@ -35,11 +38,12 @@
 using FJson = nlohmann::json;
 #include "File/DirectoryHelper.h"
 
-// interface indcludes
+// interface includes
 #include "RenderContextInterface.h"
 #include "TextureInterface.h"
 #include "MaterialInterface.h"
 #include "PrimitiveGroupInterface.h"
+#include "FontInterface.h"
 
 // local includes
 #include "Src/RenderContextBase.h"

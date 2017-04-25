@@ -12,8 +12,6 @@
 #include "BasicStaticMesh.h"
 #include "BasicCamera.h"
 #include "BasicScene.h"
-#include "RenderContextInterface.h"
-#include "PrimitiveGroupInterface.h"
 
 #include "LostCore-D3D11.h"
 using namespace D3D11;
@@ -181,7 +179,6 @@ namespace LostCore
 		virtual bool Init(IRenderContext * rc) override;
 		virtual void Fini() override;
 		virtual void DrawPreScene(float sec) override;
-		virtual void DrawPostScene(float sec) override;
 
 		virtual bool InitWindow(const char* name, HWND wnd, bool bWindowed, int32 width, int32 height) override;
 		virtual IRenderContext* GetRenderContext() override;
@@ -204,6 +201,8 @@ namespace LostCore
 
 	bool FSimpleWorld::Init(IRenderContext * rc)
 	{
+		FBasicWorld::Init(rc);
+
 		Camera = new FSimpleCamera;
 		if (!Camera->Init(rc))
 		{
@@ -224,6 +223,8 @@ namespace LostCore
 	 
 	void FSimpleWorld::Fini()
 	{
+		FBasicWorld::Fini();
+
 		ClearScene([](FBasicScene* p)
 		{ 
 			if (p != nullptr)
@@ -250,6 +251,8 @@ namespace LostCore
 
 	void FSimpleWorld::DrawPreScene(float sec)
 	{
+		FBasicWorld::DrawPreScene(sec);
+
 		if (RC == nullptr)
 		{
 			return;
@@ -260,18 +263,7 @@ namespace LostCore
 			return;
 		}
 
-		RC->BeginFrame(sec);
 		Camera->Draw(RC, sec);
-	}
-
-	void FSimpleWorld::DrawPostScene(float sec)
-	{
-		if (RC == nullptr)
-		{
-			return;
-		}
-
-		RC->EndFrame(sec);
 	}
 
 	bool FSimpleWorld::InitWindow(const char* name, HWND wnd, bool bWindowed, int32 width, int32 height)

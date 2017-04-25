@@ -103,6 +103,17 @@ namespace D3D11
 				cxt->CSSetShader(nullptr, nullptr, 0);
 
 				Param.Bind(cxt);
+
+				for (auto it = Textures.begin(); it != Textures.end(); ++it)
+				{
+					if (it->second != nullptr)
+					{
+						auto srv = it->second->GetShaderResourceRHI().GetReference();
+						auto smp = it->second->GetSamplerRHI().GetReference();
+						cxt->PSSetShaderResources(it->first, 1, &srv);
+						cxt->PSSetSamplers(it->first, 1, &smp);
+					}
+				}
 			}
 		}
 
@@ -148,6 +159,17 @@ namespace D3D11
 			Param.UpdateBuffer(cxt, buf, sz);
 		}
 
+		virtual void UpdateTexture(LostCore::IRenderContext* rc, LostCore::ITexture* tex, int32 slot)
+		{
+			//const char* head = "D3D11::FMaterial<T>::UpdateTexture";
+			//auto cxt = FRenderContext::GetDeviceContext(rc, head);
+			//if (!cxt.IsValid())
+			//{
+			//	return;
+			//}
+
+			Textures[slot] = (FTexture2D*)tex;
+		}
 
 	protected:
 		FMaterialShader* GetMaterialShader()
@@ -158,5 +180,6 @@ namespace D3D11
 	private:
 		FMaterialShader* MaterialShader;
 		T Param;
+		std::map<int32, FTexture2D*> Textures;
 	};
 }

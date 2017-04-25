@@ -10,6 +10,7 @@
 #include "stdafx.h"
 #include "Texture.h"
 #include "RenderContext.h"
+#include "SamplerStateDef.h"
 
 using namespace LostCore;
 
@@ -39,15 +40,19 @@ bool D3D11::FTexture2D::Construct(
 	bool bIsDepthStencil, 
 	bool bIsRenderTarget, 
 	bool bIsShaderResource,
-	bool bIsWritable)
+	bool bIsWritable,
+	void* initialData,
+	uint32 initialPitch)
 {
-
 	const char* head = "D3D11::FTexture2D::Construct";
 	TRefCountPtr<ID3D11Device> device = FRenderContext::GetDevice(rc, head);
 	if (!device.IsValid())
 	{
 		return false;
 	}
+
+	Width = width;
+	Height = height;
 
 	BindFlags = 0x0;
 	if (bIsDepthStencil)
@@ -62,6 +67,7 @@ bool D3D11::FTexture2D::Construct(
 	if (bIsShaderResource)
 	{
 		BindFlags |= D3D11_BIND_SHADER_RESOURCE;
+		Sampler = FSamplerStateMap::Get()->GetState("DEFAULT");
 	}
 
 	AccessFlags = 0x0;
@@ -84,7 +90,18 @@ bool D3D11::FTexture2D::Construct(
 	desc.SampleDesc.Quality = 0;
 	desc.Usage = bIsWritable ? D3D11_USAGE_DYNAMIC : D3D11_USAGE_DEFAULT;
 
-	assert(SUCCEEDED(device->CreateTexture2D(&desc, nullptr, Texture.GetInitReference())));
+	if (initialData != nullptr)
+	{
+		D3D11_SUBRESOURCE_DATA sr;
+		sr.pSysMem = initialData;
+		sr.SysMemPitch = initialPitch;
+		sr.SysMemSlicePitch = 0;
+		assert(SUCCEEDED(device->CreateTexture2D(&desc, &sr, Texture.GetInitReference())));
+	}
+	else
+	{
+		assert(SUCCEEDED(device->CreateTexture2D(&desc, nullptr, Texture.GetInitReference())));
+	}
 
 	if (bIsRenderTarget)
 	{
@@ -112,6 +129,11 @@ bool D3D11::FTexture2D::ConstructFromSwapChain(const TRefCountPtr<IDXGISwapChain
 
 	BindFlags = D3D11_BIND_RENDER_TARGET;
 	assert(SUCCEEDED(swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)Texture.GetInitReference())));
+
+	D3D11_TEXTURE2D_DESC desc;
+	Texture->GetDesc(&desc);
+	Width = desc.Width;
+	Height = desc.Height;
 
 	TRefCountPtr<ID3D11Device> device;
 	assert(SUCCEEDED(swapChain->GetDevice(__uuidof(ID3D11Device), (void**)device.GetInitReference())));
@@ -150,6 +172,11 @@ bool D3D11::FTexture2D::IsDepthStencil() const
 TRefCountPtr<ID3D11DepthStencilView> D3D11::FTexture2D::GetDepthStencilRHI()
 {
 	return DepthStencil;
+}
+
+TRefCountPtr<ID3D11SamplerState> D3D11::FTexture2D::GetSamplerRHI()
+{
+	return Sampler;
 }
 
 bool D3D11::FTexture2D::IsWritable() const
