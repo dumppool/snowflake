@@ -9,7 +9,7 @@
 #include "stdafx.h"
 //#include "LostMediaPrivatePCH.h"
 
-#include "LostMediaDecoder.h"
+#include "LMediaDecoder2.h"
 
 static vector<int32> s_int32arr;
 static vector<int64> s_int64arr;
@@ -19,11 +19,6 @@ static vector<double> s_float64arr;
 static vector<double> s_float64arr2;
 static vector<AVStream*> s_videoStreamArr;
 static chrono::time_point<chrono::steady_clock> s_start_pt;
-
-static float TbValue(const AVRational& r)
-{
-	return (float)r.num / (float)r.den;
-}
 
 FLostMediaDecoder::FLostMediaDecoder() : YUVBuffer(nullptr)
 , AudioBuffer(nullptr)
@@ -40,7 +35,7 @@ FLostMediaDecoder::FLostMediaDecoder() : YUVBuffer(nullptr)
 , AudioStream(nullptr)
 , AudioFrame(nullptr)
 , AudioStreamIndex(-1)
-, Swr(nullptr)
+, AudioResampleCxt(nullptr)
 , State(EDecodeState::PreOpened)
 , bQuit(false)
 , bRunning(true)
@@ -331,13 +326,8 @@ bool FLostMediaDecoder::Open_DecodeThread(const char * url)
 		MediaInfo.VideoBitRate = VideoContext->bit_rate;
 		MediaInfo.VideoFrameWidth = VideoContext->width;
 		MediaInfo.VideoFrameHeight = VideoContext->height;
-		if (VideoContext->framerate.num == 0)
 		{
 			MediaInfo.VideoFrameRate = VideoStream->avg_frame_rate.num / VideoStream->avg_frame_rate.den;
-		}
-		else
-		{
-			MediaInfo.VideoFrameRate = VideoContext->framerate.num / VideoContext->framerate.den;
 		}
 
 		FrameTime = 1.0 / MediaInfo.VideoFrameRate;
@@ -358,15 +348,14 @@ bool FLostMediaDecoder::Open_DecodeThread(const char * url)
 	AudioContext = AudioStream->codec;
 	if ((ret = avcodec_open2(AudioContext, AudioDecoder, nullptr)) == 0)
 	{
-		MediaInfo.AudioParamsDst.Format = AV_SAMPLE_FMT_S16;
+		MediaInfo.AudioParamsDst.Format = AudioContext->sample_fmt;
 		MediaInfo.AudioCodecID = AudioDecoder->id;
 		snprintf(MediaInfo.AudioCodecShortName, 255, "%s", AudioDecoder->name);
 		//snprintf(MediaInfo.AudioCodecLongName, 255, "%s", AudioDecoder->name);
 		MediaInfo.AudioParamsDst.Channels = AudioContext->channels;
-		//MediaInfo.AudioParamsDst.SampleRate = 44100;
 		MediaInfo.AudioParamsDst.SampleRate = AudioContext->sample_rate;
 		MediaInfo.AudioParamsDst.ChannelLayout = AudioContext->channel_layout;
-		MediaInfo.AudioParamsDst.FrameSize = av_samples_get_buffer_size(nullptr, MediaInfo.AudioParamsDst.Channels,
+		MediaInfo.AudioParamsDst.FrameSize = av_samples_get_buffer_size(&MediaInfo.AudioParamsDst.LineSize, MediaInfo.AudioParamsDst.Channels,
 			1, MediaInfo.AudioParamsDst.Format, 1);
 		MediaInfo.AudioParamsDst.BytesPerSec = av_samples_get_buffer_size(nullptr, MediaInfo.AudioParamsDst.Channels,
 			MediaInfo.AudioParamsDst.SampleRate, MediaInfo.AudioParamsDst.Format, 1);
@@ -378,7 +367,21 @@ bool FLostMediaDecoder::Open_DecodeThread(const char * url)
 		}
 
 		MediaInfo.AudioParamsSrc = MediaInfo.AudioParamsDst;
+		MediaInfo.AudioParamsDst.Format = AV_SAMPLE_FMT_S16P;
 		AudioFrame = av_frame_alloc();
+
+		// Setup audio resampler
+		AudioResampleCxt = avresample_alloc_context();
+		av_opt_set_int(AudioResampleCxt, "in_channel_layout", MediaInfo.AudioParamsSrc.ChannelLayout, 0);
+		av_opt_set_int(AudioResampleCxt, "in_sample_rate", MediaInfo.AudioParamsSrc.SampleRate, 0);
+		av_opt_set_int(AudioResampleCxt, "in_sample_fmt", MediaInfo.AudioParamsSrc.Format, 0);
+		av_opt_set_int(AudioResampleCxt, "out_channel_layout", MediaInfo.AudioParamsDst.ChannelLayout, 0);
+		av_opt_set_int(AudioResampleCxt, "out_sample_rate", MediaInfo.AudioParamsDst.SampleRate, 0);
+		av_opt_set_int(AudioResampleCxt, "out_sample_fmt", MediaInfo.AudioParamsDst.Format, 0);
+		if (avresample_open(AudioResampleCxt) != 0)
+		{
+			assert(0&&"Cannot open audio resampler.\n");
+		}
 	}
 
 	MediaInfo.UpdateLongName();
@@ -429,19 +432,28 @@ void FLostMediaDecoder::Close_DecodeThread()
 		YUVBuffer = nullptr;
 	}
 
-	//if (AudioBuffer != nullptr)
-	//{
-	//	delete[] AudioBuffer;
-	//	AudioBuffer = nullptr;
-	//}
-}
+	if (AudioBuffer != nullptr)
+	{
+		av_freep(&AudioBuffer);
+		AudioBuffer = nullptr;
+	}
 
+	if (AudioResampleCxt != nullptr)
+	{
+		avresample_free(&AudioResampleCxt);
+		AudioResampleCxt = nullptr;
+
+		av_frame_free(&AudioFrame);
+		AudioFrame = nullptr;
+
+		//avcodec_close(AudioContext);
+		//AudioContext = nullptr;
+	}
+}
 
 bool FLostMediaDecoder::Decode_DecodeThread(double& decodeTime, bool bDrop)
 {
 	static AVPacket packet;
-
-	static auto s_ts = av_gettime_relative();
 
 	decodeTime = 0.0;
 	int ret = 0;
@@ -464,7 +476,7 @@ bool FLostMediaDecoder::Decode_DecodeThread(double& decodeTime, bool bDrop)
 
 	int32 vdecoded = 0;
 	int32 adecoded = 0;
-	int32 nloop = 50;
+	int32 nloop = 10;
 
 	while (vdecoded <= 0 && nloop--)
 	{
@@ -475,35 +487,12 @@ bool FLostMediaDecoder::Decode_DecodeThread(double& decodeTime, bool bDrop)
 			ret = avcodec_decode_video2(VideoContext, VideoFrame, &vdecoded, &packet);
 			if (vdecoded > 0)
 			{
-				char msg[128];
-				snprintf(msg, 128, "delta: %d, play pos: %0.3f, delay: %0.3f, pts: %0.3f, dts: %0.3f, duration: %0.3f\n",
-					av_gettime_relative() - s_ts,
-					PlayPos * 1000.f,
-					packet.pts / TbValue(VideoStream->time_base) - PlayPos * 1000.f,
-					packet.pts/TbValue(VideoStream->time_base), 
-					packet.dts/ TbValue(VideoStream->time_base), 
-					packet.duration/TbValue(VideoStream->time_base));
-				s_ts = av_gettime_relative();
-				OutputDebugStringA(msg);
 				//auto dts = VideoStream->cur_dts;
 				//auto pts = VideoStream->pts;
 				AVStream* st = (AVStream*)av_malloc(sizeof(AVStream));
 				*st = *VideoStream;
 				s_videoStreamArr.push_back(st);
 				double timeBase = VideoStream->time_base.num / (double)VideoStream->time_base.den;
-				s_float64arr.push_back(av_frame_get_pkt_pos(VideoFrame));
-				s_float64arr2.push_back(st->cur_dts + st->first_dts);
-				s_int64arr.push_back(VideoFrame->pkt_dts);
-				s_int64arr2.push_back(VideoFrame->pkt_pts/VideoFrame->pkt_duration);
-				if (s_float32arr.empty())
-				{
-					s_start_pt = chrono::steady_clock::now();
-					s_float32arr.push_back(0.f);
-				}
-				else
-				{
-					s_float32arr.push_back(chrono::duration<float>(chrono::steady_clock::now() - s_start_pt).count());
-				}
 
 				//int64 ts = packet.pts == AV_NOPTS_VALUE ? packet.dts : packet.pts;
 				//int64 st_start = VideoStream->start_time != AV_NOPTS_VALUE ? VideoStream->start_time : 0;
@@ -559,11 +548,6 @@ bool FLostMediaDecoder::Decode_DecodeThread(double& decodeTime, bool bDrop)
 		av_packet_unref(&packet);
 	}
 
-	if (vdecoded <= 0)
-	{
-		OutputDebugStringA("no video !\n");
-	}
-
 	return vdecoded > 0;
 }
 
@@ -571,130 +555,37 @@ int32 FLostMediaDecoder::AudioResample_DecodeThread(AVFrame * aframe)
 {
 	char err[1024];
 	//char warn[1024];
+	int32 linesize = 0;
 	int32 datasize = 0;
 	int32 resampledsize = 0;
 	int64 layout;
-	int32 channels = av_frame_get_channels(aframe);
-	datasize = av_samples_get_buffer_size(nullptr, channels, aframe->nb_samples, (AVSampleFormat)aframe->format, 1);
+	int32 channels = AudioContext->channels;
+	datasize = av_samples_get_buffer_size(&linesize, channels, aframe->nb_samples, (AVSampleFormat)aframe->format, 1);
 	layout = (aframe->channel_layout && channels == av_get_channel_layout_nb_channels(
 		aframe->channel_layout)) ? aframe->channel_layout : av_get_default_channel_layout(channels);
 
 	if (aframe->format != MediaInfo.AudioParamsSrc.Format ||
 		aframe->sample_rate != MediaInfo.AudioParamsSrc.SampleRate ||
-		layout != MediaInfo.AudioParamsSrc.ChannelLayout ||
-		Swr == nullptr)
+		layout != MediaInfo.AudioParamsSrc.ChannelLayout)
 	{
-		swr_free(&Swr);
-		Swr = swr_alloc_set_opts(nullptr,
-			MediaInfo.AudioParamsDst.ChannelLayout, MediaInfo.AudioParamsDst.Format, MediaInfo.AudioParamsDst.SampleRate,
-			layout, (AVSampleFormat)aframe->format, aframe->sample_rate,
-			0, nullptr);
-		if (Swr == nullptr || swr_init(Swr) < 0)
-		{
-			//std::string err("failed to recreate SwrContext when resample audio: ");
-			snprintf(err, 1023, "failed to recreate SwrContext when resample audio: "\
-				"%s %dHz %d channels to %s %dHz %d channels\n",
-				av_get_sample_fmt_name((AVSampleFormat)aframe->format), aframe->sample_rate, aframe->channels,
-				av_get_sample_fmt_name(MediaInfo.AudioParamsDst.Format), MediaInfo.AudioParamsDst.SampleRate,
-				MediaInfo.AudioParamsDst.Channels);
-
-			goto OnFailed;
-		}
-
-		MediaInfo.AudioParamsSrc.ChannelLayout = aframe->channel_layout;
-		MediaInfo.AudioParamsSrc.Channels = channels;
-		MediaInfo.AudioParamsSrc.Format = (AVSampleFormat)aframe->format;
-		MediaInfo.AudioParamsSrc.SampleRate = aframe->sample_rate;
-		MediaInfo.AudioParamsSrc.FrameSize = av_samples_get_buffer_size(nullptr, MediaInfo.AudioParamsSrc.Channels,
-			1, MediaInfo.AudioParamsSrc.Format, 1);
-		MediaInfo.AudioParamsSrc.BytesPerSec = av_samples_get_buffer_size(nullptr, MediaInfo.AudioParamsSrc.Channels,
-			MediaInfo.AudioParamsSrc.SampleRate, MediaInfo.AudioParamsSrc.Format, 1);
-
-		MediaInfo.UpdateLongName();
-		IDecodeCallback* ptr = ConvertPtr(DecodeCallback);
-		if (ptr != nullptr)
-		{
-			ptr->OnEvent(EDecodeEvent::InfoUpdated);
-		}
 	}
 
-	if (Swr != nullptr)
+	if (AudioBuffer != nullptr && AudioBufferSize != datasize)
 	{
-		int32 frames = (int64)aframe->nb_samples * MediaInfo.AudioParamsDst.SampleRate / MediaInfo.AudioParamsSrc.SampleRate + 256;
-		int32 bytes = av_samples_get_buffer_size(nullptr, MediaInfo.AudioParamsDst.Channels, frames, MediaInfo.AudioParamsDst.Format, 0);
-		if (bytes < 0)
-		{
-			snprintf(err, 1023, "av_sample_get_buffer_size() failed\n");
-			goto OnFailed;
-		}
-
-		if (AudioBufferSize < (uint32)bytes)
-		{
-			delete[] AudioBuffer;
-			AudioBufferSize = bytes;
-			//av_fast_malloc(AudioBuffer, &AudioBufferSize, AudioBufferSize);
-			AudioBuffer = new uint8[AudioBufferSize];
-			memset(AudioBuffer, 0, AudioBufferSize * sizeof(uint8));
-		}
-
-		//av_fast_malloc(&AudioBuffer, &AudioBufferSize, bytes);
-		if (AudioBuffer == nullptr)
-		{
-			snprintf(err, 1023, "av_fast_malloc failed, may be no memory\n");
-			goto OnFailed;
-		}
-
-		int32 len2 = swr_convert(Swr, &AudioBuffer, frames, (const uint8**)aframe->extended_data, aframe->nb_samples);
-		if (len2 < 0)
-		{
-			snprintf(err, 1023, "swr_convert() failed\n");
-			goto OnFailed;
-		}
-
-		//if (len2 == frames)
-		//{
-		//	snprintf(warn, 1023, "audio buffer is probably too small\n");
-		//	if (swr_init(Swr) < 0)
-		//	{
-		//		swr_free(&Swr);
-		//	}
-
-		//	goto OnWarning;
-		//}
-
-		resampledsize = len2 * MediaInfo.AudioParamsDst.Channels * av_get_bytes_per_sample(MediaInfo.AudioParamsDst.Format);
-	}
-	else
-	{
-		AudioBuffer = aframe->data[0];
-		resampledsize = datasize;
+		av_freep(AudioBuffer);
+		AudioBuffer = nullptr;
 	}
 
-	return resampledsize;
-
-OnFailed:
+	if (AudioBuffer == nullptr)
 	{
-		IDecodeCallback* ptr = ConvertPtr(DecodeCallback);
-		if (ptr != nullptr)
-		{
-			ptr->OnMessage(EDecodeMsgLv::Error, err, strlen(err));
-		}
-
-		swr_free(&Swr);
-		Swr = nullptr;
-		return -1;
+		AudioBuffer = (uint8*)av_mallocz(datasize);
+		AudioBufferSize = datasize;
 	}
 
-	//OnWarning:
-	//	{
-	//		IDecodeCallback* ptr = ConvertPtr(DecodeCallback);
-	//		if (ptr != nullptr)
-	//		{
-	//			ptr->OnMessage(EDecodeMsgLv::Info, warn, strlen(warn));
-	//		}
-	//
-	//		return resampledsize;
-	//	}
+	avresample_convert(AudioResampleCxt, &AudioBuffer, linesize, AudioFrame->nb_samples,
+		AudioFrame->data, AudioFrame->linesize[0], AudioFrame->nb_samples);
+
+	return datasize;
 }
 
 DecoderHandle DecodeMedia(IDecodeCallbackWeakPtr callback, const char * url)
@@ -719,8 +610,8 @@ const char * FAudioParams::ToString()
 	char strlayout[256];
 	av_get_channel_layout_string(strlayout, 255, Channels, ChannelLayout);
 	memset(Info, 0, sizeof(Info));
-	snprintf(Info, 1023, "%s,%s %d,%dHz,%dBytes/frame,%dKBytes/sec",
-		av_get_sample_fmt_name(Format), strlayout, Channels, SampleRate, FrameSize, BytesPerSec / 1024);
+	snprintf(Info, 1023, "%s,%s %d,%dHz,%dBytes/frame(%d),%dKBytes/sec",
+		av_get_sample_fmt_name(Format), strlayout, Channels, SampleRate, FrameSize, LineSize, BytesPerSec / 1024);
 	return &Info[0];
 }
 

@@ -3,7 +3,7 @@
 
 #include "stdafx.h"
 #include "MediaPlayerWindow.h"
-#include "LMediaDecoder.h"
+#include "LostMediaDecoder.h"
 
 #include <al.h>
 #include <alc.h>
@@ -26,7 +26,9 @@ HWND hWindow;
 
 static int SURLIndex = -1;
 static const char* SURLs[] = {
+	"f:/User/VRMp4/ca.mp4",
 	"f:/User/VRMp4/showcase.mp4",
+	"f:/User/VRMp4/ca.mp4",
 	"http://down.video.vronline.com/dev/meisaidesibenchi.mp4",
 	"http://down.video.vronline.com/dev/Video11.mp4",
 	"http://down.video.vronline.com/dev/dijiugesizhe.mp4",

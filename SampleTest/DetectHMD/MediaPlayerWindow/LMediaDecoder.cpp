@@ -1190,6 +1190,10 @@ void LDecoder::FLMediaDecoderPrivate::VideoRefresh(void * opaque, double * remai
 
 int32 LDecoder::FLMediaDecoderPrivate::QueuePicture(FVideoState * is, AVFrame * srcFrame, double pts, double duration, int64 pos, int32 serial)
 {
+	//char msg[16];
+	//snprintf(msg, 16, "\nserial: %d", serial);
+	//OutputDebugStringA(msg);
+
 	FFrame *vp;
 
 	if (!(vp = FrameQueuePeekWritable(&is->PicQueue)))
@@ -1680,31 +1684,32 @@ void LDecoder::FLMediaDecoderPrivate::Execute_AudioThread(void * arg)
 
 		AudioCallbackTime = av_gettime_relative();
 
-		while (len > 0) {
-			if (is->AudioBufIndex >= is->AudioBuf1Size) {
+		while (len > 0 && is->AudioTgt.BytesPerSec > 0)
+		{
+			if (is->AudioBufIndex >= is->AudioBufSize)
+			{
 				audio_size = AudioDecodeFrame(is);
-				if (audio_size < 0) {
+				if (audio_size < 0) 
+				{
 					/* if error, just output silence */
 					is->AudioBuf = is->SilenceBuf;
 					is->AudioBufSize = sizeof(is->SilenceBuf) / is->AudioTgt.FrameSize * is->AudioTgt.FrameSize;
 				}
-				else {
+				else
+				{
 					if (is->ShowMode != SHOW_MODE_VIDEO)
 						UpdateSampleDisplay(is, (int16_t *)is->AudioBuf, audio_size);
 					is->AudioBufSize = audio_size;
 				}
+
 				is->AudioBufIndex = 0;
 			}
+
 			len1 = is->AudioBufSize - is->AudioBufIndex;
 
 			if (len1 > len)
 			{
 				len1 = len;
-			}
-			else if (len1 == 0)
-			{
-				av_usleep(1000.0);
-				continue;
 			}
 
 			if (!is->bMuted && is->AudioVolume == SDL_MIX_MAXVOLUME)
@@ -1715,18 +1720,19 @@ void LDecoder::FLMediaDecoderPrivate::Execute_AudioThread(void * arg)
 					SDL_MixAudio(stream, (uint8_t *)is->AudioBuf + is->AudioBufIndex, len1, is->AudioVolume);
 			}
 
-			is->DecodeCB->ProcessAudioFrame(stream, len1, is->AudioTgt.BytesPerSec);
 			len -= len1;
 			stream += len1;
 			is->AudioBufIndex += len1;
 		}
-		//DecodeCB->ProcessAudioFrame(stream, constlen, is->)
+
 		is->AudioWriteBufSize = is->AudioBufSize - is->AudioBufIndex;
 		/* Let's assume the audio driver that is used by SDL has two periods. */
 		if (!isnan(is->AudioClockValue)) {
 			SetClockAt(&is->AudioClock, is->AudioClockValue - (double)(2 * is->AudioHwBufSize + is->AudioWriteBufSize) / is->AudioTgt.BytesPerSec, is->AudioClockSerial, AudioCallbackTime / 1000000.0);
 			SyncClockToSlave(&is->ExternClock, &is->AudioClock);
 		}
+
+		is->DecodeCB->ProcessAudioFrame(stream, len, is->AudioTgt.BytesPerSec);
 	}
 
 	av_freep(stream);
@@ -1909,7 +1915,7 @@ int32 LDecoder::FLMediaDecoderPrivate::StreamComponentOpen(FVideoState * is, int
 			goto fail;
 		//SDL_PauseAudio(0);
 
-		is->AudioThreadId = std::thread([&]() {return this->Execute_AudioThread(is); });
+		//is->AudioThreadId = std::thread([&]() {return this->Execute_AudioThread(is); });
 		break;
 	case AVMEDIA_TYPE_VIDEO:
 		is->VideoStreamIndex = streamIndex;

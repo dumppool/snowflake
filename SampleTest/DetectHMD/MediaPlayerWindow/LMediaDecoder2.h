@@ -20,10 +20,9 @@ extern "C"
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libswscale/swscale.h>
-#include <libswresample/swresample.h>
+#include <libavresample/avresample.h>
 #include <libavutil/opt.h>
 #include <libavutil/imgutils.h>
-#include <libavutil/time.h>
 }
 
 #ifdef LOSTMEDIA
@@ -32,7 +31,7 @@ extern "C"
 #pragma comment(lib, "avutil.lib")
 #pragma comment(lib, "avfilter.lib")
 #pragma comment(lib, "swscale.lib")
-#pragma comment(lib, "swresample.lib")
+#pragma comment(lib, "avresample.lib")
 #endif
 
 #include <thread>
@@ -86,6 +85,7 @@ public:
 	uint32				Channels;
 	uint32				SampleRate;
 	int64				ChannelLayout;
+	int32				LineSize;
 	int32				FrameSize;
 	int32				BytesPerSec;
 
@@ -197,7 +197,8 @@ protected:
 	AVStream*			AudioStream;
 	AVFrame*			AudioFrame;
 	int32				AudioStreamIndex;
-	SwrContext*			Swr;
+
+	AVAudioResampleContext* AudioResampleCxt;
 
 	uint8*				YUVBuffer;
 	uint8*				AudioBuffer;

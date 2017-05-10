@@ -10,20 +10,20 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="LostMediaDecoder.h" />
     <ClInclude Include="MediaPlayerWindow.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="LMediaDecoder.h" />
+    <ClInclude Include="LostMediaDecoder.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="LostMediaDecoder.cpp" />
     <ClCompile Include="MediaPlayerWindow.cpp" />
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="LMediaDecoder.cpp" />
+    <ClCompile Include="LostMediaDecoder.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="MediaPlayerWindow.rc">
