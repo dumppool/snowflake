@@ -15,11 +15,11 @@ namespace LostCore
 {
 	class IPrimitiveGroup;
 
-	class FBasicStaticMesh : public IBasicInterface
+	class FBasicMesh : public IBasicInterface
 	{
 	public:
-		FBasicStaticMesh();
-		virtual ~FBasicStaticMesh() override;
+		FBasicMesh();
+		virtual ~FBasicMesh() override;
 
 		virtual bool Init(IRenderContext * rc) override;
 		virtual void Fini() override;

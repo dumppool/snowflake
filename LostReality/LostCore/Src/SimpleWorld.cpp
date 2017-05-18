@@ -89,7 +89,7 @@ namespace LostCore
 	{
 		/**************************************/
 		// hard coded static mesh creation.
-		FBasicStaticMesh* geo = new FBasicStaticMesh;
+		FBasicMesh* geo = new FBasicMesh;
 		AddStaticMesh(geo);
 
 		if (SSuccess != WrappedCreatePrimitiveGroup(&APrimitiveGroup))
@@ -148,7 +148,7 @@ namespace LostCore
 
 	void FSimpleScene::Fini()
 	{
-		ClearStaticMesh([](FBasicStaticMesh* p) 
+		ClearStaticMesh([](FBasicMesh* p) 
 		{ 
 			if (p != nullptr)
 			{

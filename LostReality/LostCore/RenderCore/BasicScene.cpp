@@ -55,7 +55,7 @@ void FBasicScene::Fini()
 	assert(0);
 }
 
-void FBasicScene::AddStaticMesh(FBasicStaticMesh * sm)
+void FBasicScene::AddStaticMesh(FBasicMesh * sm)
 {
 	if (sm != nullptr && std::find(StaticMeshArray.begin(), StaticMeshArray.end(), sm) == StaticMeshArray.end())
 	{
@@ -63,7 +63,7 @@ void FBasicScene::AddStaticMesh(FBasicStaticMesh * sm)
 	}
 }
 
-void FBasicScene::RemoveStaticMesh(FBasicStaticMesh * sm)
+void FBasicScene::RemoveStaticMesh(FBasicMesh * sm)
 {
 	if (sm == nullptr)
 	{
@@ -77,9 +77,9 @@ void FBasicScene::RemoveStaticMesh(FBasicStaticMesh * sm)
 	}
 }
 
-void FBasicScene::ClearStaticMesh(std::function<void(FBasicStaticMesh*)> func)
+void FBasicScene::ClearStaticMesh(std::function<void(FBasicMesh*)> func)
 {
-	auto clear = (func != nullptr ? func : [](FBasicStaticMesh* p) { delete p; });
+	auto clear = (func != nullptr ? func : [](FBasicMesh* p) { delete p; });
 	for (auto sm : StaticMeshArray)
 	{
 		if (sm != nullptr)

@@ -26,11 +26,11 @@ namespace LostCore
 		virtual bool Init(IRenderContext * rc) override;
 		virtual void Fini() override;
 
-		virtual void AddStaticMesh(FBasicStaticMesh * sm);
-		virtual void RemoveStaticMesh(FBasicStaticMesh * sm);
-		virtual void ClearStaticMesh(std::function<void(FBasicStaticMesh*)> func);
+		virtual void AddStaticMesh(FBasicMesh * sm);
+		virtual void RemoveStaticMesh(FBasicMesh * sm);
+		virtual void ClearStaticMesh(std::function<void(FBasicMesh*)> func);
 
 	protected:
-		std::vector<FBasicStaticMesh*> StaticMeshArray;
+		std::vector<FBasicMesh*> StaticMeshArray;
 	};
 }

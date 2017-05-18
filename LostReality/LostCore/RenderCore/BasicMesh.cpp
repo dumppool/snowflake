@@ -13,27 +13,27 @@
 
 using namespace LostCore;
 
-LostCore::FBasicStaticMesh::FBasicStaticMesh()
+LostCore::FBasicMesh::FBasicMesh()
 {
 	PrimitiveGroups.clear();
 }
 
-LostCore::FBasicStaticMesh::~FBasicStaticMesh()
+LostCore::FBasicMesh::~FBasicMesh()
 {
 	assert(PrimitiveGroups.size() == 0);
 }
 
-bool LostCore::FBasicStaticMesh::Init(IRenderContext * rc)
+bool LostCore::FBasicMesh::Init(IRenderContext * rc)
 {
 	return false;
 }
 
-void LostCore::FBasicStaticMesh::Fini()
+void LostCore::FBasicMesh::Fini()
 {
 	ClearPrimitiveGroup([](IPrimitiveGroup* p) { delete p; });
 }
 
-void LostCore::FBasicStaticMesh::Tick(float sec)
+void LostCore::FBasicMesh::Tick(float sec)
 {
 	for (auto pg : PrimitiveGroups)
 	{
@@ -44,7 +44,7 @@ void LostCore::FBasicStaticMesh::Tick(float sec)
 	}
 }
 
-void LostCore::FBasicStaticMesh::Draw(IRenderContext * rc, float sec)
+void LostCore::FBasicMesh::Draw(IRenderContext * rc, float sec)
 {
 	for (auto pg : PrimitiveGroups)
 	{
@@ -55,7 +55,7 @@ void LostCore::FBasicStaticMesh::Draw(IRenderContext * rc, float sec)
 	}
 }
 
-void LostCore::FBasicStaticMesh::AddPrimitiveGroup(IPrimitiveGroup* pg)
+void LostCore::FBasicMesh::AddPrimitiveGroup(IPrimitiveGroup* pg)
 {
 	if (pg != nullptr && std::find(PrimitiveGroups.begin(), PrimitiveGroups.end(), pg) == PrimitiveGroups.end())
 	{
@@ -63,7 +63,7 @@ void LostCore::FBasicStaticMesh::AddPrimitiveGroup(IPrimitiveGroup* pg)
 	}
 }
 
-void LostCore::FBasicStaticMesh::RemovePrimitiveGroup(IPrimitiveGroup* pg)
+void LostCore::FBasicMesh::RemovePrimitiveGroup(IPrimitiveGroup* pg)
 {
 	if (pg == nullptr)
 	{
@@ -77,7 +77,7 @@ void LostCore::FBasicStaticMesh::RemovePrimitiveGroup(IPrimitiveGroup* pg)
 	}
 }
 
-void LostCore::FBasicStaticMesh::ClearPrimitiveGroup(std::function<void(IPrimitiveGroup*)> func)
+void LostCore::FBasicMesh::ClearPrimitiveGroup(std::function<void(IPrimitiveGroup*)> func)
 {
 	if (func != nullptr)
 	{
