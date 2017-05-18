@@ -32,6 +32,20 @@ static const float3x3 YUV_TO_RGB_JPEG =
 	1.000000, 1.772000, 0.000000,
 };
 
+#define DIRECT_YUV 0
+
+#if DIRECT_YUV
+VertexOut vs_main(VertexIn Input)
+{
+	float4 Vec = float4(Input.pos, 1.0f);
+
+	VertexOut Output;
+	Output.pos = Vec;
+	Output.tco[0] = Input.tco;
+
+    return Output;
+}
+#else
 VertexOut vs_main(VertexIn Input)
 {
 	float4 Vec = float4(Input.pos, 1.0f);
@@ -47,8 +61,9 @@ VertexOut vs_main(VertexIn Input)
 	Output.tco[2] = float2(coord.x * 0.5 + 0.5, y2);
 	Output.tco[3] = Input.tco;
 
-    return Output;
+	return Output;
 }
+#endif
 
 float sRGBToLinearChannel(float ColorChannel)
 {
@@ -62,27 +77,39 @@ float3 sRGBToLinear(float3 Color)
 		sRGBToLinearChannel(Color.b));
 }
 
+#if DIRECT_YUV
 float4 ps_main(VertexOut in_data) : SV_TARGET
 {
-	float y = Texture.Sample(Sampler, in_data.tco[0]).r;
-	float u = Texture.Sample(Sampler, in_data.tco[1]).r;
-	float v = Texture.Sample(Sampler, in_data.tco[2]).r;
-	float3 RGB;
-	float4 channels = float4(y, u, v, 1.0);
-	float4x4 conversion = float4x4(
-		1.000,  0.000,  1.402, -0.701,
-		1.000, -0.344, -0.714,  0.529,
-		1.000,  1.772,  0.000, -0.886,
-		0.000,  0.000,  0.000,  0.000);
-
-	RGB = mul(conversion, channels).xyz;
 
 	//channels.xyz -= float3(0.0625, 0.5, 0.5);
 	//RGB = mul(YUV_TO_RGB_JPEG, channels.xyz);
 
 	//RGB = sRGBToLinear(RGB);
-	return float4(RGB, 1.0f);
+	return Texture.Sample(Sampler, in_data.tco[0]);
 }
+#else
+float4 ps_main(VertexOut in_data) : SV_TARGET
+{
+	float y = Texture.Sample(Sampler, in_data.tco[0]).r;
+float u = Texture.Sample(Sampler, in_data.tco[1]).r;
+float v = Texture.Sample(Sampler, in_data.tco[2]).r;
+float3 RGB;
+float4 channels = float4(y, u, v, 1.0);
+float4x4 conversion = float4x4(
+	1.000,  0.000,  1.402, -0.701,
+	1.000, -0.344, -0.714,  0.529,
+	1.000,  1.772,  0.000, -0.886,
+	0.000,  0.000,  0.000,  0.000);
+
+RGB = mul(conversion, channels).xyz;
+
+//channels.xyz -= float3(0.0625, 0.5, 0.5);
+//RGB = mul(YUV_TO_RGB_JPEG, channels.xyz);
+
+//RGB = sRGBToLinear(RGB);
+return float4(RGB, 1.0f);
+}
+#endif
 
 float4 ps_main_cursor(VertexOut in_data) : SV_TARGET
 {

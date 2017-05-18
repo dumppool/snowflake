@@ -66,9 +66,6 @@
     <ClInclude Include="Inc\BasicInterface.h">
       <Filter>Inc</Filter>
     </ClInclude>
-    <ClInclude Include="Inc\D3D11RenderContext.h">
-      <Filter>D3D11</Filter>
-    </ClInclude>
     <ClInclude Include="Inc\File\json.hpp">
       <Filter>Inc\File</Filter>
     </ClInclude>
@@ -83,6 +80,18 @@
     </ClInclude>
     <ClInclude Include="RenderCore\FontProvider.h">
       <Filter>RenderCore</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\Animation.h">
+      <Filter>Inc</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\Pose.h">
+      <Filter>Inc</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderCore\Resource\Keywords.h">
+      <Filter>RenderCore\Resource</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderCore\Resource\MeshLoader.h">
+      <Filter>RenderCore\Resource</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -103,25 +112,28 @@
     <ClCompile Include="RenderCore\BasicCamera.cpp">
       <Filter>RenderCore</Filter>
     </ClCompile>
-    <ClCompile Include="Inc\BasicStaticMesh.cpp">
-      <Filter>RenderCore</Filter>
-    </ClCompile>
-    <ClCompile Include="Inc\D3D11RenderContext.cpp">
-      <Filter>D3D11</Filter>
-    </ClCompile>
     <ClCompile Include="RenderCore\BasicGUI.cpp">
       <Filter>RenderCore</Filter>
     </ClCompile>
     <ClCompile Include="RenderCore\FontProvider.cpp">
       <Filter>RenderCore</Filter>
     </ClCompile>
+    <ClCompile Include="RenderCore\BasicStaticMesh.cpp">
+      <Filter>RenderCore</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderCore\Skeleton\Animation.cpp">
+      <Filter>RenderCore\Skeleton</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderCore\Skeleton\Pose.cpp">
+      <Filter>RenderCore\Skeleton</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderCore\Resource\MeshLoader.cpp">
+      <Filter>RenderCore\Resource</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Interface">
       <UniqueIdentifier>{050b25b3-ab71-446c-b69f-8092291a77b6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="D3D11">
-      <UniqueIdentifier>{b04fe6f5-870f-4830-90ec-2398d6664480}</UniqueIdentifier>
     </Filter>
     <Filter Include="RenderCore">
       <UniqueIdentifier>{66bd4fa5-68ac-496e-85e3-9dfa88dc4575}</UniqueIdentifier>
@@ -137,6 +149,12 @@
     </Filter>
     <Filter Include="Inc\File">
       <UniqueIdentifier>{abc05cea-8f53-40ff-b3d6-473cbb51b686}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RenderCore\Skeleton">
+      <UniqueIdentifier>{24aa1a9a-c611-4f64-a6e3-6e6a4f0b6af2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RenderCore\Resource">
+      <UniqueIdentifier>{7d9510d6-461c-455a-a0e0-38ffb316efa1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

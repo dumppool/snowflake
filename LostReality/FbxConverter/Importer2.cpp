@@ -15,11 +15,24 @@ using namespace Importer;
 static const string SSeperator("--------------------------------");
 static const string SIndent("\t\t");
 
-static void ParsePolygons(std::function<FJson&()> outputGetter, FbxMesh* mesh)
+static void ParsePolygons(std::function<FJson&()> outputGetter, FbxMesh* mesh, const map<int, vector<int>>& controlPointToVertexMap)
 {
 	if (mesh == nullptr)
 	{
 		return;
+	}
+
+	FJson& output = outputGetter();
+	int polygonCount = mesh->GetPolygonCount();
+	output[K_COUNT] = polygonCount;
+	for (int polygonIndex = 0; polygonIndex < polygonCount; ++polygonIndex)
+	{
+		int polygonSize = mesh->GetPolygonSize(polygonIndex);
+		for (int posInPolygon = 0; posInPolygon < polygonSize; ++posInPolygon)
+		{
+			int vertexIndex = mesh->GetPolygonVertex(polygonIndex, posInPolygon);
+			output[K_INDEX].push_back(vertexIndex);
+		}
 	}
 }
 
@@ -806,7 +819,7 @@ static void ParseMesh(std::function<FJson&()> outputGetter, FbxNode* node)
 	map<int, vector<int>> ControlPointToVertexMap;
 	ParseVertices([&]()->FJson& {return output; }, mesh, ControlPointToVertexMap);
 	ParseLink([&]()->FJson& {return output; }, output, mesh, ControlPointToVertexMap);
-	ParsePolygons([&]()->FJson& {return output[K_POLYGONS]; }, mesh);
+	ParsePolygons([&]()->FJson& {return output[K_POLYGONS]; }, mesh, ControlPointToVertexMap);
 }
 
 class FFbxImporter2
@@ -848,8 +861,10 @@ public:
 		{
 			for (auto it = MeshData.begin(); it != MeshData.end(); ++it)
 			{
+				char head[] = "lost reality resource file\n";
 				ofstream file;
 				file.open(ConvertPath + it.key() + ".xpt", ios::out);
+				file.width(1);
 				file << it.value();
 				file.close();
 			}

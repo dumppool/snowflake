@@ -8,6 +8,7 @@
 */
 
 #include "stdafx.h"
+#include "Keywords.h"
 #include "MeshLoader.h"
 
 using namespace LostCore;

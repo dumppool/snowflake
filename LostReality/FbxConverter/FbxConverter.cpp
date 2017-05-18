@@ -35,7 +35,7 @@ int main(int argc, char** argv)
 		Importer::ImportSceneMeshes(src, dst);
 	}
 
-	//LostCore::LoadResource(dst.c_str());
+	LostCore::LoadResource("E:\\fbxs\\ContentExample\\SK_FBX_Tube.xpt");
 
     return 0;
 }

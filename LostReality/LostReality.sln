@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.26403.7
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LostReality", "LostReality\LostReality.vcxproj", "{5D21351B-8837-467E-8A26-57DE42E41BF7}"
 EndProject
@@ -12,6 +12,12 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RealityWindow", "RealityWindow\RealityWindow.vcxproj", "{0461DAB6-574D-4D42-8C56-5CA4A1A69DCB}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LostCore", "LostCore\LostCore.vcxproj", "{1705208B-D15B-4AD5-B1CA-F97C4B41DF74}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ttt", "ttt\ttt.vcxproj", "{AFBB6E76-C015-462E-ACBF-DCB13AE48B8C}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FbxConverter", "FbxConverter\FbxConverter.vcxproj", "{B268212A-73CD-4D48-8121-3E5276DDAE62}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SignatureTarget", "SignatureTarget\SignatureTarget.vcxproj", "{1825A410-0179-4F14-9033-7D40AED4D9D2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -61,6 +67,30 @@ Global
 		{1705208B-D15B-4AD5-B1CA-F97C4B41DF74}.Release|x64.Build.0 = Release|x64
 		{1705208B-D15B-4AD5-B1CA-F97C4B41DF74}.Release|x86.ActiveCfg = Release|Win32
 		{1705208B-D15B-4AD5-B1CA-F97C4B41DF74}.Release|x86.Build.0 = Release|Win32
+		{AFBB6E76-C015-462E-ACBF-DCB13AE48B8C}.Debug|x64.ActiveCfg = Debug|x64
+		{AFBB6E76-C015-462E-ACBF-DCB13AE48B8C}.Debug|x64.Build.0 = Debug|x64
+		{AFBB6E76-C015-462E-ACBF-DCB13AE48B8C}.Debug|x86.ActiveCfg = Debug|Win32
+		{AFBB6E76-C015-462E-ACBF-DCB13AE48B8C}.Debug|x86.Build.0 = Debug|Win32
+		{AFBB6E76-C015-462E-ACBF-DCB13AE48B8C}.Release|x64.ActiveCfg = Release|x64
+		{AFBB6E76-C015-462E-ACBF-DCB13AE48B8C}.Release|x64.Build.0 = Release|x64
+		{AFBB6E76-C015-462E-ACBF-DCB13AE48B8C}.Release|x86.ActiveCfg = Release|Win32
+		{AFBB6E76-C015-462E-ACBF-DCB13AE48B8C}.Release|x86.Build.0 = Release|Win32
+		{B268212A-73CD-4D48-8121-3E5276DDAE62}.Debug|x64.ActiveCfg = Debug|x64
+		{B268212A-73CD-4D48-8121-3E5276DDAE62}.Debug|x64.Build.0 = Debug|x64
+		{B268212A-73CD-4D48-8121-3E5276DDAE62}.Debug|x86.ActiveCfg = Debug|Win32
+		{B268212A-73CD-4D48-8121-3E5276DDAE62}.Debug|x86.Build.0 = Debug|Win32
+		{B268212A-73CD-4D48-8121-3E5276DDAE62}.Release|x64.ActiveCfg = Release|x64
+		{B268212A-73CD-4D48-8121-3E5276DDAE62}.Release|x64.Build.0 = Release|x64
+		{B268212A-73CD-4D48-8121-3E5276DDAE62}.Release|x86.ActiveCfg = Release|Win32
+		{B268212A-73CD-4D48-8121-3E5276DDAE62}.Release|x86.Build.0 = Release|Win32
+		{1825A410-0179-4F14-9033-7D40AED4D9D2}.Debug|x64.ActiveCfg = Debug|x64
+		{1825A410-0179-4F14-9033-7D40AED4D9D2}.Debug|x64.Build.0 = Debug|x64
+		{1825A410-0179-4F14-9033-7D40AED4D9D2}.Debug|x86.ActiveCfg = Debug|Win32
+		{1825A410-0179-4F14-9033-7D40AED4D9D2}.Debug|x86.Build.0 = Debug|Win32
+		{1825A410-0179-4F14-9033-7D40AED4D9D2}.Release|x64.ActiveCfg = Release|x64
+		{1825A410-0179-4F14-9033-7D40AED4D9D2}.Release|x64.Build.0 = Release|x64
+		{1825A410-0179-4F14-9033-7D40AED4D9D2}.Release|x86.ActiveCfg = Release|Win32
+		{1825A410-0179-4F14-9033-7D40AED4D9D2}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

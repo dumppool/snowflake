@@ -149,13 +149,13 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Inc\Animation.h" />
     <ClInclude Include="Inc\BasicCamera.h" />
     <ClInclude Include="Inc\BasicGUI.h" />
     <ClInclude Include="Inc\BasicInterface.h" />
     <ClInclude Include="Inc\BasicScene.h" />
     <ClInclude Include="Inc\BasicStaticMesh.h" />
     <ClInclude Include="Inc\BasicWorld.h" />
-    <ClInclude Include="Inc\D3D11RenderContext.h" />
     <ClInclude Include="Inc\ExportTest.h" />
     <ClInclude Include="Inc\File\DirectoryHelper.h" />
     <ClInclude Include="Inc\File\json.hpp" />
@@ -167,6 +167,7 @@
     <ClInclude Include="Inc\Math\Vector2.h" />
     <ClInclude Include="Inc\Math\Vector3.h" />
     <ClInclude Include="Inc\Math\Vector4.h" />
+    <ClInclude Include="Inc\Pose.h" />
     <ClInclude Include="Inc\SimpleWorld.h" />
     <ClInclude Include="Interface\Drawable.h" />
     <ClInclude Include="Interface\FontInterface.h" />
@@ -175,6 +176,8 @@
     <ClInclude Include="Interface\RenderContextInterface.h" />
     <ClInclude Include="Interface\TextureInterface.h" />
     <ClInclude Include="RenderCore\FontProvider.h" />
+    <ClInclude Include="RenderCore\Resource\Keywords.h" />
+    <ClInclude Include="RenderCore\Resource\MeshLoader.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
@@ -193,13 +196,15 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Inc\BasicStaticMesh.cpp" />
-    <ClCompile Include="Inc\D3D11RenderContext.cpp" />
     <ClCompile Include="RenderCore\BasicCamera.cpp" />
     <ClCompile Include="RenderCore\BasicGUI.cpp" />
     <ClCompile Include="RenderCore\BasicScene.cpp" />
+    <ClCompile Include="RenderCore\BasicStaticMesh.cpp" />
     <ClCompile Include="RenderCore\BasicWorld.cpp" />
     <ClCompile Include="RenderCore\FontProvider.cpp" />
+    <ClCompile Include="RenderCore\Resource\MeshLoader.cpp" />
+    <ClCompile Include="RenderCore\Skeleton\Animation.cpp" />
+    <ClCompile Include="RenderCore\Skeleton\Pose.cpp" />
     <ClCompile Include="Src\LostCore.cpp" />
     <ClCompile Include="Src\SimpleWorld.cpp" />
     <ClCompile Include="stdafx.cpp">

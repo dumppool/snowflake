@@ -464,7 +464,7 @@ bool FLostMediaDecoder::Decode_DecodeThread(double& decodeTime, bool bDrop)
 
 	int32 vdecoded = 0;
 	int32 adecoded = 0;
-	int32 nloop = 50;
+	int32 nloop = 1000;
 
 	while (vdecoded <= 0 && nloop--)
 	{

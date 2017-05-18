@@ -53,6 +53,7 @@ bool D3D11::FGdiFont::Initialize(LostCore::IRenderContext* rc, const LostCore::F
 	Property.FontTexture = new FTexture2D;
 
 	auto hint = Property.Config.bAntiAliased ? TextRenderingHintAntiAliasGridFit : TextRenderingHintSingleBitPerPixelGridFit;
+	hint = TextRenderingHintClearTypeGridFit;
 
 	LOGFONTW lf;
 	wcscpy_s(lf.lfFaceName, Property.Config.FontName.c_str());
@@ -86,7 +87,7 @@ bool D3D11::FGdiFont::Initialize(LostCore::IRenderContext* rc, const LostCore::F
 		RETURN_FALSE;
 	}
 
-	int32 size = (int32)(Property.Config.Height) * sz * 2 + 1;
+	int32 size = (int32)(Property.Config.Height) * sz;
 	Bitmap bmp(size, size, PixelFormat32bppARGB);
 	if (Gdiplus::Ok != (ret = bmp.GetLastStatus()))
 	{
