@@ -1,4 +1,7 @@
 {
-"material":"res/material/",
-"shader":"res/shader/"
+	"material": "res/material/",
+	"shader": "res/shader/",
+	"primitive": "res/primitive/",
+	"model": "res/model/",
+	"scene": "res/scene/"
 }

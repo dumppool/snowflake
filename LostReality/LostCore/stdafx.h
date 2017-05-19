@@ -17,3 +17,5 @@
 #include "UtilitiesHeader.h"
 
 #include "LostCore.h"
+
+#include "LostCore-D3D11.h"

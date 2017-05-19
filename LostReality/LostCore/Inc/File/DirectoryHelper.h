@@ -69,10 +69,42 @@ namespace LostCore
 			}
 		}
 
-		bool GetMaterialJson(const std::string& relativePath, FJson& output)
+		bool GetSpecifiedAbsolutePath(const std::string& specified, const std::string& relativePath, std::string& output)
 		{
-			auto& dirs = DirectoryMap["material"];
+			auto& dirs = DirectoryMap[specified];
 			for (auto& dir : dirs)
+			{
+				std::string absPath(RootDirectory + dir + relativePath);
+				ReplaceChar(absPath, "/", "\\");
+
+				std::ifstream file;
+				file.open(absPath);
+				if (file.fail())
+				{
+					continue;
+				}
+
+				output = absPath;
+				file.close();
+				return true;
+			}
+
+			return false;
+		}
+
+		bool GetShaderAbsolutePath(const std::string& relativePath, std::string& output)
+		{
+			return GetSpecifiedAbsolutePath("shader", relativePath, output);
+		}
+
+		bool GetPrimitiveAbsolutePath(const std::string& relativePath, std::string& output)
+		{
+			return GetSpecifiedAbsolutePath("primitive", relativePath, output);
+		}
+
+		bool GetSpecifiedJson(const std::string& specified, const std::string& relativePath, FJson& output)
+		{
+			for (auto& dir : DirectoryMap[specified.c_str()])
 			{
 				std::string absPath(RootDirectory + dir + relativePath);
 				ReplaceChar(absPath, "/", "\\");
@@ -92,27 +124,24 @@ namespace LostCore
 			return false;
 		}
 
-		bool GetShaderAbsolutePath(const std::string& relativePath, std::string& output)
+		bool GetMaterialJson(const std::string& relativePath, FJson& output)
 		{
-			auto& dirs = DirectoryMap["shader"];
-			for (auto& dir : dirs)
-			{
-				std::string absPath(RootDirectory + dir + relativePath);
-				ReplaceChar(absPath, "/", "\\");
+			return GetSpecifiedJson("material", relativePath, output);
+		}
 
-				std::ifstream file;
-				file.open(absPath);
-				if (file.fail())
-				{
-					continue;
-				}
+		bool GetSceneJson(const std::string& relativePath, FJson& output)
+		{
+			return GetSpecifiedJson("scene", relativePath, output);
+		}
 
-				output = absPath;
-				file.close();
-				return true;
-			}
+		//bool GetPrimitiveJson(const std::string& relativePath, FJson& output)
+		//{
+		//	return GetSpecifiedJson("primitive", relativePath, output);
+		//}
 
-			return false;
+		bool GetModelJson(const std::string& relativePath, FJson& output)
+		{
+			return GetSpecifiedJson("model", relativePath, output);
 		}
 
 	private:

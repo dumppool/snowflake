@@ -23,7 +23,7 @@ namespace LostCore
 		FBasicWorld();
 		virtual ~FBasicWorld() override;
 
-		virtual bool Init(IRenderContext * rc) override;
+		virtual bool Load(IRenderContext * rc, const char* url) override;
 		virtual void Fini() override;
 		virtual void Tick(float sec) override;
 		virtual void Draw(IRenderContext * rc, float sec) override;

@@ -265,7 +265,7 @@ void LostCore::FBasicGUI::Draw(IRenderContext * rc, float sec)
 	Root.Draw(rc, sec);
 }
 
-bool LostCore::FBasicGUI::Init(IRenderContext * rc)
+bool LostCore::FBasicGUI::Load(IRenderContext * rc, const char* url)
 {
 	FFontProvider::Get()->Init(rc);
 

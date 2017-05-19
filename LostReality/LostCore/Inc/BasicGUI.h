@@ -116,7 +116,7 @@ namespace LostCore
 
 		virtual void Tick(float sec) override;
 		virtual void Draw(IRenderContext * rc, float sec) override;
-		virtual bool Init(IRenderContext * rc) override;
+		virtual bool Load(IRenderContext * rc, const char* url) override;
 		virtual void Fini() override;
 
 	private:

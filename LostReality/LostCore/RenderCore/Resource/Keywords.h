@@ -133,6 +133,7 @@
 #define K_ELEMENT						"Element"
 #define K_VERTEX_ELEMENT				"VertexElement"
 #define K_VERTEX						"Vertex"
+#define K_STRIDE						"Stride"
 
 #define K_MESSAGE						"Message"
 #define K_MESSAGE2						"Message2"

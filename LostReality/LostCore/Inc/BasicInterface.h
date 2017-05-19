@@ -18,7 +18,7 @@ namespace LostCore
 	public:
 		virtual ~IBasicInterface() {}
 
-		virtual bool Init(IRenderContext * rc) = 0;
+		virtual bool Load(IRenderContext * rc, const char* url) = 0;
 		virtual void Fini() = 0;
 		virtual void Tick(float sec) = 0;
 		virtual void Draw(IRenderContext * rc, float sec) = 0;

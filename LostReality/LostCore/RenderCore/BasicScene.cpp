@@ -45,9 +45,32 @@ void FBasicScene::Draw(IRenderContext * rc, float sec)
 	}
 }
 
-bool FBasicScene::Init(IRenderContext * rc)
+bool FBasicScene::Load(IRenderContext * rc, const char* url)
 {
-	return false;
+	FJson config;
+	if (!FDirectoryHelper::Get()->GetSceneJson("default_empty.json", config))
+	{
+		return false;
+	}
+
+	assert(config.find("nodes") != config.end() && "a scene needs [nodes] section");
+	for (auto node : config["nodes"])
+	{
+		assert(node.find("type") != node.end() && "a node needs [type] section");
+		assert(node.find("path") != node.end() && "a node needs [path] section");
+		assert(node.find("transform") != node.end() && "a node needs [transform] section");
+		if (node["type"] == (int)ESceneNodeType::Model)
+		{
+			FBasicModel* m = new FBasicModel;
+			std::string p = node.find("path").value();
+			m->Load(rc, p.c_str());
+			AddModel(m);
+			FMatrix mat;
+			memcpy(&mat, &(node.find("transform").value().begin()), sizeof(mat));
+		}
+	}
+
+	return true;
 }
 
 void FBasicScene::Fini()
@@ -55,7 +78,7 @@ void FBasicScene::Fini()
 	assert(0);
 }
 
-void FBasicScene::AddStaticMesh(FBasicMesh * sm)
+void FBasicScene::AddModel(FBasicModel * sm)
 {
 	if (sm != nullptr && std::find(StaticMeshArray.begin(), StaticMeshArray.end(), sm) == StaticMeshArray.end())
 	{
@@ -63,7 +86,7 @@ void FBasicScene::AddStaticMesh(FBasicMesh * sm)
 	}
 }
 
-void FBasicScene::RemoveStaticMesh(FBasicMesh * sm)
+void FBasicScene::RemoveStaticMesh(FBasicModel * sm)
 {
 	if (sm == nullptr)
 	{
@@ -77,9 +100,9 @@ void FBasicScene::RemoveStaticMesh(FBasicMesh * sm)
 	}
 }
 
-void FBasicScene::ClearStaticMesh(std::function<void(FBasicMesh*)> func)
+void FBasicScene::ClearStaticMesh(std::function<void(FBasicModel*)> func)
 {
-	auto clear = (func != nullptr ? func : [](FBasicMesh* p) { delete p; });
+	auto clear = (func != nullptr ? func : [](FBasicModel* p) { delete p; });
 	for (auto sm : StaticMeshArray)
 	{
 		if (sm != nullptr)

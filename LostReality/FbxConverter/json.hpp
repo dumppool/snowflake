@@ -1033,7 +1033,7 @@ template <
     class BooleanType = bool,
     class NumberIntegerType = std::int64_t,
     class NumberUnsignedType = std::uint64_t,
-    class NumberFloatType = double,
+    class NumberFloatType = float,
     template<typename U> class AllocatorType = std::allocator,
     template<typename T, typename SFINAE = void> class JSONSerializer = adl_serializer
     >

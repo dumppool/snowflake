@@ -26,7 +26,7 @@ LostCore::FBasicCamera::~FBasicCamera()
 {
 }
 
-bool FBasicCamera::Init(IRenderContext * rc)
+bool LostCore::FBasicCamera::Load(IRenderContext * rc, const char* url)
 {
 	return true;
 }

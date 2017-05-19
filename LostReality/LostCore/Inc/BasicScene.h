@@ -10,11 +10,17 @@
 #pragma once
 
 #include "BasicInterface.h"
-#include "BasicStaticMesh.h"
+#include "BasicModel.h"
 #include "BasicGUI.h"
 
 namespace LostCore
 {
+	enum class ESceneNodeType : uint8
+	{
+		Undefined = 0,
+		Model = 1,
+	};
+
 	class FBasicScene : public IBasicInterface
 	{
 	public:
@@ -23,14 +29,14 @@ namespace LostCore
 
 		virtual void Tick(float sec) override;
 		virtual void Draw(IRenderContext * rc, float sec) override;
-		virtual bool Init(IRenderContext * rc) override;
+		virtual bool Load(IRenderContext * rc, const char* url) override;
 		virtual void Fini() override;
 
-		virtual void AddStaticMesh(FBasicMesh * sm);
-		virtual void RemoveStaticMesh(FBasicMesh * sm);
-		virtual void ClearStaticMesh(std::function<void(FBasicMesh*)> func);
+		virtual void AddModel(FBasicModel * sm);
+		virtual void RemoveStaticMesh(FBasicModel * sm);
+		virtual void ClearStaticMesh(std::function<void(FBasicModel*)> func);
 
 	protected:
-		std::vector<FBasicMesh*> StaticMeshArray;
+		std::vector<FBasicModel*> StaticMeshArray;
 	};
 }

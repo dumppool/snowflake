@@ -24,13 +24,13 @@ FBasicWorld::~FBasicWorld()
 	assert(SceneArray.size() == 0);
 }
 
-bool FBasicWorld::Init(IRenderContext * rc)
+bool FBasicWorld::Load(IRenderContext * rc, const char* url)
 {
 	assert(GUIRoot == nullptr);
 	assert(SceneArray.size() == 0);
 
 	GUIRoot = new FBasicGUI;
-	return GUIRoot->Init(rc);
+	return GUIRoot->Load(rc, url);
 }
 
 void FBasicWorld::Fini()

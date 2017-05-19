@@ -9,7 +9,7 @@
 
 #include "stdafx.h"
 #include "SimpleWorld.h"
-#include "BasicStaticMesh.h"
+#include "BasicModel.h"
 #include "BasicCamera.h"
 #include "BasicScene.h"
 
@@ -24,7 +24,7 @@ namespace LostCore
 		FSimpleCamera();
 		virtual ~FSimpleCamera();
 
-		virtual bool Init(IRenderContext * rc) override;
+		bool Load(IRenderContext * rc, const char* url) override;
 		virtual void Draw(IRenderContext * rc, float sec) override;
 	};
 
@@ -36,7 +36,7 @@ namespace LostCore
 	{
 	}
 
-	bool FSimpleCamera::Init(IRenderContext * rc)
+	bool FSimpleCamera::Load(IRenderContext * rc, const char* url)
 	{
 		return true;
 	}
@@ -49,6 +49,7 @@ namespace LostCore
 		}
 	}
 
+	/*
 	class FSimpleScene : public FBasicScene
 	{
 	public:
@@ -56,7 +57,7 @@ namespace LostCore
 		virtual ~FSimpleScene() override;
 
 		virtual void Draw(IRenderContext * rc, float sec) override;
-		virtual bool Init(IRenderContext * rc) override;
+		bool Load(IRenderContext * rc, const char* url) override;
 		virtual void Fini() override;
 
 	private:
@@ -85,12 +86,11 @@ namespace LostCore
 		FBasicScene::Draw(rc, sec);
 	}
 
-	bool FSimpleScene::Init(IRenderContext * rc)
+	bool FSimpleScene::Load(IRenderContext * rc, const char* url)
 	{
-		/**************************************/
 		// hard coded static mesh creation.
-		FBasicMesh* geo = new FBasicMesh;
-		AddStaticMesh(geo);
+		FBasicModel* geo = new FBasicModel;
+		AddModel(geo);
 
 		if (SSuccess != WrappedCreatePrimitiveGroup(&APrimitiveGroup))
 		{
@@ -148,7 +148,7 @@ namespace LostCore
 
 	void FSimpleScene::Fini()
 	{
-		ClearStaticMesh([](FBasicMesh* p) 
+		ClearStaticMesh([](FBasicModel* p) 
 		{ 
 			if (p != nullptr)
 			{
@@ -169,6 +169,7 @@ namespace LostCore
 		//	AMaterial = nullptr;
 		//}
 	}
+	*/
 
 	class FSimpleWorld : public FBasicWorld
 	{
@@ -176,7 +177,7 @@ namespace LostCore
 		FSimpleWorld();
 		virtual ~FSimpleWorld() override;
 
-		virtual bool Init(IRenderContext * rc) override;
+		bool Load(IRenderContext * rc, const char* url) override;
 		virtual void Fini() override;
 		virtual void DrawPreScene(float sec) override;
 
@@ -199,18 +200,18 @@ namespace LostCore
 		assert(Camera == nullptr);
 	}
 
-	bool FSimpleWorld::Init(IRenderContext * rc)
+	bool FSimpleWorld::Load(IRenderContext * rc, const char* url)
 	{
-		FBasicWorld::Init(rc);
+		FBasicWorld::Load(rc, "");
 
 		Camera = new FSimpleCamera;
-		if (!Camera->Init(rc))
+		if (!Camera->Load(rc, ""))
 		{
 			return false;
 		}
 
-		auto scene = new FSimpleScene;
-		if (scene->Init(rc))
+		auto scene = new FBasicScene;
+		if (scene->Load(rc, "default_empty.json"))
 		{
 			AddScene(scene);
 			return true;
@@ -270,7 +271,7 @@ namespace LostCore
 	{
 		auto ret = WrappedCreateRenderContext(EContextID::D3D11_DXGI0, &RC);
 		assert(SSuccess == ret);
-		if (RC != nullptr && RC->Init(wnd, bWindowed, width, height) && Init(RC))
+		if (RC != nullptr && RC->Init(wnd, bWindowed, width, height) && Load(RC, ""))
 		{
 			return true;
 		}

@@ -91,7 +91,7 @@ using FJson = nlohmann::json;
 
 #include "ExportTest.h"
 #include "BasicCamera.h"
-#include "BasicStaticMesh.h"
+#include "BasicModel.h"
 #include "BasicGUI.h"
 #include "BasicScene.h"
 #include "SimpleWorld.h"

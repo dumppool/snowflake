@@ -133,6 +133,7 @@
 #define K_ELEMENT						"Element"
 #define K_VERTEX_ELEMENT				"VertexElement"
 #define K_VERTEX						"Vertex"
+#define K_STRIDE						"Stride"
 
 #define K_MESSAGE						"Message"
 #define K_MESSAGE2						"Message2"
@@ -214,10 +215,10 @@ enum ETangentWVMode
 
 enum EVertexElement
 {
-	Coordinate			= 0x1,
-	UV					= 0x2,
-	Normal				= 0x4,
-	Tangent				= 0x8,
-	Binormal			= 0x10,
-	VertexColor			= 0x20,
+	Coordinate = 0x1,
+	UV = 0x2,
+	Normal = 0x4,
+	Tangent = 0x8,
+	Binormal = 0x10,
+	VertexColor = 0x20,
 };
