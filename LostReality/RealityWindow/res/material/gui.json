@@ -1,0 +1,13 @@
+{
+	"vertex": "XYUVRGBA",
+	"vs": {
+		"path": "gui.fx",
+		"entry": "vs_main",
+		"target": "vs_5_0"
+	},
+	"ps": {
+		"path": "gui.fx",
+		"entry": "ps_main",
+		"target": "ps_5_0"
+	}
+}

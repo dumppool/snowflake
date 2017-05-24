@@ -1,14 +1,14 @@
 {
-	"vertex":"RGBAXYUV",
+	"vertex":"XYZUVNRGB",
 	"vs":
 	{
-		"path":"gui.fx",
+		"path":"xyzuvnrgb.fx",
 		"entry":"vs_main",
 		"target":"vs_5_0"
 	},
 	"ps":
 	{
-		"path":"gui.fx",
+		"path":"xyzuvnrgb.fx",
 		"entry":"ps_main",
 		"target":"ps_5_0"
 	}

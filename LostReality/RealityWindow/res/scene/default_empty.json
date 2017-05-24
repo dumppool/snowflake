@@ -2,28 +2,6 @@
 	"nodes": [
 			{
 				"type": 1,
-				"path": "triangluar_pyramid.json",
-				"transform": [
-					1.0,
-					0.0,
-					0.0,
-					0.0,
-					0.0,
-					1.0,
-					0.0,
-					0.0,
-					0.0,
-					0.0,
-					1.0,
-					0.0,
-					0.0,
-					0.0,
-					0.0,
-					1.0
-				]
-			},
-			{
-				"type": 1,
 				"path": "sk_fbx_tube.json",
 				"transform": [
 					1.0,

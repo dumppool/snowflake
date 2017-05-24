@@ -9,6 +9,7 @@ cbuffer Constant0 : register(b0)
 
 cbuffer Constant : register(b1)
 {
+	float2 Size;
 	float2 Origin;
 	float  Scale;
 }
@@ -18,9 +19,9 @@ sampler ColorSampler : register(s0);
 
 struct VertexIn
 {
-	float4 col : COLOR;
-    float2 pos : POSITION;
+	float2 pos : POSITION;
 	float2 tc  : TEXCOORD;
+	float4 col : COLOR;
 };
 
 struct VertexOut
@@ -33,7 +34,7 @@ struct VertexOut
 VertexOut vs_main(VertexIn Input)
 {
 	float2 pos = Input.pos.xy;
-	pos *= Scale;
+	pos *= Size * Scale;
 	pos += Origin;
 
 	pos = 2 * pos * float2(ScreenWidthRcp, -ScreenHeightRcp) + float2(-1.0, 1.0);

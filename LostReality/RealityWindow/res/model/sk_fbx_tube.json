@@ -1,5 +1,5 @@
 {
 	"type": 1,
 	"primitive": "SK_FBX_Tube.xpt",
-	"material": "direct.json"
+	"material_prefix": "default"
 }

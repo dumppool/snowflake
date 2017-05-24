@@ -1,15 +1,13 @@
 {
-	"vertex":"RGBXYZNUV",
-	"vs":
-	{
-		"path":"dummy.fx",
-		"entry":"vs_normal_main",
-		"target":"vs_5_0"
+	"vertex": "XYZUVNRGB",
+	"vs": {
+		"path": "dummy.fx",
+		"entry": "vs_normal_main",
+		"target": "vs_5_0"
 	},
-	"ps":
-	{
-		"path":"dummy.fx",
-		"entry":"ps_normal_main",
-		"target":"ps_5_0"
+	"ps": {
+		"path": "dummy.fx",
+		"entry": "ps_normal_main",
+		"target": "ps_5_0"
 	}
 }
