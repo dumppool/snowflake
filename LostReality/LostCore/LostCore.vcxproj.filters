@@ -93,6 +93,9 @@
     <ClInclude Include="Inc\BasicModel.h">
       <Filter>Inc</Filter>
     </ClInclude>
+    <ClInclude Include="Inc\VertexTypes.h">
+      <Filter>Inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />

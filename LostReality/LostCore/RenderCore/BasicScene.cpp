@@ -20,7 +20,7 @@ FBasicScene::FBasicScene()
 
 FBasicScene::~FBasicScene()
 {
-	assert(StaticMeshArray.size() == 0);
+	//assert(StaticMeshArray.size() == 0);
 }
 
 void FBasicScene::Tick(float sec)
@@ -66,7 +66,18 @@ bool FBasicScene::Load(IRenderContext * rc, const char* url)
 			m->Load(rc, p.c_str());
 			AddModel(m);
 			FMatrix mat;
-			memcpy(&mat, &(node.find("transform").value().begin()), sizeof(mat));
+			//memcpy(&mat, &(node.find("transform").value()[0]), sizeof(mat));
+
+			for (int y = 0; y < 4; ++y)
+			{
+				for (int x = 0; x < 4; ++x)
+				{
+					int r = (int)&(node.find("transform").value()[y * 4 + x]);
+					mat.M[x][y] = node.find("transform").value()[y * 4 + x];
+				}
+			}
+
+			m->SetWorldMatrix(mat);
 		}
 	}
 
@@ -75,7 +86,7 @@ bool FBasicScene::Load(IRenderContext * rc, const char* url)
 
 void FBasicScene::Fini()
 {
-	assert(0);
+	//assert(0);
 }
 
 void FBasicScene::AddModel(FBasicModel * sm)

@@ -16,10 +16,11 @@ namespace LostCore
 	public:
 		virtual bool Load(const char* path) = 0;
 		virtual void GetPolygons(unsigned char** buf, int* sz) = 0;
-		virtual void GetVertices(unsigned char** buf, int* sz, int* stride) = 0;
+		virtual void GetVertices(unsigned char** buf, int* sz) = 0;
+		virtual FVertexTypes::Details GetVertexDetails() = 0;
 		virtual void GetAnimations(unsigned char** buf, int* sz) = 0;
 	};
 
 	IResourceLoader* LoadResource(const char* path);
-	int GetVertexStride(int flag);
+	LostCore::FVertexTypes::Details GetVertexStride(int flag);
 }

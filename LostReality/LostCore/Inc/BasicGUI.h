@@ -23,15 +23,18 @@ namespace LostCore
 	{
 		struct FParam
 		{
+			// 大小尺寸，像素
+			FVec2 Size;
+
 			// 相对父面板的位置，单位，像素
 			FVec2 Origin;
 
 			// 相对父面板的缩放，(0.f, 1.f]
 			float Scale;
 
-			float Unused;
+			FVec3 Unused;
 
-			FParam() : Origin(0.f, 0.f), Scale(1.f) { assert(sizeof(FParam) == 4 * sizeof(float)); }
+			FParam() : Size(0.f, 0.f), Origin(0.f, 0.f), Scale(1.f) { assert(sizeof(FParam) == 8 * sizeof(float)); }
 		};
 
 	public:
@@ -90,9 +93,6 @@ namespace LostCore
 		void DrawPrivate(IRenderContext* rc, float sec);
 
 		FParam Param;
-
-		// 绝对尺寸，单位，像素
-		FVec2 Size;
 
 		// 深度，越小越靠前
 		float Depth;
