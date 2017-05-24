@@ -23,6 +23,7 @@
 #include <fstream>
 #include <memory>
 #include <functional>
+#include <array>
 
 using namespace std;
 
