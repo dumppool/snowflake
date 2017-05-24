@@ -135,7 +135,7 @@ LOSTCORED3D11_API EReturnCode D3D11::CreateMaterial_UIObject(LostCore::IMaterial
 		return SErrorInvalidParameters;
 	}
 
-	auto obj = new FMaterial<FConstantBufferFloat4>;
+	auto obj = new FMaterial<FConstantBufferUIRect>;
 	if (obj == nullptr)
 	{
 		return SErrorOutOfMemory;

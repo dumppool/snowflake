@@ -448,68 +448,68 @@ EReturnCode D3D11::CreatePrimitiveIndex(ID3D11Device* device, const void* buf, u
 	return SSuccess;
 }
 
-EReturnCode D3D11::CreateMesh_Rect(ID3D11Device* device, float width, float height, UINT vertexSize, ID3D11Buffer ** ppVB, ID3D11Buffer ** ppIB)
-{
-	const CHAR* head = "D3D11::CreateMesh_Rect";
-
-	if (device == nullptr)
-	{
-		LVERR(head, "null device");
-		return SErrorInvalidParameters;
-	}
-
-	HRESULT hr = S_FALSE;
-	float halfw = 0.5f * width;
-	float halfh = 0.5f * height;
-	TRefCountPtr<ID3D11Buffer> vertexBuffer;
-	TRefCountPtr<ID3D11Buffer> indexBuffer;
-
-	// Mesh vertices
-	const MeshVertex rectVertices[4] =
-	{
-		{ FVec3(-halfw, -halfh, 0.0f),	FVec2(0.0f, 1.0f) },			// bottom left
-		{ FVec3(-halfw, halfh, 0.0f),	FVec2(0.0f, 0.0f) },			// top left
-		{ FVec3(halfw, halfh, 0.0f),	FVec2(1.0f, 0.0f) },			// top right
-		{ FVec3(halfw, -halfh, 0.0f),	FVec2(1.0f, 1.0f) },			// bottom right
-	};
-
-	// Mesh indices
-	const uint16 rectIndices[6] = { 0, 1, 2, 3, 0, 2 };
-
-	// Vertex Buffer
-	D3D11_BUFFER_DESC vdesc{ vertexSize * ARRAYSIZE(rectVertices), D3D11_USAGE_DEFAULT, D3D11_BIND_VERTEX_BUFFER, 0, 0, 0 };
-	D3D11_SUBRESOURCE_DATA data{ &rectVertices[0], 0, 0 };
-	hr = device->CreateBuffer(&vdesc, &data, vertexBuffer.GetInitReference());
-	if (FAILED(hr))
-	{
-		LVERR(head, "failed to create vertex buffer: 0x%x(%d)", hr, hr);
-		return SErrorInternalError;
-	}
-
-	// Index Buffer
-	D3D11_BUFFER_DESC idesc{ sizeof(uint16) * ARRAYSIZE(rectIndices), D3D11_USAGE_DEFAULT, D3D11_BIND_INDEX_BUFFER, 0, 0, 0 };
-	D3D11_SUBRESOURCE_DATA Data{ &rectIndices[0], 0, 0 };
-	hr = device->CreateBuffer(&idesc, &Data, indexBuffer.GetInitReference());
-	if (FAILED(hr))
-	{
-		LVERR(head, "failed to create index buffer: 0x%x(%d)", hr, hr);
-		return SErrorInternalError;
-	}
-
-	if (ppVB != nullptr)
-	{
-		*ppVB = vertexBuffer.GetReference();
-		vertexBuffer->AddRef();
-	}
-
-	if (ppIB != nullptr)
-	{
-		*ppIB = indexBuffer.GetReference();
-		indexBuffer->AddRef();
-	}
-
-	return SSuccess;
-}
+//EReturnCode D3D11::CreateMesh_Rect(ID3D11Device* device, float width, float height, UINT vertexSize, ID3D11Buffer ** ppVB, ID3D11Buffer ** ppIB)
+//{
+//	const CHAR* head = "D3D11::CreateMesh_Rect";
+//
+//	if (device == nullptr)
+//	{
+//		LVERR(head, "null device");
+//		return SErrorInvalidParameters;
+//	}
+//
+//	HRESULT hr = S_FALSE;
+//	float halfw = 0.5f * width;
+//	float halfh = 0.5f * height;
+//	TRefCountPtr<ID3D11Buffer> vertexBuffer;
+//	TRefCountPtr<ID3D11Buffer> indexBuffer;
+//
+//	// Mesh vertices
+//	const MeshVertex rectVertices[4] =
+//	{
+//		{ FVec3(-halfw, -halfh, 0.0f),	FVec2(0.0f, 1.0f) },			// bottom left
+//		{ FVec3(-halfw, halfh, 0.0f),	FVec2(0.0f, 0.0f) },			// top left
+//		{ FVec3(halfw, halfh, 0.0f),	FVec2(1.0f, 0.0f) },			// top right
+//		{ FVec3(halfw, -halfh, 0.0f),	FVec2(1.0f, 1.0f) },			// bottom right
+//	};
+//
+//	// Mesh indices
+//	const uint16 rectIndices[6] = { 0, 1, 2, 3, 0, 2 };
+//
+//	// Vertex Buffer
+//	D3D11_BUFFER_DESC vdesc{ vertexSize * ARRAYSIZE(rectVertices), D3D11_USAGE_DEFAULT, D3D11_BIND_VERTEX_BUFFER, 0, 0, 0 };
+//	D3D11_SUBRESOURCE_DATA data{ &rectVertices[0], 0, 0 };
+//	hr = device->CreateBuffer(&vdesc, &data, vertexBuffer.GetInitReference());
+//	if (FAILED(hr))
+//	{
+//		LVERR(head, "failed to create vertex buffer: 0x%x(%d)", hr, hr);
+//		return SErrorInternalError;
+//	}
+//
+//	// Index Buffer
+//	D3D11_BUFFER_DESC idesc{ sizeof(uint16) * ARRAYSIZE(rectIndices), D3D11_USAGE_DEFAULT, D3D11_BIND_INDEX_BUFFER, 0, 0, 0 };
+//	D3D11_SUBRESOURCE_DATA Data{ &rectIndices[0], 0, 0 };
+//	hr = device->CreateBuffer(&idesc, &Data, indexBuffer.GetInitReference());
+//	if (FAILED(hr))
+//	{
+//		LVERR(head, "failed to create index buffer: 0x%x(%d)", hr, hr);
+//		return SErrorInternalError;
+//	}
+//
+//	if (ppVB != nullptr)
+//	{
+//		*ppVB = vertexBuffer.GetReference();
+//		vertexBuffer->AddRef();
+//	}
+//
+//	if (ppIB != nullptr)
+//	{
+//		*ppIB = indexBuffer.GetReference();
+//		indexBuffer->AddRef();
+//	}
+//
+//	return SSuccess;
+//}
 
 EReturnCode D3D11::CreateBuffer(ID3D11Device* device, D3D11_BUFFER_DESC * pDesc, ID3D11Buffer ** ppBuf)
 {

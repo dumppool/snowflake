@@ -9,36 +9,19 @@
 
 #pragma once
 
-// Vertex data for a colored cube.
-ALIGNED_LR(16) struct MeshVertex
-{
-	LostCore::FVec3 Position;
-	LostCore::FVec2 Texcoord;
-	MeshVertex() = default;
-	MeshVertex(LostCore::FVec3 p, LostCore::FVec2 t) : Position(p), Texcoord(t) { }
-};
-
-ALIGNED_LR(16) struct FrameBufferWVP
-{
-	LVMatrix W;
-	LVMatrix V;
-	LVMatrix P;
-	FrameBufferWVP() = default;
-	FrameBufferWVP(const LVMatrix& w, const LVMatrix& v, const LVMatrix& p)
-		: W(w), V(v), P(p) {}
-};
-
 namespace D3D11
 {
+	/********************************************************
+	Vertex detail
+	*/
 	ALIGNED_LR(16) struct FVertex_0
 	{
 		LostCore::FVec3 XYZ;
 		LostCore::FVec2 UV;
 
-		INLINE static std::string GetName()
+		INLINE static LostCore::FVertexTypes::Details GetDetails()
 		{
-			static std::string SName = "XYZUV";
-			return SName;
+			return LostCore::FVertexTypes::GetVertexType3DString(true, false, false, false, false);
 		}
 
 		INLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
@@ -56,13 +39,12 @@ namespace D3D11
 	ALIGNED_LR(16) struct FVertex_1
 	{
 		LostCore::FVec3 XYZ;
-		LostCore::FVec3 N;
 		LostCore::FVec2 UV;
+		LostCore::FVec3 N;
 
-		INLINE static std::string GetName()
+		INLINE static LostCore::FVertexTypes::Details GetDetails()
 		{
-			static std::string SName = "XYZNUV";
-			return SName;
+			return LostCore::FVertexTypes::GetVertexType3DString(true, true, false, false, false);
 		}
 
 		INLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
@@ -80,15 +62,14 @@ namespace D3D11
 
 	ALIGNED_LR(16) struct FVertex_2
 	{
-		LostCore::FVec3 RGB;
 		LostCore::FVec3 XYZ;
-		LostCore::FVec3 N;
 		LostCore::FVec2 UV;
+		LostCore::FVec3 N;
+		LostCore::FVec3 RGB;
 
-		INLINE static std::string GetName()
+		INLINE static LostCore::FVertexTypes::Details GetDetails()
 		{
-			static std::string SName = "RGBXYZNUV";
-			return SName;
+			return LostCore::FVertexTypes::GetVertexType3DString(true, true, false, false, true);
 		}
 
 		INLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
@@ -107,14 +88,12 @@ namespace D3D11
 
 	ALIGNED_LR(16) struct FVertex_3
 	{
-		LostCore::FVec4 Color;
 		LostCore::FVec2 XY;
+		LostCore::FVec4 Color;
 
-
-		INLINE static std::string GetName()
+		INLINE static LostCore::FVertexTypes::Details GetDetails()
 		{
-			static std::string SName = "RGBAXY";
-			return SName;
+			return LostCore::FVertexTypes::GetVertexType2DString(false, true);
 		}
 
 		INLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
@@ -131,14 +110,13 @@ namespace D3D11
 
 	ALIGNED_LR(16) struct FVertex_4
 	{
-		LostCore::FVec4 Color;
 		LostCore::FVec2 XY;
 		LostCore::FVec2 UV;
+		LostCore::FVec4 Color;
 
-		INLINE static std::string GetName()
+		INLINE static LostCore::FVertexTypes::Details GetDetails()
 		{
-			static std::string SName = "RGBAXYUV";
-			return SName;
+			return LostCore::FVertexTypes::GetVertexType2DString(true, true);
 		}
 
 		INLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
@@ -166,11 +144,22 @@ namespace D3D11
 
 		FInputElementDescMap()
 		{
-			DescMap.insert(std::make_pair(FVertex_0::GetName(), FVertex_0::GetDesc()));
-			DescMap.insert(std::make_pair(FVertex_1::GetName(), FVertex_1::GetDesc()));
-			DescMap.insert(std::make_pair(FVertex_2::GetName(), FVertex_2::GetDesc()));
-			DescMap.insert(std::make_pair(FVertex_3::GetName(), FVertex_3::GetDesc()));
-			DescMap.insert(std::make_pair(FVertex_4::GetName(), FVertex_4::GetDesc()));
+			const char* head = "FInputElementDescMap";
+
+			DescMap.insert(std::make_pair(FVertex_0::GetDetails().Name, FVertex_0::GetDesc()));
+			LVMSG(head, "register: %s, stride: %d, aligned stride: %d", FVertex_0::GetDetails().Name.c_str(), FVertex_0::GetDetails().Stride, sizeof(FVertex_0));
+
+			DescMap.insert(std::make_pair(FVertex_1::GetDetails().Name, FVertex_1::GetDesc()));
+			LVMSG(head, "register: %s, stride: %d, aligned stride: %d", FVertex_1::GetDetails().Name.c_str(), FVertex_1::GetDetails().Stride, sizeof(FVertex_1));
+
+			DescMap.insert(std::make_pair(FVertex_2::GetDetails().Name, FVertex_2::GetDesc()));
+			LVMSG(head, "register: %s, stride: %d, aligned stride: %d", FVertex_2::GetDetails().Name.c_str(), FVertex_2::GetDetails().Stride, sizeof(FVertex_2));
+
+			DescMap.insert(std::make_pair(FVertex_3::GetDetails().Name, FVertex_3::GetDesc()));
+			LVMSG(head, "register: %s, stride: %d, aligned stride: %d", FVertex_3::GetDetails().Name.c_str(), FVertex_3::GetDetails().Stride, sizeof(FVertex_3));
+
+			DescMap.insert(std::make_pair(FVertex_4::GetDetails().Name, FVertex_4::GetDesc()));
+			LVMSG(head, "register: %s, stride: %d, aligned stride: %d", FVertex_4::GetDetails().Name.c_str(), FVertex_4::GetDetails().Stride, sizeof(FVertex_4));
 		}
 
 		INLINE std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc(const std::string& key)
@@ -186,6 +175,10 @@ namespace D3D11
 			return std::make_pair(nullptr, 0);
 		}
 	};
+
+	/********************************************************
+	Constant buffer
+	*/
 
 	struct FConstantBuffer
 	{
@@ -268,13 +261,13 @@ namespace D3D11
 		void UpdateBuffer(const TRefCountPtr<ID3D11DeviceContext>& cxt, const void* buf, int32 sz);
 	};
 
-	struct FConstantBufferFloat4 : public FConstantBuffer
+	struct FConstantBufferUIRect : public FConstantBuffer
 	{
-		FConstantBufferFloat4() : FConstantBuffer(sizeof(float) * 4, false, 1)
+		FConstantBufferUIRect() : FConstantBuffer(sizeof(float) * 8, false, 1)
 		{
 		}
 
-		FConstantBufferFloat4(bool dynamic, int32 slot) : FConstantBuffer(sizeof(float) * 4, dynamic, slot)
+		FConstantBufferUIRect(bool dynamic, int32 slot) : FConstantBuffer(sizeof(float) * 8, dynamic, slot)
 		{
 		}
 	};

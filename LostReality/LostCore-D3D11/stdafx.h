@@ -38,6 +38,9 @@
 using FJson = nlohmann::json;
 #include "File/DirectoryHelper.h"
 
+// vertex detail includes
+#include "VertexTypes.h"
+
 // interface includes
 #include "RenderContextInterface.h"
 #include "TextureInterface.h"
