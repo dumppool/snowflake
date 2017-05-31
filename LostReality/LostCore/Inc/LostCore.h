@@ -77,7 +77,12 @@ namespace LostCore
 	}
 }
 
+#include "Keywords.h"
+
 #include "VertexTypes.h"
+
+#include "File/json.hpp"
+using FJson = nlohmann::json;
 
 #include "Math/Vector2.h"
 #include "Math/Vector3.h"
@@ -86,10 +91,10 @@ namespace LostCore
 #include "Math/Matrix.h"
 #include "Math/Transform.h"
 
-#include "File/json.hpp"
-using FJson = nlohmann::json;
-
 #include "File/DirectoryHelper.h"
+
+#include "Serialize/Serialization.h"
+#include "Serialize/StructSerialize.h"
 
 #include "ExportTest.h"
 #include "BasicCamera.h"

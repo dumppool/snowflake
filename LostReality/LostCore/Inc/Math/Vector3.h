@@ -241,6 +241,23 @@ namespace LostCore
 		return LostCore::IsZero(X) && LostCore::IsZero(Y) && LostCore::IsZero(Z);
 	}
 
+	INLINE void from_json(const FJson& j, FVec3NonVectorized& val)
+	{
+		if (j.is_array() && j.size() >= 3)
+		{
+			val.X = j[0];
+			val.Y = j[1];
+			val.Z = j[2];
+		}
+	}
+
+	INLINE void to_json(FJson& j, const FVec3NonVectorized& val)
+	{
+		j[0] = val.X;
+		j[1] = val.Y;
+		j[2] = val.Z;
+	}
+
 #ifdef TYPEDEF_DECL_FVEC3
 #error "FVec3 already defined somewhere else"
 #else

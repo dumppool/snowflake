@@ -59,7 +59,7 @@ bool FResourceLoader::Load(const char * path)
 
 	if (FileJson.find(K_VERTEX) != FileJson.end() && FileJson.find(K_VERTEX_ELEMENT) != FileJson.end())
 	{
-		VertexDetails = GetVertexStride(FileJson[K_VERTEX_ELEMENT]);
+		VertexDetails = LostCore::GetVertexDetails(FileJson[K_VERTEX_ELEMENT]);
 		auto tb = FJson::to_msgpack(FileJson[K_VERTEX]);
 		VertexSize = tb.size();
 		VertexBuf = new unsigned char[tb.size()];
@@ -98,19 +98,3 @@ IResourceLoader * LostCore::LoadResource(const char * path)
 	return loader;
 }
 
-LostCore::FVertexTypes::Details LostCore::GetVertexStride(int flag)
-{
-	int stride = 0;
-	stride += ((flag & EVertexElement::Coordinate) == EVertexElement::Coordinate ? 3 * sizeof(float) : 0);
-	stride += ((flag & EVertexElement::Normal) == EVertexElement::Normal ? 3 * sizeof(float) : 0);
-	stride += ((flag & EVertexElement::Binormal) == EVertexElement::Binormal ? 3 * sizeof(float) : 0);
-	stride += ((flag & EVertexElement::Tangent) == EVertexElement::Tangent ? 3 * sizeof(float) : 0);
-	stride += ((flag & EVertexElement::UV) == EVertexElement::UV ? 2 * sizeof(float) : 0);
-	stride += ((flag & EVertexElement::VertexColor) == EVertexElement::VertexColor ? 3 * sizeof(float) : 0);
-	return LostCore::FVertexTypes::GetVertexType3DString(
-		(flag & EVertexElement::UV) == EVertexElement::UV,
-		(flag & EVertexElement::Normal) == EVertexElement::Normal,
-		(flag & EVertexElement::Tangent) == EVertexElement::Tangent,
-		(flag & EVertexElement::Binormal) == EVertexElement::Binormal,
-		(flag & EVertexElement::VertexColor) == EVertexElement::VertexColor);
-}

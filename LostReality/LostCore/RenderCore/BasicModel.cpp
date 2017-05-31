@@ -10,6 +10,7 @@
 #include "stdafx.h"
 #include "BasicModel.h"
 #include "PrimitiveGroupInterface.h"
+#include "Serialize/StructSerialize.h"
 #include "Resource/MeshLoader.h"
 
 using namespace LostCore;
@@ -17,7 +18,7 @@ using namespace LostCore;
 LostCore::FBasicModel::FBasicModel()
 	: Primitive(nullptr)
 	, Material(nullptr)
-	, Loader(nullptr)
+	, PrimitiveFlags(0xffffffff)
 {
 }
 
@@ -25,7 +26,6 @@ LostCore::FBasicModel::~FBasicModel()
 {
 	assert(Primitive == nullptr);
 	assert(Material == nullptr);
-	assert(Loader == nullptr);
 }
 
 bool LostCore::FBasicModel::Load(IRenderContext * rc, const char* url)
@@ -38,9 +38,7 @@ bool LostCore::FBasicModel::Load(IRenderContext * rc, const char* url)
 		return false;
 	}
 
-	assert(Primitive == nullptr && Material == nullptr 
-		&& Loader == nullptr && "model should be clear before load anything");
-
+	assert(Primitive == nullptr && Material == nullptr && "model should be clear before load anything");
 	assert(modelJson.find("type") != modelJson.end() && "model needs [type] section");
 	assert((modelJson.find("material") != modelJson.end() ||  modelJson.find("material_prefix") != modelJson.end()) && "model needs [material] section");
 
@@ -57,17 +55,19 @@ bool LostCore::FBasicModel::Load(IRenderContext * rc, const char* url)
 			return false;
 		}
 
-		Loader = LoadResource(primitivePath.c_str());
+		FBinaryIO stream;
+		stream.ReadFromFile(primitivePath.c_str());
+
+		FMeshDataGPU data;
+		stream >> data;
+		PrimitiveFlags = data.VertexFlags;
 
 		if (D3D11::WrappedCreatePrimitiveGroup(&Primitive) == SSuccess)
 		{
-			uint8 *polygonBuf, *vertexBuf;
-			int polygonSz, vertexSz;
-			auto vertexDetails = Loader->GetVertexDetails();
-			Loader->GetVertices(&vertexBuf, &vertexSz);
-			Loader->GetPolygons(&polygonBuf, &polygonSz);
-			assert(Primitive->ConstructVB(rc, vertexBuf, vertexSz, vertexDetails.Stride, false) &&
-			Primitive->ConstructIB(rc, polygonBuf, polygonSz, sizeof(uint16), false));
+			uint32 ibStride = data.VertexCount < (1 << 16) ? 2 : 4;
+			uint32 vbStride = data.Vertices.size() / data.VertexCount;
+			assert(Primitive->ConstructVB(rc, &(data.Vertices[0]), data.Vertices.size(), vbStride, false) &&
+				Primitive->ConstructIB(rc, &(data.Indices[0]), data.Indices.size(), ibStride, false));
 		}
 	}
 	else
@@ -86,7 +86,7 @@ bool LostCore::FBasicModel::Load(IRenderContext * rc, const char* url)
 		else
 		{
 			string materialPath = modelJson.find("material_prefix").value();
-			string vertexName = Loader->GetVertexDetails().Name;
+			string vertexName = GetVertexDetails(PrimitiveFlags).Name;
 			materialPath = materialPath + "_" + vertexName + ".json";
 			return Material->Initialize(rc, materialPath.c_str());
 		}
@@ -107,12 +107,6 @@ void LostCore::FBasicModel::Fini()
 	{
 		D3D11::WrappedDestroyMaterial_SceneObject(std::forward<IMaterial*>(Material));
 		Material = nullptr;
-	}
-
-	if (Loader != nullptr)
-	{
-		delete Loader;
-		Loader = nullptr;
 	}
 }
 

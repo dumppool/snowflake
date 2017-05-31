@@ -22,5 +22,5 @@ namespace LostCore
 	};
 
 	IResourceLoader* LoadResource(const char* path);
-	LostCore::FVertexTypes::Details GetVertexStride(int flag);
+	LostCore::FVertexTypes::Details GetVertexDetails(int flag);
 }

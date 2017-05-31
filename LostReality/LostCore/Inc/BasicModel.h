@@ -48,6 +48,6 @@ namespace LostCore
 
 		FMatrix WorldMatrix;
 
-		IResourceLoader* Loader;
+		uint32 PrimitiveFlags;
 	};
 }

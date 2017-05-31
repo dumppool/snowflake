@@ -32,18 +32,18 @@ namespace LostCore
 			bool bHasVertexRGBA
 		)
 		{
-			std::string typeName("XY");
+			std::string typeName("xy");
 			int stride = sizeof(float) * 2;
 
 			if (bHasTexcoord)
 			{
-				typeName += "UV";
+				typeName += "uv";
 				stride += sizeof(float) * 2;
 			}
 
 			if (bHasVertexRGBA)
 			{
-				typeName += "RGBA";
+				typeName += "rgba";
 				stride += sizeof(float) * 4;
 			}
 
@@ -55,40 +55,47 @@ namespace LostCore
 			bool bHasNormal,
 			bool bHasTangent,
 			bool bHasBinormal,
-			bool bHasVertexRGB
+			bool bHasVertexRGB,
+			bool bHasSkin
 		)
 		{
-			std::string typeName("XYZ");
+			std::string typeName("xyz");
 			int stride = sizeof(float) * 3;
 
 			if (bHasTexcoord)
 			{
-				typeName += "UV";
+				typeName += "uv";
 				stride += sizeof(float) * 2;
 			}
 
 			if (bHasNormal)
 			{
-				typeName += "N";
+				typeName += "n";
 				stride += sizeof(float) * 3;
 			}
 
 			if (bHasTangent)
 			{
-				typeName += "T";
+				typeName += "t";
 				stride += sizeof(float) * 3;
 			}
 
 			if (bHasBinormal)
 			{
-				typeName += "B";
+				typeName += "b";
 				stride += sizeof(float) * 3;
 			}
 
 			if (bHasVertexRGB)
 			{
-				typeName += "RGB";
+				typeName += "rgb";
 				stride += sizeof(float) * 3;
+			}
+
+			if (bHasSkin)
+			{
+				typeName += "_skinned";
+				stride += sizeof(float) * 4;
 			}
 
 			return Details(typeName, stride);

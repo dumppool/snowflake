@@ -207,6 +207,21 @@ namespace LostCore
 		return LostCore::IsZero(X) && LostCore::IsZero(Y);
 	}
 
+	INLINE void from_json(const FJson& j, FVec2NonVectorized& val)
+	{
+		if (j.is_array() && j.size() >= 2)
+		{
+			val.X = j[0];
+			val.Y = j[1];
+		}
+}
+
+	INLINE void to_json(FJson& j, const FVec2NonVectorized& val)
+	{
+		j[0] = val.X;
+		j[1] = val.Y;
+	}
+
 #ifdef TYPEDEF_DECL_FVEC2
 #error "FVec2 already defined somewhere else"
 #else
