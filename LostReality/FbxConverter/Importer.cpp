@@ -12,32 +12,10 @@
 
 using namespace Importer;
 
-// improt sample code includes
-#include "FbxSamples/ImportScene/DisplayCommon.h"
-#include "FbxSamples/ImportScene/DisplayHierarchy.h"
-#include "FbxSamples/ImportScene/DisplayAnimation.h"
-#include "FbxSamples/ImportScene/DisplayMarker.h"
-#include "FbxSamples/ImportScene/DisplaySkeleton.h"
-#include "FbxSamples/ImportScene/DisplayMesh.h"
-#include "FbxSamples/ImportScene/DisplayNurb.h"
-#include "FbxSamples/ImportScene/DisplayPatch.h"
-#include "FbxSamples/ImportScene/DisplayLodGroup.h"
-#include "FbxSamples/ImportScene/DisplayCamera.h"
-#include "FbxSamples/ImportScene/DisplayLight.h"
-#include "FbxSamples/ImportScene/DisplayGlobalSettings.h"
-#include "FbxSamples/ImportScene/DisplayPose.h"
-#include "FbxSamples/ImportScene/DisplayPivotsAndLimits.h"
-#include "FbxSamples/ImportScene/DisplayUserProperties.h"
-#include "FbxSamples/ImportScene/DisplayGenericInfo.h"
-
-
 static const string SSeperator("--------------------------------");
 static const string SIndent("\t\t");
 
-/************************************************************************************/
-// parser
-
-static void ParseControlsPoints(std::function<FJson&()> outputGetter, FbxMesh* mesh)
+static void ParsePolygons(std::function<FJson&()> outputGetter, FbxMesh* mesh, const map<int, vector<int>>& controlPointToVertexMap)
 {
 	if (mesh == nullptr)
 	{
@@ -45,286 +23,49 @@ static void ParseControlsPoints(std::function<FJson&()> outputGetter, FbxMesh* m
 	}
 
 	FJson& output = outputGetter();
-	int count = mesh->GetControlPointsCount();
-	FbxVector4* controlPoints = mesh->GetControlPoints();
-	for (int i = 0; i < count; ++i)
+	int polygonCount = mesh->GetPolygonCount();
+	//output[K_COUNT] = polygonCount;
+	for (int polygonIndex = 0; polygonIndex < polygonCount; ++polygonIndex)
 	{
-		output.push_back(FJson());
-		auto it = output.end() - 1;
-		(*it)[K_INDEX] = i;
-		WriteFloat3((*it)[K_COORDINATE], controlPoints[i]);
-		for (int j = 0; j < mesh->GetElementNormalCount(); ++j)
+		int polygonSize = mesh->GetPolygonSize(polygonIndex);
+		for (int posInPolygon = 0; posInPolygon < polygonSize; ++posInPolygon)
 		{
-			FbxGeometryElementNormal* normal = mesh->GetElementNormal(j);
-			if (normal->GetMappingMode() == FbxGeometryElement::eByControlPoint &&
-				normal->GetReferenceMode() == FbxGeometryElement::eDirect)
-			{
-				FJson vec;
-				WriteFloat3(vec, normal->GetDirectArray().GetAt(i));
-				(*it)[K_NORMAL].push_back(vec);
-			}
+			int vertexIndex = mesh->GetPolygonVertex(polygonIndex, posInPolygon);
+			output[K_INDEX].push_back(vertexIndex);
 		}
 	}
 }
 
-static void ParsePolygons(std::function<FJson&()> outputGetter, FbxMesh* mesh)
+static void ParseLink(function<FJson&()> outputGetter, FJson& vertices, FbxMesh* mesh, const map<int, vector<int>>& controlPointToVertexMap)
 {
 	if (mesh == nullptr)
 	{
 		return;
 	}
 
-	FJson& output = outputGetter();
-	int count = mesh->GetPolygonCount();
-	FbxVector4* controlPoints = mesh->GetControlPoints();
-	FbxGeometryElementUV* uv0 = mesh->GetElementUV(0);
-	int uvCount0 = uv0->GetDirectArray().GetCount();
-	int vertexid = 0;
-	for (int i = 0; i < count; ++i)
-	{
-		output.push_back(FJson());
-		auto it = output.end() - 1;
-
-		(*it)[K_INDEX] = i;
-		for (int j = 0; j < mesh->GetElementPolygonGroupCount(); ++j)
-		{
-			FbxGeometryElementPolygonGroup* pg = mesh->GetElementPolygonGroup(j);
-			switch (pg->GetMappingMode())
-			{
-			case FbxGeometryElement::eByPolygon:
-			{
-				if (pg->GetReferenceMode() == FbxGeometryElement::eIndex)
-				{
-					(*it)[K_GROUPID].push_back(pg->GetIndexArray().GetAt(i));
-				}
-
-				break;
-			}
-			}
-		}
-
-		int polygonSize = mesh->GetPolygonSize(i);
-		for (int j = 0; j < polygonSize; ++j)
-		{
-			(*it)[K_POLYGON].push_back(FJson());
-			auto it2 = (*it)[K_POLYGON].end() - 1;
-
-			int index = mesh->GetPolygonVertex(i, j);
-			WriteFloat3((*it2)[K_COORDINATE], controlPoints[index]);
-			for (int k = 0; k < mesh->GetElementVertexColorCount(); ++k)
-			{
-				(*it2)[K_RGBA].push_back(FJson());
-				auto it3 = (*it2)[K_RGBA].end() - 1;
-
-				FbxGeometryElementVertexColor* vertexColor = mesh->GetElementVertexColor(k);
-				switch (vertexColor->GetMappingMode())
-				{
-				case FbxGeometryElement::eByControlPoint:
-				{
-					switch (vertexColor->GetReferenceMode())
-					{
-					case FbxGeometryElement::eDirect:
-						WriteRGBA(*it3, vertexColor->GetDirectArray().GetAt(index));
-						break;
-					case FbxGeometryElement::eIndexToDirect:
-						int id = vertexColor->GetIndexArray().GetAt(index);
-						WriteRGBA(*it3, vertexColor->GetDirectArray().GetAt(id));
-						break;
-					}
-
-					break;
-				}
-
-				case FbxGeometryElement::eByPolygonVertex:
-				{
-					switch (vertexColor->GetReferenceMode())
-					{
-					case FbxGeometryElement::eDirect:
-						WriteRGBA(*it3, vertexColor->GetDirectArray().GetAt(vertexid));
-						break;
-					case FbxGeometryElement::eIndexToDirect:
-					{
-						int id = vertexColor->GetIndexArray().GetAt(vertexid);
-						WriteRGBA(*it3, vertexColor->GetDirectArray().GetAt(id));
-						break;
-					}
-					default:
-						break;
-					}
-
-					break;
-				}
-
-				case FbxGeometryElement::eByPolygon:
-				case FbxGeometryElement::eAllSame:
-				case FbxGeometryElement::eNone:
-					break;
-				}
-			}
-
-			int kcount = mesh->GetElementUVCount();
-			for (int k = 0; k < kcount; ++k)
-			{
-				(*it2)[K_UV].push_back(FJson());
-				auto it3 = (*it2)[K_UV].end() - 1;
-				FbxGeometryElementUV* uv = mesh->GetElementUV(k);
-				switch (uv->GetMappingMode())
-				{
-				case FbxGeometryElement::eByControlPoint:
-				{
-					switch (uv->GetReferenceMode())
-					{
-					case FbxGeometryElement::eDirect:
-						WriteFloat2((*it3), uv->GetDirectArray().GetAt(index));
-						break;
-					case FbxGeometryElement::eIndexToDirect:
-					{
-						int id = uv->GetIndexArray().GetAt(index);
-						WriteFloat2(*it3, uv->GetDirectArray().GetAt(id));
-						break;
-					}
-					default:
-						break;
-					}
-
-					break;
-				}
-				case FbxGeometryElement::eByPolygonVertex:
-				{
-					int uvindex = mesh->GetTextureUVIndex(i, j);
-					switch (uv->GetReferenceMode())
-					{
-					case FbxGeometryElement::eDirect:
-					case FbxGeometryElement::eIndexToDirect:
-					{
-						WriteFloat2(*it3, uv->GetDirectArray().GetAt(uvindex));
-						break;
-					}
-					default:
-						break;
-					}
-
-					break;
-				}
-				case FbxGeometryElement::eByPolygon:
-				case FbxGeometryElement::eAllSame:
-				case FbxGeometryElement::eNone:
-					break;
-				}
-			}
-
-			for (int k = 0; k < mesh->GetElementNormalCount(); ++k)
-			{
-				(*it2)[K_NORMAL].push_back(FJson());
-				auto it3 = (*it2)[K_NORMAL].end() - 1;
-
-				auto normal = mesh->GetElementNormal(k);
-				if (normal->GetMappingMode() == FbxGeometryElement::eByPolygonVertex)
-				{
-					switch (normal->GetReferenceMode())
-					{
-					case FbxGeometryElement::eDirect:
-						WriteFloat3(*it3, normal->GetDirectArray().GetAt(vertexid));
-						break;
-					case FbxGeometryElement::eIndexToDirect:
-						WriteFloat3(*it3, normal->GetDirectArray().GetAt(normal->GetIndexArray().GetAt(vertexid)));
-						break;
-					default:
-						break;
-					}
-				}
-			}
-
-			for (int k = 0; k < mesh->GetElementTangentCount(); ++k)
-			{
-				(*it2)[K_TANGENT].push_back(FJson());
-				auto it3 = (*it2)[K_TANGENT].end() - 1;
-
-				auto tangent = mesh->GetElementTangent(k);
-				if (tangent->GetMappingMode() == FbxGeometryElement::eByPolygonVertex)
-				{
-					switch (tangent->GetReferenceMode())
-					{
-					case FbxGeometryElement::eDirect:
-						WriteFloat3(*it3, tangent->GetDirectArray().GetAt(vertexid));
-						break;
-					case FbxGeometryElement::eIndexToDirect:
-						WriteFloat3(*it3, tangent->GetDirectArray().GetAt(tangent->GetIndexArray().GetAt(vertexid)));
-						break;
-					default:
-						break;
-					}
-				}
-			}
-
-			for (int k = 0; k < mesh->GetElementBinormalCount(); ++k)
-			{
-				(*it2)[K_BINORMAL].push_back(FJson());
-				auto it3 = (*it2)[K_BINORMAL].end() - 1;
-
-				auto binormal = mesh->GetElementBinormal(k);
-				if (binormal->GetMappingMode() == FbxGeometryElement::eByPolygonVertex)
-				{
-					switch (binormal->GetReferenceMode())
-					{
-					case FbxGeometryElement::eDirect:
-						WriteFloat3(*it3, binormal->GetDirectArray().GetAt(vertexid));
-						break;
-					case FbxGeometryElement::eIndexToDirect:
-						WriteFloat3(*it3, binormal->GetDirectArray().GetAt(binormal->GetIndexArray().GetAt(vertexid)));
-						break;
-					default:
-						break;
-					}
-				}
-			}
-
-			++vertexid;
-		}
-	}
-
-	for (int i = 0; i < mesh->GetElementVisibilityCount(); ++i)
-	{
-		output[K_VISIBILITY].push_back(FJson());
-		auto it = output[K_VISIBILITY].end() - 1;
-		auto vis = mesh->GetElementVisibility(i);
-		switch (vis->GetMappingMode())
-		{
-		case FbxGeometryElement::eByEdge:
-			for (int j = 0; j != mesh->GetMeshEdgeCount(); ++j)
-			{
-				(*it)[K_EDGE].push_back(j);
-				(*it)[K_EDGE_VISIBILITY].push_back(vis->GetDirectArray().GetAt(j)?1:0);
-			}
-		}
-	}
-}
-
-static void ParseLink(std::function<FJson&()> outputGetter, FbxMesh* mesh)
-{
-	if (mesh == nullptr)
-	{
-		return;
-	}
-
+	int skinIndex = 0;
 	int skinCount = mesh->GetDeformerCount(FbxDeformer::eSkin);
+
+	assert(skinCount <= 1 && "skinCount is bigger than 1");
+
+	bool first = true;
+
 	FJson& output = outputGetter();
-	output[K_COUNT] = skinCount;
 	for (int i = 0; i < skinCount; ++i)
 	{
-		output[K_SKIN].push_back(FJson());
-		auto it = output[K_SKIN].end() - 1;
-		int clusterCount = ((FbxSkin*)mesh->GetDeformer(i, FbxDeformer::eSkin))->GetClusterCount();
+		auto deformer = mesh->GetDeformer(i, FbxDeformer::eSkin);
+		FJson & vertj = output[K_VERTEX];
+		int clusterCount = ((FbxSkin*)deformer)->GetClusterCount();
 		for (int j = 0; j < clusterCount; ++j)
 		{
-			static const char* SModes[] = {K_NORMALIZE, K_ADDITIVE, K_TOTAL};
-			(*it)[K_CLUSTER].push_back(FJson());
-			auto it2 = (*it)[K_CLUSTER].end() - 1;
-
-			auto cluster = ((FbxSkin*)mesh->GetDeformer(i, FbxDeformer::eSkin))->GetCluster(j);
+			auto cluster = ((FbxSkin*)deformer)->GetCluster(j);
 			if (cluster->GetLink() != nullptr)
 			{
-				(*it2)[K_NAME] = cluster->GetLink()->GetName();
+				output[K_SKIN].push_back(cluster->GetLink()->GetName());
+			}
+			else
+			{
+				output[K_SKIN].push_back(string("unamed").append(to_string(skinIndex)).c_str());
 			}
 
 			int cpIndexCount = cluster->GetControlPointIndicesCount();
@@ -332,9 +73,33 @@ static void ParseLink(std::function<FJson&()> outputGetter, FbxMesh* mesh)
 			double* weights = cluster->GetControlPointWeights();
 			for (int k = 0; k < cpIndexCount; ++k)
 			{
-				(*it2)[K_LINK_INDICES].push_back(indices[k]);
-				(*it2)[K_WEIGHT].push_back(weights[k]);
+				if (first)
+				{
+					first = false;
+					output[K_VERTEX_ELEMENT] = (uint32)output[K_VERTEX_ELEMENT] | EVertexElement::Skin;
+				}
+
+				int cpIndex = indices[k];
+				if (controlPointToVertexMap.empty())
+				{
+					vertj[cpIndex][K_SKIN].push_back(FJson());
+					FJson& j1 = *(vertj[cpIndex][K_SKIN].end() - 1);
+					j1[K_BONE] = skinIndex;
+					j1[K_WEIGHT] = weights[k];
+				}
+				else if (controlPointToVertexMap.find(cpIndex) != controlPointToVertexMap.end())
+				{
+					for (auto vertexIndex : controlPointToVertexMap.at(cpIndex))
+					{
+						vertj[vertexIndex][K_SKIN].push_back(FJson());
+						FJson& j1 = *(vertj[vertexIndex][K_SKIN].end() - 1);
+						j1[K_BONE] = skinIndex;
+						j1[K_WEIGHT] = weights[k];
+					}
+				}
 			}
+
+			++skinIndex;
 		}
 	}
 }
@@ -428,7 +193,6 @@ static void ParseCurveKeys(std::function<FJson&()> outputGetter, FbxAnimCurve* c
 
 	FJson& out = outputGetter();
 	int count = curve->KeyGetCount();
-	out[K_COUNT] = count;
 	for (int i = 0; i < count; ++i)
 	{
 		out[K_CURVE_KEY].push_back(FJson());
@@ -461,7 +225,6 @@ static void ParseListCurveKeys(std::function<FJson&()> outputGetter, FbxAnimCurv
 
 	FJson& out = outputGetter();
 	int count = curve->KeyGetCount();
-	out[K_COUNT] = count;
 	for (int i = 0; i < count; ++i)
 	{
 		out[K_CURVE_LIST].push_back(FJson());
@@ -535,7 +298,7 @@ static void ParseChannels(FJson& output,
 				{
 					auto channel = shape->GetBlendShapeChannel(j);
 					output[K_SHAPE_CHANNEL][K_NAME] = channel->GetName();
-					DisplayCurve([&]()->FJson& {return output[K_SHAPE_CHANNEL];}, geo->GetShapeChannel(i, j, layer, true));
+					DisplayCurve([&]()->FJson& {return output[K_SHAPE_CHANNEL]; }, geo->GetShapeChannel(i, j, layer, true));
 				}
 			}
 		}
@@ -557,9 +320,9 @@ static void ParseChannels(FJson& output,
 			}
 
 			auto dataType = prop.GetPropertyDataType();
-			if ((dataType.GetType() == eFbxBool) || 
-				(dataType.GetType() == eFbxDouble) || 
-				(dataType.GetType() == eFbxFloat) || 
+			if ((dataType.GetType() == eFbxBool) ||
+				(dataType.GetType() == eFbxDouble) ||
+				(dataType.GetType() == eFbxFloat) ||
 				(dataType.GetType() == eFbxInt))
 			{
 				(*it)[K_NAME] = prop.GetName().Buffer();
@@ -579,9 +342,9 @@ static void ParseChannels(FJson& output,
 				(dataType.Is(FbxColor4DT)))
 			{
 				bool isDT = dataType.Is(FbxColor3DT) || dataType.Is(FbxColor4DT);
-				const char* name1 = isDT ? FBXSDK_CURVENODE_COLOR_RED		: "X";
-				const char* name2 = isDT ? FBXSDK_CURVENODE_COLOR_GREEN		: "Y";
-				const char* name3 = isDT ? FBXSDK_CURVENODE_COLOR_BLUE		: "Z";
+				const char* name1 = isDT ? FBXSDK_CURVENODE_COLOR_RED : "X";
+				const char* name2 = isDT ? FBXSDK_CURVENODE_COLOR_GREEN : "Y";
+				const char* name3 = isDT ? FBXSDK_CURVENODE_COLOR_BLUE : "Z";
 
 				(*it)[K_NAME] = prop.GetName().Buffer();
 				(*it)[K_LABEL] = prop.GetLabel().Buffer();
@@ -629,8 +392,14 @@ static void ParseChannels(FJson& output,
 	}
 }
 
-static void ParseAnimationLayer(FJson& output, FbxAnimLayer* layer, FbxNode* node, bool bIsSwitcher)
+static void ParseAnimationLayer(function<FJson&()> outputGetter, FbxAnimLayer* layer, FbxNode* node, bool bIsSwitcher)
 {
+	if (layer == nullptr || node == nullptr)
+	{
+		return;
+	}
+
+	FJson& output = outputGetter();
 	output[K_NAME] = node->GetName();
 
 	ParseChannels(output, node, layer, ParseCurveKeys, ParseListCurveKeys, bIsSwitcher);
@@ -639,179 +408,565 @@ static void ParseAnimationLayer(FJson& output, FbxAnimLayer* layer, FbxNode* nod
 	{
 		output[K_LAYER].push_back(FJson());
 		auto it = output[K_LAYER].end() - 1;
-		ParseAnimationLayer(*it, layer, node->GetChild(i), bIsSwitcher);
+		ParseAnimationLayer([&]()->FJson& {return *it; }, layer, node->GetChild(i), bIsSwitcher);
 	}
 }
 
-static void ParseAnimationStack(FJson& output, FbxAnimStack* stack, FbxNode* node, bool bIsSwitcher)
+static void ParseAnimationStack(function<FJson&()> outputGetter, FbxAnimStack* stack, FbxNode* node, bool bIsSwitcher)
 {
-	output[K_NAME] = stack->GetName();
-	int count = stack->GetMemberCount<FbxAnimLayer>();
-	output[K_COUNT] = count;
-	for (int i = 0; i < count; ++i)
-	{
-		output[K_LAYER].push_back(FJson());
-		auto it = output[K_LAYER].end() - 1;
-		(*it)[K_INDEX] = i;
-		auto layer = stack->GetMember<FbxAnimLayer>(i);
-		ParseAnimationLayer(*it, layer, node, bIsSwitcher);
-	}
-}
-
-static void ParseAnimation(FJson& output, FbxScene* scene)
-{
-	int count = scene->GetSrcObjectCount<FbxAnimStack>();
-	output[K_COUNT] = count;
-	for (int i = 0; i < count; ++i)
-	{
-		output[K_STACK].push_back(FJson());
-		auto it = output[K_STACK].end() - 1;
-		auto stack = scene->GetSrcObject<FbxAnimStack>(i);
-		//ParseAnimationStack(*it, stack, scene->GetRootNode(), false);
-		ParseAnimationStack(*it, stack, scene->GetRootNode(), false);
-	}
-}
-
-static void ParseMetaDataConnections(std::function<FJson&()> outputGetter, FbxObject* object)
-{
-	if (object == nullptr)
+	if (stack == nullptr || node == nullptr)
 	{
 		return;
 	}
 
 	FJson& output = outputGetter();
-	int count = object->GetSrcObjectCount<FbxObjectMetaData>();
-	vector<string> names;
+
+	output[K_NAME] = stack->GetName();
+	int count = stack->GetMemberCount<FbxAnimLayer>();
 	for (int i = 0; i < count; ++i)
 	{
-		FbxObjectMetaData* data = object->GetSrcObject<FbxObjectMetaData>(i);
-		names.push_back(data->GetName());
+		output[K_LAYER].push_back(FJson());
+		auto it = output[K_LAYER].end() - 1;
+		auto layer = stack->GetMember<FbxAnimLayer>(i);
+		ParseAnimationLayer([&]()->FJson& {return *it; }, layer, node, bIsSwitcher);
 	}
-
-	output[K_NAME] = names;
 }
 
-static void ParseMarker(FJson& output, FbxNode* node)
+static void ParseAnimation(std::function<FJson&()> outputGetter, FbxScene* scene)
 {
-	FbxMarker* marker = (FbxMarker*)node->GetNodeAttribute();
-	if (marker == nullptr)
+	if (scene == nullptr)
 	{
 		return;
 	}
 
-	output[K_NAME] = node->GetName();
-	ParseMetaDataConnections([&]()->FJson& {return output[K_METADATA_CONNECTION]; }, marker);
-
-	switch (marker->GetType())
+	FJson& output = outputGetter();
+	int animStackCount = scene->GetSrcObjectCount<FbxAnimStack>();
+	for (int i = 0; i < animStackCount; ++i)
 	{
-	case FbxMarker::eStandard:		output[K_TYPE] = (int)EMarkerType::Standard; break;
-	case FbxMarker::eOptical:		output[K_TYPE] = (int)EMarkerType::Optical; break;
-	case FbxMarker::eEffectorIK:	output[K_TYPE] = (int)EMarkerType::IK_Effector; break;
-	case FbxMarker::eEffectorFK:	output[K_TYPE] = (int)EMarkerType::FK_Effector; break;
+		output[K_STACK].push_back(FJson());
+		FJson& stackJson = *(output[K_STACK].end() - 1);
+		ParseAnimationStack([&]()->FJson& {return stackJson; }, scene->GetSrcObject<FbxAnimStack>(i), scene->GetRootNode(), false);
 	}
-
-	switch (marker->Look.Get())
-	{
-	case FbxMarker::eCube:			output[K_LOOK] = (int)EMarkerLook::Cube; break;
-	case FbxMarker::eSphere:		output[K_LOOK] = (int)EMarkerLook::Sphere; break;
-	case FbxMarker::eHardCross:		output[K_LOOK] = (int)EMarkerLook::HardCross; break;
-	case FbxMarker::eLightCross:	output[K_LOOK] = (int)EMarkerLook::LightCross; break;
-	}
-
-	output[K_SIZE] = marker->Size.Get();
-	WriteFloat3(output[K_RGB], marker->Color.Get());
-	WriteFloat3(output[K_IKPIVOT], marker->IKPivot.Get());
 }
 
-static void ParseSkeleton(FJson& output, FbxNode* node)
+static void ParsePose(std::function<FJson&()> outputGetter, FbxScene* scene)
 {
-	FbxSkeleton* skeleton = (FbxSkeleton*)node->GetNodeAttribute();
-	output[K_NAME] = node->GetName();
-	ParseMetaDataConnections([&]()->FJson& {return output[K_METADATA_CONNECTION]; }, skeleton);
-
-	const char* skeletonTypes[] = { K_ROOT, K_LIMB, K_LIMBNODE, K_EFFECTOR };
-	output[K_TYPE] = skeletonTypes[skeleton->GetSkeletonType()];
-
-	switch (skeleton->GetSkeletonType())
+	if (scene == nullptr)
 	{
-	case FbxSkeleton::eLimb:			output[K_LENGTH] = skeleton->LimbLength.Get(); break;
-	case FbxSkeleton::eLimbNode:		output[K_NODESIZE] = skeleton->Size.Get(); break;
-	case FbxSkeleton::eRoot:			output[K_ROOTSIZE] = skeleton->Size.Get(); break;
+		return;
 	}
 
-	WriteRGB(output[K_RGB], skeleton->GetLimbNodeColor());
+	FJson& output = outputGetter();
+	for (int i = 0; i < scene->GetPoseCount(); ++i)
+	{
+		output[K_POSES].push_back(FJson());
+		FJson& poseJson = *(output[K_POSES].end() - 1);
+		auto pose = scene->GetPose(i);
+		poseJson[K_NAME] = pose->GetName();
+		poseJson[K_ISBIND] = pose->IsBindPose() ? 1 : 0;
+		for (int j = 0; j < pose->GetCount(); ++j)
+		{
+			poseJson[K_POSE].push_back(FJson());
+			FJson& json0 = *(poseJson[K_POSE].end() - 1);
+			json0[K_NAME] = pose->GetNodeName(j).GetCurrentName();
+			WriteFloat4x4(json0[K_MATRIX], pose->GetMatrix(j));
+		}
+	}
+
+	for (int i = 0; i < scene->GetCharacterPoseCount(); ++i)
+	{
+		output[K_CHARACTER_POSE].push_back(FJson());
+		FJson& poseJson = *(output[K_CHARACTER_POSE].end() - 1);
+		auto pose = scene->GetCharacterPose(i);
+		auto character = scene->GetCharacter(i);
+		if (character == nullptr)
+		{
+			continue;
+		}
+
+		FbxCharacterLink link;
+		FbxCharacter::ENodeId nodeid = FbxCharacter::eHips;
+		while (character->GetCharacterLink(nodeid, &link))
+		{
+			poseJson[K_MATRIX].push_back(FJson());
+			FJson& matJson = *(poseJson[K_MATRIX].end() - 1);
+			auto& pos = link.mNode->EvaluateGlobalTransform(FBXSDK_TIME_ZERO);
+			WriteFloat4x4(matJson, pos);
+		}
+	}
 }
 
-static void ParseMesh(FJson& output, FbxNode* node)
+static void ParseSkeleton(std::function<FJson&()> outputGetter, FbxNode* node)
 {
+
+}
+
+static void ParseVertices(function<FJson&()> outputGetter, FbxMesh* mesh, map<int, vector<int>>& controlPointToVertexMap)
+{
+	if (mesh == nullptr)
+	{
+		return;
+	}
+
+	FJson& output = outputGetter();
+	auto cpHead = mesh->GetControlPoints();
+	int cpCount = mesh->GetControlPointsCount();
+	auto normalHead = mesh->GetElementNormal(0);
+	auto binormalHead = mesh->GetElementBinormal(0);
+	auto tangentHead = mesh->GetElementTangent(0);
+	auto uvHead = mesh->GetElementUV(0);
+	auto vertexColorHead = mesh->GetElementVertexColor(0);
+
+	unsigned int flags = EVertexElement::Coordinate;
+	flags |= (normalHead != nullptr ? EVertexElement::Normal : 0);
+	flags |= (binormalHead != nullptr ? EVertexElement::Binormal : 0);
+	flags |= (tangentHead != nullptr ? EVertexElement::Tangent : 0);
+	flags |= (uvHead != nullptr ? EVertexElement::UV : 0);
+	flags |= (vertexColorHead != nullptr ? EVertexElement::VertexColor : 0);
+	output[K_VERTEX_ELEMENT] = (unsigned int)flags;
+
+	bool bUseControlPointAsVertex = true;
+	if (uvHead != nullptr && uvHead->GetMappingMode() == FbxGeometryElement::eByPolygonVertex)
+	{
+		bUseControlPointAsVertex = false;
+		output[K_MESSAGE] = string("| uv is eByPolygonVertex ") + to_string(uvHead->GetDirectArray().GetCount()) +
+			string(" + ") + to_string(uvHead->GetIndexArray().GetCount());
+	}
+
+	if (normalHead != nullptr && normalHead->GetMappingMode() == FbxGeometryElement::eByPolygonVertex)
+	{
+		bUseControlPointAsVertex = false;
+		output[K_MESSAGE2] = string("| normal is eByPolygonVertex ") + to_string(normalHead->GetDirectArray().GetCount()) +
+			string(" + ") + to_string(uvHead->GetIndexArray().GetCount());
+	}
+
+	if (binormalHead != nullptr && binormalHead->GetMappingMode() == FbxGeometryElement::eByPolygonVertex)
+	{
+		bUseControlPointAsVertex = false;
+		output[K_MESSAGE3] = ("| binormal is eByPolygonVertex ");
+	}
+
+	if (tangentHead != nullptr && tangentHead->GetMappingMode() == FbxGeometryElement::eByPolygonVertex)
+	{
+		bUseControlPointAsVertex = false;
+		output[K_MESSAGE4] = ("| tangent is eByPolygonVertex ");
+	}
+
+	if (vertexColorHead != nullptr && vertexColorHead->GetMappingMode() == FbxGeometryElement::eByPolygonVertex)
+	{
+		bUseControlPointAsVertex = false;
+		output[K_MESSAGE5] = string("| vertex color is eByPolygonVertex ") + to_string(vertexColorHead->GetDirectArray().GetCount()) +
+			string(" + ") + to_string(vertexColorHead->GetIndexArray().GetCount());
+	}
+
+	if (bUseControlPointAsVertex)
+	{
+		for (int i = 0; i < cpCount; ++i)
+		{
+			// coordinate
+			output[K_COORDINATE].push_back(FJson());
+			WriteFloat3(*(output[K_COORDINATE].end() - 1), cpHead[i]);
+
+			// element uv
+			if (uvHead != nullptr)
+			{
+				if (uvHead->GetMappingMode() == FbxGeometryElement::eByControlPoint)
+				{
+					if (uvHead->GetReferenceMode() == FbxGeometryElement::eDirect)
+					{
+						output[K_UV].push_back(FJson());
+						WriteFloat2(*(output[K_UV].end() - 1), uvHead->GetDirectArray().GetAt(i));
+					}
+					else if (uvHead->GetReferenceMode() == FbxGeometryElement::eIndexToDirect)
+					{
+						output[K_UV].push_back(FJson());
+						WriteFloat2(*(output[K_UV].end() - 1), uvHead->GetDirectArray().GetAt(uvHead->GetIndexArray().GetAt(i)));
+					}
+				}
+			}
+
+			// element normal
+			if (normalHead != nullptr)
+			{
+				if (normalHead->GetMappingMode() == FbxGeometryElement::eByControlPoint)
+				{
+					if (normalHead->GetReferenceMode() == FbxGeometryElement::eDirect)
+					{
+						output[K_NORMAL].push_back(FJson());
+						WriteFloat3(*(output[K_NORMAL].end() - 1), normalHead->GetDirectArray().GetAt(i));
+					}
+					else if (normalHead->GetReferenceMode() == FbxGeometryElement::eIndexToDirect)
+					{
+						output[K_NORMAL].push_back(FJson());
+						WriteFloat3(*(output[K_NORMAL].end() - 1), normalHead->GetDirectArray().GetAt(normalHead->GetIndexArray().GetAt(i)));
+					}
+				}
+			}
+
+			// element tangent
+			if (tangentHead != nullptr)
+			{
+				if (tangentHead->GetMappingMode() == FbxGeometryElement::eByControlPoint)
+				{
+					if (tangentHead->GetReferenceMode() == FbxGeometryElement::eDirect)
+					{
+						output[K_TANGENT].push_back(FJson());
+						WriteFloat3(*(output[K_TANGENT].end() - 1), tangentHead->GetDirectArray().GetAt(i));
+					}
+					else if (tangentHead->GetReferenceMode() == FbxGeometryElement::eIndexToDirect)
+					{
+						output[K_TANGENT].push_back(FJson());
+						WriteFloat3(*(output[K_TANGENT].end() - 1), tangentHead->GetDirectArray().GetAt(tangentHead->GetIndexArray().GetAt(i)));
+					}
+				}
+			}
+
+			// element binormal
+			if (binormalHead != nullptr)
+			{
+				if (binormalHead->GetMappingMode() == FbxGeometryElement::eByControlPoint)
+				{
+					if (binormalHead->GetReferenceMode() == FbxGeometryElement::eDirect)
+					{
+						output[K_BINORMAL].push_back(FJson());
+						WriteFloat3(*(output[K_BINORMAL].end() - 1), binormalHead->GetDirectArray().GetAt(i));
+					}
+					else if (binormalHead->GetReferenceMode() == FbxGeometryElement::eIndexToDirect)
+					{
+						output[K_BINORMAL].push_back(FJson());
+						WriteFloat3(*(output[K_BINORMAL].end() - 1), binormalHead->GetDirectArray().GetAt(binormalHead->GetIndexArray().GetAt(i)));
+					}
+				}
+			}
+
+			// element vertex color
+			if (vertexColorHead != nullptr)
+			{
+				if (vertexColorHead->GetMappingMode() == FbxGeometryElement::eByControlPoint)
+				{
+					if (vertexColorHead->GetReferenceMode() == FbxGeometryElement::eDirect)
+					{
+						output[K_RGB].push_back(FJson());
+						WriteRGB(*(output[K_RGB].end() - 1), vertexColorHead->GetDirectArray().GetAt(i));
+					}
+					else if (vertexColorHead->GetReferenceMode() == FbxGeometryElement::eIndexToDirect)
+					{
+						output[K_RGB].push_back(FJson());
+						WriteRGB(*(output[K_RGB].end() - 1), vertexColorHead->GetDirectArray().GetAt(vertexColorHead->GetIndexArray().GetAt(i)));
+					}
+				}
+			}
+		}
+	}
+	else
+	{
+		int vertexID = 0;
+		int polygonCount = mesh->GetPolygonCount();
+		for (int i = 0; i < polygonCount; ++i)
+		{
+			int polygonSize = mesh->GetPolygonSize(i);
+			for (int j = 0; j < polygonSize; ++j)
+			{
+				int controlPointIndex = mesh->GetPolygonVertex(i, j);
+				controlPointToVertexMap[controlPointIndex].push_back(vertexID);
+
+				output[K_COORDINATE].push_back(FJson());
+				WriteFloat3(*(output[K_COORDINATE].end() - 1), cpHead[controlPointIndex]);
+
+				// element uv
+				if (uvHead != nullptr)
+				{
+					if (uvHead->GetMappingMode() == FbxGeometryElement::eByControlPoint)
+					{
+						if (uvHead->GetReferenceMode() == FbxGeometryElement::eDirect)
+						{
+							output[K_UV].push_back(FJson());
+							WriteFloat2(*(output[K_UV].end() - 1), uvHead->GetDirectArray().GetAt(controlPointIndex));
+						}
+						else if (uvHead->GetReferenceMode() == FbxGeometryElement::eIndexToDirect)
+						{
+							output[K_UV].push_back(FJson());
+							WriteFloat2(*(output[K_UV].end() - 1), uvHead->GetDirectArray().GetAt(uvHead->GetIndexArray().GetAt(controlPointIndex)));
+						}
+					}
+					else if (uvHead->GetMappingMode() == FbxGeometryElement::eByPolygonVertex)
+					{
+						if (uvHead->GetReferenceMode() == FbxGeometryElement::eDirect)
+						{
+							output[K_UV].push_back(FJson());
+							WriteFloat2(*(output[K_UV].end() - 1), uvHead->GetDirectArray().GetAt(vertexID));
+						}
+						else if (uvHead->GetReferenceMode() == FbxGeometryElement::eIndexToDirect)
+						{
+							output[K_UV].push_back(FJson());
+							WriteFloat2(*(output[K_UV].end() - 1), uvHead->GetDirectArray().GetAt(uvHead->GetIndexArray().GetAt(vertexID)));
+						}
+					}
+				}
+
+				// element normal
+				if (normalHead != nullptr)
+				{
+					if (normalHead->GetMappingMode() == FbxGeometryElement::eByControlPoint)
+					{
+						if (normalHead->GetReferenceMode() == FbxGeometryElement::eDirect)
+						{
+							output[K_NORMAL].push_back(FJson());
+							WriteFloat3(*(output[K_NORMAL].end() - 1), normalHead->GetDirectArray().GetAt(controlPointIndex));
+						}
+						else if (normalHead->GetReferenceMode() == FbxGeometryElement::eIndexToDirect)
+						{
+							output[K_NORMAL].push_back(FJson());
+							WriteFloat3(*(output[K_NORMAL].end() - 1), normalHead->GetDirectArray().GetAt(normalHead->GetIndexArray().GetAt(controlPointIndex)));
+						}
+					}
+					else if (normalHead->GetMappingMode() == FbxGeometryElement::eByPolygonVertex)
+					{
+						if (normalHead->GetReferenceMode() == FbxGeometryElement::eDirect)
+						{
+							output[K_NORMAL].push_back(FJson());
+							WriteFloat3(*(output[K_NORMAL].end() - 1), normalHead->GetDirectArray().GetAt(vertexID));
+						}
+						else if (normalHead->GetReferenceMode() == FbxGeometryElement::eIndexToDirect)
+						{
+							output[K_NORMAL].push_back(FJson());
+							WriteFloat3(*(output[K_NORMAL].end() - 1), normalHead->GetDirectArray().GetAt(normalHead->GetIndexArray().GetAt(vertexID)));
+						}
+					}
+				}
+
+				// element tangent
+				if (tangentHead != nullptr)
+				{
+					if (tangentHead->GetMappingMode() == FbxGeometryElement::eByControlPoint)
+					{
+						if (tangentHead->GetReferenceMode() == FbxGeometryElement::eDirect)
+						{
+							output[K_TANGENT].push_back(FJson());
+							WriteFloat3(*(output[K_TANGENT].end() - 1), tangentHead->GetDirectArray().GetAt(controlPointIndex));
+						}
+						else if (tangentHead->GetReferenceMode() == FbxGeometryElement::eIndexToDirect)
+						{
+							output[K_TANGENT].push_back(FJson());
+							WriteFloat3(*(output[K_TANGENT].end() - 1), tangentHead->GetDirectArray().GetAt(tangentHead->GetIndexArray().GetAt(controlPointIndex)));
+						}
+					}
+					else if (tangentHead->GetMappingMode() == FbxGeometryElement::eByPolygonVertex)
+					{
+						if (tangentHead->GetReferenceMode() == FbxGeometryElement::eDirect)
+						{
+							output[K_TANGENT].push_back(FJson());
+							WriteFloat3(*(output[K_TANGENT].end() - 1), tangentHead->GetDirectArray().GetAt(vertexID));
+						}
+						else if (tangentHead->GetReferenceMode() == FbxGeometryElement::eIndexToDirect)
+						{
+							output[K_TANGENT].push_back(FJson());
+							WriteFloat3(*(output[K_TANGENT].end() - 1), tangentHead->GetDirectArray().GetAt(tangentHead->GetIndexArray().GetAt(vertexID)));
+						}
+					}
+				}
+
+				// element binormal
+				if (binormalHead != nullptr)
+				{
+					if (binormalHead->GetMappingMode() == FbxGeometryElement::eByControlPoint)
+					{
+						if (binormalHead->GetReferenceMode() == FbxGeometryElement::eDirect)
+						{
+							output[K_BINORMAL].push_back(FJson());
+							WriteFloat3(*(output[K_BINORMAL].end() - 1), binormalHead->GetDirectArray().GetAt(controlPointIndex));
+						}
+						else if (binormalHead->GetReferenceMode() == FbxGeometryElement::eIndexToDirect)
+						{
+							output[K_BINORMAL].push_back(FJson());
+							WriteFloat3(*(output[K_BINORMAL].end() - 1), binormalHead->GetDirectArray().GetAt(binormalHead->GetIndexArray().GetAt(controlPointIndex)));
+						}
+					}
+					else if (binormalHead->GetMappingMode() == FbxGeometryElement::eByPolygonVertex)
+					{
+						if (binormalHead->GetReferenceMode() == FbxGeometryElement::eDirect)
+						{
+							output[K_BINORMAL].push_back(FJson());
+							WriteFloat3(*(output[K_BINORMAL].end() - 1), binormalHead->GetDirectArray().GetAt(vertexID));
+						}
+						else if (binormalHead->GetReferenceMode() == FbxGeometryElement::eIndexToDirect)
+						{
+							output[K_BINORMAL].push_back(FJson());
+							WriteFloat3(*(output[K_BINORMAL].end() - 1), binormalHead->GetDirectArray().GetAt(binormalHead->GetIndexArray().GetAt(vertexID)));
+						}
+					}
+				}
+
+				// element vertex color
+				if (vertexColorHead != nullptr)
+				{
+					if (vertexColorHead->GetMappingMode() == FbxGeometryElement::eByControlPoint)
+					{
+						if (vertexColorHead->GetReferenceMode() == FbxGeometryElement::eDirect)
+						{
+							output[K_VERTEXCOLOR].push_back(FJson());
+							WriteRGB(*(output[K_VERTEXCOLOR].end() - 1), vertexColorHead->GetDirectArray().GetAt(controlPointIndex));
+						}
+						else if (vertexColorHead->GetReferenceMode() == FbxGeometryElement::eIndexToDirect)
+						{
+							output[K_VERTEXCOLOR].push_back(FJson());
+							WriteRGB(*(output[K_VERTEXCOLOR].end() - 1), vertexColorHead->GetDirectArray().GetAt(vertexColorHead->GetIndexArray().GetAt(controlPointIndex)));
+						}
+					}
+					else if (vertexColorHead->GetMappingMode() == FbxGeometryElement::eByPolygonVertex)
+					{
+						if (vertexColorHead->GetReferenceMode() == FbxGeometryElement::eDirect)
+						{
+							output[K_VERTEXCOLOR].push_back(FJson());
+							WriteRGB(*(output[K_VERTEXCOLOR].end() - 1), vertexColorHead->GetDirectArray().GetAt(vertexID));
+						}
+						else if (vertexColorHead->GetReferenceMode() == FbxGeometryElement::eIndexToDirect)
+						{
+							output[K_VERTEXCOLOR].push_back(FJson());
+							WriteRGB(*(output[K_VERTEXCOLOR].end() - 1), vertexColorHead->GetDirectArray().GetAt(vertexColorHead->GetIndexArray().GetAt(vertexID)));
+						}
+					}
+				}
+
+				++vertexID;
+			}
+		}
+	}
+}
+
+static void ParseMesh(std::function<FJson&()> outputGetter, FbxNode* node)
+{
+	if (node == nullptr)
+	{
+		return;
+	}
+
 	FbxMesh* mesh = (FbxMesh*)node->GetNodeAttribute();
+	if (mesh == nullptr)
+	{
+		return;
+	}
+
+	FJson& output = outputGetter();
 	output[K_NAME] = node->GetName();
-	ParseMetaDataConnections([&]()->FJson& {return output[K_METADATA_CONNECTION]; }, mesh);
-	ParseControlsPoints([&]()->FJson& {return output[K_CONTROLPOINT]; }, mesh);
-	ParsePolygons([&]()->FJson& {return output[K_POLYGON]; }, mesh);
-	ParseLink([&]()->FJson& {return output[K_LINK]; }, mesh);
+
+	map<int, vector<int>> ControlPointToVertexMap;
+	ParseVertices([&]()->FJson& {return output; }, mesh, ControlPointToVertexMap);
+	ParseLink([&]()->FJson& {return output; }, output, mesh, ControlPointToVertexMap);
+	ParsePolygons([&]()->FJson& {return output; }, mesh, ControlPointToVertexMap);
 }
 
-static void ParseNurbs(FJson& output, FbxNode* node)
-{
-
-}
-
-static void ParsePatch(FJson& output, FbxNode* node)
-{
-
-}
-
-static void ParseCamera(FJson& output, FbxNode* node)
-{
-
-}
-
-static void ParseLight(FJson& output, FbxNode* node)
-{
-
-}
-
-static void ParseLODGroup(FJson& output, FbxNode* node)
-{
-
-}
-
-
-/************************************************************************************/
-
-
-class FFbxImporter
+class FFbxImporter2
 {
 public:
-	static FFbxImporter* Get()
+	static FFbxImporter2* Get()
 	{
-		static FFbxImporter Inst;
+		static FFbxImporter2 Inst;
 		return &Inst;
 	}
 
 public:
-	FFbxImporter()
+	FFbxImporter2()
 		: SdkManager(nullptr)
 		, SdkScene(nullptr)
+		, bExportScene(false)
 	{
 		InitializeSdkObjects(SdkManager, SdkScene);
 	}
 
 	void OutputToStream()
 	{
-		ofstream file;
-		file.open(ConvertFile, ios::out);
+		if (bExportScene)
+		{
+			ofstream file;
+			file.open(ConvertPath, ios::out);
 
-		FJson json;
-		json[K_META] = MetaData;
-		json[K_NODE] = NodeData;
-		json[K_POSE] = PoseData;
-		json[K_ANIMATION] = AnimData;
+			FJson json;
+			json[K_META] = MetaData;
+			json[K_NODE] = NodeData;
+			json[K_POSE] = PoseData;
+			json[K_ANIMATION] = AnimData;
 
-		file << json << endl;
+			file << json << endl;
 
-		file.close();
+			file.close();
+		}
+		else
+		{
+			for (auto it = MeshData.begin(); it != MeshData.end(); ++it)
+			{
+				char head[] = "lost reality resource file\n";
+				if (0)
+				{
+					ofstream file;
+					file.open(ConvertPath + it.key() + ".xpt", ios::out);
+					file.width(1);
+					file << it.value();
+					file.close();
+				}
+
+				if (bOutputBinary && it->find(K_INDEX) != it->end() && it->find(K_COORDINATE) != it->end())
+				{
+					LostCore::FMeshData srcData, dstData;
+					LostCore::FBinaryIO outputStream, inputStream;
+					FJson& mesh = it.value();
+					srcData.IndexCount = mesh[K_INDEX].size();
+					srcData.VertexCount = mesh[K_COORDINATE].size();
+					srcData.VertexFlags = mesh[K_VERTEX_ELEMENT];
+					srcData.Bones.reserve(mesh[K_SKIN].size());
+					for (uint32 i = 0; i < mesh[K_SKIN].size(); ++i)
+					{
+						srcData.Bones.push_back(mesh[K_SKIN][i]);
+					}
+
+					// fill FMeshData(src) first
+					if (srcData.VertexCount < (1 << 16))
+					{
+						srcData.Indices16.resize(srcData.IndexCount);
+					}
+					else
+					{
+						srcData.Indices32.resize(srcData.IndexCount);
+					}
+
+					srcData.XYZ.resize(srcData.VertexCount);
+					srcData.UV.resize(srcData.VertexCount);
+					srcData.Normal.resize(srcData.VertexCount);
+					srcData.Tangent.resize(srcData.VertexCount);
+					srcData.Binormal.resize(srcData.VertexCount);
+					srcData.VertexColor.resize(srcData.VertexCount);
+					srcData.Weight.resize(srcData.VertexCount);
+					for (uint32 i = 0; i < srcData.VertexCount; ++i)
+					{
+						if (srcData.VertexCount < (1 << 16))
+						{
+							srcData.Indices16[i] = mesh[K_INDEX][i];
+						}
+						else
+						{
+							srcData.Indices32[i] = mesh[K_INDEX][i];
+						}
+
+						srcData.XYZ[i] = mesh[K_COORDINATE][i];
+						srcData.UV[i] = mesh[K_UV][i];
+						srcData.Normal[i] = mesh[K_NORMAL][i];
+						srcData.Tangent[i] = mesh[K_TANGENT][i];
+						srcData.Binormal[i] = mesh[K_BINORMAL][i];
+						srcData.VertexColor[i] = mesh[K_VERTEXCOLOR][i];
+						srcData.Weight[i] = mesh[K_WEIGHT][i];
+					}
+
+					// FMeshData(src) >> FBinaryIO
+					outputStream << srcData;
+					outputStream.WriteToFile(ConvertPath + it.key() + ".primitive");
+
+					// FBinaryIO >> FMeshData(dst)
+					//inputStream.ReadFromFile(ConvertPath + it.key() + ".primitive");
+					//inputStream >> dstData;
+
+				}
+			}
+		}
 	}
 
 	void ImportMetaData()
@@ -859,10 +1014,14 @@ public:
 		}
 	}
 
-	void ImportNode(FbxNode* node)
+	void ImportNode(std::function<FJson&()> outputGetter, FbxNode* node)
 	{
-		NodeData.push_back(FJson());
-		auto it = NodeData.end() - 1;
+		if (node == nullptr)
+		{
+			return;
+		}
+
+		FJson& output = outputGetter();
 
 		FbxNodeAttribute::EType attrType;
 		if (node->GetNodeAttribute() != nullptr)
@@ -870,37 +1029,18 @@ public:
 			attrType = node->GetNodeAttribute()->GetAttributeType();
 			switch (attrType)
 			{
-			case FbxNodeAttribute::eMarker:
-				(*it)[K_TYPE] = K_MARKER;
-				ParseMarker(*it, node);
-				break;
 			case FbxNodeAttribute::eSkeleton:
-				(*it)[K_TYPE] = K_SKELETON;
-				ParseSkeleton(*it, node);
+				ParseSkeleton([&]()->FJson& {output[K_TYPE] = K_SKELETON; return output; }, node);
 				break;
 			case FbxNodeAttribute::eMesh:
-				(*it)[K_TYPE] = K_MESH;
-				ParseMesh(*it, node);
-				break;
-			case FbxNodeAttribute::eNurbs:
-				(*it)[K_TYPE] = K_NURBS;
-				ParseNurbs(*it, node);
-				break;
-			case FbxNodeAttribute::ePatch:
-				(*it)[K_TYPE] = K_PATCH;
-				ParsePatch(*it, node);
-				break;
-			case FbxNodeAttribute::eCamera:
-				(*it)[K_TYPE] = K_CAMERA;
-				ParseCamera(*it, node);
-				break;
-			case FbxNodeAttribute::eLight:
-				(*it)[K_TYPE] = K_LIGHT;
-				ParseLight(*it, node);
-				break;
-			case FbxNodeAttribute::eLODGroup:
-				(*it)[K_TYPE] = K_LODGROUP;
-				ParseLODGroup(*it, node);
+				if (bExportScene)
+				{
+					ParseMesh([&]()->FJson& {output[K_TYPE] = K_MESH; return output; }, node);
+				}
+				else
+				{
+					ParseMesh([&]()->FJson& {return output[node->GetName()]; }, node);
+				}
 				break;
 			default:
 				break;
@@ -909,7 +1049,7 @@ public:
 
 		for (int i = 0; i < node->GetChildCount(); ++i)
 		{
-			ImportNode(node->GetChild(i));
+			ImportNode(outputGetter, node->GetChild(i));
 		}
 	}
 
@@ -920,25 +1060,41 @@ public:
 		{
 			for (int i = 0; i < node->GetChildCount(); ++i)
 			{
-				ImportNode(node->GetChild(i));
+				if (bExportScene)
+				{
+					ImportNode([&]()->FJson& {NodeData[K_CHILDREN].push_back(FJson()); return *(NodeData[K_CHILDREN].end() - 1); }, node->GetChild(i));
+				}
+				else
+				{
+					ImportNode([&]()->FJson& {return MeshData; }, node->GetChild(i));
+				}
 			}
 		}
 	}
 
 	void ImportPose()
 	{
-		ParsePose(PoseData, SdkScene);
+		if (bExportScene)
+		{
+			ParsePose([&]()->FJson& {return PoseData; }, SdkScene);
+		}
+		else
+		{
+			ParsePose([&]()->FJson& {return MeshData; }, SdkScene);
+		}
 	}
 
 	void ImportAnimation()
 	{
-		ParseAnimation(AnimData, SdkScene);
+		ParseAnimation([&]()->FJson& {return AnimData; }, SdkScene);
 	}
 
-	bool ImportScene(const string& importSrc, const string& convertDst)
+	bool ImportScene(const string& importSrc, const string& convertDst, bool outputBinary = false)
 	{
 		ImportPath = importSrc;
-		ConvertFile = convertDst;
+		ConvertPath = convertDst;
+		bOutputBinary = outputBinary;
+		bExportScene = true;
 		bool result = LoadScene(SdkManager, SdkScene, importSrc.c_str());
 
 		if (result)
@@ -947,12 +1103,48 @@ public:
 			ImportContent();
 			ImportPose();
 			ImportAnimation();
-			//DisplayGlobalLightSettings(&SdkScene->GetGlobalSettings());
 		}
 
 		OutputToStream();
 
-		return false;
+		return true;
+	}
+
+	bool ImportSceneMeshes(const string& importSrc, const string& convertDst, bool outputBinary = false)
+	{
+		ImportPath = importSrc;
+		bOutputBinary = outputBinary;
+
+		// format path, find out the correct directory path
+		ConvertPath = convertDst;
+		auto pos = std::string::npos;
+		while ((pos = ConvertPath.find("/")) != std::string::npos)
+		{
+			ConvertPath.replace(pos, 1, "\\");
+		}
+
+		auto lastSlash = ConvertPath.rfind("\\");
+		auto lastDot = ConvertPath.rfind(".");
+		bool isDir = (lastDot == string::npos) || (lastDot < lastSlash);
+		if (!isDir)
+		{
+			ConvertPath.resize(lastSlash + 1);
+		}
+
+		bExportScene = false;
+
+		bool result = LoadScene(SdkManager, SdkScene, importSrc.c_str());
+
+		if (result)
+		{
+			ImportMetaData();
+			ImportContent();
+			ImportPose();
+			ImportAnimation();
+		}
+
+		OutputToStream();
+		return true;
 	}
 
 private:
@@ -960,15 +1152,25 @@ private:
 	FbxScene*			SdkScene;
 
 	string				ImportPath;
-	string				ConvertFile;
+	string				ConvertPath;
 
 	FJson				MetaData;
 	FJson				NodeData;
 	FJson				PoseData;
 	FJson				AnimData;
+	FJson				MeshData;
+
+	bool				bExportScene;
+	bool				bOutputBinary;
+	vector<string>		MeshFiles;
 };
 
-bool Importer::ImportScene(const string& importSrc, const string& convertDst)
+bool Importer::ImportScene(const string& importSrc, const string& convertDst, bool outputBinary)
 {
-	return FFbxImporter::Get()->ImportScene(importSrc, convertDst);
+	return FFbxImporter2::Get()->ImportScene(importSrc, convertDst, outputBinary);
+}
+
+bool Importer::ImportSceneMeshes(const string& importSrc, const string& convertDst, bool outputBinary)
+{
+	return FFbxImporter2::Get()->ImportSceneMeshes(importSrc, convertDst, outputBinary);
 }

@@ -32,10 +32,8 @@ int main(int argc, char** argv)
 	if (!src.empty() && !dst.empty())
 	{
 		//Importer::ImportScene2(src, dst);
-		Importer::ImportSceneMeshes(src, dst);
+		Importer::ImportSceneMeshes(src, dst, true);
 	}
-
-	LostCore::LoadResource("E:\\fbxs\\ContentExample\\SK_FBX_Tube.xpt");
 
     return 0;
 }

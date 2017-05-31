@@ -94,8 +94,6 @@
     <ClInclude Include="FbxSamples\Common\GeometryUtility.h">
       <Filter>FbxSamples\Common</Filter>
     </ClInclude>
-    <ClInclude Include="Keywords.h" />
-    <ClInclude Include="MeshLoader.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FbxConverter.cpp" />
@@ -173,7 +171,5 @@
     <ClCompile Include="FbxSamples\Common\GeometryUtility.cxx">
       <Filter>FbxSamples\Common</Filter>
     </ClCompile>
-    <ClCompile Include="Importer2.cpp" />
-    <ClCompile Include="MeshLoader.cpp" />
   </ItemGroup>
 </Project>

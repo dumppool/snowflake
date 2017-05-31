@@ -23,32 +23,28 @@ using namespace std;
 
 // internal includes
 #include "Keywords.h"
-#include "json.hpp"
+
+#define MODULE_MSG_PREFIX "converter-log"
+#define MODULE_WARN_PREFIX "converter-warn"
+#define MODULE_ERR_PREFIX "converter-error"
+#include "UtilitiesHeader.h"
+
+#include "VertexTypes.h"
+
+#include "File/json.hpp"
 using FJson = nlohmann::json;
+
+#include "Math/Vector2.h"
+#include "Math/Vector3.h"
+#include "Math/Vector4.h"
+#include "Math/Quat.h"
+#include "Math/Matrix.h"
+#include "Math/Transform.h"
+
+#include "Serialize/Serialization.h"
+#include "Serialize/StructSerialize.h"
 
 // sdk includes
 #include <fbxsdk.h>
 
 #include "FbxSamples/Common/Common.h"
-
-inline string WideToUTF8(const wstring &wide) {
-	if (wide.length() == 0) {
-		return string();
-	}
-
-	// compute the length of the buffer we'll need
-	int charcount = WideCharToMultiByte(CP_UTF8, 0, wide.c_str(), -1,
-		NULL, 0, NULL, NULL);
-	if (charcount == 0) {
-		return string();
-	}
-
-	// convert
-	char *buf = new char[charcount];
-	WideCharToMultiByte(CP_UTF8, 0, wide.c_str(), -1, buf, charcount,
-		NULL, NULL);
-
-	string result(buf);
-	delete[] buf;
-	return result;
-}

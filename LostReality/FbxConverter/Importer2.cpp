@@ -1064,12 +1064,12 @@ private:
 	vector<string>		MeshFiles;
 };
 
-bool Importer::ImportScene2(const string& importSrc, const string& convertDst)
+bool Importer::ImportScene2(const string& importSrc, const string& convertDst, bool outputBinary)
 {
 	return FFbxImporter2::Get()->ImportScene(importSrc, convertDst);
 }
 
-bool Importer::ImportSceneMeshes(const string& importSrc, const string& convertDst)
+bool Importer::ImportSceneMeshes2(const string& importSrc, const string& convertDst, bool outputBinary)
 {
 	return FFbxImporter2::Get()->ImportSceneMeshes(importSrc, convertDst);
 }

@@ -77,7 +77,8 @@ namespace Importer {
 		output = f4x4;
 	}
 
-	extern bool ImportScene(const string& importSrc, const string& convertDst);
-	extern bool ImportScene2(const string& importSrc, const string& convertDst);
-	extern bool ImportSceneMeshes(const string& importSrc, const string& convertDst);
+	extern bool ImportScene(const string& importSrc, const string& convertDst, bool outputBinary);
+	extern bool ImportScene2(const string& importSrc, const string& convertDst, bool outputBinary);
+	extern bool ImportSceneMeshes(const string& importSrc, const string& convertDst, bool outputBinary);
+	extern bool ImportSceneMeshes2(const string& importSrc, const string& convertDst, bool outputBinary);
 }
