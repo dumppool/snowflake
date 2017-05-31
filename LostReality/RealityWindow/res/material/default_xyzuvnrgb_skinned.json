@@ -1,14 +1,14 @@
 {
-	"vertex":"XYZUVNRGB",
+	"vertex":"xyzuvnrgb_skinned",
 	"vs":
 	{
-		"path":"xyzuvnrgb.fx",
+		"path":"xyzuvnrgb_skinned.fx",
 		"entry":"vs_main",
 		"target":"vs_5_0"
 	},
 	"ps":
 	{
-		"path":"xyzuvnrgb.fx",
+		"path":"xyzuvnrgb_skinned.fx",
 		"entry":"ps_main",
 		"target":"ps_5_0"
 	}
