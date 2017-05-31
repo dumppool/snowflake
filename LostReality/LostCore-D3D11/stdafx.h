@@ -27,15 +27,16 @@
 #define MODULE_ERR_PREFIX "lostcore-d3d11-error"
 #include "UtilitiesHeader.h"
 
+// file system includes
+#include "File/json.hpp"
+using FJson = nlohmann::json;
+
 // math includes
 #include "Math/Vector2.h"
 #include "Math/Vector3.h"
 #include "Math/Vector4.h"
 #include "Math/Matrix.h"
 
-// file system includes
-#include "File/json.hpp"
-using FJson = nlohmann::json;
 #include "File/DirectoryHelper.h"
 
 // vertex detail includes
