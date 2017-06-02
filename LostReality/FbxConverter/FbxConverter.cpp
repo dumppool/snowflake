@@ -3,7 +3,6 @@
 
 #include "stdafx.h"
 #include "Importer.h"
-#include "MeshLoader.h"
 
 int main(int argc, char** argv)
 {

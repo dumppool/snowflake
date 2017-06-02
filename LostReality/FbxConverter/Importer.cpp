@@ -54,7 +54,7 @@ static void ParseLink(function<FJson&()> outputGetter, FJson& vertices, FbxMesh*
 	for (int i = 0; i < skinCount; ++i)
 	{
 		auto deformer = mesh->GetDeformer(i, FbxDeformer::eSkin);
-		FJson & vertj = output[K_VERTEX];
+		FJson & vertj = output[K_WEIGHT];
 		int clusterCount = ((FbxSkin*)deformer)->GetClusterCount();
 		for (int j = 0; j < clusterCount; ++j)
 		{
@@ -82,24 +82,35 @@ static void ParseLink(function<FJson&()> outputGetter, FJson& vertices, FbxMesh*
 				int cpIndex = indices[k];
 				if (controlPointToVertexMap.empty())
 				{
-					vertj[cpIndex][K_SKIN].push_back(FJson());
-					FJson& j1 = *(vertj[cpIndex][K_SKIN].end() - 1);
-					j1[K_BONE] = skinIndex;
-					j1[K_WEIGHT] = weights[k];
+					float w = min(weights[k], 0.999999f);
+					vertj[cpIndex].push_back(skinIndex + w);
+					//FJson& j1 = *(vertj[cpIndex].end() - 1);
+					//j1[K_BONE] = skinIndex;
+					//j1[K_WEIGHT] = weights[k];
 				}
 				else if (controlPointToVertexMap.find(cpIndex) != controlPointToVertexMap.end())
 				{
 					for (auto vertexIndex : controlPointToVertexMap.at(cpIndex))
 					{
-						vertj[vertexIndex][K_SKIN].push_back(FJson());
-						FJson& j1 = *(vertj[vertexIndex][K_SKIN].end() - 1);
-						j1[K_BONE] = skinIndex;
-						j1[K_WEIGHT] = weights[k];
+						float w = min(weights[k], 0.999999f);
+						vertj[vertexIndex].push_back(skinIndex + w);
+						//FJson& j1 = *(vertj[vertexIndex].end() - 1);
+						//j1[K_BONE] = skinIndex;
+						//j1[K_WEIGHT] = weights[k];
 					}
 				}
 			}
 
 			++skinIndex;
+		}
+	}
+
+	for (auto& wj : output[K_WEIGHT])
+	{
+		if (wj.size() < 4)
+		{
+			for (int j = wj.size(); j < 4; ++j)
+				wj.push_back(0.f);
 		}
 	}
 }
@@ -896,8 +907,9 @@ public:
 			for (auto it = MeshData.begin(); it != MeshData.end(); ++it)
 			{
 				char head[] = "lost reality resource file\n";
-				if (0)
+				if (1)
 				{
+
 					ofstream file;
 					file.open(ConvertPath + it.key() + ".xpt", ios::out);
 					file.width(1);
@@ -953,6 +965,7 @@ public:
 						srcData.Tangent[i] = mesh[K_TANGENT][i];
 						srcData.Binormal[i] = mesh[K_BINORMAL][i];
 						srcData.VertexColor[i] = mesh[K_VERTEXCOLOR][i];
+
 						srcData.Weight[i] = mesh[K_WEIGHT][i];
 					}
 
