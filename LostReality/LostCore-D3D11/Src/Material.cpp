@@ -64,7 +64,7 @@ bool D3D11::FMaterialShader::LoadShader(LostCore::IRenderContext * rc, const str
 			nullptr, VS.GetInitReference());
 		if (FAILED(hr))
 		{
-			LVERR(head, "create vertex shader(%s) failed: 0x08x(%d)", path.c_str(), hr, hr);
+			LVERR(head, "create vertex shader(%s) failed: 0x%08x(%d)", path.c_str(), hr, hr);
 			return false;
 		}
 
@@ -72,7 +72,7 @@ bool D3D11::FMaterialShader::LoadShader(LostCore::IRenderContext * rc, const str
 			shaderBlob->GetBufferSize(), IL.GetInitReference());
 		if (FAILED(hr))
 		{
-			LVERR(head, "create input layout(%s) failed: 0x08x(%d)", path.c_str(), hr, hr);
+			LVERR(head, "create input layout(%s) failed: 0x%08x(%d)", path.c_str(), hr, hr);
 			return false;
 		}
 	}

@@ -137,12 +137,12 @@ namespace D3D11
 		LostCore::FVec3 XYZ;
 		LostCore::FVec2 UV;
 		LostCore::FVec3 N;
-		LostCore::FVec4 Color;
+		LostCore::FVec3 Color;
 		LostCore::FVec4 Weight;
 
 		INLINE static LostCore::FVertexTypes::Details GetDetails()
 		{
-			return LostCore::FVertexTypes::GetVertexType3DString(true, true, false, false, false, true);
+			return LostCore::FVertexTypes::GetVertexType3DString(true, true, false, false, true, true);
 		}
 
 		INLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
@@ -153,7 +153,7 @@ namespace D3D11
 				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_5, XYZ), D3D11_INPUT_PER_VERTEX_DATA, 0 },
 				{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_5, N), D3D11_INPUT_PER_VERTEX_DATA, 0 },
 				{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, offsetof(FVertex_5, UV),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "TEXCOORD1", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(FVertex_5, Weight),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "WEIGHTS", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(FVertex_5, Weight),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
 			};
 
 			return std::make_pair(SDesc, ARRAYSIZE(SDesc));
