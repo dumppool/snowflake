@@ -22,7 +22,7 @@ struct VertexIn
 	float2 tc  : TEXCOORD;
 	float3 normal : NORMAL;
 	float3 col : COLOR;
-float4 weight : TEXCOORD1;
+	float4 weight : WEIGHTS;
 };
 
 struct VertexOut
