@@ -84,9 +84,6 @@
     <ClInclude Include="Inc\Pose.h">
       <Filter>Inc</Filter>
     </ClInclude>
-    <ClInclude Include="RenderCore\Resource\Keywords.h">
-      <Filter>RenderCore\Resource</Filter>
-    </ClInclude>
     <ClInclude Include="RenderCore\Resource\MeshLoader.h">
       <Filter>RenderCore\Resource</Filter>
     </ClInclude>
@@ -95,6 +92,15 @@
     </ClInclude>
     <ClInclude Include="Inc\VertexTypes.h">
       <Filter>Inc</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\Keywords.h">
+      <Filter>Inc</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\Serialize\Serialization.h">
+      <Filter>Inc\Serialize</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\Serialize\StructSerialize.h">
+      <Filter>Inc\Serialize</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -158,6 +164,9 @@
     </Filter>
     <Filter Include="RenderCore\Resource">
       <UniqueIdentifier>{7d9510d6-461c-455a-a0e0-38ffb316efa1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Inc\Serialize">
+      <UniqueIdentifier>{0f0f3142-2263-4f52-9369-a21c2475add1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

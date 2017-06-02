@@ -83,9 +83,13 @@ namespace LostCore
 			Serialize(stream, (const uint8*)&data.Indices32[0], data.IndexCount * sizeof(uint32));
 		}
 
+		uint32 stride = GetVertexDetails(data.VertexFlags).Stride;
+		uint32 paddingBytes = (uint32)ceil(stride / 16.f) * 16 - stride;
+		uint8* padding = new uint8[paddingBytes];
 		for (uint32 i = 0; i < data.VertexCount; ++i)
 		{
 			stream << data.XYZ[i];
+
 			if ((data.VertexFlags & EVertexElement::UV) == EVertexElement::UV)
 			{
 				stream << data.UV[i];
@@ -115,8 +119,14 @@ namespace LostCore
 			{
 				stream << data.Weight[i];
 			}
+
+			if (paddingBytes != 0)
+			{
+				Serialize(stream, padding, paddingBytes);
+			}
 		}
 
+		delete[] padding;
 		return stream;
 	}
 
@@ -151,6 +161,9 @@ namespace LostCore
 			Deserialize(stream, (uint8*)&data.Indices32[0], data.IndexCount * sizeof(uint32));
 		}
 
+		uint32 stride = GetVertexDetails(data.VertexFlags).Stride;
+		uint32 paddingBytes = (uint32)ceil(stride / 16.f) * 16 - stride;
+		uint8* padding = new uint8[paddingBytes];
 		bool allocating = true;
 		for (uint32 i = 0; i < data.VertexCount; ++i)
 		{
@@ -221,8 +234,14 @@ namespace LostCore
 			}
 
 			allocating = false;
+
+			if (paddingBytes != 0)
+			{
+				Deserialize(stream, padding, paddingBytes);
+			}
 		}
 
+		delete[] padding;
 		return stream;
 	}
 
@@ -287,7 +306,9 @@ namespace LostCore
 		data.Indices.resize(ibSz);
 		Deserialize(stream, &(data.Indices[0]), ibSz);
 
-		uint32 sz = GetVertexDetails(data.VertexFlags).Stride * data.VertexCount;
+		uint32 stride = GetVertexDetails(data.VertexFlags).Stride;
+		//uint32 paddingBytes = (uint32)ceil(stride / 16.f) * 16 - stride;
+		uint32 sz = (uint32)ceil(stride / 16.f) * 16 * data.VertexCount;
 		data.Vertices.resize(sz);
 		Deserialize(stream, &(data.Vertices[0]), sz);
 		return stream;
