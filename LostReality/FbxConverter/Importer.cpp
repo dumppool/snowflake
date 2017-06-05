@@ -920,7 +920,7 @@ public:
 				if (bOutputBinary && it->find(K_INDEX) != it->end() && it->find(K_COORDINATE) != it->end())
 				{
 					LostCore::FMeshData srcData, dstData;
-					LostCore::FBinaryIO outputStream, inputStream;
+					LostCore::FBinaryIO outputStream;
 					FJson& mesh = it.value();
 					srcData.IndexCount = mesh[K_INDEX].size();
 					srcData.VertexCount = mesh[K_COORDINATE].size();
@@ -973,10 +973,24 @@ public:
 					outputStream << srcData;
 					outputStream.WriteToFile(ConvertPath + it.key() + ".primitive");
 
-					// FBinaryIO >> FMeshData(dst)
-					//inputStream.ReadFromFile(ConvertPath + it.key() + ".primitive");
-					//inputStream >> dstData;
+					if (0)
+					{
+						LostCore::FBinaryIO inputStream1, inputStream2;
+						inputStream1.ReadFromFile(ConvertPath + it.key() + ".primitive");
+						inputStream2.ReadFromFile(ConvertPath + it.key() + ".primitive");
+						LostCore::FMeshData data, data2, data3;
+						LostCore::FMeshDataGPU gpuData, gpuData2;
+						inputStream1 >> gpuData;
+						inputStream2 >> data;
 
+						LostCore::FBinaryIO outputStream1((uint8*)outputStream.Data(), outputStream.Size());
+						LostCore::FBinaryIO outputStream2((uint8*)outputStream.Data(), outputStream.Size());
+						outputStream1 >> gpuData2;
+						data3 = gpuData2.ToMeshData();
+						outputStream2 >> data2;
+
+						outputStream2 >> data2;
+					}
 				}
 			}
 		}
