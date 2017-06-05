@@ -224,13 +224,4 @@ enum EVertexElement
 	Skin				= 0x40,
 };
 
-#define H_VERTEXELEMENT 0x00f0
-#define H_VERTEX 0x00f1
-#define H_COORDINATE 0x00f2
-#define H_NORMAL 0x00f3
-#define H_RGB 0x00f4
-#define H_WEIGHT 0x00f5
-#define H_UV 0x00f6
-#define H_SKIN 0x00f7
-#define H_COUNT 0x00f8
-#define H_INDICES 0xf9
+#define MAGIC_VERTEX 0xaabbabab

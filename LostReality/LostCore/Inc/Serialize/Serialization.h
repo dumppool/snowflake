@@ -11,6 +11,10 @@
 
 namespace LostCore
 {
+	class FBinaryIO;
+	FBinaryIO& Serialize(FBinaryIO& stream, const uint8* buf, uint32 sz);
+	FBinaryIO& Deserialize(FBinaryIO& stream, uint8* buf, uint32 sz);
+
 	class FBinaryIO
 	{
 	protected:
@@ -22,6 +26,7 @@ namespace LostCore
 	public:
 		FBinaryIO();
 		explicit FBinaryIO(uint32 size);
+		FBinaryIO(uint8* begin, uint32 sz);
 		~FBinaryIO();
 
 		const void * Retrieve(uint32 bytes);
@@ -50,6 +55,16 @@ namespace LostCore
 		Read = Begin;
 		Write = Begin;
 		End = Begin + sz;
+	}
+
+	inline FBinaryIO::FBinaryIO(uint8* begin, uint32 sz)
+	{
+		assert(sz > 0);
+		Begin = new uint8[sz];
+		Read = Begin;
+		Write = Begin;
+		End = Begin + sz;
+		Serialize(*this, begin, sz);
 	}
 
 	inline FBinaryIO::~FBinaryIO()
@@ -115,7 +130,7 @@ namespace LostCore
 	inline void FBinaryIO::WriteToFile(const std::string& filePath)
 	{
 		ofstream file;
-		file.open(filePath, ios::out);
+		file.open(filePath, ios::out|ios::binary);
 		file.write((const char*)Data(), Size());
 		file.close();
 	}

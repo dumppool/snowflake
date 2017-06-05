@@ -29,6 +29,16 @@ namespace LostCore
 			(flag & EVertexElement::Skin) == EVertexElement::Skin);
 	}
 
+	inline uint32 GetAlignedSize(uint32 sz, uint32 alignment)
+	{
+		return (uint32)ceil(sz / (float)alignment)*alignment;
+	}
+
+	inline uint32 GetPaddingSize(uint32 sz, uint32 alignment)
+	{
+		return (uint32)ceil(sz / (float)alignment) * alignment - sz;
+	}
+
 	struct FWeight
 	{
 		int32 BoneIndex;
@@ -53,8 +63,11 @@ namespace LostCore
 		vector<FVec3> VertexColor;
 		vector<FVec4> Weight;
 
+		uint32 VertexMagic;
+
 		FMeshData() {}
 		~FMeshData() {}
+
 	};
 
 	// serialize
@@ -84,8 +97,9 @@ namespace LostCore
 		}
 
 		uint32 stride = GetVertexDetails(data.VertexFlags).Stride;
-		uint32 paddingBytes = (uint32)ceil(stride / 16.f) * 16 - stride;
+		uint32 paddingBytes = GetPaddingSize(stride, 16);
 		uint8* padding = new uint8[paddingBytes];
+		stream << (uint32)MAGIC_VERTEX;
 		for (uint32 i = 0; i < data.VertexCount; ++i)
 		{
 			stream << data.XYZ[i];
@@ -137,6 +151,8 @@ namespace LostCore
 		stream >> data.IndexCount >> data.VertexCount >> data.VertexFlags;
 		if ((data.VertexFlags & EVertexElement::Skin) == EVertexElement::Skin)
 		{
+			data.Bones.clear();
+
 			size_t boneSize;
 			stream >> boneSize;
 			for (size_t i = 0; i < boneSize; ++i)
@@ -162,9 +178,11 @@ namespace LostCore
 		}
 
 		uint32 stride = GetVertexDetails(data.VertexFlags).Stride;
-		uint32 paddingBytes = (uint32)ceil(stride / 16.f) * 16 - stride;
+		uint32 paddingBytes = GetPaddingSize(stride, 16);
 		uint8* padding = new uint8[paddingBytes];
 		bool allocating = true;
+		stream >> data.VertexMagic;
+		assert(data.VertexMagic == MAGIC_VERTEX && "vertex data is incorrect");
 		for (uint32 i = 0; i < data.VertexCount; ++i)
 		{
 			if (allocating)
@@ -256,8 +274,117 @@ namespace LostCore
 		vector<uint8> Indices;
 		vector<uint8> Vertices;
 
+		uint32 VertexMagic;
+
 		FMeshDataGPU() {}
 		~FMeshDataGPU() {}
+
+		inline FMeshData ToMeshData()
+		{
+			FMeshData output;
+			output.IndexCount = IndexCount;
+			output.VertexCount = VertexCount;
+			output.VertexFlags = VertexFlags;
+			output.VertexMagic = VertexMagic;
+			if ((VertexFlags & EVertexElement::Skin) == EVertexElement::Skin)
+			{
+				output.Bones.clear();
+				for (size_t i = 0; i < Bones.size(); ++i)
+				{
+					output.Bones.push_back(Bones[i]);
+				}
+			}
+
+			if (VertexCount < (1 << 16))
+			{
+				output.Indices16.resize(Indices.size() / sizeof(uint16));
+				memcpy(&output.Indices16[0], &Indices[0], Indices.size());
+			}
+			else
+			{
+				output.Indices32.resize(Indices.size() / sizeof(uint32));
+				memcpy(&output.Indices32[0], &Indices[0], Indices.size()); 
+			}
+
+			uint32 stride = GetVertexDetails(VertexFlags).Stride;
+			uint32 paddingBytes = GetPaddingSize(stride, 16);
+			uint32 alignedSz = GetAlignedSize(stride, 16);
+			uint8* padding = new uint8[paddingBytes];
+			bool allocating = true;
+			for (uint32 i = 0; i < VertexCount; ++i)
+			{
+				FBinaryIO stream(&Vertices[i * alignedSz], alignedSz);
+
+				if (allocating)
+				{
+					output.XYZ.resize(VertexCount);
+				}
+				stream >> output.XYZ[i];
+
+				if ((VertexFlags & EVertexElement::UV) == EVertexElement::UV)
+				{
+					if (allocating)
+					{
+						output.UV.resize(VertexCount);
+					}
+					stream >> output.UV[i];
+				}
+
+				if ((VertexFlags & EVertexElement::Normal) == EVertexElement::Normal)
+				{
+					if (allocating)
+					{
+						output.Normal.resize(VertexCount);
+					}
+					stream >> output.Normal[i];
+				}
+
+				if ((VertexFlags & EVertexElement::Tangent) == EVertexElement::Tangent)
+				{
+					if (allocating)
+					{
+						output.Tangent.resize(VertexCount);
+					}
+					stream >> output.Tangent[i];
+				}
+
+				if ((VertexFlags & EVertexElement::Binormal) == EVertexElement::Binormal)
+				{
+					if (allocating)
+					{
+						output.Binormal.resize(VertexCount);
+					}
+					stream << output.Binormal[i];
+				}
+
+				if ((VertexFlags & EVertexElement::VertexColor) == EVertexElement::VertexColor)
+				{
+					if (allocating)
+					{
+						output.VertexColor.resize(VertexCount);
+					}
+					stream << output.VertexColor[i];
+				}
+
+				if ((VertexFlags & EVertexElement::Skin) == EVertexElement::Skin)
+				{
+					if (allocating)
+					{
+						output.Weight.resize(VertexCount);
+					}
+					stream << output.Weight[i];
+				}
+
+				//if (paddingBytes != 0)
+				//{
+				//	Serialize(stream, padding, paddingBytes);
+				//}
+				allocating = false;
+			}
+
+			delete[] padding;
+			return output;
+		}
 	};
 
 	template<>
@@ -279,6 +406,7 @@ namespace LostCore
 		uint32 ibSz = data.IndexCount * (data.VertexCount < (1 << 16) ? 2 : 4);
 		Serialize(stream, &(data.Indices[0]), ibSz);
 
+		stream << (uint32)MAGIC_VERTEX;
 		Serialize(stream, &(data.Vertices[0]), data.Vertices.size());
 		return stream;
 	}
@@ -289,6 +417,8 @@ namespace LostCore
 		stream >> data.IndexCount >> data.VertexCount >> data.VertexFlags;
 		if ((data.VertexFlags & EVertexElement::Skin) == EVertexElement::Skin)
 		{
+			data.Bones.clear();
+
 			size_t boneSize;
 			stream >> boneSize;
 			for (size_t i = 0; i < boneSize; ++i)
@@ -306,9 +436,11 @@ namespace LostCore
 		data.Indices.resize(ibSz);
 		Deserialize(stream, &(data.Indices[0]), ibSz);
 
+		stream >> data.VertexMagic;
+		assert(data.VertexMagic == MAGIC_VERTEX && "vertex data is incorrect");
 		uint32 stride = GetVertexDetails(data.VertexFlags).Stride;
-		//uint32 paddingBytes = (uint32)ceil(stride / 16.f) * 16 - stride;
-		uint32 sz = (uint32)ceil(stride / 16.f) * 16 * data.VertexCount;
+		uint32 sz = (uint32)ceil(stride / 16.f) * 16;
+		sz *= data.VertexCount;
 		data.Vertices.resize(sz);
 		Deserialize(stream, &(data.Vertices[0]), sz);
 		return stream;
