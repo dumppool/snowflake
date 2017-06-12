@@ -50,10 +50,13 @@ namespace LostCore
 		uint32 IndexCount;
 		uint32 VertexCount;
 		uint32 VertexFlags;
+
 		vector<string> Bones;
 
 		vector<uint16> Indices16;
 		vector<uint32> Indices32;
+
+		uint32 VertexMagic;
 
 		vector<FVec3> XYZ;
 		vector<FVec2> UV;
@@ -63,10 +66,97 @@ namespace LostCore
 		vector<FVec3> VertexColor;
 		vector<FVec4> Weight;
 
-		uint32 VertexMagic;
+		map<string, FMatrix> DefaultPose;
 
 		FMeshData() {}
 		~FMeshData() {}
+
+		void FromJson(const FJson& j)
+		{
+			IndexCount = j[K_INDEX].size();
+			VertexCount = j[K_COORDINATE].size();
+			VertexFlags = j[K_VERTEX_ELEMENT];
+			Bones.reserve(j[K_SKIN].size());
+			for (uint32 i = 0; i < j[K_SKIN].size(); ++i)
+			{
+				Bones.push_back(j[K_SKIN][i]);
+			}
+
+			// fill FMeshData(src) first
+			if (VertexCount < (1 << 16))
+			{
+				Indices16.resize(IndexCount);
+			}
+			else
+			{
+				Indices32.resize(IndexCount);
+			}
+
+			XYZ.resize(VertexCount);
+			UV.resize(VertexCount);
+			Normal.resize(VertexCount);
+			Tangent.resize(VertexCount);
+			Binormal.resize(VertexCount);
+			VertexColor.resize(VertexCount);
+			Weight.resize(VertexCount);
+			for (uint32 i = 0; i < VertexCount; ++i)
+			{
+				if (VertexCount < (1 << 16))
+				{
+					Indices16[i] = j[K_INDEX][i];
+				}
+				else
+				{
+					Indices32[i] = j[K_INDEX][i];
+				}
+
+				XYZ[i] = j[K_COORDINATE][i];
+				
+				if ((VertexFlags & EVertexElement::UV) == EVertexElement::UV)
+				{
+					UV[i] = j[K_UV][i];
+				}
+				
+				if ((VertexFlags & EVertexElement::Normal) == EVertexElement::Normal)
+				{
+					Normal[i] = j[K_NORMAL][i];
+				}
+				
+				if ((VertexFlags & EVertexElement::Tangent) == EVertexElement::Tangent)
+				{
+					Tangent[i] = j[K_TANGENT][i];
+				}
+				
+				if ((VertexFlags & EVertexElement::Binormal) == EVertexElement::Binormal)
+				{
+					Binormal[i] = j[K_BINORMAL][i];
+				}
+				
+				if ((VertexFlags & EVertexElement::VertexColor) == EVertexElement::VertexColor)
+				{
+					VertexColor[i] = j[K_VERTEXCOLOR][i];
+				}
+
+				if ((VertexFlags & EVertexElement::Skin) == EVertexElement::Skin)
+				{
+					Weight[i] = j[K_WEIGHT][i];
+				}
+			}
+
+			auto it = j.find(K_DEFAULT_POSE);
+			if (it != j.end())
+			{
+				const FJson& matrices = it.value()[K_POSE];
+				for (const auto& bone : Bones)
+				{
+					auto matrixNode = matrices.find(bone);
+					if (matrixNode != matrices.end())
+					{
+						DefaultPose[bone] = matrixNode.value();
+					}
+				}
+			}
+		}
 
 	};
 
@@ -279,7 +369,7 @@ namespace LostCore
 		FMeshDataGPU() {}
 		~FMeshDataGPU() {}
 
-		inline FMeshData ToMeshData()
+		inline FMeshData&& ToMeshData()
 		{
 			FMeshData output;
 			output.IndexCount = IndexCount;
@@ -383,7 +473,7 @@ namespace LostCore
 			}
 
 			delete[] padding;
-			return output;
+			return std::forward<FMeshData&&>(output);
 		}
 	};
 

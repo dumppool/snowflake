@@ -140,7 +140,7 @@ namespace LostCore
 		ifstream file;
 		file.open(filePath, ios::in | ios::binary | ios::ate);
 		auto sz = file.tellg();
-		Reserve(sz);
+		Reserve((uint32)sz);
 		file.seekg(0);
 		file.read((char*)Begin, sz);
 		file.close();

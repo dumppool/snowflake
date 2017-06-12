@@ -27,6 +27,7 @@
 #define K_LODGROUP						"LODGroup"
 #define K_POSE							"Pose"
 #define K_POSES							"Poses"
+#define K_DEFAULT_POSE					"DefaultPose"
 
 #define K_CONTROLPOINT					"ControlPoint"
 #define K_POLYGON						"Polygon"

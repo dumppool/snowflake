@@ -8,6 +8,7 @@ int main(int argc, char** argv)
 {
 	string src("");
 	string dst("");
+	bool exportAnim = false;
 	for (int i = 1; i < argc; ++i)
 	{
 		string cmd(argv[i]);
@@ -26,12 +27,18 @@ int main(int argc, char** argv)
 				dst = value;
 			}
 		}
+		else
+		{
+			if (cmd.compare("anim") == 0)
+			{
+				exportAnim = true;
+			}
+		}
 	}
 
 	if (!src.empty() && !dst.empty())
 	{
-		//Importer::ImportScene2(src, dst);
-		Importer::ImportSceneMeshes(src, dst, true);
+		Importer::ImportSceneMeshes(src, dst, true, exportAnim);
 	}
 
     return 0;

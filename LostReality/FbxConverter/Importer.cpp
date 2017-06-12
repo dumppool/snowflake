@@ -82,7 +82,7 @@ static void ParseLink(function<FJson&()> outputGetter, FJson& vertices, FbxMesh*
 				int cpIndex = indices[k];
 				if (controlPointToVertexMap.empty())
 				{
-					float w = min(weights[k], 0.999999f);
+					float w = min((float)weights[k], 0.999999f);
 					vertj[cpIndex].push_back(skinIndex + w);
 					//FJson& j1 = *(vertj[cpIndex].end() - 1);
 					//j1[K_BONE] = skinIndex;
@@ -92,7 +92,7 @@ static void ParseLink(function<FJson&()> outputGetter, FJson& vertices, FbxMesh*
 				{
 					for (auto vertexIndex : controlPointToVertexMap.at(cpIndex))
 					{
-						float w = min(weights[k], 0.999999f);
+						float w = min((float)weights[k], 0.999999f);
 						vertj[vertexIndex].push_back(skinIndex + w);
 						//FJson& j1 = *(vertj[vertexIndex].end() - 1);
 						//j1[K_BONE] = skinIndex;
@@ -403,7 +403,89 @@ static void ParseChannels(FJson& output,
 	}
 }
 
-static void ParseAnimationLayer(function<FJson&()> outputGetter, FbxAnimLayer* layer, FbxNode* node, bool bIsSwitcher)
+// @param bInMeshSection false表示需要在json里找到合适的mesh块保存输出
+static void ParseSkeletonLayer(function<FJson&()> outputMeshGetter, function<FJson&()> outputAnimGetter, const std::string& meshName, FbxAnimLayer* layer, FbxNode* node, bool bIsSwitcher)
+{
+	if (layer == nullptr || node == nullptr)
+	{
+		return;
+	}
+
+	FJson& outputMesh = outputMeshGetter();
+	outputMesh[K_NAME] = node->GetName();
+
+	FJson& outputAnim = outputAnimGetter();
+	outputAnim[K_NAME] = node->GetName();
+
+
+	// 这里是导出动画数据，如果可以提到骨骼层级导出之外会干净很多
+	ParseChannels(outputAnim, node, layer, ParseCurveKeys, ParseListCurveKeys, bIsSwitcher);
+
+	auto count = node->GetChildCount();
+	for (int i = 0; i < count; ++i)
+	{
+		auto child = node->GetChild(i);
+		if (meshName.compare(child->GetName()) == 0)
+		{
+			continue;
+		}
+
+		ParseSkeletonLayer([&]()->FJson& {outputMesh[K_LAYER].push_back(FJson());
+			return *(outputMesh[K_LAYER].end() - 1);}, outputAnimGetter, meshName, layer, child, bIsSwitcher);
+	}
+}
+
+static void ParseSkeleton(std::function<FJson&()> outputMeshGetter, std::function<FJson&()> outputAnimGetter, FbxScene* scene)
+{
+	if (scene == nullptr)
+	{
+		return;
+	}
+
+	FJson& output = outputMeshGetter();
+	std::string meshName = output[K_NAME];
+
+	int animStackCount = scene->GetSrcObjectCount<FbxAnimStack>();
+	assert(animStackCount == 1 && "stack count must be 1");
+
+	auto rootNode = scene->GetRootNode();
+	int nodeCount = rootNode->GetChildCount();
+	for (int i = 0; i < animStackCount; ++i)
+	{
+		auto stack = scene->GetSrcObject<FbxAnimStack>(i);
+		int layerCount = stack->GetMemberCount<FbxAnimLayer>();
+		assert(layerCount == 1 && "layer count must be 1");
+
+		for (int j = 0; j < layerCount; ++j)
+		{
+			auto layer = stack->GetMember<FbxAnimLayer>(j);
+
+			// 对fbx导出结构知之甚少，不了解mesh node之间是否存在平行之外的关系，
+			// 因此这里只考虑RootNode下的mesh node。
+			for (int k = 0; k < nodeCount; ++k)
+			{
+				auto node = rootNode->GetChild(k);
+				int ncount = node->GetChildCount();
+				if (meshName.compare(node->GetName()) == 0)
+				{
+					for (int l = 0; l < ncount; ++l)
+					{
+						auto childNode = node->GetChild(l);
+						if (meshName.compare(childNode->GetName()) == 0)
+						{
+							continue;
+						}
+
+						ParseSkeletonLayer([&]()->FJson& {return output[K_STACK]; }, outputAnimGetter, meshName, layer, childNode, true);
+						return;
+					}
+				}
+			}
+		}
+	}
+}
+
+static void ParseAnimationLayer(std::function<FJson&()> outputGetter, FbxAnimLayer* layer, FbxNode* node, bool bIsSwitcher)
 {
 	if (layer == nullptr || node == nullptr)
 	{
@@ -411,35 +493,17 @@ static void ParseAnimationLayer(function<FJson&()> outputGetter, FbxAnimLayer* l
 	}
 
 	FJson& output = outputGetter();
-	output[K_NAME] = node->GetName();
+	auto nodeName = node->GetName();
+	assert(output.find(nodeName) == output.end() && "already exist");
 
-	ParseChannels(output, node, layer, ParseCurveKeys, ParseListCurveKeys, bIsSwitcher);
+	output[nodeName] = FJson();
+	ParseChannels(output[nodeName][K_CURVE], node, layer, ParseCurveKeys, ParseListCurveKeys, bIsSwitcher);
 
-	for (int i = 0; i < node->GetChildCount(); ++i)
+	int childCount = node->GetChildCount();
+	for (int i = 0; i < childCount; ++i)
 	{
-		output[K_LAYER].push_back(FJson());
-		auto it = output[K_LAYER].end() - 1;
-		ParseAnimationLayer([&]()->FJson& {return *it; }, layer, node->GetChild(i), bIsSwitcher);
-	}
-}
-
-static void ParseAnimationStack(function<FJson&()> outputGetter, FbxAnimStack* stack, FbxNode* node, bool bIsSwitcher)
-{
-	if (stack == nullptr || node == nullptr)
-	{
-		return;
-	}
-
-	FJson& output = outputGetter();
-
-	output[K_NAME] = stack->GetName();
-	int count = stack->GetMemberCount<FbxAnimLayer>();
-	for (int i = 0; i < count; ++i)
-	{
-		output[K_LAYER].push_back(FJson());
-		auto it = output[K_LAYER].end() - 1;
-		auto layer = stack->GetMember<FbxAnimLayer>(i);
-		ParseAnimationLayer([&]()->FJson& {return *it; }, layer, node, bIsSwitcher);
+		auto childNode = node->GetChild(i);
+		ParseAnimationLayer(outputGetter, layer, childNode, bIsSwitcher);
 	}
 }
 
@@ -450,13 +514,26 @@ static void ParseAnimation(std::function<FJson&()> outputGetter, FbxScene* scene
 		return;
 	}
 
-	FJson& output = outputGetter();
 	int animStackCount = scene->GetSrcObjectCount<FbxAnimStack>();
+	assert(animStackCount == 1 && "stack count must be 1");
+
+	auto rootNode = scene->GetRootNode();
+	int nodeCount = rootNode->GetChildCount();
 	for (int i = 0; i < animStackCount; ++i)
 	{
-		output[K_STACK].push_back(FJson());
-		FJson& stackJson = *(output[K_STACK].end() - 1);
-		ParseAnimationStack([&]()->FJson& {return stackJson; }, scene->GetSrcObject<FbxAnimStack>(i), scene->GetRootNode(), false);
+		auto stack = scene->GetSrcObject<FbxAnimStack>(i);
+		int layerCount = stack->GetMemberCount<FbxAnimLayer>();
+		assert(layerCount == 1 && "layer count must be 1");
+
+		for (int j = 0; j < layerCount; ++j)
+		{
+			auto layer = stack->GetMember<FbxAnimLayer>(j);
+			for (int k = 0; k < nodeCount; ++k)
+			{
+				auto node = rootNode->GetChild(k);
+				ParseAnimationLayer(outputGetter, layer, node, false);
+			}
+		}
 	}
 }
 
@@ -470,17 +547,20 @@ static void ParsePose(std::function<FJson&()> outputGetter, FbxScene* scene)
 	FJson& output = outputGetter();
 	for (int i = 0; i < scene->GetPoseCount(); ++i)
 	{
-		output[K_POSES].push_back(FJson());
-		FJson& poseJson = *(output[K_POSES].end() - 1);
 		auto pose = scene->GetPose(i);
-		poseJson[K_NAME] = pose->GetName();
+		auto poseName = pose->GetName();
+		auto it = output.find(poseName);
+		if (it == output.end())
+		{
+			continue;
+		}
+
+		FJson& poseJson = it.value()[K_DEFAULT_POSE];
 		poseJson[K_ISBIND] = pose->IsBindPose() ? 1 : 0;
 		for (int j = 0; j < pose->GetCount(); ++j)
 		{
-			poseJson[K_POSE].push_back(FJson());
-			FJson& json0 = *(poseJson[K_POSE].end() - 1);
-			json0[K_NAME] = pose->GetNodeName(j).GetCurrentName();
-			WriteFloat4x4(json0[K_MATRIX], pose->GetMatrix(j));
+			FJson& json0 = poseJson[K_POSE][pose->GetNodeName(j).GetCurrentName()];
+			WriteFloat4x4(json0, pose->GetMatrix(j));
 		}
 	}
 
@@ -657,13 +737,13 @@ static void ParseVertices(function<FJson&()> outputGetter, FbxMesh* mesh, map<in
 				{
 					if (vertexColorHead->GetReferenceMode() == FbxGeometryElement::eDirect)
 					{
-						output[K_RGB].push_back(FJson());
-						WriteRGB(*(output[K_RGB].end() - 1), vertexColorHead->GetDirectArray().GetAt(i));
+						output[K_VERTEXCOLOR].push_back(FJson());
+						WriteRGB(*(output[K_VERTEXCOLOR].end() - 1), vertexColorHead->GetDirectArray().GetAt(i));
 					}
 					else if (vertexColorHead->GetReferenceMode() == FbxGeometryElement::eIndexToDirect)
 					{
-						output[K_RGB].push_back(FJson());
-						WriteRGB(*(output[K_RGB].end() - 1), vertexColorHead->GetDirectArray().GetAt(vertexColorHead->GetIndexArray().GetAt(i)));
+						output[K_VERTEXCOLOR].push_back(FJson());
+						WriteRGB(*(output[K_VERTEXCOLOR].end() - 1), vertexColorHead->GetDirectArray().GetAt(vertexColorHead->GetIndexArray().GetAt(i)));
 					}
 				}
 			}
@@ -867,130 +947,73 @@ static void ParseMesh(std::function<FJson&()> outputGetter, FbxNode* node)
 	ParsePolygons([&]()->FJson& {return output; }, mesh, ControlPointToVertexMap);
 }
 
-class FFbxImporter2
+class FFbxImporter
 {
 public:
-	static FFbxImporter2* Get()
+	static FFbxImporter* Get()
 	{
-		static FFbxImporter2 Inst;
+		static FFbxImporter Inst;
 		return &Inst;
 	}
 
 public:
-	FFbxImporter2()
+	FFbxImporter()
 		: SdkManager(nullptr)
 		, SdkScene(nullptr)
-		, bExportScene(false)
 	{
 		InitializeSdkObjects(SdkManager, SdkScene);
 	}
 
 	void OutputToStream()
 	{
-		if (bExportScene)
+		if (1)
 		{
 			ofstream file;
-			file.open(ConvertPath, ios::out);
-
-			FJson json;
-			json[K_META] = MetaData;
-			json[K_NODE] = NodeData;
-			json[K_POSE] = PoseData;
-			json[K_ANIMATION] = AnimData;
-
-			file << json << endl;
-
+			file.open(ConvertPath + "anim.anim", ios::out);
+			file.width(1);
+			file << AnimData;
 			file.close();
 		}
-		else
+
+		for (auto it = MeshData.begin(); it != MeshData.end(); ++it)
 		{
-			for (auto it = MeshData.begin(); it != MeshData.end(); ++it)
+			char head[] = "lost reality resource file\n";
+			if (1)
 			{
-				char head[] = "lost reality resource file\n";
-				if (1)
+				ofstream file;
+				file.open(ConvertPath + it.key() + ".xpt", ios::out);
+				file.width(1);
+				file << it.value();
+				file.close();
+			}
+
+			if (bOutputBinary && it->find(K_INDEX) != it->end() && it->find(K_COORDINATE) != it->end())
+			{
+				LostCore::FMeshData srcData, dstData;
+				LostCore::FBinaryIO outputStream;
+				FJson& mesh = it.value();
+				srcData.FromJson(it.value());
+
+				outputStream << srcData;
+				outputStream.WriteToFile(ConvertPath + it.key() + ".primitive");
+
+				if (0)
 				{
+					LostCore::FBinaryIO inputStream1, inputStream2;
+					inputStream1.ReadFromFile(ConvertPath + it.key() + ".primitive");
+					inputStream2.ReadFromFile(ConvertPath + it.key() + ".primitive");
+					LostCore::FMeshData data, data2, data3;
+					LostCore::FMeshDataGPU gpuData, gpuData2;
+					inputStream1 >> gpuData;
+					inputStream2 >> data;
 
-					ofstream file;
-					file.open(ConvertPath + it.key() + ".xpt", ios::out);
-					file.width(1);
-					file << it.value();
-					file.close();
-				}
+					LostCore::FBinaryIO outputStream1((uint8*)outputStream.Data(), outputStream.Size());
+					LostCore::FBinaryIO outputStream2((uint8*)outputStream.Data(), outputStream.Size());
+					outputStream1 >> gpuData2;
+					data3 = gpuData2.ToMeshData();
+					outputStream2 >> data2;
 
-				if (bOutputBinary && it->find(K_INDEX) != it->end() && it->find(K_COORDINATE) != it->end())
-				{
-					LostCore::FMeshData srcData, dstData;
-					LostCore::FBinaryIO outputStream;
-					FJson& mesh = it.value();
-					srcData.IndexCount = mesh[K_INDEX].size();
-					srcData.VertexCount = mesh[K_COORDINATE].size();
-					srcData.VertexFlags = mesh[K_VERTEX_ELEMENT];
-					srcData.Bones.reserve(mesh[K_SKIN].size());
-					for (uint32 i = 0; i < mesh[K_SKIN].size(); ++i)
-					{
-						srcData.Bones.push_back(mesh[K_SKIN][i]);
-					}
-
-					// fill FMeshData(src) first
-					if (srcData.VertexCount < (1 << 16))
-					{
-						srcData.Indices16.resize(srcData.IndexCount);
-					}
-					else
-					{
-						srcData.Indices32.resize(srcData.IndexCount);
-					}
-
-					srcData.XYZ.resize(srcData.VertexCount);
-					srcData.UV.resize(srcData.VertexCount);
-					srcData.Normal.resize(srcData.VertexCount);
-					srcData.Tangent.resize(srcData.VertexCount);
-					srcData.Binormal.resize(srcData.VertexCount);
-					srcData.VertexColor.resize(srcData.VertexCount);
-					srcData.Weight.resize(srcData.VertexCount);
-					for (uint32 i = 0; i < srcData.VertexCount; ++i)
-					{
-						if (srcData.VertexCount < (1 << 16))
-						{
-							srcData.Indices16[i] = mesh[K_INDEX][i];
-						}
-						else
-						{
-							srcData.Indices32[i] = mesh[K_INDEX][i];
-						}
-
-						srcData.XYZ[i] = mesh[K_COORDINATE][i];
-						srcData.UV[i] = mesh[K_UV][i];
-						srcData.Normal[i] = mesh[K_NORMAL][i];
-						srcData.Tangent[i] = mesh[K_TANGENT][i];
-						srcData.Binormal[i] = mesh[K_BINORMAL][i];
-						srcData.VertexColor[i] = mesh[K_VERTEXCOLOR][i];
-
-						srcData.Weight[i] = mesh[K_WEIGHT][i];
-					}
-
-					// FMeshData(src) >> FBinaryIO
-					outputStream << srcData;
-					outputStream.WriteToFile(ConvertPath + it.key() + ".primitive");
-
-					if (0)
-					{
-						LostCore::FBinaryIO inputStream1, inputStream2;
-						inputStream1.ReadFromFile(ConvertPath + it.key() + ".primitive");
-						inputStream2.ReadFromFile(ConvertPath + it.key() + ".primitive");
-						LostCore::FMeshData data, data2, data3;
-						LostCore::FMeshDataGPU gpuData, gpuData2;
-						inputStream1 >> gpuData;
-						inputStream2 >> data;
-
-						LostCore::FBinaryIO outputStream1((uint8*)outputStream.Data(), outputStream.Size());
-						LostCore::FBinaryIO outputStream2((uint8*)outputStream.Data(), outputStream.Size());
-						outputStream1 >> gpuData2;
-						data3 = gpuData2.ToMeshData();
-						outputStream2 >> data2;
-
-						outputStream2 >> data2;
-					}
+					outputStream2 >> data2;
 				}
 			}
 		}
@@ -1060,11 +1083,6 @@ public:
 				ParseSkeleton([&]()->FJson& {output[K_TYPE] = K_SKELETON; return output; }, node);
 				break;
 			case FbxNodeAttribute::eMesh:
-				if (bExportScene)
-				{
-					ParseMesh([&]()->FJson& {output[K_TYPE] = K_MESH; return output; }, node);
-				}
-				else
 				{
 					ParseMesh([&]()->FJson& {return output[node->GetName()]; }, node);
 				}
@@ -1087,60 +1105,37 @@ public:
 		{
 			for (int i = 0; i < node->GetChildCount(); ++i)
 			{
-				if (bExportScene)
-				{
-					ImportNode([&]()->FJson& {NodeData[K_CHILDREN].push_back(FJson()); return *(NodeData[K_CHILDREN].end() - 1); }, node->GetChild(i));
-				}
-				else
-				{
-					ImportNode([&]()->FJson& {return MeshData; }, node->GetChild(i));
-				}
+				ImportNode([&]()->FJson& {return MeshData; }, node->GetChild(i));
 			}
 		}
 	}
 
 	void ImportPose()
 	{
-		if (bExportScene)
-		{
-			ParsePose([&]()->FJson& {return PoseData; }, SdkScene);
-		}
-		else
-		{
-			ParsePose([&]()->FJson& {return MeshData; }, SdkScene);
-		}
+		ParsePose([&]()->FJson& {return MeshData; }, SdkScene);
 	}
 
 	void ImportAnimation()
 	{
-		ParseAnimation([&]()->FJson& {return AnimData; }, SdkScene);
-	}
-
-	bool ImportScene(const string& importSrc, const string& convertDst, bool outputBinary = false)
-	{
-		ImportPath = importSrc;
-		ConvertPath = convertDst;
-		bOutputBinary = outputBinary;
-		bExportScene = true;
-		bool result = LoadScene(SdkManager, SdkScene, importSrc.c_str());
-
-		if (result)
+		if (bExportAnimation)
 		{
-			ImportMetaData();
-			ImportContent();
-			ImportPose();
-			ImportAnimation();
+			ParseAnimation([&]()->FJson& {return AnimData; }, SdkScene);
 		}
-
-		OutputToStream();
-
-		return true;
+		else
+		{
+			for (FJson::iterator it = MeshData.begin(); it != MeshData.end(); ++it)
+			{
+				if (it->find(K_NAME) != it->end() && it->find(K_COORDINATE) != it->end())
+					ParseSkeleton([&]()->FJson& {return it.value(); }, [&]()->FJson& {return AnimData; }, SdkScene);
+			}
+		}
 	}
 
-	bool ImportSceneMeshes(const string& importSrc, const string& convertDst, bool outputBinary = false)
+	bool ImportSceneMeshes(const string& importSrc, const string& convertDst, bool outputBinary, bool exportAnimation)
 	{
 		ImportPath = importSrc;
 		bOutputBinary = outputBinary;
+		bExportAnimation = exportAnimation;
 
 		// format path, find out the correct directory path
 		ConvertPath = convertDst;
@@ -1158,9 +1153,10 @@ public:
 			ConvertPath.resize(lastSlash + 1);
 		}
 
-		bExportScene = false;
-
 		bool result = LoadScene(SdkManager, SdkScene, importSrc.c_str());
+		//DisplayMesh(SdkScene->GetRootNode());
+		//DisplayAnimation(SdkScene);
+		//DisplayHierarchy(SdkScene);
 
 		if (result)
 		{
@@ -1182,22 +1178,22 @@ private:
 	string				ConvertPath;
 
 	FJson				MetaData;
-	FJson				NodeData;
-	FJson				PoseData;
 	FJson				AnimData;
+	FJson				PoseData;
 	FJson				MeshData;
 
-	bool				bExportScene;
 	bool				bOutputBinary;
+	bool				bExportAnimation;
 	vector<string>		MeshFiles;
 };
 
 bool Importer::ImportScene(const string& importSrc, const string& convertDst, bool outputBinary)
 {
-	return FFbxImporter2::Get()->ImportScene(importSrc, convertDst, outputBinary);
+	assert(0 && "not implemented yet");
+	return false;
 }
 
-bool Importer::ImportSceneMeshes(const string& importSrc, const string& convertDst, bool outputBinary)
+bool Importer::ImportSceneMeshes(const string& importSrc, const string& convertDst, bool outputBinary, bool exportAnimation)
 {
-	return FFbxImporter2::Get()->ImportSceneMeshes(importSrc, convertDst, outputBinary);
+	return FFbxImporter::Get()->ImportSceneMeshes(importSrc, convertDst, outputBinary, exportAnimation);
 }

@@ -41,7 +41,7 @@ namespace LostCore
 			val.Z = j[2];
 			val.W = j[3];
 		}
-}
+	}
 
 	INLINE void to_json(FJson& j, const FVec4NonVectorized& val)
 	{

@@ -15,10 +15,10 @@
 
 namespace LostCore
 {
-	ALIGNED_LR(16) class FMatrixNonVectorized
+	class FMatrixNonVectorized
 	{
 	public:
-		__declspec(align(16)) float M[4][4];
+		float M[4][4];
 
 		INLINE FVec3 GetScale() const
 		{
@@ -126,6 +126,29 @@ namespace LostCore
 			return ret;
 		}
 	};
+
+	INLINE void from_json(const FJson& j, FMatrixNonVectorized& matrix)
+	{
+		if (j.is_array() && j.size() >= 16)
+		{
+			//FJson::number_float_t
+			//memcpy(matrix.M, &j[0], sizeof(float) * 16);
+			for (int row = 0; row < 4; ++row)
+			{
+				for (int col = 0; col < 4; ++col)
+				{
+					matrix.M[row][col] = j[row * 4 + col];
+				}
+			}
+		}
+	}
+
+	INLINE void to_json(FJson& j, const FMatrixNonVectorized& matrix)
+	{
+		assert(j.size() >= 16);
+		//j[15] = 0.f;
+		memcpy(&j[0], matrix.M, sizeof(float) * 16);
+	}
 
 #ifdef TYPEDEF_DECL_FMATRIX
 #error "FMatrix already defined somewhere else"
