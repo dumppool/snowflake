@@ -171,9 +171,7 @@ namespace LostCore
 			for (size_t i = 0; i < data.Bones.size(); ++i)
 			{
 				auto it = data.Bones.begin() + i;
-				uint32 stringLen = it->length();
-				stream << stringLen;
-				Serialize(stream, (const uint8*)&((*it)[0]), stringLen);
+				stream << *it;
 			}
 		}
 
@@ -230,6 +228,12 @@ namespace LostCore
 			}
 		}
 
+		stream << data.DefaultPose.size();
+		for (auto it = data.DefaultPose.begin(); it != data.DefaultPose.end(); ++it)
+		{
+			stream << it->first << it->second;
+		}
+
 		delete[] padding;
 		return stream;
 	}
@@ -247,12 +251,9 @@ namespace LostCore
 			stream >> boneSize;
 			for (size_t i = 0; i < boneSize; ++i)
 			{
-				uint32 stringLen;
-				stream >> stringLen;
-				uint8* boneName = new uint8[stringLen+1];
-				Deserialize(stream, boneName, stringLen);
-				boneName[stringLen] = '\0';
-				data.Bones.push_back(string((char*)boneName));
+				std::string boneName;
+				stream >> boneName;
+				data.Bones.push_back(boneName);
 			}
 		}
 
@@ -349,6 +350,16 @@ namespace LostCore
 			}
 		}
 
+		uint32 defaultPoseSz;
+		stream >> defaultPoseSz;
+		for (int i = 0; i < defaultPoseSz; ++i)
+		{
+			string boneName;
+			FMatrix boneMatrix;
+			stream >> boneName >> boneMatrix;
+			data.DefaultPose[boneName] = boneMatrix;
+		}
+
 		delete[] padding;
 		return stream;
 	}
@@ -364,12 +375,14 @@ namespace LostCore
 		vector<uint8> Indices;
 		vector<uint8> Vertices;
 
+		map<string, FMatrix> DefaultPose;
+
 		uint32 VertexMagic;
 
 		FMeshDataGPU() {}
 		~FMeshDataGPU() {}
 
-		inline FMeshData&& ToMeshData()
+		inline FMeshData ToMeshData()
 		{
 			FMeshData output;
 			output.IndexCount = IndexCount;
@@ -444,7 +457,7 @@ namespace LostCore
 					{
 						output.Binormal.resize(VertexCount);
 					}
-					stream << output.Binormal[i];
+					stream >> output.Binormal[i];
 				}
 
 				if ((VertexFlags & EVertexElement::VertexColor) == EVertexElement::VertexColor)
@@ -453,7 +466,7 @@ namespace LostCore
 					{
 						output.VertexColor.resize(VertexCount);
 					}
-					stream << output.VertexColor[i];
+					stream >> output.VertexColor[i];
 				}
 
 				if ((VertexFlags & EVertexElement::Skin) == EVertexElement::Skin)
@@ -462,18 +475,19 @@ namespace LostCore
 					{
 						output.Weight.resize(VertexCount);
 					}
-					stream << output.Weight[i];
+					stream >> output.Weight[i];
 				}
 
-				//if (paddingBytes != 0)
-				//{
-				//	Serialize(stream, padding, paddingBytes);
-				//}
 				allocating = false;
 			}
 
+			for (auto it = DefaultPose.begin(); it != DefaultPose.end(); ++it)
+			{
+				output.DefaultPose[it->first] = it->second;
+			}
+
 			delete[] padding;
-			return std::forward<FMeshData&&>(output);
+			return (output);
 		}
 	};
 
@@ -498,6 +512,13 @@ namespace LostCore
 
 		stream << (uint32)MAGIC_VERTEX;
 		Serialize(stream, &(data.Vertices[0]), data.Vertices.size());
+
+		stream << data.DefaultPose.size();
+		for (auto it = data.DefaultPose.begin(); it != data.DefaultPose.end(); ++it)
+		{
+			stream << it->first << it->second;
+		}
+
 		return stream;
 	}
 
@@ -533,6 +554,17 @@ namespace LostCore
 		sz *= data.VertexCount;
 		data.Vertices.resize(sz);
 		Deserialize(stream, &(data.Vertices[0]), sz);
+
+		uint32 defaultPoseSz;
+		stream >> defaultPoseSz;
+		for (int i = 0; i < defaultPoseSz; ++i)
+		{
+			std::string boneName;
+			FMatrix boneMatrix;
+			stream >> boneName >> boneMatrix;
+			data.DefaultPose[boneName] = boneMatrix;
+		}
+
 		return stream;
 	}
 }

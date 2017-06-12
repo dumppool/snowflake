@@ -13,6 +13,7 @@
 namespace LostCore
 {
 	static const float SSmallFloat = 1.e-8f;
+	static const float SSmallFloat2 = 1.e-4f;
 	static const float SPI = 3.14159265359f;
 	static const float SHalfPI = SPI * 0.5f;
 	static const float SInvPI = (1.f / SPI);

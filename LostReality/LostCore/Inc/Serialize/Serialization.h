@@ -163,6 +163,25 @@ namespace LostCore
 		return stream;
 	}
 
+	template<>
+	inline FBinaryIO& operator<<(FBinaryIO& stream, const std::string& data)
+	{
+		auto sz = data.length();
+		stream << sz;
+		Serialize(stream, (const uint8*)&(data[0]), sz);
+		return stream;
+	}
+
+	template<>
+	inline FBinaryIO& operator >> (FBinaryIO& stream, std::string& data)
+	{
+		uint32 sz;
+		stream >> sz;
+		data.resize(sz);
+		Deserialize(stream, (uint8*)&(data[0]), sz);
+		return stream;
+	}
+
 	inline FBinaryIO& Serialize(FBinaryIO& stream, const uint8* buf, uint32 sz)
 	{
 		memcpy(stream.Reserve(sz), buf, sz);

@@ -70,7 +70,7 @@ namespace Importer {
 			FbxVector4 vec = matrix.GetRow(row);
 			for (int col = 0; col < 4; ++col)
 			{
-				f4x4.push_back(vec[col]);
+				f4x4.push_back(abs(vec[col]) < LostCore::SSmallFloat2 ? 0.0f : vec[col]);
 			}
 		}
 

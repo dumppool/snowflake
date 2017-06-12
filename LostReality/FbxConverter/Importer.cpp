@@ -994,10 +994,12 @@ public:
 				FJson& mesh = it.value();
 				srcData.FromJson(it.value());
 
+				true_type tt;
+
 				outputStream << srcData;
 				outputStream.WriteToFile(ConvertPath + it.key() + ".primitive");
 
-				if (0)
+				if (02)
 				{
 					LostCore::FBinaryIO inputStream1, inputStream2;
 					inputStream1.ReadFromFile(ConvertPath + it.key() + ".primitive");
@@ -1011,8 +1013,6 @@ public:
 					LostCore::FBinaryIO outputStream2((uint8*)outputStream.Data(), outputStream.Size());
 					outputStream1 >> gpuData2;
 					data3 = gpuData2.ToMeshData();
-					outputStream2 >> data2;
-
 					outputStream2 >> data2;
 				}
 			}
