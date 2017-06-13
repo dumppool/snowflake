@@ -12,9 +12,6 @@
     <ClInclude Include="Src\PrimitiveGroup.h">
       <Filter>Src</Filter>
     </ClInclude>
-    <ClInclude Include="Src\BufferDef.h">
-      <Filter>Src</Filter>
-    </ClInclude>
     <ClInclude Include="Src\RenderContext.h">
       <Filter>Src</Filter>
     </ClInclude>
@@ -42,6 +39,12 @@
     <ClInclude Include="Src\SamplerStateDef.h">
       <Filter>Src</Filter>
     </ClInclude>
+    <ClInclude Include="Src\ConstantBuffer.h">
+      <Filter>Src</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\VertexDef.h">
+      <Filter>Src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
@@ -64,9 +67,6 @@
     <ClCompile Include="Src\Texture.cpp">
       <Filter>Src</Filter>
     </ClCompile>
-    <ClCompile Include="Src\BufferDef.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
     <ClCompile Include="Src\BlendStateDef.cpp">
       <Filter>Src</Filter>
     </ClCompile>
@@ -80,6 +80,12 @@
       <Filter>Src</Filter>
     </ClCompile>
     <ClCompile Include="Src\SamplerStateDef.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\ConstantBuffer.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\VertexDef.cpp">
       <Filter>Src</Filter>
     </ClCompile>
   </ItemGroup>

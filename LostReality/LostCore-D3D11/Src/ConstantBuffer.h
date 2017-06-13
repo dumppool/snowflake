@@ -106,4 +106,19 @@ namespace D3D11
 		{
 		}
 	};
+
+	struct FConstantBufferSkinned : public FConstantBuffer
+	{
+		struct FParam
+		{
+			LostCore::FMatrix World;
+			array<LostCore::FMatrix, 72> Bones;
+		};
+
+		FConstantBufferSkinned() : FConstantBuffer(sizeof(FParam), false, 1)
+		{
+		}
+
+		void UpdateBuffer(const TRefCountPtr<ID3D11DeviceContext>& cxt, const void* buf, int32 sz);
+	};
 }

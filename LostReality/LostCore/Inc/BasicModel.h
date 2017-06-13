@@ -10,7 +10,7 @@
 #pragma once
 
 #include "BasicInterface.h"
-
+#include "Animation.h"
 namespace LostCore
 {
 	class IPrimitiveGroup;
@@ -47,6 +47,7 @@ namespace LostCore
 		IMaterial* Material;
 
 		FMatrix WorldMatrix;
+		array<FMatrix, 72> BoneMatrices;
 
 		uint32 PrimitiveFlags;
 	};

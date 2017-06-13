@@ -168,7 +168,6 @@
     <ClInclude Include="Inc\Math\Vector2.h" />
     <ClInclude Include="Inc\Math\Vector3.h" />
     <ClInclude Include="Inc\Math\Vector4.h" />
-    <ClInclude Include="Inc\Pose.h" />
     <ClInclude Include="Inc\Serialize\Serialization.h" />
     <ClInclude Include="Inc\Serialize\StructSerialize.h" />
     <ClInclude Include="Inc\SimpleWorld.h" />
@@ -207,7 +206,6 @@
     <ClCompile Include="RenderCore\FontProvider.cpp" />
     <ClCompile Include="RenderCore\Resource\MeshLoader.cpp" />
     <ClCompile Include="RenderCore\Skeleton\Animation.cpp" />
-    <ClCompile Include="RenderCore\Skeleton\Pose.cpp" />
     <ClCompile Include="Src\LostCore.cpp" />
     <ClCompile Include="Src\SimpleWorld.cpp" />
     <ClCompile Include="stdafx.cpp">

@@ -94,6 +94,12 @@ namespace D3D11 {
 	extern "C" LOSTCORED3D11_API int32 DestroyMaterial_SceneObject(LostCore::IMaterial* material);
 	static TExportFuncWrapper<LostCore::IMaterial*> WrappedDestroyMaterial_SceneObject("DestroyMaterial_SceneObject", GetModule_LostCoreD3D11);
 
+	extern "C" LOSTCORED3D11_API int32 CreateMaterial_SceneObjectSkinned(LostCore::IMaterial** material);
+	static TExportFuncWrapper<LostCore::IMaterial**> WrappedCreateMaterial_SceneObjectSkinned("CreateMaterial_SceneObjectSkinned", GetModule_LostCoreD3D11);
+
+	extern "C" LOSTCORED3D11_API int32 DestroyMaterial_SceneObjectSkinned(LostCore::IMaterial* material);
+	static TExportFuncWrapper<LostCore::IMaterial*> WrappedDestroyMaterial_SceneObjectSkinned("DestroyMaterial_SceneObjectSkinned", GetModule_LostCoreD3D11);
+
 	extern "C" LOSTCORED3D11_API int32 CreateMaterial_UIObject(LostCore::IMaterial** material);
 	static TExportFuncWrapper<LostCore::IMaterial**> WrappedCreateMaterial_UIObject("CreateMaterial_UIObject", GetModule_LostCoreD3D11);
 

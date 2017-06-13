@@ -18,7 +18,18 @@ namespace LostCore
 	class FMatrixNonVectorized
 	{
 	public:
+		static FMatrixNonVectorized Identity;
+
+	public:
 		float M[4][4];
+
+		FMatrixNonVectorized()
+		{
+			M[0][0] = 1.f; M[0][1] = 0.f; M[0][2] = 0.f; M[0][3] = 0.f;
+			M[1][0] = 0.f; M[1][1] = 1.f; M[1][2] = 0.f; M[1][3] = 0.f;
+			M[2][0] = 0.f; M[2][1] = 0.f; M[2][2] = 1.f; M[2][3] = 0.f;
+			M[3][0] = 0.f; M[3][1] = 0.f; M[3][2] = 0.f; M[3][3] = 1.f;
+		}
 
 		INLINE FVec3 GetScale() const
 		{
@@ -131,8 +142,6 @@ namespace LostCore
 	{
 		if (j.is_array() && j.size() >= 16)
 		{
-			//FJson::number_float_t
-			//memcpy(matrix.M, &j[0], sizeof(float) * 16);
 			for (int row = 0; row < 4; ++row)
 			{
 				for (int col = 0; col < 4; ++col)

@@ -76,7 +76,8 @@ bool LostCore::FBasicModel::Load(IRenderContext * rc, const char* url)
 		return false;
 	}
 
-	if (D3D11::WrappedCreateMaterial_SceneObject(&Material) == SSuccess)
+	if (((PrimitiveFlags & EVertexElement::Skin) == EVertexElement::Skin && D3D11::WrappedCreateMaterial_SceneObjectSkinned(&Material) == SSuccess) ||
+		((PrimitiveFlags & EVertexElement::Skin) != EVertexElement::Skin && D3D11::WrappedCreateMaterial_SceneObject(&Material) == SSuccess))
 	{
 		if (modelJson.find("material") != modelJson.end())
 		{
@@ -90,6 +91,11 @@ bool LostCore::FBasicModel::Load(IRenderContext * rc, const char* url)
 			materialPath = materialPath + "_" + vertexName + ".json";
 			return Material->Initialize(rc, materialPath.c_str());
 		}
+	}
+	else
+	{
+		assert(0 && "create material failed");
+		return false;
 	}
 
 	return true;
@@ -105,7 +111,15 @@ void LostCore::FBasicModel::Fini()
 
 	if (Material != nullptr)
 	{
-		D3D11::WrappedDestroyMaterial_SceneObject(std::forward<IMaterial*>(Material));
+		if ((PrimitiveFlags & EVertexElement::Skin) == EVertexElement::Skin)
+		{
+			D3D11::WrappedDestroyMaterial_SceneObjectSkinned(std::forward<IMaterial*>(Material));
+		}
+		else
+		{
+			D3D11::WrappedDestroyMaterial_SceneObject(std::forward<IMaterial*>(Material));
+		}
+
 		Material = nullptr;
 	}
 }

@@ -994,12 +994,10 @@ public:
 				FJson& mesh = it.value();
 				srcData.FromJson(it.value());
 
-				true_type tt;
-
 				outputStream << srcData;
 				outputStream.WriteToFile(ConvertPath + it.key() + ".primitive");
 
-				if (02)
+				if (0)
 				{
 					LostCore::FBinaryIO inputStream1, inputStream2;
 					inputStream1.ReadFromFile(ConvertPath + it.key() + ".primitive");

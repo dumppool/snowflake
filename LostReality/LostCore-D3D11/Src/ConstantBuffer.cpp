@@ -73,3 +73,15 @@ void D3D11::FConstantBufferMatrix::UpdateBuffer(const TRefCountPtr<ID3D11DeviceC
 	p.Mat = p.Mat.GetTranspose();
 	cxt->UpdateSubresource(GetBufferRHI().GetReference(), 0, nullptr, &p, 0, 0);
 }
+
+void D3D11::FConstantBufferSkinned::UpdateBuffer(const TRefCountPtr<ID3D11DeviceContext>& cxt, const void * buf, int32 sz)
+{
+	assert(sz == GetByteWidth());
+	assert(GetBufferRHI().IsValid());
+
+	FParam p;
+	memcpy(&p, buf, sz);
+	p.World = p.World.GetTranspose();
+	for_each(p.Bones.begin(), p.Bones.end(), [](LostCore::FMatrix& mat) {mat = mat.GetTranspose(); });
+	cxt->UpdateSubresource(GetBufferRHI().GetReference(), 0, nullptr, &p, 0, 0);
+}

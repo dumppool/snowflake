@@ -152,7 +152,7 @@
     <ClInclude Include="GdiFont.h" />
     <ClInclude Include="Inc\LostCore-D3D11.h" />
     <ClInclude Include="Src\BlendStateDef.h" />
-    <ClInclude Include="Src\BufferDef.h" />
+    <ClInclude Include="Src\ConstantBuffer.h" />
     <ClInclude Include="Src\DepthStencilStateDef.h" />
     <ClInclude Include="Src\Material.h" />
     <ClInclude Include="Src\PrimitiveGroup.h" />
@@ -161,6 +161,7 @@
     <ClInclude Include="Src\RenderContextBase.h" />
     <ClInclude Include="Src\SamplerStateDef.h" />
     <ClInclude Include="Src\Texture.h" />
+    <ClInclude Include="Src\VertexDef.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
@@ -181,7 +182,7 @@
     </ClCompile>
     <ClCompile Include="GdiFont.cpp" />
     <ClCompile Include="Src\BlendStateDef.cpp" />
-    <ClCompile Include="Src\BufferDef.cpp" />
+    <ClCompile Include="Src\ConstantBuffer.cpp" />
     <ClCompile Include="Src\DepthStencilStateDef.cpp" />
     <ClCompile Include="Src\LostCore-D3D11.cpp" />
     <ClCompile Include="Src\Material.cpp" />
@@ -191,6 +192,7 @@
     <ClCompile Include="Src\RenderContextBase.cpp" />
     <ClCompile Include="Src\SamplerStateDef.cpp" />
     <ClCompile Include="Src\Texture.cpp" />
+    <ClCompile Include="Src\VertexDef.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
