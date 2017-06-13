@@ -1,14 +1,14 @@
 /*
-* file BufferDef.cpp
+* file ConstantBuffer.cpp
 *
 * author luoxw
-* date 2017/01/22
+* date 2017/06/13
 *
 *
 */
 
 #include "stdafx.h"
-#include "BufferDef.h"
+#include "ConstantBuffer.h"
 
 bool D3D11::FConstantBuffer::Initialize(const TRefCountPtr<ID3D11Device>& device)
 {

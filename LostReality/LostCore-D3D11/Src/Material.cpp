@@ -9,7 +9,7 @@
 
 #include "stdafx.h"
 #include "Material.h"
-#include "BufferDef.h"
+#include "VertexDef.h"
 
 using namespace LostCore;
 using namespace std;

@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include "BufferDef.h"
+//#include "Constant.h"
 
 namespace D3D11
 {
@@ -161,13 +161,6 @@ namespace D3D11
 
 		virtual void UpdateTexture(LostCore::IRenderContext* rc, LostCore::ITexture* tex, int32 slot)
 		{
-			//const char* head = "D3D11::FMaterial<T>::UpdateTexture";
-			//auto cxt = FRenderContext::GetDeviceContext(rc, head);
-			//if (!cxt.IsValid())
-			//{
-			//	return;
-			//}
-
 			Textures[slot] = (FTexture2D*)tex;
 		}
 

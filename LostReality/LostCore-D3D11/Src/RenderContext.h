@@ -10,7 +10,7 @@
 #pragma once
 
 #include "Texture.h"
-#include "BufferDef.h"
+#include "ConstantBuffer.h"
 #include "GdiFont.h"
 
 namespace D3D11

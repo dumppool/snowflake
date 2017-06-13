@@ -9,7 +9,7 @@
 
 #include "stdafx.h"
 #include "RenderContextBase.h"
-#include "BufferDef.h"
+//#include "BufferDef.h"
 
 using namespace LostCore;
 
