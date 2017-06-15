@@ -27,7 +27,7 @@ namespace LostCore
 			}
 		};
 
-		static Details GetVertexType2DString(
+		static Details GetVertexDetail2D(
 			bool bHasTexcoord,
 			bool bHasVertexRGBA
 		)
@@ -50,7 +50,7 @@ namespace LostCore
 			return Details(typeName, stride);
 		}
 
-		static Details GetVertexType3DString(
+		static Details GetVertexDetail3D(
 			bool bHasTexcoord,
 			bool bHasNormal,
 			bool bHasTangent,
@@ -95,7 +95,7 @@ namespace LostCore
 			if (bHasSkin)
 			{
 				typeName += "_skinned";
-				stride += sizeof(float) * 4;
+				stride += sizeof(float) * 8;
 			}
 
 			return Details(typeName, stride);

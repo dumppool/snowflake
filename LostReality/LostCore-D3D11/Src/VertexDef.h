@@ -21,7 +21,7 @@ namespace D3D11
 
 		INLINE static LostCore::FVertexTypes::Details GetDetails()
 		{
-			return LostCore::FVertexTypes::GetVertexType3DString(true, false, false, false, false, false);
+			return LostCore::FVertexTypes::GetVertexDetail3D(true, false, false, false, false, false);
 		}
 
 		INLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
@@ -44,7 +44,7 @@ namespace D3D11
 
 		INLINE static LostCore::FVertexTypes::Details GetDetails()
 		{
-			return LostCore::FVertexTypes::GetVertexType3DString(true, true, false, false, false, false);
+			return LostCore::FVertexTypes::GetVertexDetail3D(true, true, false, false, false, false);
 		}
 
 		INLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
@@ -69,7 +69,7 @@ namespace D3D11
 
 		INLINE static LostCore::FVertexTypes::Details GetDetails()
 		{
-			return LostCore::FVertexTypes::GetVertexType3DString(true, true, false, false, true, false);
+			return LostCore::FVertexTypes::GetVertexDetail3D(true, true, false, false, true, false);
 		}
 
 		INLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
@@ -93,7 +93,7 @@ namespace D3D11
 
 		INLINE static LostCore::FVertexTypes::Details GetDetails()
 		{
-			return LostCore::FVertexTypes::GetVertexType2DString(false, true);
+			return LostCore::FVertexTypes::GetVertexDetail2D(false, true);
 		}
 
 		INLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
@@ -116,7 +116,7 @@ namespace D3D11
 
 		INLINE static LostCore::FVertexTypes::Details GetDetails()
 		{
-			return LostCore::FVertexTypes::GetVertexType2DString(true, true);
+			return LostCore::FVertexTypes::GetVertexDetail2D(true, true);
 		}
 
 		INLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
@@ -138,11 +138,12 @@ namespace D3D11
 		LostCore::FVec2 UV;
 		LostCore::FVec3 N;
 		LostCore::FVec3 Color;
-		LostCore::FVec4 Weight;
+		LostCore::FVec4 BlendWeights;
+		LostCore::FVec4 BlendIndices;
 
 		INLINE static LostCore::FVertexTypes::Details GetDetails()
 		{
-			return LostCore::FVertexTypes::GetVertexType3DString(true, true, false, false, true, true);
+			return LostCore::FVertexTypes::GetVertexDetail3D(true, true, false, false, true, true);
 		}
 
 		INLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
@@ -153,7 +154,8 @@ namespace D3D11
 				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_5, XYZ), D3D11_INPUT_PER_VERTEX_DATA, 0 },
 				{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_5, N), D3D11_INPUT_PER_VERTEX_DATA, 0 },
 				{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, offsetof(FVertex_5, UV),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "WEIGHTS", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(FVertex_5, Weight),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "BLENDWEIGHTS", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(FVertex_5, BlendWeights),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "BLENDINDICES", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(FVertex_5, BlendIndices),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
 			};
 
 			return std::make_pair(SDesc, ARRAYSIZE(SDesc));

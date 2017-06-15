@@ -124,6 +124,8 @@
 #define K_TOTAL							"Total"
 #define K_LINK_INDICES					"LinkIndices"
 #define K_WEIGHT						"Weight"
+#define K_BLEND_WEIGHTS					"BlendWeights"
+#define K_BLEND_INDICES					"BlendIndices"
 #define K_LINK							"Link"
 #define K_CLUSTER						"Cluster"
 #define K_SKIN							"Skin"

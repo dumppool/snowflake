@@ -18,7 +18,7 @@ LostCore::FBasicCamera::FBasicCamera()
 	, Fov(90.f)
 	, AspectRatio(1280.f/720.f)
 	, ViewEuler()
-	, ViewPosition()
+	, ViewPosition(0.f, 0.f, -500.f)
 {
 }
 

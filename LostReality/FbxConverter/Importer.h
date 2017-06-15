@@ -11,6 +11,11 @@
 
 namespace Importer {
 
+	inline float SNUM(float val)
+	{
+		return abs(val) < LostCore::SSmallFloat2 ? 0.0f : val;
+	}
+
 	static void WriteRGB(FJson& output, const FbxColor& color)
 	{
 		if (color.IsValid())
@@ -44,17 +49,41 @@ namespace Importer {
 		output = f2;
 	}
 
+	static void WriteFloat3_FromUnreal(FJson& output, const FbxDouble3& value)
+	{
+		vector<double> f3;
+		f3.push_back(value[1]);
+		f3.push_back(value[2]);
+		f3.push_back(value[0]);
+		output = f3;
+	}
+
 	static void WriteFloat3(FJson& output, const FbxDouble3& value)
 	{
+		WriteFloat3_FromUnreal(output, value);
+		return;
+
 		vector<double> f3;
 		f3.push_back(value[0]);
 		f3.push_back(value[1]);
 		f3.push_back(value[2]);
+		output = f3;
+	}
+
+	static void WriteFloat3_FromUnreal(FJson& output, const FbxVector4& value)
+	{
+		vector<double> f3;
+		f3.push_back(value[1]);
+		f3.push_back(value[2]);
+		f3.push_back(value[0]);
 		output = f3;
 	}
 
 	static void WriteFloat3(FJson& output, const FbxVector4& value)
 	{
+		WriteFloat3_FromUnreal(output, value);
+		return;
+
 		vector<double> f3;
 		f3.push_back(value[0]);
 		f3.push_back(value[1]);
@@ -62,15 +91,43 @@ namespace Importer {
 		output = f3;
 	}
 
+	static void WriteFloat4x4_FromUnreal(FJson& output, const FbxMatrix& matrix)
+	{
+		vector<double> f4x4;
+		for (int row = 0; row < 4; ++row)
+		{
+			FbxVector4 vec = matrix.GetRow(row);
+			if (row < 3)
+			{
+				for (int col = 0; col < 4; ++col)
+				{
+					f4x4.push_back(abs(vec[col]) < LostCore::SSmallFloat2 ? 0.0f : vec[col]);
+				}
+			}
+			else
+			{
+				f4x4.push_back(SNUM(vec[1]));
+				f4x4.push_back(SNUM(vec[2]));
+				f4x4.push_back(SNUM(vec[0]));
+				f4x4.push_back(SNUM(vec[3]));
+			}
+		}
+
+		output = f4x4;
+	}
+
 	static void WriteFloat4x4(FJson& output, const FbxMatrix& matrix)
 	{
+		WriteFloat4x4_FromUnreal(output, matrix);
+		return;
+
 		vector<double> f4x4;
 		for (int row = 0; row < 4; ++row)
 		{
 			FbxVector4 vec = matrix.GetRow(row);
 			for (int col = 0; col < 4; ++col)
 			{
-				f4x4.push_back(abs(vec[col]) < LostCore::SSmallFloat2 ? 0.0f : vec[col]);
+				f4x4.push_back(SNUM(vec[col]));
 			}
 		}
 

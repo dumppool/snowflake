@@ -13,14 +13,7 @@ namespace LostCore
 {
 	inline FVertexTypes::Details GetVertexDetails(int flag)
 	{
-		int stride = 0;
-		stride += ((flag & EVertexElement::Coordinate) == EVertexElement::Coordinate ? 3 * sizeof(float) : 0);
-		stride += ((flag & EVertexElement::Normal) == EVertexElement::Normal ? 3 * sizeof(float) : 0);
-		stride += ((flag & EVertexElement::Binormal) == EVertexElement::Binormal ? 3 * sizeof(float) : 0);
-		stride += ((flag & EVertexElement::Tangent) == EVertexElement::Tangent ? 3 * sizeof(float) : 0);
-		stride += ((flag & EVertexElement::UV) == EVertexElement::UV ? 2 * sizeof(float) : 0);
-		stride += ((flag & EVertexElement::VertexColor) == EVertexElement::VertexColor ? 3 * sizeof(float) : 0);
-		return LostCore::FVertexTypes::GetVertexType3DString(
+		return LostCore::FVertexTypes::GetVertexDetail3D(
 			(flag & EVertexElement::UV) == EVertexElement::UV,
 			(flag & EVertexElement::Normal) == EVertexElement::Normal,
 			(flag & EVertexElement::Tangent) == EVertexElement::Tangent,
@@ -114,7 +107,9 @@ namespace LostCore
 		vector<FVec3> Tangent;
 		vector<FVec3> Binormal;
 		vector<FVec3> VertexColor;
-		vector<FVec4> Weight;
+
+		vector<FVec4> BlendWeights;
+		vector<FVec4> BlendIndices;
 
 		FPose DefaultPose;
 
@@ -150,7 +145,13 @@ namespace LostCore
 			Tangent.resize(VertexCount);
 			Binormal.resize(VertexCount);
 			VertexColor.resize(VertexCount);
-			Weight.resize(VertexCount);
+
+			if ((VertexFlags & EVertexElement::Skin) == EVertexElement::Skin)
+			{
+				BlendWeights.resize(VertexCount);
+				BlendIndices.resize(VertexCount);
+			}
+
 			for (uint32 i = 0; i < VertexCount; ++i)
 			{
 				if (VertexCount < (1 << 16))
@@ -191,7 +192,8 @@ namespace LostCore
 
 				if ((VertexFlags & EVertexElement::Skin) == EVertexElement::Skin)
 				{
-					Weight[i] = j[K_WEIGHT][i];
+					BlendWeights[i] = j[K_BLEND_WEIGHTS][i];
+					BlendIndices[i] = j[K_BLEND_INDICES][i];
 				}
 			}
 
@@ -277,7 +279,7 @@ namespace LostCore
 
 			if ((data.VertexFlags & EVertexElement::Skin) == EVertexElement::Skin)
 			{
-				stream << data.Weight[i];
+				stream << data.BlendWeights[i] << data.BlendIndices[i];
 			}
 
 			if (paddingBytes != 0)
@@ -396,10 +398,12 @@ namespace LostCore
 			{
 				if (allocating)
 				{
-					data.Weight.resize(data.VertexCount);
+					data.BlendWeights.resize(data.VertexCount);
+					data.BlendIndices.resize(data.VertexCount);
 				}
 
-				stream >> *(data.Weight.begin() + i);
+				stream >> *(data.BlendWeights.begin() + i)
+					>> *(data.BlendIndices.begin() + i);
 			}
 
 			allocating = false;
@@ -537,9 +541,11 @@ namespace LostCore
 				{
 					if (allocating)
 					{
-						output.Weight.resize(VertexCount);
+						output.BlendWeights.resize(VertexCount);
+						output.BlendIndices.resize(VertexCount);
 					}
-					stream >> output.Weight[i];
+
+					stream >> output.BlendWeights[i] >> output.BlendIndices[i];
 				}
 
 				allocating = false;

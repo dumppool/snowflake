@@ -23,7 +23,8 @@ struct VertexIn
 	float2 tc  : TEXCOORD;
 	float3 normal : NORMAL;
 	float3 col : COLOR;
-	float4 weight : WEIGHTS;
+	float4 weight : BLENDWEIGHTS;
+	float4 indices : BLENDINDICES;
 };
 
 struct VertexOut
@@ -36,17 +37,16 @@ struct VertexOut
 
 VertexOut vs_main(VertexIn Input)
 {
-	float4 weightInt = floor(Input.weight);
-	float4 weightFra = Input.weight - weightInt;
+	int4 sIndices = floor(Input.indices);
 
 	float4 pos = float4(Input.pos.xyz, 1.0f);
 	pos = 
-		mul(pos, Bones[weightInt.x]) * weightFra.x +
-		mul(pos, Bones[weightInt.y]) * weightFra.y + 
-		mul(pos, Bones[weightInt.z]) * weightFra.z + 
-		mul(pos, Bones[weightInt.w]) * weightFra.w;
+		mul(pos, Bones[sIndices.x]) * Input.weight.x +
+		mul(pos, Bones[sIndices.y]) * Input.weight.y +
+		mul(pos, Bones[sIndices.z]) * Input.weight.z +
+		mul(pos, Bones[sIndices.w]) * Input.weight.w;
 
-	pos = mul(pos, World);
+	//pos = mul(pos, World);
 	pos = mul(pos, ViewProject);
 
 	VertexOut o;
@@ -61,6 +61,10 @@ VertexOut vs_main(VertexIn Input)
 float4 ps_main(VertexOut Input) : SV_TARGET
 {
 	//float4 final = ColorTexture.Sample(ColorSampler, Input.tc);
-	float4 final = float4(1.0f, 1.0f, 1.0f, 1.0f);
+	const float3 s_ambientCol = float3(0.01f, 0.01f, 0.2f);
+	const float3 s_lightDir = float3(0.3f, -0.8f, 0.5f);
+const float3 s_lightCol = float3(0.8f, 0.7f, 0.0f);
+float3 col = dot(s_lightDir, Input.normal) * s_lightCol + s_ambientCol;
+	float4 final = float4(col, 1.0f);
 	return final;
 }

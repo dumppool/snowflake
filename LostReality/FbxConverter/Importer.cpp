@@ -54,7 +54,8 @@ static void ParseLink(function<FJson&()> outputGetter, FJson& vertices, FbxMesh*
 	for (int i = 0; i < skinCount; ++i)
 	{
 		auto deformer = mesh->GetDeformer(i, FbxDeformer::eSkin);
-		FJson & vertj = output[K_WEIGHT];
+		FJson & weightj = output[K_BLEND_WEIGHTS];
+		FJson & indexj = output[K_BLEND_INDICES];
 		int clusterCount = ((FbxSkin*)deformer)->GetClusterCount();
 		for (int j = 0; j < clusterCount; ++j)
 		{
@@ -82,21 +83,15 @@ static void ParseLink(function<FJson&()> outputGetter, FJson& vertices, FbxMesh*
 				int cpIndex = indices[k];
 				if (controlPointToVertexMap.empty())
 				{
-					float w = min((float)weights[k], 0.999999f);
-					vertj[cpIndex].push_back(skinIndex + w);
-					//FJson& j1 = *(vertj[cpIndex].end() - 1);
-					//j1[K_BONE] = skinIndex;
-					//j1[K_WEIGHT] = weights[k];
+					weightj[cpIndex].push_back(weights[k]);
+					indexj[cpIndex].push_back(skinIndex);
 				}
 				else if (controlPointToVertexMap.find(cpIndex) != controlPointToVertexMap.end())
 				{
 					for (auto vertexIndex : controlPointToVertexMap.at(cpIndex))
 					{
-						float w = min((float)weights[k], 0.999999f);
-						vertj[vertexIndex].push_back(skinIndex + w);
-						//FJson& j1 = *(vertj[vertexIndex].end() - 1);
-						//j1[K_BONE] = skinIndex;
-						//j1[K_WEIGHT] = weights[k];
+						weightj[cpIndex].push_back(weights[k]);
+						indexj[cpIndex].push_back(skinIndex);
 					}
 				}
 			}
@@ -105,12 +100,21 @@ static void ParseLink(function<FJson&()> outputGetter, FJson& vertices, FbxMesh*
 		}
 	}
 
-	for (auto& wj : output[K_WEIGHT])
+	for (auto& wj : output[K_BLEND_WEIGHTS])
 	{
 		if (wj.size() < 4)
 		{
 			for (int j = wj.size(); j < 4; ++j)
 				wj.push_back(0.f);
+		}
+	}
+
+	for (auto& ij : output[K_BLEND_INDICES])
+	{
+		if (ij.size() < 4)
+		{
+			for (int j = ij.size(); j < 4; ++j)
+				ij.push_back(0.f);
 		}
 	}
 }
