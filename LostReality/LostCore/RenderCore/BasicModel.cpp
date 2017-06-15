@@ -61,6 +61,14 @@ bool LostCore::FBasicModel::Load(IRenderContext * rc, const char* url)
 		FMeshDataGPU data;
 		stream >> data;
 		PrimitiveFlags = data.VertexFlags;
+		Root.LoadSkeleton(data.RootNode);
+		Root.LoadLocalPose(data.DefaultPose);
+
+		int index = 0;
+		for (auto boneName : data.Bones)
+		{
+			SkeletonNodeTable[boneName] = index++;
+		}
 
 		if (D3D11::WrappedCreatePrimitiveGroup(&Primitive) == SSuccess)
 		{
@@ -69,6 +77,7 @@ bool LostCore::FBasicModel::Load(IRenderContext * rc, const char* url)
 			assert(Primitive->ConstructVB(rc, &(data.Vertices[0]), data.Vertices.size(), vbStride, false) &&
 				Primitive->ConstructIB(rc, &(data.Indices[0]), data.Indices.size(), ibStride, false));
 		}
+
 	}
 	else
 	{
@@ -126,27 +135,25 @@ void LostCore::FBasicModel::Fini()
 
 void LostCore::FBasicModel::Tick(float sec)
 {
-	//for (auto pg : PrimitiveGroups)
-	//{
-	//	if (pg != nullptr)
-	//	{
-	//		//pg->Tick(sec);
-	//	}
-	//}
+	Root.UpdateWorldMatrix(Matrices.World);
 }
 
 void LostCore::FBasicModel::Draw(IRenderContext * rc, float sec)
 {
-	//for (auto pg : PrimitiveGroups)
-	//{
-	//	if (pg != nullptr)
-	//	{
-	//		pg->Draw(rc, sec);
-	//	}
-	//}
 	if (Material != nullptr)
 	{
-		Material->UpdateConstantBuffer(rc, (const void*)&WorldMatrix, sizeof(WorldMatrix));
+		// 是时候分开Skeleton和非Skeleton了
+		FPose pose;
+		Root.GetWorldPose(pose);
+		for (const auto& it : pose)
+		{
+			if (SkeletonNodeTable.find(it.first) != SkeletonNodeTable.end())
+			{
+				Matrices.Bones[SkeletonNodeTable[it.first]] = it.second;
+			}
+		}
+
+		Material->UpdateConstantBuffer(rc, (const void*)&Matrices, sizeof(Matrices));
 		Material->Draw(rc, sec);
 	}
 
@@ -156,45 +163,7 @@ void LostCore::FBasicModel::Draw(IRenderContext * rc, float sec)
 	}
 }
 
-//void LostCore::FBasicModel::AddPrimitiveGroup(IPrimitiveGroup* pg)
-//{
-//	if (pg != nullptr && std::find(PrimitiveGroups.begin(), PrimitiveGroups.end(), pg) == PrimitiveGroups.end())
-//	{
-//		PrimitiveGroups.push_back(pg);
-//	}
-//}
-//
-//void LostCore::FBasicModel::RemovePrimitiveGroup(IPrimitiveGroup* pg)
-//{
-//	if (pg == nullptr)
-//	{
-//		return;
-//	}
-//
-//	auto it = std::find(PrimitiveGroups.begin(), PrimitiveGroups.end(), pg);
-//	if (it != PrimitiveGroups.end())
-//	{
-//		PrimitiveGroups.erase(it);
-//	}
-//}
-//
-//void LostCore::FBasicModel::ClearPrimitiveGroup(std::function<void(IPrimitiveGroup*)> func)
-//{
-//	if (func != nullptr)
-//	{
-//		for (auto pg : PrimitiveGroups)
-//		{
-//			if (pg != nullptr)
-//			{
-//				func(pg);
-//			}
-//		}
-//	}
-//
-//	PrimitiveGroups.clear();
-//}
-
 void LostCore::FBasicModel::SetWorldMatrix(const FMatrix & world)
 {
-	WorldMatrix = world;
+	Matrices.World = world;
 }

@@ -11,6 +11,7 @@ cbuffer Constant0 : register(b0)
 cbuffer Constant : register(b1)
 {
 	float4x4 World;
+	float4x4 Bones[96];
 }
 
 //Texture2D ColorTexture : register(t0);
@@ -35,7 +36,16 @@ struct VertexOut
 
 VertexOut vs_main(VertexIn Input)
 {
+	float4 weightInt = floor(Input.weight);
+	float4 weightFra = Input.weight - weightInt;
+
 	float4 pos = float4(Input.pos.xyz, 1.0f);
+	pos = 
+		mul(pos, Bones[weightInt.x]) * weightFra.x +
+		mul(pos, Bones[weightInt.y]) * weightFra.y + 
+		mul(pos, Bones[weightInt.z]) * weightFra.z + 
+		mul(pos, Bones[weightInt.w]) * weightFra.w;
+
 	pos = mul(pos, World);
 	pos = mul(pos, ViewProject);
 

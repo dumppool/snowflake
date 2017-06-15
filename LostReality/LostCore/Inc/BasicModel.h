@@ -36,18 +36,22 @@ namespace LostCore
 		virtual void Draw(IRenderContext * rc, float sec) override;
 
 	public:
-		//virtual void AddPrimitiveGroup(IPrimitiveGroup* pg);
-		//virtual void RemovePrimitiveGroup(IPrimitiveGroup* pg);
-		//virtual void ClearPrimitiveGroup(std::function<void(IPrimitiveGroup*)> func);
-
 		virtual void SetWorldMatrix(const FMatrix& world);
 
 	protected:
 		IPrimitiveGroup* Primitive;
 		IMaterial* Material;
 
-		FMatrix WorldMatrix;
-		array<FMatrix, 72> BoneMatrices;
+		struct 
+		{
+			FMatrix World;
+			array<FMatrix, 96> Bones;
+		} Matrices;
+
+		map<string, int> SkeletonNodeTable;
+
+		FSkeletonNode Root;
+		FAnimation Animation;
 
 		uint32 PrimitiveFlags;
 	};

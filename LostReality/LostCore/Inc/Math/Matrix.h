@@ -17,8 +17,6 @@ namespace LostCore
 {
 	class FMatrixNonVectorized
 	{
-	public:
-		static FMatrixNonVectorized Identity;
 
 	public:
 		float M[4][4];
@@ -109,7 +107,7 @@ namespace LostCore
 			return FVec3(M[3][0], M[3][1], M[3][2]);
 		}
 
-		INLINE FMatrixNonVectorized operator*(const FMatrixNonVectorized& rhs)
+		INLINE FMatrixNonVectorized operator*(const FMatrixNonVectorized& rhs) const
 		{
 			FMatrixNonVectorized result;
 			for (int32 i = 0; i < 4; ++i)

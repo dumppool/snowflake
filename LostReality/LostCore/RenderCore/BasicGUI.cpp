@@ -250,8 +250,8 @@ bool LostCore::FBasicGUI::Load(IRenderContext * rc, const char* url)
 	// ÁÙÊ±´úÂë
 	Root.SetOrigin(FVec2(0.f, 0.f));
 	Root.SetSize(FVec2(
-		FFontProvider::Get()->GetGdiFont()->GetFontTextures()[0]->GetWidth(),
-		FFontProvider::Get()->GetGdiFont()->GetFontTextures()[0]->GetHeight()));
+		(float)FFontProvider::Get()->GetGdiFont()->GetFontTextures()[0]->GetWidth(),
+		(float)FFontProvider::Get()->GetGdiFont()->GetFontTextures()[0]->GetHeight()));
 	Root.SetScale(1.f);
 	return true;
 }

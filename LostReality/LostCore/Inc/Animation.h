@@ -11,60 +11,37 @@
 
 namespace LostCore
 {
-	class FBone
+	class FSkeletonNode
 	{
 		string Name;
+		vector<FSkeletonNode> Children;
+
 		FMatrix Local;
 		FMatrix World;
-		vector<FBone> Children;
 
 	public:
 
-		FBone(const FJson& j, const FJson& defaultPose) : Local(FMatrix::Identity), World(FMatrix::Identity)
-		{
-			assert(j.find(K_NAME) != j.end());
-			Name = j[K_NAME];
+		FSkeletonNode();
+		FSkeletonNode(const FTreeNode & skelRoot);
 
-			if (defaultPose.find(Name) != defaultPose.end())
-			{
-				Local = defaultPose[Name];
-			}
+		void LoadSkeleton(const FTreeNode& skelRoot);
+		void LoadLocalPose(const FPose& pose);
 
-			Children.clear();
-			if (j.find(K_LAYER) != j.end())
-			{
-				for (auto it = j[K_LAYER].begin(); it != j[K_LAYER].end(); ++it)
-				{
-					Children.push_back(FBone(*it, defaultPose));
-				}
-			}
-		}
-
-		void UpdateWorldMatrix(const FMatrix& parentWorld)
-		{
-			World = parentWorld * Local;
-		}
-
-		void GetPose(map<string, FMatrix>& pose)
-		{
-
-		}
-
+		void UpdateWorldMatrix(const FMatrix& parentWorld);
+		void GetWorldPose(FPose& pose);
 	};
+
 	class FAnimation
 	{
-		FBone Root;
-
 	public:
 		FAnimation();
 		~FAnimation();
 
-		void LoadDefaultPose(const FJson& j);
-		void LoadAnimation(const FJson& j);
+		void LoadAnimation(const FJson& animJson);
 
 		void Tick(float sec);
 
-		map<string, FMatrix> GetPose();
+		void GetPose(FPose& pose);
 	};
 }
 

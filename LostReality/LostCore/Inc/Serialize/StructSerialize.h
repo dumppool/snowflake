@@ -39,11 +39,61 @@ namespace LostCore
 		return (uint32)ceil(sz / (float)alignment) * alignment - sz;
 	}
 
-	struct FWeight
+	typedef map<string, FMatrix> FPose;
+
+	struct FTreeNode
 	{
-		int32 BoneIndex;
-		float Weight;
+		string Name;
+		vector<FTreeNode> Children;
+
+		FTreeNode() 
+		{
+		}
+
+		FTreeNode(const FJson& j)
+		{
+			Load(j);
+		}
+
+		void Load(const FJson& j)
+		{
+			assert(j.find(K_NAME) != j.end());
+			Name = j[K_NAME];
+
+			Children.clear();
+			if (j.find(K_LAYER) != j.end())
+			{
+				for (auto it = j[K_LAYER].begin(); it != j[K_LAYER].end(); ++it)
+				{
+					Children.push_back(FTreeNode(it.value()));
+				}
+			}
+		}
 	};
+
+	inline FBinaryIO& operator<<(FBinaryIO& stream, const FTreeNode& data)
+	{
+		stream << data.Name << data.Children.size();
+		for (auto& child : data.Children)
+		{
+			stream << child;
+		}
+
+		return stream;
+	}
+
+	inline FBinaryIO& operator >> (FBinaryIO& stream, FTreeNode& data)
+	{
+		uint32 childNum;
+		stream >> data.Name >> childNum;
+		for (uint32 i = 0; i < childNum; ++i)
+		{
+			data.Children.push_back(FTreeNode());
+			stream >> *(data.Children.end() - 1);
+		}
+
+		return stream;
+	}
 
 	struct FMeshData
 	{
@@ -66,7 +116,9 @@ namespace LostCore
 		vector<FVec3> VertexColor;
 		vector<FVec4> Weight;
 
-		map<string, FMatrix> DefaultPose;
+		FPose DefaultPose;
+
+		FTreeNode RootNode;
 
 		FMeshData() {}
 		~FMeshData() {}
@@ -156,8 +208,14 @@ namespace LostCore
 					}
 				}
 			}
-		}
 
+			auto itStack = j.find(K_STACK);
+			FTreeNode& node = RootNode;
+			if (itStack != j.end())
+			{
+				RootNode.Load(itStack.value());
+			}
+		}
 	};
 
 	// serialize
@@ -233,6 +291,8 @@ namespace LostCore
 		{
 			stream << it->first << it->second;
 		}
+
+		stream << data.RootNode;
 
 		delete[] padding;
 		return stream;
@@ -352,13 +412,15 @@ namespace LostCore
 
 		uint32 defaultPoseSz;
 		stream >> defaultPoseSz;
-		for (int i = 0; i < defaultPoseSz; ++i)
+		for (uint32 i = 0; i < defaultPoseSz; ++i)
 		{
 			string boneName;
 			FMatrix boneMatrix;
 			stream >> boneName >> boneMatrix;
 			data.DefaultPose[boneName] = boneMatrix;
 		}
+
+		stream >> data.RootNode;
 
 		delete[] padding;
 		return stream;
@@ -375,7 +437,9 @@ namespace LostCore
 		vector<uint8> Indices;
 		vector<uint8> Vertices;
 
-		map<string, FMatrix> DefaultPose;
+		FPose DefaultPose;
+
+		FTreeNode RootNode;
 
 		uint32 VertexMagic;
 
@@ -486,6 +550,8 @@ namespace LostCore
 				output.DefaultPose[it->first] = it->second;
 			}
 
+			output.RootNode = RootNode;
+
 			delete[] padding;
 			return (output);
 		}
@@ -518,6 +584,8 @@ namespace LostCore
 		{
 			stream << it->first << it->second;
 		}
+
+		stream << data.RootNode;
 
 		return stream;
 	}
@@ -557,13 +625,15 @@ namespace LostCore
 
 		uint32 defaultPoseSz;
 		stream >> defaultPoseSz;
-		for (int i = 0; i < defaultPoseSz; ++i)
+		for (uint32 i = 0; i < defaultPoseSz; ++i)
 		{
 			std::string boneName;
 			FMatrix boneMatrix;
 			stream >> boneName >> boneMatrix;
 			data.DefaultPose[boneName] = boneMatrix;
 		}
+
+		stream >> data.RootNode;
 
 		return stream;
 	}
