@@ -300,10 +300,10 @@ bool Direct3D11Helper::UpdateBuffer_Direct3D9(IDirect3DDevice9 * device)
 					Buffer_Direct9Copy->GetDesc(&mappedDesc);
 					UINT height = min(surfaceDesc.Height, mappedDesc.Height);
 					UINT pitch = min(locked.Pitch, mapped.RowPitch);
-					LVMSG(head, "ready to copy, height: %d, pitch: %d", height, pitch);
+					//LVMSG(head, "ready to copy, height: %d, pitch: %d(%d, %d)", height, pitch, locked.Pitch, mapped.RowPitch);
 					for (UINT i = 0; i < height; ++i)
 					{
-						memcpy((CHAR*)mapped.pData + i * pitch, (CHAR*)locked.pBits + i * pitch, pitch);
+						memcpy((CHAR*)mapped.pData + i * mapped.RowPitch, (CHAR*)locked.pBits + i * locked.Pitch, pitch);
 					}
 
 					Context->Unmap(Buffer_Direct9Copy, 0);
@@ -447,8 +447,8 @@ bool Direct3D11Helper::OutputBuffer_Texture2D_Direct3D9(ID3D11Texture2D * dst)
 	dst->GetDesc(&dstDesc);
 	Buffer_Direct9Copy->GetDesc(&srcDesc);
 #ifdef _DEBUG
-	LVMSG(head, "width(%d), height(%d), format(%d), usage(%d), miplevels(%d), sampler count(%d)", srcDesc.Width, srcDesc.Height, srcDesc.Format, srcDesc.Usage, srcDesc.MipLevels, srcDesc.SampleDesc.Count);
-	LVMSG(head, "width(%d), height(%d), format(%d), usage(%d), miplevels(%d), sampler count(%d)", dstDesc.Width, dstDesc.Height, dstDesc.Format, dstDesc.Usage, dstDesc.MipLevels, dstDesc.SampleDesc.Count);
+	//LVMSG(head, "src width(%d), height(%d), format(%d), usage(%d), miplevels(%d), sampler count(%d)", srcDesc.Width, srcDesc.Height, srcDesc.Format, srcDesc.Usage, srcDesc.MipLevels, srcDesc.SampleDesc.Count);
+	//LVMSG(head, "dst width(%d), height(%d), format(%d), usage(%d), miplevels(%d), sampler count(%d)", dstDesc.Width, dstDesc.Height, dstDesc.Format, dstDesc.Usage, dstDesc.MipLevels, dstDesc.SampleDesc.Count);
 #endif
 	Context->CopyResource(dst, Buffer_Direct9Copy);
 	return true;

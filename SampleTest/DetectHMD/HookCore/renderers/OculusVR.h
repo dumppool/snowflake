@@ -200,7 +200,10 @@ namespace lostvr
 
 		void Commit()
 		{
-			ovr_CommitTextureSwapChain(Session, TextureChain);
+			if (!OVR_SUCCESS(ovr_CommitTextureSwapChain(Session, TextureChain)))
+			{
+				LVERROR("ovr_CommitTextureSwapChain", "failed");
+			}
 		}
 	};
 
@@ -387,6 +390,8 @@ namespace lostvr
 
 		Direct3D11Helper*				Renderer;
 		ID3D11RenderTargetView*			RTV;
+
+		bool							bMounted;
 
 	public:
 

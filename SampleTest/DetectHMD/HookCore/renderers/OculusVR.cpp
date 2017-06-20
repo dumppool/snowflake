@@ -160,6 +160,22 @@ bool OculusVR::IsConnected()
 bool OculusVR::OnPresent_Direct3D11(IDXGISwapChain* swapChain)
 {
 	const CHAR* head = "OculusVR::OnPresent_Direct3D11";
+
+	ovrSessionStatus status;
+	if (!OVR_SUCCESS(ovr_GetSessionStatus(Session, &status)))
+	{
+		LVERROR(head, "ovr_GetSessionStatus failed");
+		return false;
+	}
+
+	if (bMounted && !status.HmdMounted)
+	{
+		Shutdown();
+		return false;
+	}
+
+	bMounted = status.HmdMounted;
+
 	if (Renderer == nullptr)
 	{
 		Renderer = new Direct3D11Helper(EDirect3D::DeviceRef);
@@ -220,7 +236,7 @@ bool OculusVR::OnPresent_Direct3D11(IDXGISwapChain* swapChain)
 	ovrResult ret = DistortAndPresent(1);
 	if (!OVR_SUCCESS(ret))
 	{
-		LVMSG(head, "submit failed(%d), ...", ret);
+		//LVERROR(head, "submit failed(%d), ...", ret);
 		return false;
 	}
 
@@ -307,7 +323,7 @@ bool OculusVR::OnPresent_Direct3D9(IDirect3DDevice9* device)
 	ovrResult ret = DistortAndPresent(1);
 	if (!OVR_SUCCESS(ret))
 	{
-		LVMSG(head, "submit failed(%d), ...", ret);
+		//LVERROR(head, "submit failed(%d), ...", ret);
 		return false;
 	}
 
@@ -394,7 +410,7 @@ ovrResult OculusVR::DistortAndPresent(int numLayersToRender, D3D11_BOX * optiona
 	presentResult = ovr_SubmitFrame(Session, 0, nullptr, layerHeaders, numLayersToRender);
 	if (!OVR_SUCCESS(presentResult))
 	{
-		LVMSG("ovr_SubmitFrame", "layers(%d), result(%d)", (int)ovrMaxLayerCount, presentResult);
+		LVERROR("ovr_SubmitFrame", "layers(%d), result(%d)", (int)ovrMaxLayerCount, presentResult);
 		return(presentResult);
 	}
 
