@@ -136,36 +136,54 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	static bool bMouseDown = false;
-	static FVec3 s_rotate = FVec3::GetZero();
+
+	static const float s_invalidPos = INFINITE;
+	static const float s_factor = 0.1f;
+
+	static bool s_moving = false;
+	static float s_startPosX = s_invalidPos;
+	static float s_startPosY = s_invalidPos;
+
 
     switch (message)
     {
 	case WM_MOUSEMOVE:
 	{
-		FVec3 rotate;
-		float move_x = LOWORD(lParam);
-		float move_y = HIWORD(lParam);
-		const float factor = 0.01f;
-
-		if (s_rotate == FVec3::GetZero())
+		if (!s_moving)
 		{
-			s_rotate.Yaw = move_x * factor;
-			s_rotate.Pitch = move_y * factor;
-			rotate = s_rotate;
-		}
-		else
-		{
-			rotate.Yaw = move_x * factor;
-			rotate.Pitch = move_y * factor;
+			break;
 		}
 
-		int button = LOWORD(wParam);
-		if (button == MK_RBUTTON)
+		bool bMove = false;
+		float moveX, moveY;
+		moveX = moveY = 0.f;
+
+		float posX = LOWORD(lParam);
+		float posY = HIWORD(lParam);
+		//if (!LostCore::IsEqual(s_startPosX, s_invalidPos))
+		if (s_moving)
 		{
-			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddEuler(rotate-s_rotate);
+			moveX = posX - s_startPosX;
+			bMove = true;
 		}
 
-		s_rotate = rotate;
+		//if (!LostCore::IsEqual(s_startPosY, s_invalidPos))
+		if (s_moving)
+		{
+			moveY = posY - s_startPosY;
+			bMove = true;
+		}
+
+		if (bMove)
+		{
+			FVec3 rotate;
+			rotate.Yaw = moveX * s_factor;
+			rotate.Pitch = moveY * s_factor;
+			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddEulerWorld(rotate);
+		}
+
+		s_startPosX = posX;
+		s_startPosY = posY;
 
 		break;
 	}
@@ -186,6 +204,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             }
         }
         break;
+	case WM_RBUTTONDOWN:
+	{
+		s_moving = true;
+		float posX = LOWORD(lParam);
+		float posY = HIWORD(lParam);
+		s_startPosX = posX;
+		s_startPosY = posY;
+	}
+	break;
+	case WM_RBUTTONUP:
+		//s_startPosX = s_startPosY = s_invalidPos;
+		s_moving = false;
+		break;
 	case WM_KEYUP:
 	{
 		int key = LOWORD(wParam);
@@ -206,16 +237,22 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		switch (key)
 		{
 		case 'W':
-			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddPosition(FVec3(0.f, 0.f, 0.1f));
+			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddPositionWorld(FVec3(0.f, 0.f, 0.1f));
 			break;
 		case 'S':
-			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddPosition(FVec3(0.f, 0.f, -0.1f));
+			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddPositionWorld(FVec3(0.f, 0.f, -0.1f));
 			break;
 		case 'A':
-			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddPosition(FVec3(-0.1f, 0.f, 0.f));
+			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddPositionWorld(FVec3(-0.1f, 0.f, 0.f));
 			break;
 		case 'D':
-			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddPosition(FVec3(0.1f, 0.f, 0.1f));
+			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddPositionWorld(FVec3(0.1f, 0.f, 0.f));
+			break;
+		case 'Q':
+			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddPositionWorld(FVec3(0.f, -0.1f, 0.f));
+			break;
+		case 'E':
+			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddPositionWorld(FVec3(0.f, 0.1f, 0.f));
 			break;
 		default:
 			break;

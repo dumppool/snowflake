@@ -660,7 +660,7 @@ static void ParseVertices(function<FJson&()> outputGetter, FbxMesh* mesh, map<in
 		{
 			// coordinate
 			output[K_COORDINATE].push_back(FJson());
-			WriteFloat3(*(output[K_COORDINATE].end() - 1), cpHead[i]);
+			WriteFloat3(*(output[K_COORDINATE].end() - 1), cpHead[i], true);
 
 			// element uv
 			if (uvHead != nullptr)

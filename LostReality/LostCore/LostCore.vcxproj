@@ -164,7 +164,7 @@
     <ClInclude Include="Inc\Math\MathBase.h" />
     <ClInclude Include="Inc\Math\Matrix.h" />
     <ClInclude Include="Inc\Math\Quat.h" />
-    <ClInclude Include="Inc\Math\Transform.h" />
+    <ClInclude Include="Inc\Math\Transform2.h" />
     <ClInclude Include="Inc\Math\Vector2.h" />
     <ClInclude Include="Inc\Math\Vector3.h" />
     <ClInclude Include="Inc\Math\Vector4.h" />

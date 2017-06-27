@@ -42,9 +42,6 @@
     <ClInclude Include="Inc\Math\Quat.h">
       <Filter>Inc\Math</Filter>
     </ClInclude>
-    <ClInclude Include="Inc\Math\Transform.h">
-      <Filter>Inc\Math</Filter>
-    </ClInclude>
     <ClInclude Include="Inc\Math\MathBase.h">
       <Filter>Inc\Math</Filter>
     </ClInclude>
@@ -98,6 +95,9 @@
     </ClInclude>
     <ClInclude Include="Inc\Serialize\StructSerialize.h">
       <Filter>Inc\Serialize</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\Math\Transform2.h">
+      <Filter>Inc\Math</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

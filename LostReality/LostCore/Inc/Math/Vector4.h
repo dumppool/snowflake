@@ -30,6 +30,11 @@ namespace LostCore
 
 		FVec4NonVectorized(float x, float y, float z, float w)
 			: X(x), Y(y), Z(z), W(w) {}
+
+		INLINE float operator|(const FVec4NonVectorized& vec) const
+		{
+			return X * vec.X + Y * vec.Y + Z * vec.Z + W * vec.W;
+		}
 	};
 
 	INLINE void from_json(const FJson& j, FVec4NonVectorized& val)

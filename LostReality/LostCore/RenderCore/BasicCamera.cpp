@@ -18,7 +18,7 @@ LostCore::FBasicCamera::FBasicCamera()
 	, Fov(90.f)
 	, AspectRatio(1280.f/720.f)
 	, ViewEuler()
-	, ViewPosition(0.f, 0.f, -500.f)
+	, ViewPosition(0.f, 0.f, -5.f)
 {
 }
 
@@ -46,7 +46,7 @@ void LostCore::FBasicCamera::Draw(IRenderContext * rc, float sec)
 
 }
 
-void LostCore::FBasicCamera::AddPosition(const FVec3& pos)
+void LostCore::FBasicCamera::AddPositionWorld(const FVec3& pos)
 {
 	FQuat orientation;
 	orientation.FromEuler(ViewEuler);
@@ -55,7 +55,21 @@ void LostCore::FBasicCamera::AddPosition(const FVec3& pos)
 	ViewPosition = world.TransformPosition(pos);
 }
 
-void LostCore::FBasicCamera::AddEuler(const FVec3& euler)
+void LostCore::FBasicCamera::AddEulerWorld(const FVec3& euler)
+{
+	ViewEuler += euler;
+}
+
+void LostCore::FBasicCamera::AddPositionLocal(const FVec3& pos)
+{
+	FQuat orientation;
+	orientation.FromEuler(ViewEuler);
+
+	FTransform world(orientation, ViewPosition);
+	ViewPosition = world.TransformPosition(pos);
+}
+
+void LostCore::FBasicCamera::AddEulerLocal(const FVec3& euler)
 {
 	ViewEuler += euler;
 }
@@ -104,9 +118,31 @@ FMatrix LostCore::FBasicCamera::GetViewMatrix() const
 {
 	FQuat orientation;
 	orientation.FromEuler(ViewEuler);
+
+	FVec3 formattedEuler = orientation.Euler();
 	
-	FTransform world(orientation, ViewPosition);
-	return world.GetInversed().ToMatrix();
+	//FTransform world(orientation, ViewPosition);
+	FMatrix world, world34;
+	world.SetRotateAndOrigin(orientation, ViewPosition);
+	world34.SetRotateAndOrigin(orientation, ViewPosition);
+	//return world.GetInversed().ToMatrix();
+
+	FMatrix matRot, matTrans;
+	matRot.SetRotate(orientation);
+	matTrans.SetTranslate(ViewPosition);
+	FMatrix world2 = matRot * matTrans;
+
+	FVec3 pt1 = world.ApplyPoint(FVec3(0.f, 0.f, 0.f));
+	FVec3 pt2 = world2.ApplyPoint(FVec3(0.f, 0.f, 0.f));
+
+	FVec3 right = orientation.GetRightVector();
+	FVec3 up = orientation.GetUpVector();
+	FVec3 direction = orientation.GetForwardVector();
+	
+	world.Invert();
+	world34.Invert34();
+
+	return world;
 }
 
 FMatrix LostCore::FBasicCamera::GetProjectMatrix() const

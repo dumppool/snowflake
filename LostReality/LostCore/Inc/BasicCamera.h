@@ -9,7 +9,6 @@
 
 #pragma once
 
-#include "Math/Transform.h"
 #include "BasicInterface.h"
 
 namespace LostCore
@@ -27,8 +26,10 @@ namespace LostCore
 		virtual void Tick(float sec) override;
 		virtual void Draw(IRenderContext * rc, float sec) override;
 
-		virtual void AddPosition(const FVec3& pos);
-		virtual void AddEuler(const FVec3& euler);
+		virtual void AddPositionWorld(const FVec3& pos);
+		virtual void AddEulerWorld(const FVec3& euler);
+		virtual void AddPositionLocal(const FVec3& pos);
+		virtual void AddEulerLocal(const FVec3& euler);
 
 		virtual void SetNearPlane(float value);
 		virtual float GetNearPlane() const;

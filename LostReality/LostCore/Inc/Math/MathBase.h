@@ -30,6 +30,13 @@ namespace LostCore
 		return IsZero(f1 - f2, tolerance);
 	}
 
+	INLINE FVec3 ClampEuler(const FVec3& euler)
+	{
+		FVec3 ret;
+		ret.Pitch = min(max(euler.Pitch, -90.f), 90.f);
+		return ret;
+	}
+
 	INLINE void SinCos(float& oSin, float& oCos, float rad)
 	{
 		float quotient = (SInvPI * 0.5f) * rad;
@@ -71,6 +78,12 @@ namespace LostCore
 		oCos = sign*p;
 	}
 
+	INLINE void SinCos2(float& oSin, float& oCos, float rad)
+	{
+		oSin = sinf(rad);
+		oCos = cosf(rad);
+	}
+
 	INLINE float Sqrt(float val)
 	{
 		return std::sqrt(val);
@@ -107,5 +120,10 @@ namespace LostCore
 	INLINE float Asin(float val)
 	{
 		return std::asin(val);
+	}
+
+	INLINE bool IsValidEuler(float)
+	{
+		return true;
 	}
 }

@@ -16,6 +16,11 @@ namespace Importer {
 		return abs(val) < LostCore::SSmallFloat2 ? 0.0f : val;
 	}
 
+	inline double SNUM(double val)
+	{
+		return abs(val) < (double)LostCore::SSmallFloat2 ? 0.0 : val;
+	}
+
 	static void WriteRGB(FJson& output, const FbxColor& color)
 	{
 		if (color.IsValid())
@@ -70,18 +75,18 @@ namespace Importer {
 		output = f3;
 	}
 
-	static void WriteFloat3_FromUnreal(FJson& output, const FbxVector4& value)
+	static void WriteFloat3_FromUnreal(FJson& output, const FbxVector4& value, bool isCoordinate = false)
 	{
 		vector<double> f3;
-		f3.push_back(value[1]);
-		f3.push_back(value[2]);
-		f3.push_back(value[0]);
+		f3.push_back(isCoordinate ? SNUM(value[1]) * 0.01 : SNUM(value[1]));
+		f3.push_back(isCoordinate ? SNUM(value[2]) * 0.01 : SNUM(value[2]));
+		f3.push_back(isCoordinate ? SNUM(value[0]) * 0.01 : SNUM(value[0]));
 		output = f3;
 	}
 
-	static void WriteFloat3(FJson& output, const FbxVector4& value)
+	static void WriteFloat3(FJson& output, const FbxVector4& value, bool isCoordinate = false)
 	{
-		WriteFloat3_FromUnreal(output, value);
+		WriteFloat3_FromUnreal(output, value, isCoordinate);
 		return;
 
 		vector<double> f3;
@@ -106,9 +111,9 @@ namespace Importer {
 			}
 			else
 			{
-				f4x4.push_back(SNUM(vec[1]));
-				f4x4.push_back(SNUM(vec[2]));
-				f4x4.push_back(SNUM(vec[0]));
+				f4x4.push_back(SNUM(vec[1]) * 0.01);
+				f4x4.push_back(SNUM(vec[2]) * 0.01);
+				f4x4.push_back(SNUM(vec[0]) * 0.01);
 				f4x4.push_back(SNUM(vec[3]));
 			}
 		}
