@@ -98,7 +98,6 @@
   <ItemGroup>
     <ClCompile Include="FbxConverter.cpp" />
     <ClCompile Include="stdafx.cpp" />
-    <ClCompile Include="Importer.cpp" />
     <ClCompile Include="FbxSamples\ImportScene\DisplayAnimation.cxx">
       <Filter>FbxSamples\ImportScene</Filter>
     </ClCompile>
@@ -171,5 +170,7 @@
     <ClCompile Include="FbxSamples\Common\GeometryUtility.cxx">
       <Filter>FbxSamples\Common</Filter>
     </ClCompile>
+    <ClCompile Include="Importer.cpp" />
+    <ClCompile Include="Importer2.cpp" />
   </ItemGroup>
 </Project>

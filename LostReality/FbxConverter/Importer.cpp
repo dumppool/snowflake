@@ -36,7 +36,8 @@ static void ParsePolygons(std::function<FJson&()> outputGetter, FbxMesh* mesh, c
 	}
 }
 
-static void ParseLink(function<FJson&()> outputGetter, FJson& vertices, FbxMesh* mesh, const map<int, vector<int>>& controlPointToVertexMap)
+static void ParseLink(function<FJson&()> outputGetter, FJson& vertices, FbxScene* scene,
+	FbxMesh* mesh, const map<int, vector<int>>& controlPointToVertexMap, vector<FbxNode*>& links)
 {
 	if (mesh == nullptr)
 	{
@@ -47,6 +48,9 @@ static void ParseLink(function<FJson&()> outputGetter, FJson& vertices, FbxMesh*
 	int skinCount = mesh->GetDeformerCount(FbxDeformer::eSkin);
 
 	assert(skinCount <= 1 && "skinCount is bigger than 1");
+
+	auto meshName = mesh->GetName();
+	SortSkeletalLink(scene, mesh, links);
 
 	bool first = true;
 
@@ -60,9 +64,10 @@ static void ParseLink(function<FJson&()> outputGetter, FJson& vertices, FbxMesh*
 		for (int j = 0; j < clusterCount; ++j)
 		{
 			auto cluster = ((FbxSkin*)deformer)->GetCluster(j);
-			if (cluster->GetLink() != nullptr)
+			auto link = cluster->GetLink();
+			if (link != nullptr)
 			{
-				output[K_SKIN].push_back(cluster->GetLink()->GetName());
+				output[K_SKIN].push_back(link->GetName());
 			}
 			else
 			{
@@ -102,65 +107,14 @@ static void ParseLink(function<FJson&()> outputGetter, FJson& vertices, FbxMesh*
 
 	for (auto& wj : output[K_BLEND_WEIGHTS])
 	{
-		if (wj.size() < 4)
-		{
-			for (int j = wj.size(); j < 4; ++j)
-				wj.push_back(0.f);
-		}
+		for (int j = wj.size(); j < 4; ++j)
+			wj.push_back(0.f);
 	}
 
 	for (auto& ij : output[K_BLEND_INDICES])
 	{
-		if (ij.size() < 4)
-		{
-			for (int j = ij.size(); j < 4; ++j)
-				ij.push_back(0.f);
-		}
-	}
-}
-
-static void ParsePose(FJson& output, FbxScene* scene)
-{
-	int count = scene->GetPoseCount();
-	for (int i = 0; i < count; ++i)
-	{
-		output[K_POSE].push_back(FJson());
-		auto it = output[K_POSE].end() - 1;
-		auto pose = scene->GetPose(i);
-		(*it)[K_NAME] = pose->GetName();
-		(*it)[K_ISBIND] = pose->IsBindPose() ? 1 : 0;
-		(*it)[K_COUNT] = pose->GetCount();
-
-		for (int j = 0; j < pose->GetCount(); ++j)
-		{
-			(*it)[K_POSE].push_back(FJson());
-			auto it2 = (*it)[K_POSE].end() - 1;
-			(*it2)[K_NAME] = pose->GetNodeName(j).GetCurrentName();
-			WriteFloat4x4((*it2)[K_MATRIX], pose->GetMatrix(j));
-		}
-	}
-
-	count = scene->GetCharacterPoseCount();
-	for (int i = 0; i < count; ++i)
-	{
-		output[K_CHARACTER_POSE].push_back(FJson());
-		auto it = output[K_CHARACTER_POSE].end() - 1;
-		auto pose = scene->GetCharacterPose(i);
-		auto character = pose->GetCharacter();
-		if (character == nullptr)
-		{
-			break;
-		}
-
-		FbxCharacterLink charLink;
-		FbxCharacter::ENodeId nodeid = FbxCharacter::eHips;
-		while (character->GetCharacterLink(nodeid, &charLink))
-		{
-			(*it)[K_MATRIX].push_back(FJson());
-			auto it2 = (*it)[K_MATRIX].end() - 1;
-			auto& pos = charLink.mNode->EvaluateGlobalTransform(FBXSDK_TIME_ZERO);
-			WriteFloat4x4(*it2, pos);
-		}
+		for (int j = ij.size(); j < 4; ++j)
+			ij.push_back(0.f);
 	}
 }
 
@@ -541,11 +495,18 @@ static void ParseAnimation(std::function<FJson&()> outputGetter, FbxScene* scene
 	}
 }
 
-static void ParsePose(std::function<FJson&()> outputGetter, FbxScene* scene)
+static void ParsePose(std::function<FJson&()> outputGetter, FbxScene* scene, const vector<FbxMesh*>& skeletalMeshes, const vector<FbxNode*>& links)
 {
 	if (scene == nullptr)
 	{
 		return;
+	}
+
+	// links是所有mesh里取出来的，并没有一一区分存储，在下面可能会产生一定困惑,
+	// 希望可以找到fbx的文档可以描述清楚mesh以及对应的links存取关系，暂时只能这样处理。
+	if (skeletalMeshes.size() > 1)
+	{
+		LVMSG("ParsePose", "we have %d skeletal meshes.", skeletalMeshes);
 	}
 
 	FJson& output = outputGetter();
@@ -561,34 +522,69 @@ static void ParsePose(std::function<FJson&()> outputGetter, FbxScene* scene)
 
 		FJson& poseJson = it.value()[K_DEFAULT_POSE];
 		poseJson[K_ISBIND] = pose->IsBindPose() ? 1 : 0;
-		for (int j = 0; j < pose->GetCount(); ++j)
+		FbxStatus status;
+		for (auto mesh : skeletalMeshes)
 		{
-			FJson& json0 = poseJson[K_POSE][pose->GetNodeName(j).GetCurrentName()];
-			WriteFloat4x4(json0, pose->GetMatrix(j));
+			bool bSuccess = false;
+			NodeList missingAncestors, missingDeformers, missingDeformersAncestors, wrongMatrices;
+
+			// 确定mesh和pose的关系
+			if (pose->IsValidBindPoseVerbose(mesh->GetNode(), missingAncestors, missingDeformers, missingDeformersAncestors, wrongMatrices))
+			{
+				bSuccess = true;
+			}
+			else
+			{
+				// TODO: 
+			}
+
+			if (bSuccess)
+			{
+				map<FbxNode*, FbxAMatrix> linkMatrices;
+				for (int i = 0; i < links.size(); ++i)
+				{
+					auto link = links[i];
+					auto linkIndex = pose->Find(link);
+					if (linkIndex >= 0)
+					{
+						FbxAMatrix amat = *(FbxAMatrix*)&pose->GetMatrix(linkIndex);
+						linkMatrices[link] = amat;
+						auto parentLink = link->GetParent();
+						if (linkMatrices.find(parentLink) != linkMatrices.end())
+						{
+							WriteFloat4x4(poseJson[K_POSE][link->GetName()], linkMatrices[parentLink].Inverse() * amat);
+						}
+						else
+						{
+							WriteFloat4x4(poseJson[K_POSE][link->GetName()], amat);
+						}
+					}
+				}
+			}
 		}
 	}
 
-	for (int i = 0; i < scene->GetCharacterPoseCount(); ++i)
-	{
-		output[K_CHARACTER_POSE].push_back(FJson());
-		FJson& poseJson = *(output[K_CHARACTER_POSE].end() - 1);
-		auto pose = scene->GetCharacterPose(i);
-		auto character = scene->GetCharacter(i);
-		if (character == nullptr)
-		{
-			continue;
-		}
+	//for (int i = 0; i < scene->GetCharacterPoseCount(); ++i)
+	//{
+	//	output[K_CHARACTER_POSE].push_back(FJson());
+	//	FJson& poseJson = *(output[K_CHARACTER_POSE].end() - 1);
+	//	auto pose = scene->GetCharacterPose(i);
+	//	auto character = scene->GetCharacter(i);
+	//	if (character == nullptr)
+	//	{
+	//		continue;
+	//	}
 
-		FbxCharacterLink link;
-		FbxCharacter::ENodeId nodeid = FbxCharacter::eHips;
-		while (character->GetCharacterLink(nodeid, &link))
-		{
-			poseJson[K_MATRIX].push_back(FJson());
-			FJson& matJson = *(poseJson[K_MATRIX].end() - 1);
-			auto& pos = link.mNode->EvaluateGlobalTransform(FBXSDK_TIME_ZERO);
-			WriteFloat4x4(matJson, pos);
-		}
-	}
+	//	FbxCharacterLink link;
+	//	FbxCharacter::ENodeId nodeid = FbxCharacter::eHips;
+	//	while (character->GetCharacterLink(nodeid, &link))
+	//	{
+	//		poseJson[K_MATRIX].push_back(FJson());
+	//		FJson& matJson = *(poseJson[K_MATRIX].end() - 1);
+	//		auto& pos = link.mNode->EvaluateGlobalTransform(FBXSDK_TIME_ZERO);
+	//		WriteFloat4x4(matJson, pos);
+	//	}
+	//}
 }
 
 static void ParseSkeleton(std::function<FJson&()> outputGetter, FbxNode* node)
@@ -766,7 +762,7 @@ static void ParseVertices(function<FJson&()> outputGetter, FbxMesh* mesh, map<in
 				controlPointToVertexMap[controlPointIndex].push_back(vertexID);
 
 				output[K_COORDINATE].push_back(FJson());
-				WriteFloat3(*(output[K_COORDINATE].end() - 1), cpHead[controlPointIndex]);
+				WriteFloat3(*(output[K_COORDINATE].end() - 1), cpHead[controlPointIndex], true);
 
 				// element uv
 				if (uvHead != nullptr)
@@ -929,17 +925,27 @@ static void ParseVertices(function<FJson&()> outputGetter, FbxMesh* mesh, map<in
 	}
 }
 
-static void ParseMesh(std::function<FJson&()> outputGetter, FbxNode* node)
+static void ParseMesh(std::function<FJson&()> outputGetter, FbxScene* scene, FbxNode* node, 
+	vector<FbxMesh*>& staticMeshes, vector<FbxMesh*>& skeletalMeshes, vector<FbxNode*>& links)
 {
 	if (node == nullptr)
 	{
 		return;
 	}
 
-	FbxMesh* mesh = (FbxMesh*)node->GetNodeAttribute();
+	auto mesh = node->GetMesh();
 	if (mesh == nullptr)
 	{
 		return;
+	}
+
+	if (mesh->GetDeformerCount(FbxDeformer::eSkin) > 0)
+	{
+		skeletalMeshes.push_back(mesh);
+	}
+	else
+	{
+		staticMeshes.push_back(mesh);
 	}
 
 	FJson& output = outputGetter();
@@ -947,7 +953,7 @@ static void ParseMesh(std::function<FJson&()> outputGetter, FbxNode* node)
 
 	map<int, vector<int>> ControlPointToVertexMap;
 	ParseVertices([&]()->FJson& {return output; }, mesh, ControlPointToVertexMap);
-	ParseLink([&]()->FJson& {return output; }, output, mesh, ControlPointToVertexMap);
+	ParseLink([&]()->FJson& {return output; }, output, scene, mesh, ControlPointToVertexMap, links);
 	ParsePolygons([&]()->FJson& {return output; }, mesh, ControlPointToVertexMap);
 }
 
@@ -970,7 +976,7 @@ public:
 
 	void OutputToStream()
 	{
-		if (1)
+		if (0)
 		{
 			ofstream file;
 			file.open(ConvertPath + "anim.anim", ios::out);
@@ -988,6 +994,10 @@ public:
 				file.open(ConvertPath + it.key() + ".xpt", ios::out);
 				file.width(1);
 				file << it.value();
+				//FJson sp;
+				//sp[K_SKIN] = it.value()[K_SKIN];
+				//sp[K_STACK] = it.value()[K_STACK];
+				//file << sp;
 				file.close();
 			}
 
@@ -1066,7 +1076,7 @@ public:
 		}
 	}
 
-	void ImportNode(std::function<FJson&()> outputGetter, FbxNode* node)
+	void ImportNode(std::function<FJson&()> outputGetter, FbxScene* scene, FbxNode* node)
 	{
 		if (node == nullptr)
 		{
@@ -1086,7 +1096,7 @@ public:
 				break;
 			case FbxNodeAttribute::eMesh:
 				{
-					ParseMesh([&]()->FJson& {return output[node->GetName()]; }, node);
+					ParseMesh([&]()->FJson& {return output[node->GetName()]; }, scene, node, StaticMeshes, SkeletalMeshes, Links);
 				}
 				break;
 			default:
@@ -1096,7 +1106,7 @@ public:
 
 		for (int i = 0; i < node->GetChildCount(); ++i)
 		{
-			ImportNode(outputGetter, node->GetChild(i));
+			ImportNode(outputGetter, scene, node->GetChild(i));
 		}
 	}
 
@@ -1107,14 +1117,14 @@ public:
 		{
 			for (int i = 0; i < node->GetChildCount(); ++i)
 			{
-				ImportNode([&]()->FJson& {return MeshData; }, node->GetChild(i));
+				ImportNode([&]()->FJson& {return MeshData; }, SdkScene, node->GetChild(i));
 			}
 		}
 	}
 
 	void ImportPose()
 	{
-		ParsePose([&]()->FJson& {return MeshData; }, SdkScene);
+		ParsePose([&]()->FJson& {return MeshData; }, SdkScene, SkeletalMeshes, Links);
 	}
 
 	void ImportAnimation()
@@ -1175,6 +1185,9 @@ public:
 private:
 	FbxManager*			SdkManager;
 	FbxScene*			SdkScene;
+	vector<FbxMesh*>	StaticMeshes;
+	vector<FbxMesh*>	SkeletalMeshes;
+	vector<FbxNode*>	Links;
 
 	string				ImportPath;
 	string				ConvertPath;
@@ -1188,12 +1201,6 @@ private:
 	bool				bExportAnimation;
 	vector<string>		MeshFiles;
 };
-
-bool Importer::ImportScene(const string& importSrc, const string& convertDst, bool outputBinary)
-{
-	assert(0 && "not implemented yet");
-	return false;
-}
 
 bool Importer::ImportSceneMeshes(const string& importSrc, const string& convertDst, bool outputBinary, bool exportAnimation)
 {

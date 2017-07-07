@@ -38,7 +38,7 @@ int main(int argc, char** argv)
 
 	if (!src.empty() && !dst.empty())
 	{
-		Importer::ImportSceneMeshes(src, dst, true, exportAnim);
+		Importer::DumpSceneMeshes(src, dst, true, exportAnim);
 	}
 
     return 0;

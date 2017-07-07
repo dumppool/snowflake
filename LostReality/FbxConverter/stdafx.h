@@ -34,6 +34,8 @@ using namespace std;
 #include "File/json.hpp"
 using FJson = nlohmann::json;
 
+#include "File/DirectoryHelper.h"
+
 #include "Math/Vector2.h"
 #include "Math/Vector3.h"
 #include "Math/Vector4.h"
