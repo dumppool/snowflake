@@ -54,5 +54,7 @@ namespace LostCore
 		FAnimation Animation;
 
 		uint32 PrimitiveFlags;
+
+		FAABoundingBox BoundingBox;
 	};
 }

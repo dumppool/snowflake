@@ -59,7 +59,7 @@ void D3D11::FConstantBufferRegister0::UpdateBuffer(const TRefCountPtr<ID3D11Devi
 
 	FParam p;
 	memcpy(&p, buf, GetByteWidth());
-	p.ViewProject = p.ViewProject.GetTranspose();
+	p.ViewProject.Transpose();
 	cxt->UpdateSubresource(GetBufferRHI().GetReference(), 0, nullptr, &p, 0, 0);
 }
 
@@ -70,7 +70,7 @@ void D3D11::FConstantBufferMatrix::UpdateBuffer(const TRefCountPtr<ID3D11DeviceC
 
 	FParam p;
 	memcpy(&p, buf, GetByteWidth());
-	p.Mat = p.Mat.GetTranspose();
+	p.Mat.Transpose();
 	cxt->UpdateSubresource(GetBufferRHI().GetReference(), 0, nullptr, &p, 0, 0);
 }
 
@@ -81,7 +81,7 @@ void D3D11::FConstantBufferSkinned::UpdateBuffer(const TRefCountPtr<ID3D11Device
 
 	FParam p;
 	memcpy(&p, buf, sz);
-	p.World = p.World.GetTranspose();
-	for_each(p.Bones.begin(), p.Bones.end(), [](LostCore::FMatrix& mat) {mat = mat.GetTranspose(); });
+	p.World.Transpose();
+	for_each(p.Bones.begin(), p.Bones.end(), [](LostCore::FMatrix& mat) {mat.Transpose(); });
 	cxt->UpdateSubresource(GetBufferRHI().GetReference(), 0, nullptr, &p, 0, 0);
 }

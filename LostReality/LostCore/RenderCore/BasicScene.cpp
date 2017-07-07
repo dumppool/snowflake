@@ -73,7 +73,7 @@ bool FBasicScene::Load(IRenderContext * rc, const char* url)
 				for (int x = 0; x < 4; ++x)
 				{
 					int r = (int)&(node.find("transform").value()[y * 4 + x]);
-					mat.M[x][y] = node.find("transform").value()[y * 4 + x];
+					mat.M[y][x] = node.find("transform").value()[y * 4 + x];
 				}
 			}
 

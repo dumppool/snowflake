@@ -139,6 +139,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	static const float s_invalidPos = INFINITE;
 	static const float s_factor = 0.1f;
+	static const float s_step = 1.1f;
 
 	static bool s_moving = false;
 	static float s_startPosX = s_invalidPos;
@@ -237,22 +238,22 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		switch (key)
 		{
 		case 'W':
-			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddPositionWorld(FVec3(0.f, 0.f, 0.1f));
+			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddPositionWorld(FVec3(0.f, 0.f, s_step));
 			break;
 		case 'S':
-			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddPositionWorld(FVec3(0.f, 0.f, -0.1f));
+			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddPositionWorld(FVec3(0.f, 0.f, -s_step));
 			break;
 		case 'A':
-			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddPositionWorld(FVec3(-0.1f, 0.f, 0.f));
+			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddPositionWorld(FVec3(-s_step, 0.f, 0.f));
 			break;
 		case 'D':
-			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddPositionWorld(FVec3(0.1f, 0.f, 0.f));
+			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddPositionWorld(FVec3(s_step, 0.f, 0.f));
 			break;
 		case 'Q':
-			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddPositionWorld(FVec3(0.f, -0.1f, 0.f));
+			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddPositionWorld(FVec3(0.f, -s_step, 0.f));
 			break;
 		case 'E':
-			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddPositionWorld(FVec3(0.f, 0.1f, 0.f));
+			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddPositionWorld(FVec3(0.f, s_step, 0.f));
 			break;
 		default:
 			break;

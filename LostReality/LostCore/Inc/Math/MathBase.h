@@ -30,13 +30,6 @@ namespace LostCore
 		return IsZero(f1 - f2, tolerance);
 	}
 
-	INLINE FVec3 ClampEuler(const FVec3& euler)
-	{
-		FVec3 ret;
-		ret.Pitch = min(max(euler.Pitch, -90.f), 90.f);
-		return ret;
-	}
-
 	INLINE void SinCos(float& oSin, float& oCos, float rad)
 	{
 		float quotient = (SInvPI * 0.5f) * rad;

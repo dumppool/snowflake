@@ -29,10 +29,8 @@ namespace LostCore
 
 	inline uint32 GetPaddingSize(uint32 sz, uint32 alignment)
 	{
-		return (uint32)ceil(sz / (float)alignment) * alignment - sz;
+		return GetAlignedSize(sz, alignment) - sz;
 	}
-
-	typedef map<string, FMatrix> FPose;
 
 	struct FTreeNode
 	{
@@ -87,6 +85,8 @@ namespace LostCore
 
 		return stream;
 	}
+
+	typedef map<string, FMatrix> FPose;
 
 	struct FMeshData
 	{

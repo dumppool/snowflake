@@ -43,7 +43,12 @@
 #define K_TANGENT						"Tangent"
 #define K_BINORMAL						"Binormal"
 #define K_NAME							"Name"
+#define K_TYPENAME						"TypeName"
 #define K_TYPE							"Type"
+#define K_ATTRIBUTE_TYPE				"AttributeType"
+#define K_DEFORMER_TYPE					"DeformerType"
+#define K_DEFORMER_COUNT				"DeformerCount"
+#define K_DEFORMER_NAME					"DeformerName"
 #define K_LOOK							"Look"
 #define K_SIZE							"Size"
 #define K_RED							"Red"
@@ -228,3 +233,56 @@ enum EVertexElement
 };
 
 #define MAGIC_VERTEX 0xaabbabab
+
+/**
+    enum EType
+    {   
+        eUnknown,
+        eNull,
+        eMarker,
+        eSkeleton, 
+        eMesh, 
+        eNurbs, 
+        ePatch,
+        eCamera, 
+        eCameraStereo,
+        eCameraSwitcher,
+        eLight,
+        eOpticalReference,
+        eOpticalMarker,
+        eNurbsCurve,
+        eTrimNurbsSurface,
+        eBoundary,
+        eNurbsSurface,
+        eShape,
+        eLODGroup,
+        eSubDiv,
+        eCachedEffect,
+        eLine
+		};
+		*/
+
+static const char* SAttributeTypeString[] = {
+	"Unknown",
+	"Null",
+	"Marker",
+	"Skeleton",
+	"Mesh",
+	"Nurbs",
+	"Patch",
+	"Camera",
+	"CameraStereo",
+	"CameraSwitcher",
+	"Light",
+	"OpticalReference",
+	"OpticalMarker",
+	"NurbsCurve",
+	"TrimNurbsSurface",
+	"Boundary",
+	"NurbsSurface",
+	"Shape",
+	"LODGroup",
+	"SubDiv",
+	"CachedEffect",
+	"Line"
+};

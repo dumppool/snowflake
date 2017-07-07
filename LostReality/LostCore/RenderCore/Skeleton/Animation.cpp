@@ -48,7 +48,7 @@ void LostCore::FSkeletonNode::LoadLocalPose(const FPose& pose)
 
 void LostCore::FSkeletonNode::UpdateWorldMatrix(const FMatrix & parentWorld)
 {
-	World = parentWorld * Local;
+	World = Local * parentWorld;
 	for (auto& child : Children)
 	{
 		child.UpdateWorldMatrix(World);

@@ -90,6 +90,7 @@ using FJson = nlohmann::json;
 #include "Math/Quat.h"
 #include "Math/Matrix.h"
 #include "Math/Transform2.h"
+#include "Math/AABB.h"
 
 #include "File/DirectoryHelper.h"
 

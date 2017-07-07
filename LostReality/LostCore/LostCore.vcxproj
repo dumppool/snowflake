@@ -161,6 +161,7 @@
     <ClInclude Include="Inc\File\json.hpp" />
     <ClInclude Include="Inc\Keywords.h" />
     <ClInclude Include="Inc\LostCore.h" />
+    <ClInclude Include="Inc\Math\AABB.h" />
     <ClInclude Include="Inc\Math\MathBase.h" />
     <ClInclude Include="Inc\Math\Matrix.h" />
     <ClInclude Include="Inc\Math\Quat.h" />

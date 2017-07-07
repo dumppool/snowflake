@@ -16,9 +16,90 @@ namespace LostCore
 		auto pos = std::string::npos;
 		while ((pos = target.find(replaceFrom)) != std::string::npos)
 		{
-			target.replace(pos, 1, replaceTo);
+			target.replace(pos, strlen(replaceFrom), replaceTo);
 		}
 	}
+
+	/***************************************************************************
+	* 所有的操作的输入路径都需要将'/'替换为'\\'
+	*/
+
+	// 假定所有文件名都包含扩展名，没有扩展名的视为文件夹名
+	static bool IsDirectory(const string& path)
+	{
+		auto lastSlash = path.rfind('\\');
+		auto lastDot = path.rfind('.');
+		return (lastDot == string::npos) || (lastDot < lastSlash) || (path.back() == ':');
+	}
+
+	// 输出路径以'\\'结束
+	static void GetDirectory(string& outPath, const string& path)
+	{
+		outPath = path;
+		auto lastSlash = outPath.rfind('\\');
+		if (!IsDirectory(path))
+		{
+			outPath.resize(lastSlash + 1);
+		}
+
+		if (outPath.back() != '\\')
+		{
+			outPath += '\\';
+		}
+	}
+
+	// 获取不包含路径的文件名及扩展名
+	// 如果输入文件名实际上是路径名，输出的扩展名为空
+	static void GetFileName(string& outFileName, string& outExtName, const string& path)
+	{
+		assert(path.size() > 1);
+
+		string tmp(path.begin(), path.end() - (path.back() == '\\' ? 1 : 0));
+		if (tmp.back() == ':')
+		{
+			outFileName = tmp;
+			outExtName = "";
+			return;
+		}
+
+		auto lastSlash = tmp.rfind('\\');
+		tmp.assign(tmp.begin() + lastSlash + 1, tmp.end());
+
+		auto lastDot = tmp.rfind('.');
+		if (lastDot == string::npos)
+		{
+			outFileName = tmp;
+			outExtName = "";
+		}
+		else
+		{
+			outFileName.assign(tmp.begin(), tmp.begin() + lastDot);
+			outExtName.assign(tmp.begin() + lastDot + 1, tmp.end());
+		}
+	}
+
+	static void AutoTest_FilePath()
+	{
+		string a[] = { "D:/haha/", "D:/haha", "D:", "D:/", "D:/aa.a" };
+
+		for_each(a, a + ARRAYSIZE(a), [](const string& p)
+		{
+			string fileName, extName, fullPath(p);
+			ReplaceChar(fullPath, "/", "\\");
+			GetFileName(fileName, extName, fullPath);
+
+			printf("\n%s\t is %sa directory, \t(file & ext) is: [%s], [%s]",
+				fullPath.c_str(),
+				IsDirectory(fullPath) ? "" : "not ",
+				fileName.c_str(), extName.c_str());
+		});
+
+		string d0("D:\\GitUnreal\\UnrealEngine\\Engine\\Source\\ThirdParty\\nvtesslib");
+		ReplaceChar(d0, "\\", " + ");
+		ReplaceChar(d0, " + ", "|");
+	}
+
+	/***************************************************************************/
 
 	class FDirectoryHelper
 	{

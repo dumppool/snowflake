@@ -78,6 +78,15 @@ bool LostCore::FBasicModel::Load(IRenderContext * rc, const char* url)
 				Primitive->ConstructIB(rc, &(data.Indices[0]), data.Indices.size(), ibStride, false));
 		}
 
+		//FBinaryIO stream2;
+		//stream2.ReadFromFile(primitivePath.c_str());
+
+		//FMeshData data2;
+		//stream2 >> data2;
+		//for (uint32 i = 0; i < data2.XYZ.size(); ++i)
+		//{
+
+		//}
 	}
 	else
 	{
@@ -136,23 +145,23 @@ void LostCore::FBasicModel::Fini()
 void LostCore::FBasicModel::Tick(float sec)
 {
 	Root.UpdateWorldMatrix(Matrices.World);
+
+	// 是时候分开Skeleton和非Skeleton了
+	FPose pose;
+	Root.GetWorldPose(pose);
+	for (const auto& it : pose)
+	{
+		if (SkeletonNodeTable.find(it.first) != SkeletonNodeTable.end())
+		{
+			Matrices.Bones[SkeletonNodeTable[it.first]] = it.second;
+		}
+	}
 }
 
 void LostCore::FBasicModel::Draw(IRenderContext * rc, float sec)
 {
 	if (Material != nullptr)
 	{
-		// 是时候分开Skeleton和非Skeleton了
-		FPose pose;
-		Root.GetWorldPose(pose);
-		for (const auto& it : pose)
-		{
-			if (SkeletonNodeTable.find(it.first) != SkeletonNodeTable.end())
-			{
-				Matrices.Bones[SkeletonNodeTable[it.first]] = it.second;
-			}
-		}
-
 		Material->UpdateConstantBuffer(rc, (const void*)&Matrices, sizeof(Matrices));
 		Material->Draw(rc, sec);
 	}
