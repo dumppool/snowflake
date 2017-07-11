@@ -19,19 +19,19 @@ namespace LostCore
 		union
 		{
 			float X;
-			float Roll;
+			float Pitch;
 		};
 		
 		union
 		{
 			float Y;
-			float Pitch;
+			float Yaw;
 		};
 
 		union
 		{
 			float Z;
-			float Yaw;
+			float Roll;
 		};
 
 	public:

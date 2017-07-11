@@ -71,30 +71,7 @@ namespace LostCore
 
 		INLINE void SetRotateAndOrigin(const FQuat& q, const FVec3& origin, const FVec3& scale = FVec3(1.f, 1.f, 1.f))
 		{
-			float xx = q.X * q.X * 2.f;
-			float xy = q.X * q.Y * 2.f;
-			float xz = q.X * q.Z * 2.f;
-
-			float yy = q.Y * q.Y * 2.f;
-			float yz = q.Y * q.Z * 2.f;
-
-			float zz = q.Z * q.Z * 2.f;
-
-			float wx = q.W * q.X * 2.f;
-			float wy = q.W * q.Y * 2.f;
-			float wz = q.W * q.Z * 2.f;
-
-			M[0][0] = scale.X * (1.f - (yy + zz));
-			M[1][0] = scale.Y * (xy - wz);
-			M[2][0] = scale.Z * (xz + wy);
-
-			M[0][1] = scale.X * (xy + wz);
-			M[1][1] = scale.Y * (1.f - (xx + zz));
-			M[2][1] = scale.Z * (yz - wx);
-
-			M[0][2] = scale.X * (xz - wy);
-			M[1][2] = scale.Y * (yz + wx);
-			M[2][2] = scale.Z * (1.f - (xx + yy));
+			SetRotate(q);
 
 			M[0][3] = M[1][3] = M[2][3] = 0.f;
 
@@ -108,28 +85,28 @@ namespace LostCore
 		{
 			float xx = q.X * q.X * 2.f;
 			float xy = q.X * q.Y * 2.f;
-			float xz = q.X * q.Z * 2.f;
+			float xz = -q.X * q.Z * 2.f;
 
 			float yy = q.Y * q.Y * 2.f;
-			float yz = q.Y * q.Z * 2.f;
+			float yz = -q.Y * q.Z * 2.f;
 
 			float zz = q.Z * q.Z * 2.f;
 
-			float wx = q.W * q.X * 2.f;
-			float wy = q.W * q.Y * 2.f;
+			float wx = -q.W * q.X * 2.f;
+			float wy = -q.W * q.Y * 2.f;
 			float wz = q.W * q.Z * 2.f;
 
-			M[0][0] = 1.f - (yy + zz); 
-			M[1][0] = xy - wz; 
-			M[2][0] = xz + wy;
+			M[0][0] = (1.f - (yy + zz));
+			M[0][1] = (xy + wz);
+			M[0][2] = (xz - wy);
 
-			M[0][1] = xy + wz;
-			M[1][1] = 1.f - (xx + zz);
-			M[2][1] = yz - wx;
+			M[1][0] = (xy - wz);
+			M[1][1] = (1.f - (xx + zz));
+			M[1][2] = (yz + wx);
 
-			M[0][2] = xz - wy;
-			M[1][2] = yz + wx;
-			M[2][2] = 1.f - (xx + yy);
+			M[2][0] = (xz + wy);
+			M[2][1] = (yz - wx);
+			M[2][2] = (1.f - (xx + yy));
 
 			M[0][3] = M[1][3] = M[2][3] = M[3][0] = M[3][1] = M[3][2] = 0.f;
 			M[3][3] = 1.f;

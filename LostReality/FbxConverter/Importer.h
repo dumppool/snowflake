@@ -275,13 +275,14 @@ namespace Importer {
 			return;
 		}
 
-		if (mesh->GetDeformerCount() > 1)
+		auto deformerCount = mesh->GetDeformerCount(FbxDeformer::eSkin);
+		if (deformerCount > 1)
 		{
-			LVMSG("SortSkeletalLink", "mesh[%s] has %d deformers.", mesh->GetName(), mesh->GetDeformerCount(FbxDeformer::eSkin));
+			LVMSG("SortSkeletalLink", "mesh[%s] has %d deformers.", mesh->GetName(), deformerCount);
 		}
 
 		vector<FbxNode*> rootLinks;
-		for (int deformerIndex = 0; deformerIndex < mesh->GetDeformerCount(FbxDeformer::eSkin); ++deformerIndex)
+		for (int deformerIndex = 0; deformerIndex < deformerCount; ++deformerIndex)
 		{
 			FbxSkin* skin = (FbxSkin*)mesh->GetDeformer(deformerIndex, FbxDeformer::eSkin);
 			for (int clusterIndex = 0; skin != nullptr && clusterIndex < skin->GetClusterCount(); ++clusterIndex)
@@ -313,6 +314,22 @@ namespace Importer {
 		{
 			SortLinkRecursively(link, links);
 		}
+	}
+
+	static FbxAMatrix ComputeMatrixLocalToParent(FbxNode* node, FbxNode* parentNode)
+	{
+		auto scene = node->GetScene();
+		if (scene != nullptr && parentNode != nullptr)
+		{
+			auto parentWorld = scene->GetAnimationEvaluator()->GetNodeGlobalTransform(parentNode);
+			auto parentLocal = scene->GetAnimationEvaluator()->GetNodeLocalTransform(parentNode);
+			auto selfWorld = scene->GetAnimationEvaluator()->GetNodeGlobalTransform(node);
+			return parentLocal * selfWorld;
+		}
+
+		FbxAMatrix selfWorld;
+		selfWorld.SetIdentity();
+		return selfWorld;
 	}
 
 	extern bool DumpSceneMeshes(const string& importSrc, const string& convertDst, bool outputBinary, bool exportAnimation);

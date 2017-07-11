@@ -142,6 +142,25 @@ FMatrix LostCore::FBasicCamera::GetViewMatrix() const
 	world.Invert();
 	world34.Invert34();
 
+	/*************************************************/
+	const float s2 = Sqrt(2.f)*0.5;
+	FVec3 src(s2, 0.f, s2);
+	FQuat rot0; rot0.FromEuler(FVec3(0.f, 45.f, 0.f));
+	FVec3 euler0 = rot0.Euler();
+	FMatrix mat0; mat0.SetRotate(rot0);
+	FVec3 dst = mat0.ApplyPoint(src);
+
+	FMatrix mat1; mat1.SetTranslate(FVec3(0.f, 0.f, 1.f));
+	mat0 = mat0 * mat1;
+	dst = mat0.ApplyPoint(src);
+
+	FMatrix mat2; mat2.M[0][0] = mat2.M[2][0] = mat2.M[2][2] = s2; mat2.M[0][2] = mat2.M[3][0] = mat2.M[3][2] = -s2;
+	dst = mat2.ApplyPoint(FVec3(0.f, 0.f, 0.f));
+	dst = mat2.ApplyPoint(src);
+	mat2.Invert();
+	dst = mat2.ApplyPoint(src);
+	/*************************************************/
+
 	return world;
 }
 

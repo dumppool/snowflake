@@ -37,7 +37,7 @@ namespace LostCore
 	{
 		outPath = path;
 		auto lastSlash = outPath.rfind('\\');
-		if (!IsDirectory(path))
+		if (!IsDirectory(outPath))
 		{
 			outPath.resize(lastSlash + 1);
 		}
