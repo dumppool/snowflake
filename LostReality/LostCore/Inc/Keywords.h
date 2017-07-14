@@ -232,6 +232,10 @@ enum EVertexElement
 	Skin				= 0x40,
 };
 
+#define MAX_BONES_PER_VERTEX 4
+#define MAX_BONES_PER_BATCH 128
+#define MAX_BONES_PER_MESH (1<<16)
+
 #define MAGIC_VERTEX 0xaabbabab
 
 /**

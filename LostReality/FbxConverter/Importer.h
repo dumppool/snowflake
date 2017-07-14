@@ -11,14 +11,14 @@
 
 namespace Importer {
 
-	inline float SNUM(float val)
+	INLINE float SNUM(float val)
 	{
 		return abs(val) < LostCore::SSmallFloat2 ? 0.0f : val;
 	}
 
-	inline double SNUM(double val)
+	INLINE float SNUM(double val)
 	{
-		return abs(val) < (float)LostCore::SSmallFloat2 ? 0.0 : val;
+		return (float)abs(val) < LostCore::SSmallFloat2 ? 0.f : (float)val;
 	}
 
 	static void WriteRGB(FJson& output, const FbxColor& color)
@@ -208,8 +208,79 @@ namespace Importer {
 		output = f4x4;
 	}
 
-	static FbxNode* GetRootLink(FbxScene* scene, FbxNode* link)
+	INLINE LostCore::FVec4 ToVector4(const FbxVector4& vec)
 	{
+		LostCore::FVec4 output;
+		output.X = vec[0];
+		output.Y = vec[1];
+		output.Z = -vec[2];
+		output.W = vec[3];
+		return output;
+	}
+
+	INLINE LostCore::FVec3 ToVector3(const FbxVector4& vec)
+	{
+		LostCore::FVec3 output;
+		output.X = vec[0];
+		output.Y = vec[1];
+		output.Z = -vec[2];
+		return output;
+	}
+
+	INLINE LostCore::FVec2 ToVector2(const FbxVector2& vec)
+	{
+		LostCore::FVec2 output;
+		output.X = vec[0];
+		output.Y = vec[1];
+		return output;
+	}
+
+	INLINE LostCore::FQuat ToQuat(const FbxQuaternion& quat)
+	{
+		LostCore::FQuat output;
+		output.X = quat[0];
+		output.Y = quat[1];
+		output.Z = -quat[2];
+		output.W = -quat[3];
+		return output;
+	}
+
+	INLINE LostCore::FMatrix ToMatrix(const FbxAMatrix& mat)
+	{
+		LostCore::FMatrix output;
+		for (int row = 0; row < 4; ++row)
+		{
+			auto vec = mat.GetRow(row);
+			if (row == 2)
+			{
+				output.M[row][0] = -vec[0];
+				output.M[row][1] = -vec[1];
+				output.M[row][2] = vec[2];
+				output.M[row][3] = -vec[3];
+			}
+			else
+			{
+				output.M[row][0] = vec[0];
+				output.M[row][1] = vec[1];
+				output.M[row][2] = -vec[2];
+				output.M[row][3] = vec[3];
+			}
+		}
+
+		return output;
+	}
+
+	static bool IsOddNegativeScale(const FbxAMatrix& mat)
+	{
+		auto scale = mat.GetS();
+		int count = (scale[0] < 0 ? 1 : 0) + (scale[1] < 0 ? 1 : 0) + (scale[2] < 0 ? 1 : 0);
+
+		return count == 1 || count == 3;
+	}
+
+	static FbxNode* GetRootLink(FbxNode* link)
+	{
+		FbxScene* scene = link != nullptr ? link->GetScene() : nullptr;
 		FbxNode* root = link;
 		auto rootParent = root != nullptr ? root->GetParent() : nullptr;
 		while (root != nullptr && rootParent != nullptr && rootParent != scene->GetRootNode())
@@ -256,6 +327,43 @@ namespace Importer {
 		return attrType == FbxNodeAttribute::eSkeleton || attrType == FbxNodeAttribute::eMesh || attrType == FbxNodeAttribute::eNull;
 	}
 
+	// no validation at all
+	static FbxAMatrix GetLinkMatrixFromPose(FbxPose* pose, FbxNode* link)
+	{
+		//if (pose != nullptr && link != nullptr && pose->Find(link) >= 0)
+		{
+			return *((FbxAMatrix*)&pose->GetMatrix(pose->Find(link)));
+		}
+
+		//FbxAMatrix mat;
+		//mat.SetIdentity();
+		//return mat;
+	}
+
+	typedef LostCore::FTreeNode<LostCore::FMatrixNode> FPoseTree;
+	static void BuildPose(FbxPose* pose, FbxNode* link, FPoseTree& data)
+	{
+		if (pose != nullptr && IsBone(link) && pose->Find(link)>=0)
+		{
+			for (int i = 0; i < link->GetChildCount(); ++i)
+			{
+				auto childData = FPoseTree();
+				BuildPose(pose, link->GetChild(i), childData);
+				data.AddChild(childData);
+			}
+
+			auto mat = GetLinkMatrixFromPose(pose, link);
+			auto parentLink = link->GetParent();
+			if (parentLink != nullptr && IsBone(parentLink))
+			{
+				mat = GetLinkMatrixFromPose(pose, parentLink).Inverse() * mat;
+			}
+
+			data.Data.Matrix = ToMatrix(mat);
+			data.Data.Name = link->GetName();
+		}
+	}
+
 	static void SortLinkRecursively(FbxNode* link, vector<FbxNode*>& links)
 	{
 		if (IsBone(link))
@@ -291,7 +399,7 @@ namespace Importer {
 				if (link != nullptr)
 				{
 					auto linkName = link->GetName();
-					link = GetRootLink(scene, link);
+					link = GetRootLink(link);
 					bool found = false;
 					for (auto plink : rootLinks)
 					{
@@ -318,19 +426,116 @@ namespace Importer {
 
 	static FbxAMatrix ComputeMatrixLocalToParent(FbxNode* node, FbxNode* parentNode)
 	{
-		auto scene = node->GetScene();
-		if (scene != nullptr && parentNode != nullptr)
+		if (node != nullptr)
 		{
-			auto parentWorld = scene->GetAnimationEvaluator()->GetNodeGlobalTransform(parentNode);
-			auto parentLocal = scene->GetAnimationEvaluator()->GetNodeLocalTransform(parentNode);
-			auto selfWorld = scene->GetAnimationEvaluator()->GetNodeGlobalTransform(node);
-			return parentLocal * selfWorld;
+			auto scene = node->GetScene();
+			if (scene != nullptr)
+			{
+				auto selfWorld = scene->GetAnimationEvaluator()->GetNodeGlobalTransform(node);
+				if (parentNode != nullptr)
+				{
+					auto parentWorld = scene->GetAnimationEvaluator()->GetNodeGlobalTransform(parentNode);
+					auto parentLocal = scene->GetAnimationEvaluator()->GetNodeLocalTransform(parentNode);
+					return parentWorld.Inverse() * selfWorld;
+				}
+				else
+				{
+					return selfWorld;
+				}
+			}
 		}
 
 		FbxAMatrix selfWorld;
 		selfWorld.SetIdentity();
 		return selfWorld;
 	}
+
+	struct FConvertOptions
+	{
+		enum EImportType
+		{
+			ImportLeast,
+			ImportNormal,
+			ImportTangent,
+			ImportMost,
+		};
+
+		enum ERegenerateType
+		{
+			NoRegenerate,
+			ForceRegenerate,
+			RegenerateIfNotFound,
+		};
+
+		bool bImportNormal;
+		bool bImportTangent;
+		bool bImportVertexColor;
+
+		bool bForceRegenerateNormal;
+		bool bRegenerateNormalIfNotFound;
+
+		bool bForceRegenerateTangent;
+		bool bRegenerateTangentIfNotFound;
+
+		explicit FConvertOptions(EImportType import, ERegenerateType regenerate)
+		{
+			switch (import)
+			{
+			case ImportLeast:
+				bImportNormal = false;
+				bImportTangent = false;
+				bImportVertexColor = false;
+				break;
+			case ImportNormal:
+				bImportNormal = true;
+				bImportTangent = false;
+				bImportVertexColor = false;
+				break;
+			case ImportTangent:
+				bImportNormal = true;
+				bImportTangent = true;
+				bImportVertexColor = false;
+				break;
+			case ImportMost:
+				bImportNormal = true;
+				bImportTangent = true;
+				bImportVertexColor = false;
+				break;
+			default:
+				break;
+			}
+
+			switch (regenerate)
+			{
+			case NoRegenerate:
+				bForceRegenerateNormal = false;
+				bRegenerateNormalIfNotFound = false;
+				bForceRegenerateTangent = false;
+				bRegenerateTangentIfNotFound = false;
+				break;
+			case ForceRegenerate:
+				bImportNormal = false;
+				bForceRegenerateNormal = true;
+				bRegenerateNormalIfNotFound = false;
+				bImportTangent = false;
+				bForceRegenerateTangent = true;
+				bRegenerateTangentIfNotFound = false;
+				break;
+			case RegenerateIfNotFound:
+				bImportNormal = true;
+				bForceRegenerateNormal = false;
+				bRegenerateNormalIfNotFound = true;
+				bImportTangent = true;
+				bForceRegenerateTangent = false;
+				bRegenerateTangentIfNotFound = true;
+				break;
+			default:
+				break;
+			}
+		}
+	};
+
+	static FConvertOptions SOptions(FConvertOptions::ImportMost, FConvertOptions::NoRegenerate);
 
 	extern bool DumpSceneMeshes(const string& importSrc, const string& convertDst, bool outputBinary, bool exportAnimation);
 	extern bool ImportSceneMeshes(const string& importSrc, const string& convertDst, bool outputBinary, bool exportAnimation);

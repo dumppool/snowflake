@@ -4,8 +4,44 @@
 * author luoxw
 * date 2017/02/08
 *
-* All these great algorithms in the math library come from UnrealEngine4,
-* thank them for saving me.
+* 数学基础：
+* 微软左手系 右上前
+* 行主序矩阵 组合顺序从左到右
+* Euler Pitch(x-axis), Yaw(y-axis), Roll(z-axis)
+* 
+* 右手系到左手系的转换参考
+* UnrealEngine\Engine\Source\Editor\UnrealEd\Private\Fbx\FbxUtilsImport.cpp
+* Vector				右手(X, Y, Z) -> 左手(X, Y, -Z)
+* Euler					右手(Pitch, Yaw, Roll) -> 左手(Pitch, -Yaw, Roll）
+* Quaternion			右手(Qx, Qy, Qz, Qw) -> 左手(Qx, Qy, -Qz, -Qw)
+* Matrix(affine)		右手	| M00, M01, M02, 0 |	左手	| M00, -M01, M02, 0	|
+*							| M10, M11, M12, 0 |	->	| M10, -M11, M12, 0	|
+*							| M20, M21, M22, 0 |		| -M20, M21, -M22, 0|
+*							| M30, M31, M32, 1 |		| M30, -M31, M32, 1	|
+*
+* 部分算法参考wiki
+* https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles#Euler_Angles_to_Quaternion_Conversion
+* https://en.wikipedia.org/wiki/Rotation_matrix#Quaternion
+* https://en.wikipedia.org/wiki/Matrix_multiplication
+* 被虐了一个下午总结下wiki的数学基础：
+* 右手系 后右上
+* 列主序矩阵 组合顺序从右到左
+* Euler Pitch(y-axis), Yaw(z-axis), Roll(x-axis)
+*
+* UE4数学基础：
+* 左手系 前右上
+* 行主序矩阵 组合顺序从左到右
+* Euler Pitch(y-axis), Yaw(z-axis), Roll(x-axis)、
+*
+* 果然一开始就借用高度优化的UE4数学算法不太现实，首先保证正确性，功能完整到一定程度再优化性能.
+* 
+* FbxAMatrix注释有点绕口，这里面的列和行应该不是同一个层面的概念，仅矩阵相乘时才需要注意列主序这个前提。
+* 一般当作行主序矩阵访问。
+* [引用]
+* * Matrices are defined using the Column Major scheme. When a FbxAMatrix represents a transformation (translation, rotation and scale), 
+* * the last row of the matrix represents the translation part of the transformation.
+* [/引用]
+*
 */
 
 #pragma once

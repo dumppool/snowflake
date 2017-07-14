@@ -13,15 +13,54 @@
 using namespace Importer;
 using namespace LostCore;
 
+
 struct FTempMesh
 {
+	struct Triangle
+	{
+		FVec2				TexCoords[3];
+		FVec3				Normals[3];
+		FVec3				Tangents[3];
+		FVec3				Binormals[3];
+		uint32				ControlPointIndices[3];
+		uint8				MaterialIndices[2];
+		uint32				SmoothingGroups;
+		FVec3				Colors[3];
+	};
+
 	FbxScene*				Scene;
 	FbxMesh*				Mesh;
 
 	bool					bIsSkeletal;
+
+	// 从根到叶的links
 	vector<FbxNode*>		Links;
 
+	// 从根到叶的骨骼
+	vector<string>			BoneNames;
+	vector<FMatrix>			BoneMatrix;
+
+	// poses
+	map<string, FPoseTree>	Poses;
+
+	// 顶点结构
 	uint32					VertexFlags;
+
+	// 矩阵[node -> scene root]
+	FMatrix					MeshToSceneRoot;
+
+	// MeshToSceneRoot的旋转部分
+	FMatrix					MeshToSceneRootDir;
+
+	// control points都在mesh node本地空间
+	vector<FVec3>			ControlPoints;
+
+	// 三角面
+	vector<Triangle>		Triangles;
+
+	// 骨骼模型才有的骨骼索引&骨骼混合权重
+	vector<array<int, MAX_BONES_PER_VERTEX>>	BlendIndices;
+	vector<array<float, MAX_BONES_PER_VERTEX>>	BlendWeights;
 
 #ifdef _DEBUG
 	string					Name;
@@ -44,7 +83,7 @@ struct FTempMesh
 
 	bool IsValid() const
 	{
-		return Scene != nullptr && Mesh != nullptr;
+		return Mesh != nullptr;
 	}
 
 	bool IsSkeletal() const
@@ -78,11 +117,24 @@ struct FTempMesh
 			return;
 		}
 
-#ifdef _DEBUG
-		Name = Mesh->GetName();
+		auto scene = Mesh->GetScene();
+		if (scene == nullptr)
+		{
+			LVERR(head, "mesh[%s] 's scene is not exist", Mesh->GetName());
+			return;
+		}
+
+		if (!Mesh->IsTriangleMesh())
+		{
+			LVERR(head, "mesh[%s] is not a triangle mesh");
+		}
 
 		auto meshNode = Mesh->GetNode();
 		auto parentNode = meshNode->GetParent();
+
+#ifdef _DEBUG
+		Name = Mesh->GetName();
+
 		if (parentNode == nullptr)
 		{
 			ParentName = "non-exist";
@@ -97,7 +149,94 @@ struct FTempMesh
 		if (IsSkeletal())
 		{
 			bIsSkeletal = true;
-			SortSkeletalLink(Scene, Mesh, Links);
+			SortSkeletalLink(scene, Mesh, Links);
+
+			int skinCount = Mesh->GetDeformerCount(FbxDeformer::eSkin);
+			assert(skinCount == 1);
+
+			// fill blend indices & weights
+			int cpCount = Mesh->GetControlPointsCount();
+			
+			BlendIndices.resize(cpCount);
+			for_each(BlendIndices.begin(), BlendIndices.end(), [](array<int, MAX_BONES_PER_VERTEX>& arr) {arr.fill(-1); });
+			
+			BlendWeights.resize(cpCount);
+			for_each(BlendWeights.begin(), BlendWeights.end(), [](array<float, MAX_BONES_PER_VERTEX>& arr) {arr.fill(INFINITY); });
+
+			set<FbxNode*> rootLinks;
+			auto skin = (FbxSkin*)Mesh->GetDeformer(0, FbxDeformer::eSkin);
+			int clusterCount = skin->GetClusterCount();
+			for (int i = 0; i < clusterCount; ++i)
+			{
+				auto cluster = skin->GetCluster(i);
+
+				auto link = cluster->GetLink();
+				auto rootLink = GetRootLink(link);
+				if (rootLink != nullptr && rootLinks.find(rootLink) == rootLinks.end())
+				{
+					rootLinks.insert(rootLink);
+				}
+
+				int cpIndexCount = cluster->GetControlPointIndicesCount();
+				auto indices = cluster->GetControlPointIndices();
+				auto weights = cluster->GetControlPointWeights();
+				for (int j = 0; j < cpIndexCount; ++j)
+				{
+					auto index = indices[j];
+					auto& outputIndices = BlendIndices[index];
+					auto& outputWeights = BlendWeights[index];
+
+					auto weight = weights[j];
+
+					for (int k = 0; k < MAX_BONES_PER_VERTEX; ++k)
+					{
+						if (outputIndices[k] == -1)
+						{
+							outputIndices[k] = i;
+							outputWeights[k] = weight;
+							break;
+						}
+					}
+				}
+			}
+
+			if (rootLinks.size() != 1)
+			{
+				LVERR(head, "mesh[%s] has %d root", Mesh->GetName(), rootLinks.size());
+				return;
+			}
+
+			// 查找属于这个mesh的pose
+			auto link0 = *(rootLinks.begin());
+			for (int i = 0; i < scene->GetPoseCount(); ++i)
+			{
+				auto pose = scene->GetPose(i);
+				bool bValid = pose != nullptr;
+
+				int linkIndex = pose->Find(link0);
+				bValid &= linkIndex >= 0;
+
+				NodeList missingAncestors, missingDeformers, missingDeformersAncestors, wrongMatrices;
+				if (pose->IsValidBindPoseVerbose(meshNode, missingAncestors,
+					missingDeformers, missingDeformersAncestors, wrongMatrices))
+				{
+					bValid = true;
+				}
+				else
+				{
+					bValid = false;
+
+					// TODO: 修复
+				}
+
+				if (bValid)
+				{
+					pose->GetMatrix(linkIndex);
+					FPoseTree poseData;
+					BuildPose(pose, link0, poseData);
+					Poses[pose->GetName()] = poseData;
+				}
+			}
 		}
 
 		auto layer0 = Mesh->GetLayer(0);
@@ -108,18 +247,18 @@ struct FTempMesh
 		}
 
 		// Element heads
-		auto vcHead = layer0->GetVertexColors();
-		auto normalHead = layer0->GetNormals();
-		auto tangentHead = layer0->GetTangents();
-		auto binormalHead = layer0->GetBinormals();
-		auto uvHead = layer0->GetUVSets();
+		auto vcHead = SOptions.bImportVertexColor ? layer0->GetVertexColors() : nullptr;
+		auto normalHead = SOptions.bImportNormal ? layer0->GetNormals() : nullptr;
+		auto tangentHead = SOptions.bImportTangent ? layer0->GetTangents() : nullptr;
+		auto binormalHead = SOptions.bImportTangent ? layer0->GetBinormals() : nullptr;
+		//auto uvHead = layer0->GetUVSets();
+		auto uvHead = Mesh->GetElementUV(0);
 		auto coordHead = Mesh->GetControlPoints();
 		auto coordCount = Mesh->GetControlPointsCount();
+		auto polygonCount = Mesh->GetPolygonCount();
 
-		VertexFlags = EVertexElement::Coordinate;
 		VertexFlags |= (normalHead != nullptr ? EVertexElement::Normal : 0);
-		VertexFlags |= (binormalHead != nullptr ? EVertexElement::Binormal : 0);
-		VertexFlags |= (tangentHead != nullptr ? EVertexElement::Tangent : 0);
+		VertexFlags |= (tangentHead != nullptr  && binormalHead != nullptr ? EVertexElement::Tangent : 0);
 		VertexFlags |= (uvHead != nullptr ? EVertexElement::UV : 0);
 		VertexFlags |= (vcHead != nullptr ? EVertexElement::VertexColor : 0);
 
@@ -129,10 +268,100 @@ struct FTempMesh
 			return;
 		}
 
+		auto mat = ComputeMatrixLocalToParent(meshNode, scene->GetRootNode());
+		bool oddNegativeScale = IsOddNegativeScale(mat);
+		MeshToSceneRoot = ToMatrix(mat);
+		MeshToSceneRootDir = ToMatrix(mat.Inverse().Transpose());
 		for (int i = 0; i < coordCount; ++i)
 		{
+			//mat.MultT(coordHead[i])
+			ControlPoints.push_back(ToVector3(coordHead[i]));
+		}
+
+		FbxLayerElement::EReferenceMode referenceMode;
+		FbxLayerElement::EMappingMode mappingMode;
+		if (Mesh->IsTriangleMesh())
+		{
+			Triangles.resize(polygonCount);
+			for (int i = 0; i < polygonCount; ++i)
+			{
+				auto& tri = Triangles[i];
+				for (int j = 0; j < 3; ++j)
+				{
+					int idx = oddNegativeScale ? (2 - j) : j;
+					int cpIndex = Mesh->GetPolygonVertex(i, j);
+					int tmpIndex = i * 3 + j;
+
+					tri.ControlPointIndices[idx] = cpIndex;
+
+					if (normalHead != nullptr)
+					{
+						referenceMode = normalHead->GetReferenceMode();
+						mappingMode = normalHead->GetMappingMode(); 
+						int mapIndex = referenceMode == FbxLayerElement::eByControlPoint ? cpIndex : tmpIndex;
+						int valIndex = mappingMode == FbxLayerElement::eDirect ? mapIndex : normalHead->GetIndexArray().GetAt(mapIndex);
+						tri.Normals[idx] = ToVector3(normalHead->GetDirectArray().GetAt(valIndex));
+						tri.Normals[idx].Normalize();
+					}
+
+					if (tangentHead != nullptr)
+					{
+						referenceMode = tangentHead->GetReferenceMode();
+						mappingMode = tangentHead->GetMappingMode();
+						int mapIndex = referenceMode == FbxLayerElement::eByControlPoint ? cpIndex : tmpIndex;
+						int valIndex = mappingMode == FbxLayerElement::eDirect ? mapIndex : tangentHead->GetIndexArray().GetAt(mapIndex);
+						tri.Tangents[idx] = ToVector3(tangentHead->GetDirectArray().GetAt(valIndex));
+						tri.Tangents[idx].Normalize();
+					}
+
+					if (binormalHead != nullptr)
+					{
+						referenceMode = binormalHead->GetReferenceMode();
+						mappingMode = binormalHead->GetMappingMode();
+						int mapIndex = referenceMode == FbxLayerElement::eByControlPoint ? cpIndex : tmpIndex;
+						int valIndex = mappingMode == FbxLayerElement::eDirect ? mapIndex : binormalHead->GetIndexArray().GetAt(mapIndex);
+						tri.Binormals[idx] = ToVector3(binormalHead->GetDirectArray().GetAt(valIndex));
+						tri.Binormals[idx].Normalize();
+					}
+
+					// TODO: 考虑多重uv
+					if (uvHead != nullptr)
+					{
+						referenceMode = uvHead->GetReferenceMode();
+						mappingMode = uvHead->GetMappingMode();
+						int mapIndex = referenceMode == FbxLayerElement::eByControlPoint ? cpIndex : tmpIndex;
+						int valIndex = mappingMode == FbxLayerElement::eDirect ? mapIndex : uvHead->GetIndexArray().GetAt(mapIndex);
+						tri.TexCoords[idx] = ToVector2(uvHead->GetDirectArray().GetAt(valIndex));
+					}
+
+					// TODO: 没有Color类，暂不导入
+					//if (vcHead != nullptr)
+					//{
+					//	referenceMode = vcHead->GetReferenceMode();
+					//	mappingMode = vcHead->GetMappingMode();
+					//	int mapIndex = referenceMode == FbxLayerElement::eByControlPoint ? cpIndex : tmpIndex;
+					//	int valIndex = mappingMode == FbxLayerElement::eDirect ? mapIndex : vcHead->GetIndexArray().GetAt(mapIndex);
+					//	tri.Colors[idx] = ToVector2(vcHead->GetDirectArray().GetAt(valIndex));
+					//}
+				}
+			}
 
 		}
+	}
+
+	LostCore::FMeshData ToMeshData()
+	{
+		LostCore::FMeshData output;
+
+		if (Mesh->IsTriangleMesh())
+		{
+			output.IndexCount = Triangles.size() * 3;
+			output.VertexCount = ControlPoints.size();
+			output.VertexFlags = VertexFlags;
+
+		}
+		
+		return output;
 	}
 };
 

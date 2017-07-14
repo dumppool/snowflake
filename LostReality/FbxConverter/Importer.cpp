@@ -610,8 +610,7 @@ static void ParseVertices(function<FJson&()> outputGetter, FbxMesh* mesh, map<in
 
 	unsigned int flags = EVertexElement::Coordinate;
 	flags |= (normalHead != nullptr ? EVertexElement::Normal : 0);
-	flags |= (binormalHead != nullptr ? EVertexElement::Binormal : 0);
-	flags |= (tangentHead != nullptr ? EVertexElement::Tangent : 0);
+	flags |= ((tangentHead != nullptr && binormalHead != nullptr) ? EVertexElement::Tangent : 0);
 	flags |= (uvHead != nullptr ? EVertexElement::UV : 0);
 	flags |= (vertexColorHead != nullptr ? EVertexElement::VertexColor : 0);
 	output[K_VERTEX_ELEMENT] = (unsigned int)flags;

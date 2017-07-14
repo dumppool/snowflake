@@ -158,60 +158,156 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="FbxSamples\Common\AnimationUtility.h" />
-    <ClInclude Include="FbxSamples\Common\Common.h" />
-    <ClInclude Include="FbxSamples\Common\GeometryUtility.h" />
-    <ClInclude Include="FbxSamples\ImportScene\DisplayAnimation.h" />
-    <ClInclude Include="FbxSamples\ImportScene\DisplayCache.h" />
-    <ClInclude Include="FbxSamples\ImportScene\DisplayCamera.h" />
-    <ClInclude Include="FbxSamples\ImportScene\DisplayCommon.h" />
-    <ClInclude Include="FbxSamples\ImportScene\DisplayGenericInfo.h" />
-    <ClInclude Include="FbxSamples\ImportScene\DisplayGlobalSettings.h" />
-    <ClInclude Include="FbxSamples\ImportScene\DisplayHierarchy.h" />
-    <ClInclude Include="FbxSamples\ImportScene\DisplayLight.h" />
-    <ClInclude Include="FbxSamples\ImportScene\DisplayLink.h" />
-    <ClInclude Include="FbxSamples\ImportScene\DisplayLodGroup.h" />
-    <ClInclude Include="FbxSamples\ImportScene\DisplayMarker.h" />
-    <ClInclude Include="FbxSamples\ImportScene\DisplayMaterial.h" />
-    <ClInclude Include="FbxSamples\ImportScene\DisplayMesh.h" />
-    <ClInclude Include="FbxSamples\ImportScene\DisplayNurb.h" />
-    <ClInclude Include="FbxSamples\ImportScene\DisplayPatch.h" />
-    <ClInclude Include="FbxSamples\ImportScene\DisplayPivotsAndLimits.h" />
-    <ClInclude Include="FbxSamples\ImportScene\DisplayPose.h" />
-    <ClInclude Include="FbxSamples\ImportScene\DisplayShape.h" />
-    <ClInclude Include="FbxSamples\ImportScene\DisplaySkeleton.h" />
-    <ClInclude Include="FbxSamples\ImportScene\DisplayTexture.h" />
-    <ClInclude Include="FbxSamples\ImportScene\DisplayUserProperties.h" />
+    <ClInclude Include="FbxSamples\Common\AnimationUtility.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\Common\Common.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\Common\GeometryUtility.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayAnimation.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayCache.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayCamera.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayCommon.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayGenericInfo.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayGlobalSettings.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayHierarchy.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayLight.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayLink.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayLodGroup.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayMarker.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayMaterial.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayMesh.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayNurb.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayPatch.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayPivotsAndLimits.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayPose.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayShape.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplaySkeleton.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayTexture.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="FbxSamples\ImportScene\DisplayUserProperties.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="Importer.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FbxConverter.cpp" />
-    <ClCompile Include="FbxSamples\Common\AnimationUtility.cxx" />
-    <ClCompile Include="FbxSamples\Common\Common.cxx" />
-    <ClCompile Include="FbxSamples\Common\GeometryUtility.cxx" />
-    <ClCompile Include="FbxSamples\ImportScene\DisplayAnimation.cxx" />
-    <ClCompile Include="FbxSamples\ImportScene\DisplayCache.cxx" />
-    <ClCompile Include="FbxSamples\ImportScene\DisplayCamera.cxx" />
-    <ClCompile Include="FbxSamples\ImportScene\DisplayCommon.cxx" />
-    <ClCompile Include="FbxSamples\ImportScene\DisplayGenericInfo.cxx" />
-    <ClCompile Include="FbxSamples\ImportScene\DisplayGlobalSettings.cxx" />
-    <ClCompile Include="FbxSamples\ImportScene\DisplayHierarchy.cxx" />
-    <ClCompile Include="FbxSamples\ImportScene\DisplayLight.cxx" />
-    <ClCompile Include="FbxSamples\ImportScene\DisplayLink.cxx" />
-    <ClCompile Include="FbxSamples\ImportScene\DisplayLodGroup.cxx" />
-    <ClCompile Include="FbxSamples\ImportScene\DisplayMarker.cxx" />
-    <ClCompile Include="FbxSamples\ImportScene\DisplayMaterial.cxx" />
-    <ClCompile Include="FbxSamples\ImportScene\DisplayMesh.cxx" />
-    <ClCompile Include="FbxSamples\ImportScene\DisplayNurb.cxx" />
-    <ClCompile Include="FbxSamples\ImportScene\DisplayPatch.cxx" />
-    <ClCompile Include="FbxSamples\ImportScene\DisplayPivotsAndLimits.cxx" />
-    <ClCompile Include="FbxSamples\ImportScene\DisplayPose.cxx" />
-    <ClCompile Include="FbxSamples\ImportScene\DisplayShape.cxx" />
-    <ClCompile Include="FbxSamples\ImportScene\DisplaySkeleton.cxx" />
-    <ClCompile Include="FbxSamples\ImportScene\DisplayTexture.cxx" />
-    <ClCompile Include="FbxSamples\ImportScene\DisplayUserProperties.cxx" />
+    <ClCompile Include="FbxSamples\Common\AnimationUtility.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\Common\Common.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\Common\GeometryUtility.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayAnimation.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayCache.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayCamera.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayCommon.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayGenericInfo.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayGlobalSettings.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayHierarchy.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayLight.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayLink.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayLodGroup.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayMarker.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayMaterial.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayMesh.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayNurb.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayPatch.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayPivotsAndLimits.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayPose.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayShape.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplaySkeleton.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayTexture.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="FbxSamples\ImportScene\DisplayUserProperties.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="Importer.cpp" />
     <ClCompile Include="Importer2.cpp" />
     <ClCompile Include="stdafx.cpp">

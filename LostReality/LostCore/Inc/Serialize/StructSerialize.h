@@ -17,7 +17,6 @@ namespace LostCore
 			(flag & EVertexElement::UV) == EVertexElement::UV,
 			(flag & EVertexElement::Normal) == EVertexElement::Normal,
 			(flag & EVertexElement::Tangent) == EVertexElement::Tangent,
-			(flag & EVertexElement::Binormal) == EVertexElement::Binormal,
 			(flag & EVertexElement::VertexColor) == EVertexElement::VertexColor,
 			(flag & EVertexElement::Skin) == EVertexElement::Skin);
 	}
@@ -32,39 +31,32 @@ namespace LostCore
 		return GetAlignedSize(sz, alignment) - sz;
 	}
 
+	// 树节点模板类
+	template<typename T>
 	struct FTreeNode
 	{
-		string Name;
-		vector<FTreeNode> Children;
-
 		FTreeNode() 
 		{
 		}
 
-		FTreeNode(const FJson& j)
+		void SetData(const T& data)
 		{
-			Load(j);
+			Data = data;
 		}
 
-		void Load(const FJson& j)
+		void AddChild(const FTreeNode<T>& node)
 		{
-			assert(j.find(K_NAME) != j.end());
-			Name = j[K_NAME];
-
-			Children.clear();
-			if (j.find(K_LAYER) != j.end())
-			{
-				for (auto it = j[K_LAYER].begin(); it != j[K_LAYER].end(); ++it)
-				{
-					Children.push_back(FTreeNode(it.value()));
-				}
-			}
+			Children.push_back(node);
 		}
+
+		T Data;
+		vector<FTreeNode> Children;
 	};
 
-	inline FBinaryIO& operator<<(FBinaryIO& stream, const FTreeNode& data)
+	template<typename T>
+	inline FBinaryIO& operator<<(FBinaryIO& stream, const FTreeNode<T>& data)
 	{
-		stream << data.Name << data.Children.size();
+		stream << data.Data << data.Children.size();
 		for (auto& child : data.Children)
 		{
 			stream << child;
@@ -73,19 +65,89 @@ namespace LostCore
 		return stream;
 	}
 
-	inline FBinaryIO& operator >> (FBinaryIO& stream, FTreeNode& data)
+	template<typename T>
+	inline FBinaryIO& operator >> (FBinaryIO& stream, FTreeNode<T>& data)
 	{
 		uint32 childNum;
-		stream >> data.Name >> childNum;
+		stream >> data.Data >> childNum;
 		for (uint32 i = 0; i < childNum; ++i)
 		{
-			data.Children.push_back(FTreeNode());
+			data.Children.push_back(FTreeNode<T>());
 			stream >> *(data.Children.end() - 1);
 		}
 
 		return stream;
 	}
 
+	// 骨骼节点的简单结构
+	struct FMatrixNode
+	{
+		string Name;
+		FMatrix Matrix;
+
+		FMatrixNode() {}
+		FMatrixNode(const string& name, const FMatrix& mat) : Name(name), Matrix(mat) {}
+	};
+
+	inline FBinaryIO& operator<<(FBinaryIO& stream, const FMatrixNode& data)
+	{
+		stream << data.Name << data.Matrix;
+		return stream;
+	}
+
+	inline FBinaryIO& operator >> (FBinaryIO& stream, FMatrixNode& data)
+	{
+		stream >> data.Name >> data.Matrix;
+		return stream;
+	}
+
+	// Specialization: 用骨骼节点的简单结点作为类模板参数的树节点类
+	// 增加通过json加载的方法.
+	//template<>
+	//struct FTreeNode<FMatrixNode>
+	//{
+
+	//	FTreeNode() {}
+	//	FTreeNode(const FJson& j)
+	//	{
+	//		Load(j);
+	//	}
+
+	//	void AddChild(const FTreeNode& node)
+	//	{
+	//		Children.push_back(node);
+	//	}
+
+	//	FMatrixNode Data;
+	//	vector<FTreeNode> Children;
+	//};
+
+	// 如果没有加载json数据需求，完全可以用FTreeNode<FMatrixNode>取代
+	struct FMatrixTreeNode : public FTreeNode<FMatrixNode>
+	{
+		FMatrixTreeNode() {}
+		FMatrixTreeNode(const FJson& j)
+		{
+			Load(j);
+		}
+
+		void Load(const FJson& j)
+		{
+			assert(j.find(K_NAME) != j.end());
+			Data.Name = j[K_NAME];
+
+			Children.clear();
+			if (j.find(K_LAYER) != j.end())
+			{
+				for (auto it = j[K_LAYER].begin(); it != j[K_LAYER].end(); ++it)
+				{
+					Children.push_back(FMatrixTreeNode(it.value()));
+				}
+			}
+		}
+	};
+
+	// TODO: 将pose信息直接反映在FTreeNode
 	typedef map<string, FMatrix> FPose;
 
 	struct FMeshData
@@ -101,7 +163,7 @@ namespace LostCore
 
 		uint32 VertexMagic;
 
-		vector<FVec3> XYZ;
+		vector<FVec3> Coordinates;
 		vector<FVec2> UV;
 		vector<FVec3> Normal;
 		vector<FVec3> Tangent;
@@ -113,7 +175,8 @@ namespace LostCore
 
 		FPose DefaultPose;
 
-		FTreeNode RootNode;
+		//FTreeNode<FMatrixNode> RootNode;
+		FMatrixTreeNode RootNode;
 
 		FMeshData() {}
 		~FMeshData() {}
@@ -139,7 +202,7 @@ namespace LostCore
 				Indices32.resize(IndexCount);
 			}
 
-			XYZ.resize(VertexCount);
+			Coordinates.resize(VertexCount);
 			UV.resize(VertexCount);
 			Normal.resize(VertexCount);
 			Tangent.resize(VertexCount);
@@ -163,7 +226,7 @@ namespace LostCore
 					Indices32[i] = j[K_INDEX][i];
 				}
 
-				XYZ[i] = j[K_COORDINATE][i];
+				Coordinates[i] = j[K_COORDINATE][i];
 				
 				if ((VertexFlags & EVertexElement::UV) == EVertexElement::UV)
 				{
@@ -178,10 +241,6 @@ namespace LostCore
 				if ((VertexFlags & EVertexElement::Tangent) == EVertexElement::Tangent)
 				{
 					Tangent[i] = j[K_TANGENT][i];
-				}
-				
-				if ((VertexFlags & EVertexElement::Binormal) == EVertexElement::Binormal)
-				{
 					Binormal[i] = j[K_BINORMAL][i];
 				}
 				
@@ -212,7 +271,6 @@ namespace LostCore
 			}
 
 			auto itStack = j.find(K_STACK);
-			FTreeNode& node = RootNode;
 			if (itStack != j.end())
 			{
 				RootNode.Load(itStack.value());
@@ -250,7 +308,7 @@ namespace LostCore
 		stream << (uint32)MAGIC_VERTEX;
 		for (uint32 i = 0; i < data.VertexCount; ++i)
 		{
-			stream << data.XYZ[i];
+			stream << data.Coordinates[i];
 
 			if ((data.VertexFlags & EVertexElement::UV) == EVertexElement::UV)
 			{
@@ -265,10 +323,6 @@ namespace LostCore
 			if ((data.VertexFlags & EVertexElement::Tangent) == EVertexElement::Tangent)
 			{
 				stream << data.Tangent[i];
-			}
-
-			if ((data.VertexFlags & EVertexElement::Binormal) == EVertexElement::Binormal)
-			{
 				stream << data.Binormal[i];
 			}
 
@@ -340,10 +394,10 @@ namespace LostCore
 		{
 			if (allocating)
 			{
-				data.XYZ.resize(data.VertexCount);
+				data.Coordinates.resize(data.VertexCount);
 			}
 
-			stream >> *(data.XYZ.begin() + i);
+			stream >> *(data.Coordinates.begin() + i);
 			if ((data.VertexFlags & EVertexElement::UV) == EVertexElement::UV)
 			{
 				if (allocating)
@@ -369,18 +423,10 @@ namespace LostCore
 				if (allocating)
 				{
 					data.Tangent.resize(data.VertexCount);
-				}
-
-				stream >> *(data.Tangent.begin() + i);
-			}
-
-			if ((data.VertexFlags & EVertexElement::Binormal) == EVertexElement::Binormal)
-			{
-				if (allocating)
-				{
 					data.Binormal.resize(data.VertexCount);
 				}
 
+				stream >> *(data.Tangent.begin() + i);
 				stream >> *(data.Binormal.begin() + i);
 			}
 
@@ -443,7 +489,8 @@ namespace LostCore
 
 		FPose DefaultPose;
 
-		FTreeNode RootNode;
+		//FTreeNode<FMatrixNode> RootNode;
+		FMatrixTreeNode RootNode;
 
 		uint32 VertexMagic;
 
@@ -488,9 +535,9 @@ namespace LostCore
 
 				if (allocating)
 				{
-					output.XYZ.resize(VertexCount);
+					output.Coordinates.resize(VertexCount);
 				}
-				stream >> output.XYZ[i];
+				stream >> output.Coordinates[i];
 
 				if ((VertexFlags & EVertexElement::UV) == EVertexElement::UV)
 				{
@@ -515,16 +562,9 @@ namespace LostCore
 					if (allocating)
 					{
 						output.Tangent.resize(VertexCount);
-					}
-					stream >> output.Tangent[i];
-				}
-
-				if ((VertexFlags & EVertexElement::Binormal) == EVertexElement::Binormal)
-				{
-					if (allocating)
-					{
 						output.Binormal.resize(VertexCount);
 					}
+					stream >> output.Tangent[i];
 					stream >> output.Binormal[i];
 				}
 

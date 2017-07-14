@@ -54,7 +54,6 @@ namespace LostCore
 			bool bHasTexcoord,
 			bool bHasNormal,
 			bool bHasTangent,
-			bool bHasBinormal,
 			bool bHasVertexRGB,
 			bool bHasSkin
 		)
@@ -76,14 +75,8 @@ namespace LostCore
 
 			if (bHasTangent)
 			{
-				typeName += "t";
-				stride += sizeof(float) * 3;
-			}
-
-			if (bHasBinormal)
-			{
-				typeName += "b";
-				stride += sizeof(float) * 3;
+				typeName += "tb";
+				stride += sizeof(float) * 6;
 			}
 
 			if (bHasVertexRGB)
