@@ -10,7 +10,7 @@
 #include "stdafx.h"
 #include "BasicModel.h"
 #include "PrimitiveGroupInterface.h"
-#include "Serialize/StructSerialize.h"
+#include "Serialize/MeshData2.h"
 #include "Resource/MeshLoader.h"
 
 using namespace LostCore;

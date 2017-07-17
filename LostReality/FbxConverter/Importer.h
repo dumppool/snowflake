@@ -26,9 +26,9 @@ namespace Importer {
 		if (color.IsValid())
 		{
 			vector<float> rgb;
-			rgb.push_back(color.mRed);
-			rgb.push_back(color.mGreen);
-			rgb.push_back(color.mBlue);
+			rgb.push_back(SNUM(color.mRed));
+			rgb.push_back(SNUM(color.mGreen));
+			rgb.push_back(SNUM(color.mBlue));
 			output = rgb;
 		}
 	}
@@ -38,10 +38,10 @@ namespace Importer {
 		if (color.IsValid())
 		{
 			vector<float> rgba;
-			rgba.push_back(color.mRed);
-			rgba.push_back(color.mGreen);
-			rgba.push_back(color.mBlue);
-			rgba.push_back(color.mAlpha);
+			rgba.push_back(SNUM(color.mRed));
+			rgba.push_back(SNUM(color.mGreen));
+			rgba.push_back(SNUM(color.mBlue));
+			rgba.push_back(SNUM(color.mAlpha));
 			output = rgba;
 		}
 	}
@@ -49,8 +49,8 @@ namespace Importer {
 	static void WriteFloat2(FJson& output, const FbxDouble2& value)
 	{
 		vector<float> f2;
-		f2.push_back(value[0]);
-		f2.push_back(value[1]);
+		f2.push_back(SNUM(value[0]));
+		f2.push_back(SNUM(value[1]));
 		output = f2;
 	}
 
@@ -73,9 +73,9 @@ namespace Importer {
 		return;
 
 		vector<float> f3;
-		f3.push_back(value[0]);
-		f3.push_back(value[1]);
-		f3.push_back(value[2]);
+		f3.push_back(SNUM(value[0]));
+		f3.push_back(SNUM(value[1]));
+		f3.push_back(SNUM(value[2]));
 		output = f3;
 	}
 
@@ -97,9 +97,9 @@ namespace Importer {
 		return;
 
 		vector<float> f3;
-		f3.push_back(value[0]);
-		f3.push_back(value[1]);
-		f3.push_back(value[2]);
+		f3.push_back(SNUM(value[0]));
+		f3.push_back(SNUM(value[1]));
+		f3.push_back(SNUM(value[2]));
 		output = f3;
 	}
 
@@ -182,9 +182,9 @@ namespace Importer {
 		auto q = amatrix.GetQ();
 		
 		LostCore::FMatrix outMatrix;
-		LostCore::FVec3 t2(t[0], -t[1], t[2]);
-		LostCore::FVec3 s2(s[0], s[1], s[2]);
-		LostCore::FQuat q2(q[0], -q[1], q[2], -q[3]);
+		LostCore::FVec3 t2(SNUM(t[0]), SNUM(-t[1]), SNUM(t[2]));
+		LostCore::FVec3 s2(SNUM(s[0]), SNUM(s[1]), SNUM(s[2]));
+		LostCore::FQuat q2(SNUM(q[0]), SNUM(-q[1]), SNUM(q[2]), SNUM(-q[3]));
 		outMatrix.SetRotateAndOrigin(q2, t2, s2);
 
 		output = outMatrix;
@@ -211,37 +211,37 @@ namespace Importer {
 	INLINE LostCore::FVec4 ToVector4(const FbxVector4& vec)
 	{
 		LostCore::FVec4 output;
-		output.X = vec[0];
-		output.Y = vec[1];
-		output.Z = -vec[2];
-		output.W = vec[3];
+		output.X = SNUM(vec[0]);
+		output.Y = SNUM(vec[1]);
+		output.Z = SNUM(-vec[2]);
+		output.W = SNUM(vec[3]);
 		return output;
 	}
 
 	INLINE LostCore::FVec3 ToVector3(const FbxVector4& vec)
 	{
 		LostCore::FVec3 output;
-		output.X = vec[0];
-		output.Y = vec[1];
-		output.Z = -vec[2];
+		output.X = SNUM(vec[0]);
+		output.Y = SNUM(vec[1]);
+		output.Z = SNUM(-vec[2]);
 		return output;
 	}
 
 	INLINE LostCore::FVec2 ToVector2(const FbxVector2& vec)
 	{
 		LostCore::FVec2 output;
-		output.X = vec[0];
-		output.Y = vec[1];
+		output.X = SNUM(vec[0]);
+		output.Y = SNUM(vec[1]);
 		return output;
 	}
 
 	INLINE LostCore::FQuat ToQuat(const FbxQuaternion& quat)
 	{
 		LostCore::FQuat output;
-		output.X = quat[0];
-		output.Y = quat[1];
-		output.Z = -quat[2];
-		output.W = -quat[3];
+		output.X = SNUM(quat[0]);
+		output.Y = SNUM(quat[1]);
+		output.Z = SNUM(-quat[2]);
+		output.W = SNUM(-quat[3]);
 		return output;
 	}
 
@@ -253,17 +253,17 @@ namespace Importer {
 			auto vec = mat.GetRow(row);
 			if (row == 2)
 			{
-				output.M[row][0] = -vec[0];
-				output.M[row][1] = -vec[1];
-				output.M[row][2] = vec[2];
-				output.M[row][3] = -vec[3];
+				output.M[row][0] = SNUM(-vec[0]);
+				output.M[row][1] = SNUM(-vec[1]);
+				output.M[row][2] = SNUM(vec[2]);
+				output.M[row][3] = SNUM(-vec[3]);
 			}
 			else
 			{
-				output.M[row][0] = vec[0];
-				output.M[row][1] = vec[1];
-				output.M[row][2] = -vec[2];
-				output.M[row][3] = vec[3];
+				output.M[row][0] = SNUM(vec[0]);
+				output.M[row][1] = SNUM(vec[1]);
+				output.M[row][2] = SNUM(-vec[2]);
+				output.M[row][3] = SNUM(vec[3]);
 			}
 		}
 
@@ -317,6 +317,11 @@ namespace Importer {
 
 	static bool IsBone(FbxNode* link)
 	{
+		if (link == nullptr)
+		{
+			return false;
+		}
+
 		auto attr = link->GetNodeAttribute();
 		if (attr == nullptr)
 		{
@@ -340,15 +345,29 @@ namespace Importer {
 		//return mat;
 	}
 
-	typedef LostCore::FTreeNode<LostCore::FMatrixNode> FPoseTree;
-	static void BuildPose(FbxPose* pose, FbxNode* link, FPoseTree& data)
+	static void BuildSkeletonTree(FbxNode* link, FSkeletonTreeAlias& data)
+	{
+		if (IsBone(link))
+		{
+			for (int i = 0; i < link->GetChildCount(); ++i)
+			{
+				auto childData = FSkeletonTreeAlias();
+				BuildSkeletonTree(link->GetChild(i), childData);
+				data.AddChild(childData);
+			}
+
+			data.Data = link->GetName();
+		}
+	}
+
+	static void BuildPoseTree(FbxPose* pose, FbxNode* link, FPoseTreeAlias& data)
 	{
 		if (pose != nullptr && IsBone(link) && pose->Find(link)>=0)
 		{
 			for (int i = 0; i < link->GetChildCount(); ++i)
 			{
-				auto childData = FPoseTree();
-				BuildPose(pose, link->GetChild(i), childData);
+				auto childData = FPoseTreeAlias();
+				BuildPoseTree(pose, link->GetChild(i), childData);
 				data.AddChild(childData);
 			}
 
@@ -361,6 +380,15 @@ namespace Importer {
 
 			data.Data.Matrix = ToMatrix(mat);
 			data.Data.Name = link->GetName();
+		}
+	}
+
+	static void GetPoseMapFromTree(const FPoseTreeAlias& poseTree, FPoseMapAlias& poseMap)
+	{
+		poseMap[poseTree.Data.Name] = poseTree.Data.Matrix;
+		for (const auto& c : poseTree.Children)
+		{
+			GetPoseMapFromTree(c, poseMap);
 		}
 	}
 

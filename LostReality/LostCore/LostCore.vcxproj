@@ -169,6 +169,7 @@
     <ClInclude Include="Inc\Math\Vector2.h" />
     <ClInclude Include="Inc\Math\Vector3.h" />
     <ClInclude Include="Inc\Math\Vector4.h" />
+    <ClInclude Include="Inc\Serialize\MeshData2.h" />
     <ClInclude Include="Inc\Serialize\Serialization.h" />
     <ClInclude Include="Inc\Serialize\StructSerialize.h" />
     <ClInclude Include="Inc\SimpleWorld.h" />

@@ -44,7 +44,12 @@ using FJson = nlohmann::json;
 #include "Math/Transform2.h"
 
 #include "Serialize/Serialization.h"
-#include "Serialize/StructSerialize.h"
+#include "Serialize/MeshData2.h"
+
+using FPoseTreeAlias = LostCore::FPoseTree;
+using FPoseMapAlias = LostCore::FPoseMap;
+using FSkeletonTreeAlias = LostCore::FBone;
+using FMeshDataAlias = LostCore::FMeshDataGPU;
 
 // sdk includes
 #include <fbxsdk.h>
@@ -53,3 +58,5 @@ using FJson = nlohmann::json;
 #include "FbxSamples/ImportScene/DisplayMesh.h"
 #include "FbxSamples/ImportScene/DisplayAnimation.h"
 #include "FbxSamples/ImportScene/DisplayHierarchy.h"
+
+#include "Importer.h"

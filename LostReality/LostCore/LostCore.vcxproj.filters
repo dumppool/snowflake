@@ -100,6 +100,9 @@
       <Filter>Inc\Math</Filter>
     </ClInclude>
     <ClInclude Include="Inc\Math\AABB.h" />
+    <ClInclude Include="Inc\Serialize\MeshData2.h">
+      <Filter>Inc\Serialize</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />

@@ -22,9 +22,9 @@ namespace LostCore
 	public:
 
 		FSkeletonNode();
-		FSkeletonNode(const FTreeNode & skelRoot);
+		FSkeletonNode(const TTreeNode & skelRoot);
 
-		void LoadSkeleton(const FTreeNode& skelRoot);
+		void LoadSkeleton(const TTreeNode& skelRoot);
 		void LoadLocalPose(const FPose& pose);
 
 		void UpdateWorldMatrix(const FMatrix& parentWorld);

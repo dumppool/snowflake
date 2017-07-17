@@ -16,12 +16,12 @@ LostCore::FSkeletonNode::FSkeletonNode() : Name(""), Local(), World()
 {
 }
 
-LostCore::FSkeletonNode::FSkeletonNode(const FTreeNode & skelRoot) : Name(""), Local(), World()
+LostCore::FSkeletonNode::FSkeletonNode(const TTreeNode & skelRoot) : Name(""), Local(), World()
 {
 	LoadSkeleton(skelRoot);
 }
 
-void LostCore::FSkeletonNode::LoadSkeleton(const FTreeNode & skelRoot)
+void LostCore::FSkeletonNode::LoadSkeleton(const TTreeNode & skelRoot)
 {
 	Name = skelRoot.Name;
 

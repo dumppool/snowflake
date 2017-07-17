@@ -95,7 +95,8 @@ using FJson = nlohmann::json;
 #include "File/DirectoryHelper.h"
 
 #include "Serialize/Serialization.h"
-#include "Serialize/StructSerialize.h"
+//#include "Serialize/MeshData.h"
+#include "Serialize/MeshData2.h"
 
 #include "ExportTest.h"
 #include "BasicCamera.h"

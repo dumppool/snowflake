@@ -8,7 +8,6 @@
 */
 
 #include "stdafx.h"
-#include "Importer.h"
 
 using namespace Importer;
 using namespace LostCore;
@@ -36,12 +35,14 @@ struct FTempMesh
 	// 从根到叶的links
 	vector<FbxNode*>		Links;
 
-	// 从根到叶的骨骼
-	vector<string>			BoneNames;
-	vector<FMatrix>			BoneMatrix;
+	// 骨骼
+	FSkeletonTreeAlias		Skeleton;
 
 	// poses
-	map<string, FPoseTree>	Poses;
+	map<string, FPoseMapAlias>	Poses;
+
+	// 骨骼索引表
+	map<string, int32>		SkeletonIndexMap;
 
 	// 顶点结构
 	uint32					VertexFlags;
@@ -171,6 +172,11 @@ struct FTempMesh
 				auto cluster = skin->GetCluster(i);
 
 				auto link = cluster->GetLink();
+				if (IsBone(link))
+				{
+					SkeletonIndexMap[link->GetName()] = i;
+				}
+
 				auto rootLink = GetRootLink(link);
 				if (rootLink != nullptr && rootLinks.find(rootLink) == rootLinks.end())
 				{
@@ -193,7 +199,7 @@ struct FTempMesh
 						if (outputIndices[k] == -1)
 						{
 							outputIndices[k] = i;
-							outputWeights[k] = weight;
+							outputWeights[k] = (float)weight;
 							break;
 						}
 					}
@@ -206,18 +212,26 @@ struct FTempMesh
 				return;
 			}
 
-			// 查找属于这个mesh的pose
+			// Use the first link only
 			auto link0 = *(rootLinks.begin());
+
+			// Get skeleton
+			BuildSkeletonTree(link0, Skeleton);
+
+			// Get all the poses from fbx
 			for (int i = 0; i < scene->GetPoseCount(); ++i)
 			{
 				auto pose = scene->GetPose(i);
-				bool bValid = pose != nullptr;
+				if (pose == nullptr)
+				{
+					continue;
+				}
 
 				int linkIndex = pose->Find(link0);
-				bValid &= linkIndex >= 0;
+				bool bValid = linkIndex >= 0;
 
 				NodeList missingAncestors, missingDeformers, missingDeformersAncestors, wrongMatrices;
-				if (pose->IsValidBindPoseVerbose(meshNode, missingAncestors,
+				if (bValid && pose->IsValidBindPoseVerbose(meshNode, missingAncestors,
 					missingDeformers, missingDeformersAncestors, wrongMatrices))
 				{
 					bValid = true;
@@ -232,9 +246,11 @@ struct FTempMesh
 				if (bValid)
 				{
 					pose->GetMatrix(linkIndex);
-					FPoseTree poseData;
-					BuildPose(pose, link0, poseData);
-					Poses[pose->GetName()] = poseData;
+					FPoseTreeAlias poseTree;
+					FPoseMapAlias poseMap;
+					BuildPoseTree(pose, link0, poseTree);
+					GetPoseMapFromTree(poseTree, poseMap);
+					Poses[pose->GetName()] = poseMap;
 				}
 			}
 		}
@@ -349,16 +365,28 @@ struct FTempMesh
 		}
 	}
 
-	LostCore::FMeshData ToMeshData()
+	FMeshDataAlias ToMeshDataGPU(const string& outputDir) const
 	{
-		LostCore::FMeshData output;
+		FMeshDataAlias output;
 
 		if (Mesh->IsTriangleMesh())
 		{
-			output.IndexCount = Triangles.size() * 3;
+			output.IndexCount = 0;
 			output.VertexCount = ControlPoints.size();
 			output.VertexFlags = VertexFlags;
+			
+			output.Indices.clear();
+			output.Vertices.clear();
 
+			output.Poses = Poses;
+		}
+
+		if (!outputDir.empty())
+		{
+			auto outputFile = outputDir + Name + "." + K_PRIMITIVE;
+			FBinaryIO stream;
+			stream << output;
+			stream.WriteToFile(outputFile);
 		}
 		
 		return output;
@@ -437,6 +465,11 @@ public:
 		GetDirectory(DestDirectory, DestDirectory);
 
 		ImportNode(SdkScene->GetRootNode());
+
+		for (const auto& mesh : TempMeshArray)
+		{
+			mesh.ToMeshDataGPU("");
+		}
 
 		return true;
 	}

@@ -33,9 +33,9 @@ namespace LostCore
 
 	// 树节点模板类
 	template<typename T>
-	struct FTreeNode
+	struct TTreeNode
 	{
-		FTreeNode() 
+		TTreeNode() 
 		{
 		}
 
@@ -44,17 +44,17 @@ namespace LostCore
 			Data = data;
 		}
 
-		void AddChild(const FTreeNode<T>& node)
+		void AddChild(const TTreeNode<T>& node)
 		{
 			Children.push_back(node);
 		}
 
 		T Data;
-		vector<FTreeNode> Children;
+		vector<TTreeNode<T>> Children;
 	};
 
 	template<typename T>
-	inline FBinaryIO& operator<<(FBinaryIO& stream, const FTreeNode<T>& data)
+	inline FBinaryIO& operator<<(FBinaryIO& stream, const TTreeNode<T>& data)
 	{
 		stream << data.Data << data.Children.size();
 		for (auto& child : data.Children)
@@ -66,572 +66,75 @@ namespace LostCore
 	}
 
 	template<typename T>
-	inline FBinaryIO& operator >> (FBinaryIO& stream, FTreeNode<T>& data)
+	inline FBinaryIO& operator >> (FBinaryIO& stream, TTreeNode<T>& data)
 	{
 		uint32 childNum;
 		stream >> data.Data >> childNum;
 		for (uint32 i = 0; i < childNum; ++i)
 		{
-			data.Children.push_back(FTreeNode<T>());
+			data.Children.push_back(TTreeNode<T>());
 			stream >> *(data.Children.end() - 1);
 		}
 
 		return stream;
 	}
 
-	// 骨骼节点的简单结构
+	typedef TTreeNode<string> FBone;
+
 	struct FMatrixNode
 	{
 		string Name;
 		FMatrix Matrix;
-
-		FMatrixNode() {}
-		FMatrixNode(const string& name, const FMatrix& mat) : Name(name), Matrix(mat) {}
 	};
 
-	inline FBinaryIO& operator<<(FBinaryIO& stream, const FMatrixNode& data)
-	{
-		stream << data.Name << data.Matrix;
-		return stream;
-	}
+	typedef map<string, FMatrix> FPoseMap;
+	typedef TTreeNode<FMatrixNode> FPoseTree;
 
-	inline FBinaryIO& operator >> (FBinaryIO& stream, FMatrixNode& data)
-	{
-		stream >> data.Name >> data.Matrix;
-		return stream;
-	}
 
-	// Specialization: 用骨骼节点的简单结点作为类模板参数的树节点类
-	// 增加通过json加载的方法.
-	//template<>
-	//struct FTreeNode<FMatrixNode>
-	//{
-
-	//	FTreeNode() {}
-	//	FTreeNode(const FJson& j)
-	//	{
-	//		Load(j);
-	//	}
-
-	//	void AddChild(const FTreeNode& node)
-	//	{
-	//		Children.push_back(node);
-	//	}
-
-	//	FMatrixNode Data;
-	//	vector<FTreeNode> Children;
-	//};
-
-	// 如果没有加载json数据需求，完全可以用FTreeNode<FMatrixNode>取代
-	struct FMatrixTreeNode : public FTreeNode<FMatrixNode>
-	{
-		FMatrixTreeNode() {}
-		FMatrixTreeNode(const FJson& j)
-		{
-			Load(j);
-		}
-
-		void Load(const FJson& j)
-		{
-			assert(j.find(K_NAME) != j.end());
-			Data.Name = j[K_NAME];
-
-			Children.clear();
-			if (j.find(K_LAYER) != j.end())
-			{
-				for (auto it = j[K_LAYER].begin(); it != j[K_LAYER].end(); ++it)
-				{
-					Children.push_back(FMatrixTreeNode(it.value()));
-				}
-			}
-		}
-	};
-
-	// TODO: 将pose信息直接反映在FTreeNode
-	typedef map<string, FMatrix> FPose;
-
-	struct FMeshData
-	{
-		uint32 IndexCount;
-		uint32 VertexCount;
-		uint32 VertexFlags;
-
-		vector<string> Bones;
-
-		vector<uint16> Indices16;
-		vector<uint32> Indices32;
-
-		uint32 VertexMagic;
-
-		vector<FVec3> Coordinates;
-		vector<FVec2> UV;
-		vector<FVec3> Normal;
-		vector<FVec3> Tangent;
-		vector<FVec3> Binormal;
-		vector<FVec3> VertexColor;
-
-		vector<FVec4> BlendWeights;
-		vector<FVec4> BlendIndices;
-
-		FPose DefaultPose;
-
-		//FTreeNode<FMatrixNode> RootNode;
-		FMatrixTreeNode RootNode;
-
-		FMeshData() {}
-		~FMeshData() {}
-
-		void FromJson(const FJson& j)
-		{
-			IndexCount = j[K_INDEX].size();
-			VertexCount = j[K_COORDINATE].size();
-			VertexFlags = j[K_VERTEX_ELEMENT];
-			Bones.reserve(j[K_SKIN].size());
-			for (uint32 i = 0; i < j[K_SKIN].size(); ++i)
-			{
-				Bones.push_back(j[K_SKIN][i]);
-			}
-
-			// fill FMeshData(src) first
-			if (VertexCount < (1 << 16))
-			{
-				Indices16.resize(IndexCount);
-			}
-			else
-			{
-				Indices32.resize(IndexCount);
-			}
-
-			Coordinates.resize(VertexCount);
-			UV.resize(VertexCount);
-			Normal.resize(VertexCount);
-			Tangent.resize(VertexCount);
-			Binormal.resize(VertexCount);
-			VertexColor.resize(VertexCount);
-
-			if ((VertexFlags & EVertexElement::Skin) == EVertexElement::Skin)
-			{
-				BlendWeights.resize(VertexCount);
-				BlendIndices.resize(VertexCount);
-			}
-
-			for (uint32 i = 0; i < VertexCount; ++i)
-			{
-				if (VertexCount < (1 << 16))
-				{
-					Indices16[i] = j[K_INDEX][i];
-				}
-				else
-				{
-					Indices32[i] = j[K_INDEX][i];
-				}
-
-				Coordinates[i] = j[K_COORDINATE][i];
-				
-				if ((VertexFlags & EVertexElement::UV) == EVertexElement::UV)
-				{
-					UV[i] = j[K_UV][i];
-				}
-				
-				if ((VertexFlags & EVertexElement::Normal) == EVertexElement::Normal)
-				{
-					Normal[i] = j[K_NORMAL][i];
-				}
-				
-				if ((VertexFlags & EVertexElement::Tangent) == EVertexElement::Tangent)
-				{
-					Tangent[i] = j[K_TANGENT][i];
-					Binormal[i] = j[K_BINORMAL][i];
-				}
-				
-				if ((VertexFlags & EVertexElement::VertexColor) == EVertexElement::VertexColor)
-				{
-					VertexColor[i] = j[K_VERTEXCOLOR][i];
-				}
-
-				if ((VertexFlags & EVertexElement::Skin) == EVertexElement::Skin)
-				{
-					BlendWeights[i] = j[K_BLEND_WEIGHTS][i];
-					BlendIndices[i] = j[K_BLEND_INDICES][i];
-				}
-			}
-
-			auto it = j.find(K_DEFAULT_POSE);
-			if (it != j.end())
-			{
-				const FJson& matrices = it.value()[K_POSE];
-				for (const auto& bone : Bones)
-				{
-					auto matrixNode = matrices.find(bone);
-					if (matrixNode != matrices.end())
-					{
-						DefaultPose[bone] = matrixNode.value();
-					}
-				}
-			}
-
-			auto itStack = j.find(K_STACK);
-			if (itStack != j.end())
-			{
-				RootNode.Load(itStack.value());
-			}
-		}
-	};
-
-	// serialize
-	template<>
-	inline FBinaryIO& operator<<(FBinaryIO& stream, const FMeshData& data)
-	{
-		stream << data.IndexCount << data.VertexCount << data.VertexFlags;
-		if ((data.VertexFlags & EVertexElement::Skin) == EVertexElement::Skin)
-		{
-			stream << data.Bones.size();
-			for (size_t i = 0; i < data.Bones.size(); ++i)
-			{
-				auto it = data.Bones.begin() + i;
-				stream << *it;
-			}
-		}
-
-		if (data.VertexCount < (1 << 16))
-		{
-			Serialize(stream, (const uint8*)&data.Indices16[0], data.IndexCount * sizeof(uint16));
-		}
-		else
-		{
-			Serialize(stream, (const uint8*)&data.Indices32[0], data.IndexCount * sizeof(uint32));
-		}
-
-		uint32 stride = GetVertexDetails(data.VertexFlags).Stride;
-		uint32 paddingBytes = GetPaddingSize(stride, 16);
-		uint8* padding = new uint8[paddingBytes];
-		stream << (uint32)MAGIC_VERTEX;
-		for (uint32 i = 0; i < data.VertexCount; ++i)
-		{
-			stream << data.Coordinates[i];
-
-			if ((data.VertexFlags & EVertexElement::UV) == EVertexElement::UV)
-			{
-				stream << data.UV[i];
-			}
-
-			if ((data.VertexFlags & EVertexElement::Normal) == EVertexElement::Normal)
-			{
-				stream << data.Normal[i];
-			}
-
-			if ((data.VertexFlags & EVertexElement::Tangent) == EVertexElement::Tangent)
-			{
-				stream << data.Tangent[i];
-				stream << data.Binormal[i];
-			}
-
-			if ((data.VertexFlags & EVertexElement::VertexColor) == EVertexElement::VertexColor)
-			{
-				stream << data.VertexColor[i];
-			}
-
-			if ((data.VertexFlags & EVertexElement::Skin) == EVertexElement::Skin)
-			{
-				stream << data.BlendWeights[i] << data.BlendIndices[i];
-			}
-
-			if (paddingBytes != 0)
-			{
-				Serialize(stream, padding, paddingBytes);
-			}
-		}
-
-		stream << data.DefaultPose.size();
-		for (auto it = data.DefaultPose.begin(); it != data.DefaultPose.end(); ++it)
-		{
-			stream << it->first << it->second;
-		}
-
-		stream << data.RootNode;
-
-		delete[] padding;
-		return stream;
-	}
-
-	// deserialize
-	template<>
-	inline FBinaryIO& operator>>(FBinaryIO& stream, FMeshData& data)
-	{
-		stream >> data.IndexCount >> data.VertexCount >> data.VertexFlags;
-		if ((data.VertexFlags & EVertexElement::Skin) == EVertexElement::Skin)
-		{
-			data.Bones.clear();
-
-			size_t boneSize;
-			stream >> boneSize;
-			for (size_t i = 0; i < boneSize; ++i)
-			{
-				std::string boneName;
-				stream >> boneName;
-				data.Bones.push_back(boneName);
-			}
-		}
-
-		if (data.VertexCount < (1 << 16))
-		{
-			data.Indices16.resize(data.IndexCount);
-			Deserialize(stream, (uint8*)&data.Indices16[0], data.IndexCount * sizeof(uint16));
-		}
-		else
-		{
-			data.Indices32.resize(data.IndexCount);
-			Deserialize(stream, (uint8*)&data.Indices32[0], data.IndexCount * sizeof(uint32));
-		}
-
-		uint32 stride = GetVertexDetails(data.VertexFlags).Stride;
-		uint32 paddingBytes = GetPaddingSize(stride, 16);
-		uint8* padding = new uint8[paddingBytes];
-		bool allocating = true;
-		stream >> data.VertexMagic;
-		assert(data.VertexMagic == MAGIC_VERTEX && "vertex data is incorrect");
-		for (uint32 i = 0; i < data.VertexCount; ++i)
-		{
-			if (allocating)
-			{
-				data.Coordinates.resize(data.VertexCount);
-			}
-
-			stream >> *(data.Coordinates.begin() + i);
-			if ((data.VertexFlags & EVertexElement::UV) == EVertexElement::UV)
-			{
-				if (allocating)
-				{
-					data.UV.resize(data.VertexCount);
-				}
-
-				stream >> *(data.UV.begin() + i);
-			}
-
-			if ((data.VertexFlags & EVertexElement::Normal) == EVertexElement::Normal)
-			{
-				if (allocating)
-				{
-					data.Normal.resize(data.VertexCount);
-				}
-
-				stream >> *(data.Normal.begin() + i);
-			}
-
-			if ((data.VertexFlags & EVertexElement::Tangent) == EVertexElement::Tangent)
-			{
-				if (allocating)
-				{
-					data.Tangent.resize(data.VertexCount);
-					data.Binormal.resize(data.VertexCount);
-				}
-
-				stream >> *(data.Tangent.begin() + i);
-				stream >> *(data.Binormal.begin() + i);
-			}
-
-			if ((data.VertexFlags & EVertexElement::VertexColor) == EVertexElement::VertexColor)
-			{
-				if (allocating)
-				{
-					data.VertexColor.resize(data.VertexCount);
-				}
-
-				stream >> *(data.VertexColor.begin() + i);
-			}
-
-			if ((data.VertexFlags & EVertexElement::Skin) == EVertexElement::Skin)
-			{
-				if (allocating)
-				{
-					data.BlendWeights.resize(data.VertexCount);
-					data.BlendIndices.resize(data.VertexCount);
-				}
-
-				stream >> *(data.BlendWeights.begin() + i)
-					>> *(data.BlendIndices.begin() + i);
-			}
-
-			allocating = false;
-
-			if (paddingBytes != 0)
-			{
-				Deserialize(stream, padding, paddingBytes);
-			}
-		}
-
-		uint32 defaultPoseSz;
-		stream >> defaultPoseSz;
-		for (uint32 i = 0; i < defaultPoseSz; ++i)
-		{
-			string boneName;
-			FMatrix boneMatrix;
-			stream >> boneName >> boneMatrix;
-			data.DefaultPose[boneName] = boneMatrix;
-		}
-
-		stream >> data.RootNode;
-
-		delete[] padding;
-		return stream;
-	}
-
-	// FMeshDataGPU可以反序列化FMeshData序列化的数据，并提供面向图形API的数据格式
+	// 提供面向图形API的数据格式
 	struct FMeshDataGPU
 	{
 		uint32 IndexCount;
 		uint32 VertexCount;
 		uint32 VertexFlags;
-		vector<string> Bones;
 
 		vector<uint8> Indices;
 		vector<uint8> Vertices;
 
-		FPose DefaultPose;
-
-		//FTreeNode<FMatrixNode> RootNode;
-		FMatrixTreeNode RootNode;
+		map<string, FPoseMap> Poses;
+		FBone Skeleton;
+		map<string, int32> SkeletonIndexMap;
 
 		uint32 VertexMagic;
 
 		FMeshDataGPU() {}
 		~FMeshDataGPU() {}
-
-		inline FMeshData ToMeshData()
-		{
-			FMeshData output;
-			output.IndexCount = IndexCount;
-			output.VertexCount = VertexCount;
-			output.VertexFlags = VertexFlags;
-			output.VertexMagic = VertexMagic;
-			if ((VertexFlags & EVertexElement::Skin) == EVertexElement::Skin)
-			{
-				output.Bones.clear();
-				for (size_t i = 0; i < Bones.size(); ++i)
-				{
-					output.Bones.push_back(Bones[i]);
-				}
-			}
-
-			if (VertexCount < (1 << 16))
-			{
-				output.Indices16.resize(Indices.size() / sizeof(uint16));
-				memcpy(&output.Indices16[0], &Indices[0], Indices.size());
-			}
-			else
-			{
-				output.Indices32.resize(Indices.size() / sizeof(uint32));
-				memcpy(&output.Indices32[0], &Indices[0], Indices.size()); 
-			}
-
-			uint32 stride = GetVertexDetails(VertexFlags).Stride;
-			uint32 paddingBytes = GetPaddingSize(stride, 16);
-			uint32 alignedSz = GetAlignedSize(stride, 16);
-			uint8* padding = new uint8[paddingBytes];
-			bool allocating = true;
-			for (uint32 i = 0; i < VertexCount; ++i)
-			{
-				FBinaryIO stream(&Vertices[i * alignedSz], alignedSz);
-
-				if (allocating)
-				{
-					output.Coordinates.resize(VertexCount);
-				}
-				stream >> output.Coordinates[i];
-
-				if ((VertexFlags & EVertexElement::UV) == EVertexElement::UV)
-				{
-					if (allocating)
-					{
-						output.UV.resize(VertexCount);
-					}
-					stream >> output.UV[i];
-				}
-
-				if ((VertexFlags & EVertexElement::Normal) == EVertexElement::Normal)
-				{
-					if (allocating)
-					{
-						output.Normal.resize(VertexCount);
-					}
-					stream >> output.Normal[i];
-				}
-
-				if ((VertexFlags & EVertexElement::Tangent) == EVertexElement::Tangent)
-				{
-					if (allocating)
-					{
-						output.Tangent.resize(VertexCount);
-						output.Binormal.resize(VertexCount);
-					}
-					stream >> output.Tangent[i];
-					stream >> output.Binormal[i];
-				}
-
-				if ((VertexFlags & EVertexElement::VertexColor) == EVertexElement::VertexColor)
-				{
-					if (allocating)
-					{
-						output.VertexColor.resize(VertexCount);
-					}
-					stream >> output.VertexColor[i];
-				}
-
-				if ((VertexFlags & EVertexElement::Skin) == EVertexElement::Skin)
-				{
-					if (allocating)
-					{
-						output.BlendWeights.resize(VertexCount);
-						output.BlendIndices.resize(VertexCount);
-					}
-
-					stream >> output.BlendWeights[i] >> output.BlendIndices[i];
-				}
-
-				allocating = false;
-			}
-
-			for (auto it = DefaultPose.begin(); it != DefaultPose.end(); ++it)
-			{
-				output.DefaultPose[it->first] = it->second;
-			}
-
-			output.RootNode = RootNode;
-
-			delete[] padding;
-			return (output);
-		}
 	};
 
 	template<>
 	inline FBinaryIO& operator<<(FBinaryIO& stream, const FMeshDataGPU& data)
 	{
 		stream << data.IndexCount << data.VertexCount << data.VertexFlags;
-		if ((data.VertexFlags & EVertexElement::Skin) == EVertexElement::Skin)
-		{
-			stream << data.Bones.size();
-			for (size_t i = 0; i < data.Bones.size(); ++i)
-			{
-				auto it = data.Bones.begin() + i;
-				uint32 stringLen = it->length();
-				stream << stringLen;
-				Serialize(stream, (const uint8*)&((*it)[0]), stringLen);
-			}
-		}
 
-		uint32 ibSz = data.IndexCount * (data.VertexCount < (1 << 16) ? 2 : 4);
-		Serialize(stream, &(data.Indices[0]), ibSz);
+		if (data.IndexCount > 0)
+		{
+			uint32 ibSz = data.IndexCount * (data.VertexCount < (1 << 16) ? 2 : 4);
+			Serialize(stream, &(data.Indices[0]), ibSz);
+		}
 
 		stream << (uint32)MAGIC_VERTEX;
-		Serialize(stream, &(data.Vertices[0]), data.Vertices.size());
 
-		stream << data.DefaultPose.size();
-		for (auto it = data.DefaultPose.begin(); it != data.DefaultPose.end(); ++it)
+		if (data.VertexCount > 0)
 		{
-			stream << it->first << it->second;
+			Serialize(stream, &(data.Vertices[0]), data.Vertices.size());
 		}
 
-		stream << data.RootNode;
+		if ((data.VertexFlags & EVertexElement::Skin) == EVertexElement::Skin)
+		{
+			stream << data.Poses;
+			stream << data.Skeleton;
+			stream << data.SkeletonIndexMap;
+		}
 
 		return stream;
 	}
@@ -640,46 +143,33 @@ namespace LostCore
 	inline FBinaryIO& operator >> (FBinaryIO& stream, FMeshDataGPU& data)
 	{
 		stream >> data.IndexCount >> data.VertexCount >> data.VertexFlags;
-		if ((data.VertexFlags & EVertexElement::Skin) == EVertexElement::Skin)
+
+		if (data.IndexCount > 0)
 		{
-			data.Bones.clear();
-
-			size_t boneSize;
-			stream >> boneSize;
-			for (size_t i = 0; i < boneSize; ++i)
-			{
-				uint32 stringLen;
-				stream >> stringLen;
-				uint8* boneName = new uint8[stringLen + 1];
-				Deserialize(stream, boneName, stringLen);
-				boneName[stringLen] = '\0';
-				data.Bones.push_back(string((char*)boneName));
-			}
+			uint32 ibSz = data.IndexCount * (data.VertexCount < (1 << 16) ? 2 : 4);
+			data.Indices.resize(ibSz);
+			Deserialize(stream, &(data.Indices[0]), ibSz);
 		}
-
-		uint32 ibSz = data.IndexCount * (data.VertexCount < (1 << 16) ? 2 : 4);
-		data.Indices.resize(ibSz);
-		Deserialize(stream, &(data.Indices[0]), ibSz);
 
 		stream >> data.VertexMagic;
 		assert(data.VertexMagic == MAGIC_VERTEX && "vertex data is incorrect");
-		uint32 stride = GetVertexDetails(data.VertexFlags).Stride;
-		uint32 sz = (uint32)ceil(stride / 16.f) * 16;
-		sz *= data.VertexCount;
-		data.Vertices.resize(sz);
-		Deserialize(stream, &(data.Vertices[0]), sz);
 
-		uint32 defaultPoseSz;
-		stream >> defaultPoseSz;
-		for (uint32 i = 0; i < defaultPoseSz; ++i)
+		if (data.VertexCount > 0)
 		{
-			std::string boneName;
-			FMatrix boneMatrix;
-			stream >> boneName >> boneMatrix;
-			data.DefaultPose[boneName] = boneMatrix;
+			uint32 stride = GetVertexDetails(data.VertexFlags).Stride;
+			uint32 sz = GetAlignedSize(stride, 16) * data.VertexCount;
+			data.Vertices.resize(sz);
+			Deserialize(stream, &(data.Vertices[0]), sz);
 		}
 
-		stream >> data.RootNode;
+		if ((data.VertexFlags & EVertexElement::Skin) == EVertexElement::Skin)
+		{
+			data.Poses.clear();
+			data.SkeletonIndexMap.clear();
+			stream >> data.Poses;
+			stream >> data.Skeleton;
+			stream >> data.SkeletonIndexMap;
+		}
 
 		return stream;
 	}
