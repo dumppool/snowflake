@@ -12,27 +12,27 @@
 
 using namespace LostCore;
 
-LostCore::FSkeletonNode::FSkeletonNode() : Name(""), Local(), World()
+LostCore::FSkelPoseTree::FSkelPoseTree()
 {
 }
 
-LostCore::FSkeletonNode::FSkeletonNode(const TTreeNode & skelRoot) : Name(""), Local(), World()
+LostCore::FSkelPoseTree::FSkelPoseTree(const FBone & skelRoot)
 {
 	LoadSkeleton(skelRoot);
 }
 
-void LostCore::FSkeletonNode::LoadSkeleton(const TTreeNode & skelRoot)
+void LostCore::FSkelPoseTree::LoadSkeleton(const FBone & skelRoot)
 {
-	Name = skelRoot.Name;
+	Name = skelRoot.Data;
 
 	Children.clear();
 	for (auto it = skelRoot.Children.begin(); it != skelRoot.Children.end(); ++it)
 	{
-		Children.push_back(FSkeletonNode(*it));
+		Children.push_back(FSkelPoseTree(*it));
 	}
 }
 
-void LostCore::FSkeletonNode::LoadLocalPose(const FPose& pose)
+void LostCore::FSkelPoseTree::LoadLocalPose(const FPoseMap& pose)
 {
 	auto it = pose.find(Name);
 	if (it != pose.end())
@@ -46,7 +46,7 @@ void LostCore::FSkeletonNode::LoadLocalPose(const FPose& pose)
 	}
 }
 
-void LostCore::FSkeletonNode::UpdateWorldMatrix(const FMatrix & parentWorld)
+void LostCore::FSkelPoseTree::UpdateWorldMatrix(const FMatrix & parentWorld)
 {
 	World = Local * parentWorld;
 	for (auto& child : Children)
@@ -55,7 +55,7 @@ void LostCore::FSkeletonNode::UpdateWorldMatrix(const FMatrix & parentWorld)
 	}
 }
 
-void LostCore::FSkeletonNode::GetWorldPose(FPose& pose)
+void LostCore::FSkelPoseTree::GetWorldPose(FPoseMap& pose)
 {
 	pose[Name] = World;
 	for (auto& child : Children)
@@ -64,22 +64,22 @@ void LostCore::FSkeletonNode::GetWorldPose(FPose& pose)
 	}
 }
 
-LostCore::FAnimation::FAnimation()
-{
-}
-
-LostCore::FAnimation::~FAnimation()
-{
-}
-
-void LostCore::FAnimation::LoadAnimation(const FJson & animJson)
-{
-}
-
-void LostCore::FAnimation::Tick(float sec)
-{
-}
-
-void LostCore::FAnimation::GetPose(FPose& pose)
-{
-}
+//LostCore::FAnimation::FAnimation()
+//{
+//}
+//
+//LostCore::FAnimation::~FAnimation()
+//{
+//}
+//
+//void LostCore::FAnimation::LoadAnimation(const FJson & animJson)
+//{
+//}
+//
+//void LostCore::FAnimation::Tick(float sec)
+//{
+//}
+//
+//void LostCore::FAnimation::GetPose(FPose& pose)
+//{
+//}

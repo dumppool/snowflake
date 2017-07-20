@@ -45,13 +45,13 @@ namespace LostCore
 		struct 
 		{
 			FMatrix World;
-			array<FMatrix, 96> Bones;
+			array<FMatrix, MAX_BONES_PER_BATCH> Bones;
 		} Matrices;
 
-		map<string, int> SkeletonNodeTable;
+		map<string, int32> SkeletonIndexMap;
 
-		FSkeletonNode Root;
-		FAnimation Animation;
+		FSkelPoseTree Root;
+		//FAnimation Animation;
 
 		uint32 PrimitiveFlags;
 

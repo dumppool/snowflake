@@ -21,7 +21,7 @@ namespace D3D11
 
 		INLINE static LostCore::FVertexTypes::Details GetDetails()
 		{
-			return LostCore::FVertexTypes::GetVertexDetail3D(true, false, false, false, false, false);
+			return LostCore::FVertexTypes::GetVertexDetail3D(true, false, false, false, false);
 		}
 
 		INLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
@@ -44,7 +44,7 @@ namespace D3D11
 
 		INLINE static LostCore::FVertexTypes::Details GetDetails()
 		{
-			return LostCore::FVertexTypes::GetVertexDetail3D(true, true, false, false, false, false);
+			return LostCore::FVertexTypes::GetVertexDetail3D(true, true, false, false, false);
 		}
 
 		INLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
@@ -69,7 +69,7 @@ namespace D3D11
 
 		INLINE static LostCore::FVertexTypes::Details GetDetails()
 		{
-			return LostCore::FVertexTypes::GetVertexDetail3D(true, true, false, false, true, false);
+			return LostCore::FVertexTypes::GetVertexDetail3D(true, true, false, true, false);
 		}
 
 		INLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
@@ -143,7 +143,7 @@ namespace D3D11
 
 		INLINE static LostCore::FVertexTypes::Details GetDetails()
 		{
-			return LostCore::FVertexTypes::GetVertexDetail3D(true, true, false, false, true, true);
+			return LostCore::FVertexTypes::GetVertexDetail3D(true, true, false, true, true);
 		}
 
 		INLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
@@ -156,6 +156,60 @@ namespace D3D11
 				{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, offsetof(FVertex_5, UV),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
 				{ "BLENDWEIGHTS", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(FVertex_5, BlendWeights),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
 				{ "BLENDINDICES", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(FVertex_5, BlendIndices),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			};
+
+			return std::make_pair(SDesc, ARRAYSIZE(SDesc));
+		}
+	};
+
+	ALIGNED_LR(16) struct FVertex_6
+	{
+		LostCore::FVec3 XYZ;
+		LostCore::FVec2 UV;
+		LostCore::FVec3 N;
+		LostCore::FVec4 BlendWeights;
+		LostCore::FVec4 BlendIndices;
+
+		INLINE static LostCore::FVertexTypes::Details GetDetails()
+		{
+			return LostCore::FVertexTypes::GetVertexDetail3D(true, true, false, false, true);
+		}
+
+		INLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
+		{
+			static D3D11_INPUT_ELEMENT_DESC SDesc[] =
+			{
+				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_6, XYZ), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_6, N), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, offsetof(FVertex_6, UV),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "BLENDWEIGHTS", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(FVertex_6, BlendWeights),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "BLENDINDICES", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(FVertex_6, BlendIndices),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			};
+
+			return std::make_pair(SDesc, ARRAYSIZE(SDesc));
+		}
+	};
+
+	ALIGNED_LR(16) struct FVertex_7
+	{
+		LostCore::FVec3 XYZ;
+		LostCore::FVec3 N;
+		LostCore::FVec4 BlendWeights;
+		LostCore::FVec4 BlendIndices;
+
+		INLINE static LostCore::FVertexTypes::Details GetDetails()
+		{
+			return LostCore::FVertexTypes::GetVertexDetail3D(false, true, false, false, true);
+		}
+
+		INLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
+		{
+			static D3D11_INPUT_ELEMENT_DESC SDesc[] =
+			{
+				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_7, XYZ), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_7, N), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "BLENDWEIGHTS", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(FVertex_7, BlendWeights),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "BLENDINDICES", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(FVertex_7, BlendIndices),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
 			};
 
 			return std::make_pair(SDesc, ARRAYSIZE(SDesc));
@@ -191,9 +245,14 @@ namespace D3D11
 			DescMap.insert(std::make_pair(FVertex_4::GetDetails().Name, FVertex_4::GetDesc()));
 			LVMSG(head, "register: %s, stride: %d, aligned stride: %d", FVertex_4::GetDetails().Name.c_str(), FVertex_4::GetDetails().Stride, sizeof(FVertex_4));
 
-
 			DescMap.insert(std::make_pair(FVertex_5::GetDetails().Name, FVertex_5::GetDesc()));
 			LVMSG(head, "register: %s, stride: %d, aligned stride: %d", FVertex_5::GetDetails().Name.c_str(), FVertex_5::GetDetails().Stride, sizeof(FVertex_5));
+
+			DescMap.insert(std::make_pair(FVertex_6::GetDetails().Name, FVertex_6::GetDesc()));
+			LVMSG(head, "register: %s, stride: %d, aligned stride: %d", FVertex_6::GetDetails().Name.c_str(), FVertex_6::GetDetails().Stride, sizeof(FVertex_6));
+
+			DescMap.insert(std::make_pair(FVertex_7::GetDetails().Name, FVertex_7::GetDesc()));
+			LVMSG(head, "register: %s, stride: %d, aligned stride: %d", FVertex_7::GetDetails().Name.c_str(), FVertex_7::GetDetails().Stride, sizeof(FVertex_7));
 		}
 
 		INLINE std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc(const std::string& key)

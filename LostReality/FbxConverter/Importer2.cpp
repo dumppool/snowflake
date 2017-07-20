@@ -15,16 +15,21 @@ using namespace LostCore;
 
 struct FTempMesh
 {
-	struct Triangle
+	struct FVertex
 	{
-		FVec2				TexCoords[3];
-		FVec3				Normals[3];
-		FVec3				Tangents[3];
-		FVec3				Binormals[3];
-		uint32				ControlPointIndices[3];
-		uint8				MaterialIndices[2];
-		uint32				SmoothingGroups;
-		FVec3				Colors[3];
+		FVec2				TexCoords;
+		FVec3				Normals;
+		FVec3				Tangents;
+		FVec3				Binormals;
+		uint32				ControlPointIndices;
+		//uint8				MaterialIndices[2];
+		//uint32			SmoothingGroups;
+		FVec3				Colors;
+	};
+
+	struct FTriangle
+	{
+		FVertex				Vertices[3];
 	};
 
 	FbxScene*				Scene;
@@ -32,8 +37,11 @@ struct FTempMesh
 
 	bool					bIsSkeletal;
 
-	// 从根到叶的links
-	vector<FbxNode*>		Links;
+	// 骨骼的FbxAMatrix
+	map<int32, FbxAMatrix> SkelAMatrix;
+
+	// link mode
+	FbxCluster::ELinkMode	LinkMode;
 
 	// 骨骼
 	FSkeletonTreeAlias		Skeleton;
@@ -56,11 +64,13 @@ struct FTempMesh
 	// control points都在mesh node本地空间
 	vector<FVec3>			ControlPoints;
 
+	vector<FVec3>			ControlPoints2;
+
 	// 三角面
-	vector<Triangle>		Triangles;
+	vector<FTriangle>		Triangles;
 
 	// 骨骼模型才有的骨骼索引&骨骼混合权重
-	vector<array<int, MAX_BONES_PER_VERTEX>>	BlendIndices;
+	vector<array<float, MAX_BONES_PER_VERTEX>>	BlendIndices;
 	vector<array<float, MAX_BONES_PER_VERTEX>>	BlendWeights;
 
 #ifdef _DEBUG
@@ -79,6 +89,14 @@ struct FTempMesh
 		, ParentTypeName("uninitialized")
 #endif
 	{
+		SkelAMatrix.clear();
+		Poses.clear();
+		SkeletonIndexMap.clear();
+		ControlPoints.clear();
+		Triangles.clear();
+		BlendIndices.clear();
+		BlendWeights.clear();
+
 		Extract();
 	}
 
@@ -99,8 +117,7 @@ struct FTempMesh
 
 	bool HasElementTangent() const
 	{
-		return (VertexFlags & EVertexElement::Tangent) == EVertexElement::Tangent &&
-			(VertexFlags & EVertexElement::Binormal) == EVertexElement::Binormal;
+		return (VertexFlags & EVertexElement::Tangent) == EVertexElement::Tangent;
 	}
 
 	bool HasElementVertexColor() const
@@ -147,10 +164,11 @@ struct FTempMesh
 		}
 #endif
 
+		VertexFlags = 0;
 		if (IsSkeletal())
 		{
 			bIsSkeletal = true;
-			SortSkeletalLink(scene, Mesh, Links);
+			VertexFlags |= EVertexElement::Skin;
 
 			int skinCount = Mesh->GetDeformerCount(FbxDeformer::eSkin);
 			assert(skinCount == 1);
@@ -159,7 +177,7 @@ struct FTempMesh
 			int cpCount = Mesh->GetControlPointsCount();
 			
 			BlendIndices.resize(cpCount);
-			for_each(BlendIndices.begin(), BlendIndices.end(), [](array<int, MAX_BONES_PER_VERTEX>& arr) {arr.fill(-1); });
+			for_each(BlendIndices.begin(), BlendIndices.end(), [](array<float, MAX_BONES_PER_VERTEX>& arr) {arr.fill(-1); });
 			
 			BlendWeights.resize(cpCount);
 			for_each(BlendWeights.begin(), BlendWeights.end(), [](array<float, MAX_BONES_PER_VERTEX>& arr) {arr.fill(INFINITY); });
@@ -176,6 +194,19 @@ struct FTempMesh
 				{
 					SkeletonIndexMap[link->GetName()] = i;
 				}
+				else
+				{
+					LVERR(head, "cluster[%s] is not a bone", cluster->GetName());
+					continue;
+				}
+
+				LinkMode = cluster->GetLinkMode();
+				if (LinkMode == FbxCluster::eAdditive)
+				{
+					LVERR(head, "mesh[%s] link[%s] mode: additive", Mesh->GetName(), link->GetName());
+				}
+
+				SkelAMatrix[SkeletonIndexMap[link->GetName()]] = GetInitialClusterMatrix(Mesh, cluster);
 
 				auto rootLink = GetRootLink(link);
 				if (rootLink != nullptr && rootLinks.find(rootLink) == rootLinks.end())
@@ -196,9 +227,9 @@ struct FTempMesh
 
 					for (int k = 0; k < MAX_BONES_PER_VERTEX; ++k)
 					{
-						if (outputIndices[k] == -1)
+						if (outputIndices[k] < 0)
 						{
-							outputIndices[k] = i;
+							outputIndices[k] = (float)i;
 							outputWeights[k] = (float)weight;
 							break;
 						}
@@ -273,6 +304,7 @@ struct FTempMesh
 		auto coordCount = Mesh->GetControlPointsCount();
 		auto polygonCount = Mesh->GetPolygonCount();
 
+		VertexFlags |= (coordHead != nullptr ? EVertexElement::Coordinate : 0);
 		VertexFlags |= (normalHead != nullptr ? EVertexElement::Normal : 0);
 		VertexFlags |= (tangentHead != nullptr  && binormalHead != nullptr ? EVertexElement::Tangent : 0);
 		VertexFlags |= (uvHead != nullptr ? EVertexElement::UV : 0);
@@ -308,16 +340,17 @@ struct FTempMesh
 					int cpIndex = Mesh->GetPolygonVertex(i, j);
 					int tmpIndex = i * 3 + j;
 
-					tri.ControlPointIndices[idx] = cpIndex;
+					auto& vert = tri.Vertices[idx];
 
+					vert.ControlPointIndices = cpIndex;
 					if (normalHead != nullptr)
 					{
 						referenceMode = normalHead->GetReferenceMode();
-						mappingMode = normalHead->GetMappingMode(); 
+						mappingMode = normalHead->GetMappingMode();
 						int mapIndex = referenceMode == FbxLayerElement::eByControlPoint ? cpIndex : tmpIndex;
 						int valIndex = mappingMode == FbxLayerElement::eDirect ? mapIndex : normalHead->GetIndexArray().GetAt(mapIndex);
-						tri.Normals[idx] = ToVector3(normalHead->GetDirectArray().GetAt(valIndex));
-						tri.Normals[idx].Normalize();
+						vert.Normals = ToVector3(normalHead->GetDirectArray().GetAt(valIndex));
+						vert.Normals.Normalize();
 					}
 
 					if (tangentHead != nullptr)
@@ -326,8 +359,8 @@ struct FTempMesh
 						mappingMode = tangentHead->GetMappingMode();
 						int mapIndex = referenceMode == FbxLayerElement::eByControlPoint ? cpIndex : tmpIndex;
 						int valIndex = mappingMode == FbxLayerElement::eDirect ? mapIndex : tangentHead->GetIndexArray().GetAt(mapIndex);
-						tri.Tangents[idx] = ToVector3(tangentHead->GetDirectArray().GetAt(valIndex));
-						tri.Tangents[idx].Normalize();
+						vert.Tangents = ToVector3(tangentHead->GetDirectArray().GetAt(valIndex));
+						vert.Tangents.Normalize();
 					}
 
 					if (binormalHead != nullptr)
@@ -336,8 +369,8 @@ struct FTempMesh
 						mappingMode = binormalHead->GetMappingMode();
 						int mapIndex = referenceMode == FbxLayerElement::eByControlPoint ? cpIndex : tmpIndex;
 						int valIndex = mappingMode == FbxLayerElement::eDirect ? mapIndex : binormalHead->GetIndexArray().GetAt(mapIndex);
-						tri.Binormals[idx] = ToVector3(binormalHead->GetDirectArray().GetAt(valIndex));
-						tri.Binormals[idx].Normalize();
+						vert.Binormals = ToVector3(binormalHead->GetDirectArray().GetAt(valIndex));
+						vert.Binormals.Normalize();
 					}
 
 					// TODO: 考虑多重uv
@@ -347,7 +380,7 @@ struct FTempMesh
 						mappingMode = uvHead->GetMappingMode();
 						int mapIndex = referenceMode == FbxLayerElement::eByControlPoint ? cpIndex : tmpIndex;
 						int valIndex = mappingMode == FbxLayerElement::eDirect ? mapIndex : uvHead->GetIndexArray().GetAt(mapIndex);
-						tri.TexCoords[idx] = ToVector2(uvHead->GetDirectArray().GetAt(valIndex));
+						vert.TexCoords = ToVector2(uvHead->GetDirectArray().GetAt(valIndex));
 					}
 
 					// TODO: 没有Color类，暂不导入
@@ -362,6 +395,58 @@ struct FTempMesh
 				}
 			}
 
+			if ((ControlPoints.size() != BlendIndices.size() || ControlPoints.size() != BlendWeights.size()))
+			{
+				LVERR(head, "Size of control points mismatch in mesh[%s]: cp[%d], bi[%d], bw[%d]", Mesh->GetName(),
+					ControlPoints.size(), BlendIndices.size(), BlendWeights.size());
+			}
+
+			// 顶点坐标转换到本地空间
+			ProcessSkeletalVertex();
+		}
+	}
+
+	void ProcessSkeletalVertex()
+	{
+		if (ControlPoints.size() == 0)
+		{
+			return;
+		}
+
+		ControlPoints2.resize(ControlPoints.size());
+		for (uint32 vertIndex = 0; vertIndex < ControlPoints.size(); ++vertIndex)
+		{
+			auto& indices = BlendIndices[vertIndex];
+			auto& weights = BlendWeights[vertIndex];
+			FbxAMatrix mat;
+			memset(&mat, 0, sizeof(mat));
+			float w = 0.f;
+			for (uint32 j = 0; j < MAX_BONES_PER_VERTEX; ++j)
+			{
+				if (indices[j] == -1)
+				{
+					break;
+				}
+
+				auto index = indices[j];
+				auto val = weights[j];
+
+				FbxAMatrix tmp = SkelAMatrix[index];
+				AMatrixScale(tmp, val);
+
+				AMatrixAdd(mat, tmp);
+				w += val;
+			}
+
+			ControlPoints2[vertIndex] = ToMatrix(mat).ApplyPoint(ControlPoints[vertIndex]);
+			if (LinkMode == FbxCluster::eNormalize)
+			{
+				ControlPoints2[vertIndex] *= 1.f/w;
+			}
+			else if (LinkMode == FbxCluster::eTotalOne)
+			{
+				ControlPoints2[vertIndex] += ControlPoints[vertIndex] * (1.f - w);
+			}
 		}
 	}
 
@@ -371,22 +456,94 @@ struct FTempMesh
 
 		if (Mesh->IsTriangleMesh())
 		{
+			output.Name = Mesh->GetName();
+
 			output.IndexCount = 0;
-			output.VertexCount = ControlPoints.size();
-			output.VertexFlags = VertexFlags;
+			if (output.IndexCount > 0)
+			{
+				output.VertexCount = ControlPoints2.size();
+			}
+			else
+			{
+				output.VertexCount = Triangles.size() * 3;
+			}
 			
+			output.VertexFlags = VertexFlags;
+
+			// Indices & vertices
 			output.Indices.clear();
 			output.Vertices.clear();
+			FBinaryIO stream;
+			vector<uint8> padding;
+			auto paddingSz = GetPaddingSize(GetVertexDetails(VertexFlags).Stride, 16);
+			padding.resize(paddingSz);
+			for (uint32 i = 0; i < Triangles.size(); ++i)
+			{
+				for (uint32 j = 0; j < 3; ++j)
+				{
+					const auto& vert = Triangles[i].Vertices[j];
 
+					Serialize(stream, (uint8*)&(ControlPoints2[vert.ControlPointIndices]), sizeof(FVec3));
+
+					if ((VertexFlags & EVertexElement::UV) == EVertexElement::UV)
+					{
+						stream << vert.TexCoords;
+					}
+
+					if ((VertexFlags & EVertexElement::Normal) == EVertexElement::Normal)
+					{
+						stream << vert.Normals;
+					}
+
+					if ((VertexFlags & EVertexElement::Tangent) == EVertexElement::Tangent)
+					{
+						stream << vert.Tangents << vert.Binormals;
+					}
+
+					if ((VertexFlags & EVertexElement::VertexColor) == EVertexElement::VertexColor)
+					{
+						stream << vert.Colors;
+					}
+
+					if ((VertexFlags & EVertexElement::Skin) == EVertexElement::Skin)
+					{
+						Serialize(stream, (const uint8*)&BlendWeights[vert.ControlPointIndices][0], sizeof(float)*MAX_BONES_PER_VERTEX);
+						Serialize(stream, (const uint8*)&BlendIndices[vert.ControlPointIndices][0], sizeof(float)*MAX_BONES_PER_VERTEX);
+					}
+
+					if (padding.size() > 0)
+					{
+						Serialize(stream, (uint8*)&padding[0], padding.size());
+					}
+				}
+			}
+
+			output.Vertices.resize(stream.RemainingSize());
+			Deserialize(stream, (uint8*)&output.Vertices[0], stream.RemainingSize());
+
+			// Skeletal...
 			output.Poses = Poses;
+			output.Skeleton = Skeleton;
+			output.SkeletonIndexMap = SkeletonIndexMap;
+
+			output.VertexMagic = MAGIC_VERTEX;
 		}
 
 		if (!outputDir.empty())
 		{
-			auto outputFile = outputDir + Name + "." + K_PRIMITIVE;
+			auto outputFile = outputDir + output.Name + "." + K_PRIMITIVE;
 			FBinaryIO stream;
 			stream << output;
 			stream.WriteToFile(outputFile);
+
+			auto sz = stream.Size()/1024.f;
+
+			//FBinaryIO test;
+			//FMeshDataAlias mesh;
+			//test.ReadFromFile(outputFile);
+			//test >> mesh;
+
+			LVMSG("FbxConverter", "mesh[%s, %.3fKB] is saved[%s]", output.Name.c_str(), sz, outputFile.c_str());
 		}
 		
 		return output;
@@ -468,7 +625,7 @@ public:
 
 		for (const auto& mesh : TempMeshArray)
 		{
-			mesh.ToMeshDataGPU("");
+			mesh.ToMeshDataGPU(DestDirectory);
 		}
 
 		return true;

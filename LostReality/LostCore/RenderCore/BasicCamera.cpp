@@ -166,7 +166,7 @@ FMatrix LostCore::FBasicCamera::GetViewMatrix() const
 
 FMatrix LostCore::FBasicCamera::GetProjectMatrix() const
 {
-	float htan = std::tan(Fov * 0.5f);
+	float htan = std::tan(Fov * SD2RConstant * 0.5f);
 	if (IsEqual(0.f, htan))
 	{
 		htan = 0.001f;

@@ -148,6 +148,9 @@ namespace LostCore
 
 	/************************************************************
 	Serialize implementation
+	stl容器都需要特定模板，否则会试图匹配第一个模板，目前有string,map,vector,
+	set,array
+	其中string,map测试过
 	************************************************************/
 	template<typename T>
 	FBinaryIO& operator<<(FBinaryIO& stream, const T& data)
@@ -166,7 +169,7 @@ namespace LostCore
 	template<>
 	inline FBinaryIO& operator<<(FBinaryIO& stream, const std::string& data)
 	{
-		auto sz = data.length();
+		uint32 sz = data.length();
 		stream << sz;
 		Serialize(stream, (const uint8*)&(data[0]), sz);
 		return stream;
@@ -179,6 +182,118 @@ namespace LostCore
 		stream >> sz;
 		data.resize(sz);
 		Deserialize(stream, (uint8*)&(data[0]), sz);
+		return stream;
+	}
+
+	template <typename T>
+	inline FBinaryIO& operator<<(FBinaryIO& stream, const std::vector<T>& data)
+	{
+		uint32 sz = data.size();
+		stream << sz;
+		if (sz > 0)
+		{
+			Serialize(stream, (const uint8*)&data[0], sz * sizeof(T));
+		}
+		
+		return stream;
+	}
+
+	template <typename T>
+	inline FBinaryIO& operator >> (FBinaryIO& stream, std::vector<T>& data)
+	{
+		uint32 sz;
+		stream >> sz;
+		if (sz > 0)
+		{
+			data.resize(sz);
+			Deserialize(stream, (uint8*)&data[0], sz * sizeof(T));
+		}
+
+		return stream;
+	}
+
+	template <typename T>
+	inline FBinaryIO& operator<<(FBinaryIO& stream, const std::set<T>& data)
+	{
+		uint32 sz = data.size();
+		stream << sz;
+		if (sz > 0)
+		{
+			std::for_each(data.begin(), data.end(), [](T& elem) {stream << elem; });
+		}
+
+		return stream;
+	}
+
+	template <typename T, int NUM>
+	inline FBinaryIO& operator >> (FBinaryIO& stream, std::array<T, NUM>& data)
+	{
+		uint32 sz;
+		stream >> sz;
+		if (sz > 0)
+		{
+			Deserialize(stream, (uint8*)&data[0], sz * sizeof(T));
+		}
+
+		return stream;
+	}
+
+	template <typename T, int NUM>
+	inline FBinaryIO& operator << (FBinaryIO& stream, const std::array<T, NUM>& data)
+	{
+		uint32 sz = data.size();
+		stream << sz;
+		if (sz > 0)
+		{
+			Serialize(stream, (const uint8*)&data[0], sz * sizeof(T));
+		}
+
+		return stream;
+	}
+
+	template <typename T>
+	inline FBinaryIO& operator >> (FBinaryIO& stream, std::set<T>& data)
+	{
+		uint32 sz;
+		stream >> sz;
+		if (sz > 0)
+		{
+			for (uint32 i = 0; i < sz; ++i)
+			{
+				T val;
+				stream >> val;
+				data.insert(val);
+			}
+		}
+
+		return stream;
+	}
+
+	template<typename T1, typename T2>
+	inline FBinaryIO& operator<<(FBinaryIO& stream, const std::map<T1, T2>& data)
+	{
+		stream << data.size();
+		for (auto& it = data.begin(); it != data.end(); ++it)
+		{
+			stream << it->first << it->second;
+		}
+
+		return stream;
+	}
+
+	template<typename T1, typename T2>
+	inline FBinaryIO& operator>>(FBinaryIO& stream, std::map<T1, T2>& data)
+	{
+		uint32 num;
+		stream >> num;
+		for (uint32 i=0;i<num;++i)
+		{
+			T1 key;
+			T2 val;
+			stream >> key >> val;
+			data[key] = val;
+		}
+
 		return stream;
 	}
 

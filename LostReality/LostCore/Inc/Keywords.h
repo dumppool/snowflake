@@ -135,6 +135,7 @@
 #define K_CLUSTER						"Cluster"
 #define K_SKIN							"Skin"
 #define K_BONE							"Bone"
+#define K_INITIAL_POSE					"InitialPose"
 
 #define K_CHILDREN						"Children"
 #define K_MATERIAL						"Material"
@@ -150,7 +151,7 @@
 #define K_MESSAGE5						"Message5"
 #define K_MESSAGE6						"Message6"
 
-#define K_PRIMITIVE						"primitive"
+#define K_PRIMITIVE						"iv"
 
 #define FLAG_UNKNOWN					0x0badfffa
 
@@ -229,9 +230,8 @@ enum EVertexElement
 	UV					= 0x2,
 	Normal				= 0x4,
 	Tangent				= 0x8,
-	Binormal			= 0x10,
-	VertexColor			= 0x20,
-	Skin				= 0x40,
+	VertexColor			= 0x10,
+	Skin				= 0x20,
 };
 
 #define MAX_BONES_PER_VERTEX 4

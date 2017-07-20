@@ -27,6 +27,8 @@
 #define MODULE_ERR_PREFIX "lostcore-d3d11-error"
 #include "UtilitiesHeader.h"
 
+#include "Keywords.h"
+
 // file system includes
 #include "File/json.hpp"
 using FJson = nlohmann::json;

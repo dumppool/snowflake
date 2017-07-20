@@ -345,7 +345,7 @@ namespace Importer {
 		//return mat;
 	}
 
-	static void BuildSkeletonTree(FbxNode* link, FSkeletonTreeAlias& data)
+	static void BuildSkeletonTree(FbxNode* link, FSkeletonTreeAlias& output)
 	{
 		if (IsBone(link))
 		{
@@ -353,14 +353,68 @@ namespace Importer {
 			{
 				auto childData = FSkeletonTreeAlias();
 				BuildSkeletonTree(link->GetChild(i), childData);
-				data.AddChild(childData);
+				output.AddChild(childData);
 			}
 
-			data.Data = link->GetName();
+			output.Data = link->GetName();
 		}
 	}
 
-	static void BuildPoseTree(FbxPose* pose, FbxNode* link, FPoseTreeAlias& data)
+	static void AMatrixScale(FbxAMatrix& mat, float val)
+	{
+		for (int i = 0; i < 4; ++i)
+		{
+			for (int j = 0; j < 4; ++j)
+			{
+				mat[i][j] *= val;
+			}
+		}
+	}
+
+	static void AMatrixAddToDiagonal(FbxAMatrix& mat, float val)
+	{
+		for (int i = 0; i < 4; ++i)
+		{
+			mat[i][i] += val;
+		}
+	}
+
+	static void AMatrixAdd(FbxAMatrix& mat, const FbxAMatrix& matR)
+	{
+		for (int i = 0; i < 4; ++i)
+		{
+			for (int j = 0; j < 4; ++j)
+			{
+				mat[i][j] += matR[i][j];
+			}
+		}
+	}
+
+	static FbxAMatrix GetGeometry(FbxNode* node)
+	{
+		auto t = node->GetGeometricTranslation(FbxNode::eSourcePivot);
+		auto r = node->GetGeometricRotation(FbxNode::eSourcePivot);
+		auto s = node->GetGeometricScaling(FbxNode::eSourcePivot);
+		return FbxAMatrix(t, r, s);
+	}
+
+	static FbxAMatrix GetInitialClusterMatrix(FbxMesh* mesh, FbxCluster* cluster)
+	{
+		if (mesh == nullptr || cluster == nullptr)
+		{
+			return FbxAMatrix();
+		}
+
+		FbxAMatrix meshGlobal, meshGeometry, clusterLocal, clusterGlobal;
+		cluster->GetTransformMatrix(meshGlobal);
+		cluster->GetTransformLinkMatrix(clusterGlobal);
+		meshGeometry = GetGeometry(mesh->GetNode());
+		clusterLocal = meshGlobal * meshGeometry;
+		clusterLocal = clusterGlobal.Inverse() * clusterLocal;
+		return clusterLocal;
+	}
+
+	static void BuildPoseTree(FbxPose* pose, FbxNode* link, FPoseTreeAlias& output)
 	{
 		if (pose != nullptr && IsBone(link) && pose->Find(link)>=0)
 		{
@@ -368,7 +422,7 @@ namespace Importer {
 			{
 				auto childData = FPoseTreeAlias();
 				BuildPoseTree(pose, link->GetChild(i), childData);
-				data.AddChild(childData);
+				output.AddChild(childData);
 			}
 
 			auto mat = GetLinkMatrixFromPose(pose, link);
@@ -378,8 +432,8 @@ namespace Importer {
 				mat = GetLinkMatrixFromPose(pose, parentLink).Inverse() * mat;
 			}
 
-			data.Data.Matrix = ToMatrix(mat);
-			data.Data.Name = link->GetName();
+			output.Data.Matrix = ToMatrix(mat);
+			output.Data.Name = link->GetName();
 		}
 	}
 
@@ -494,6 +548,8 @@ namespace Importer {
 			ForceRegenerate,
 			RegenerateIfNotFound,
 		};
+
+		bool bFromUnreal;
 
 		bool bImportNormal;
 		bool bImportTangent;

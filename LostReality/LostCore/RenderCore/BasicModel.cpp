@@ -60,22 +60,26 @@ bool LostCore::FBasicModel::Load(IRenderContext * rc, const char* url)
 
 		FMeshDataGPU data;
 		stream >> data;
-		PrimitiveFlags = data.VertexFlags;
-		Root.LoadSkeleton(data.RootNode);
-		Root.LoadLocalPose(data.DefaultPose);
 
-		int index = 0;
-		for (auto boneName : data.Bones)
-		{
-			SkeletonNodeTable[boneName] = index++;
-		}
+		PrimitiveFlags = data.VertexFlags;
+
+		Root.LoadSkeleton(data.Skeleton);
+
+		if (data.Poses.size() > 0)
+		Root.LoadLocalPose(data.Poses.begin()->second);
+
+		SkeletonIndexMap = data.SkeletonIndexMap;
 
 		if (D3D11::WrappedCreatePrimitiveGroup(&Primitive) == SSuccess)
 		{
-			uint32 ibStride = data.VertexCount < (1 << 16) ? 2 : 4;
+			if (data.IndexCount > 0)
+			{
+				uint32 ibStride = data.VertexCount < (1 << 16) ? 2 : 4;
+				assert(Primitive->ConstructIB(rc, &(data.Indices[0]), data.Indices.size(), ibStride, false));
+			}
+
 			uint32 vbStride = data.Vertices.size() / data.VertexCount;
-			assert(Primitive->ConstructVB(rc, &(data.Vertices[0]), data.Vertices.size(), vbStride, false) &&
-				Primitive->ConstructIB(rc, &(data.Indices[0]), data.Indices.size(), ibStride, false));
+			assert(Primitive->ConstructVB(rc, &(data.Vertices[0]), data.Vertices.size(), vbStride, false));
 		}
 
 		//FBinaryIO stream2;
@@ -147,13 +151,13 @@ void LostCore::FBasicModel::Tick(float sec)
 	Root.UpdateWorldMatrix(Matrices.World);
 
 	// 是时候分开Skeleton和非Skeleton了
-	FPose pose;
+	LostCore::FPoseMap pose;
 	Root.GetWorldPose(pose);
 	for (const auto& it : pose)
 	{
-		if (SkeletonNodeTable.find(it.first) != SkeletonNodeTable.end())
+		if (SkeletonIndexMap.find(it.first) != SkeletonIndexMap.end())
 		{
-			Matrices.Bones[SkeletonNodeTable[it.first]] = it.second;
+			Matrices.Bones[SkeletonIndexMap[it.first]] = it.second;
 		}
 	}
 }

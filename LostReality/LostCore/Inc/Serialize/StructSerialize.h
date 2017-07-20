@@ -57,7 +57,7 @@ namespace LostCore
 	inline FBinaryIO& operator<<(FBinaryIO& stream, const TTreeNode<T>& data)
 	{
 		stream << data.Data << data.Children.size();
-		for (auto& child : data.Children)
+		for (const auto& child : data.Children)
 		{
 			stream << child;
 		}
@@ -94,6 +94,8 @@ namespace LostCore
 	// 提供面向图形API的数据格式
 	struct FMeshDataGPU
 	{
+		string Name;
+
 		uint32 IndexCount;
 		uint32 VertexCount;
 		uint32 VertexFlags;
@@ -107,14 +109,27 @@ namespace LostCore
 
 		uint32 VertexMagic;
 
-		FMeshDataGPU() {}
-		~FMeshDataGPU() {}
+		FMeshDataGPU() 
+		{
+			Indices.clear();
+			Vertices.clear();
+			Poses.clear();
+			SkeletonIndexMap.clear();
+		}
+
+		~FMeshDataGPU() 
+		{
+			Indices.clear();
+			Vertices.clear();
+			Poses.clear();
+			SkeletonIndexMap.clear();
+		}
 	};
 
 	template<>
 	inline FBinaryIO& operator<<(FBinaryIO& stream, const FMeshDataGPU& data)
 	{
-		stream << data.IndexCount << data.VertexCount << data.VertexFlags;
+		stream << data.Name << data.IndexCount << data.VertexCount << data.VertexFlags;
 
 		if (data.IndexCount > 0)
 		{
@@ -122,10 +137,9 @@ namespace LostCore
 			Serialize(stream, &(data.Indices[0]), ibSz);
 		}
 
-		stream << (uint32)MAGIC_VERTEX;
-
 		if (data.VertexCount > 0)
 		{
+			stream << data.Vertices.size();
 			Serialize(stream, &(data.Vertices[0]), data.Vertices.size());
 		}
 
@@ -136,13 +150,15 @@ namespace LostCore
 			stream << data.SkeletonIndexMap;
 		}
 
+		stream << (uint32)MAGIC_VERTEX;
+
 		return stream;
 	}
 
 	template<>
 	inline FBinaryIO& operator >> (FBinaryIO& stream, FMeshDataGPU& data)
 	{
-		stream >> data.IndexCount >> data.VertexCount >> data.VertexFlags;
+		stream >> data.Name >> data.IndexCount >> data.VertexCount >> data.VertexFlags;
 
 		if (data.IndexCount > 0)
 		{
@@ -151,13 +167,10 @@ namespace LostCore
 			Deserialize(stream, &(data.Indices[0]), ibSz);
 		}
 
-		stream >> data.VertexMagic;
-		assert(data.VertexMagic == MAGIC_VERTEX && "vertex data is incorrect");
-
 		if (data.VertexCount > 0)
 		{
-			uint32 stride = GetVertexDetails(data.VertexFlags).Stride;
-			uint32 sz = GetAlignedSize(stride, 16) * data.VertexCount;
+			uint32 sz;
+			stream >> sz;
 			data.Vertices.resize(sz);
 			Deserialize(stream, &(data.Vertices[0]), sz);
 		}
@@ -170,6 +183,9 @@ namespace LostCore
 			stream >> data.Skeleton;
 			stream >> data.SkeletonIndexMap;
 		}
+
+		stream >> data.VertexMagic;
+		assert(data.VertexMagic == MAGIC_VERTEX && "vertex data is incorrect");
 
 		return stream;
 	}

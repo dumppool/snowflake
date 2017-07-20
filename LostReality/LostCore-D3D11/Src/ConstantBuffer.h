@@ -112,7 +112,7 @@ namespace D3D11
 		struct FParam
 		{
 			LostCore::FMatrix World;
-			array<LostCore::FMatrix, 96> Bones;
+			array<LostCore::FMatrix, MAX_BONES_PER_BATCH> Bones;
 		};
 
 		FConstantBufferSkinned() : FConstantBuffer(sizeof(FParam), false, 1)
