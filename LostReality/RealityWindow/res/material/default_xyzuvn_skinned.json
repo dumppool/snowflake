@@ -1,0 +1,15 @@
+{
+	"vertex":"xyzuvn_skinned",
+	"vs":
+	{
+		"path":"xyzuvn_skinned.fx",
+		"entry":"vs_main",
+		"target":"vs_5_0"
+	},
+	"ps":
+	{
+		"path":"xyzuvn_skinned.fx",
+		"entry":"ps_main",
+		"target":"ps_5_0"
+	}
+}
