@@ -22,7 +22,7 @@ struct VertexIn
 	float3 pos : POSITION;
 	float3 normal : NORMAL;
 	float4 weight : BLENDWEIGHTS;
-	float4 indices : BLENDINDICES;
+	int4 indices : BLENDINDICES;
 };
 
 struct VertexOut
@@ -38,16 +38,30 @@ VertexOut vs_main(VertexIn Input)
 	float4 pos = float4(Input.pos.xyz, 1.0f);
 	if (1)
 	{
-		float4x4 mat = Bones[sIndices.x] * Input.weight.x + 
-			Bones[sIndices.y] * Input.weight.y + 
-			Bones[sIndices.z] * Input.weight.z +
-			Bones[sIndices.w] * Input.weight.w;
+		float4x4 mat = Bones[sIndices.x] * Input.weight.x;
+
+		if (sIndices.y >= 0)
+		{
+			mat += Bones[sIndices.y] * Input.weight.y;
+		}
+
+		if (sIndices.z >= 0)
+		{
+			mat += Bones[sIndices.z] * Input.weight.z;
+		}
+
+		if (sIndices.w >= 0)
+		{
+			mat += Bones[sIndices.w] * Input.weight.w;
+		}
+
 		pos = mul(pos, mat);
+
 		//pos =
-		//	mul(pos, Bones[sIndices.x]) * Input.weight.x +
-		//	mul(pos, Bones[sIndices.y]) * Input.weight.y +
-		//	mul(pos, Bones[sIndices.z]) * Input.weight.z +
-		//	mul(pos, Bones[sIndices.w]) * Input.weight.w;
+		//	sIndices.x >= 0 ? (mul(pos, Bones[sIndices.x]) * Input.weight.x) : 0.f +
+		//	sIndices.y >= 0 ? (mul(pos, Bones[sIndices.y]) * Input.weight.y) : 0.f +
+		//	sIndices.z >= 0 ? (mul(pos, Bones[sIndices.z]) * Input.weight.z) : 0.f +
+		//	sIndices.w >= 0 ? (mul(pos, Bones[sIndices.w]) * Input.weight.w) : 0.f;
 	}
 	else
 	{

@@ -38,7 +38,7 @@ VertexOut vs_main(VertexIn Input)
 	int4 sIndices = int4(Input.indices);
 
 	float4 pos = float4(Input.pos.xyz, 1.0f);
-	if (0)
+	if (1)
 	{
 		float4x4 mat = Bones[sIndices.x] * Input.weight.x;
 		

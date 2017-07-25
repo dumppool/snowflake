@@ -477,6 +477,8 @@ namespace Importer {
 			return FbxAMatrix();
 		}
 
+		auto pn = cluster->GetLink()->GetName();
+
 		FbxAMatrix meshGlobal, meshGeometry, clusterLocal, clusterGlobal;
 		cluster->GetTransformMatrix(meshGlobal);
 		cluster->GetTransformLinkMatrix(clusterGlobal);
@@ -484,7 +486,7 @@ namespace Importer {
 		clusterLocal = meshGlobal * meshGeometry;
 		clusterLocal = clusterGlobal.Inverse() * clusterLocal;
 
-		pm[cluster->GetLink()->GetName()] = ToMatrix(clusterLocal);
+		pm[cluster->GetLink()->GetName()] = ToMatrix(clusterLocal).Normalize3x3();
 
 		//auto scene = mesh->GetScene();
 		//FbxAnimStack* currAnimStack = scene->GetSrcObject<FbxAnimStack>(0);

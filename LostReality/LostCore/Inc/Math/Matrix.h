@@ -509,6 +509,19 @@ namespace LostCore
 
 			return *this;
 		}
+
+		INLINE TMatrixNonVectorized<T>& Normalize3x3()
+		{
+			for (uint32 i = 0; i < 3; ++i)
+			{
+				TVec3NonVectorized<T> v;
+				memcpy(&v, &M[i][0], sizeof(v));
+				v.Normalize();
+				memcpy(&M[i][0], &(v), sizeof(v));
+			}
+
+			return *this;
+		}
 	};
 
 	template <typename T>

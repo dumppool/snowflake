@@ -9,8 +9,8 @@
 
 #include "stdafx.h"
 
-#define STORE_FBX_CONTROLPOINT 0
-#define TEST_SOFT_SKINNED 1
+#define EXPORT_ORIGINAL_GEOMETRY 0
+#define TEST_SOFT_SKINNED 0
 
 using namespace Importer;
 using namespace LostCore;
@@ -25,8 +25,6 @@ struct FTempMesh
 		FFloat3				Tangents;
 		FFloat3				Binormals;
 		uint32				ControlPointIndices;
-		//uint8				MaterialIndices[2];
-		//uint32			SmoothingGroups;
 		FFloat3				Colors;
 	};
 
@@ -41,7 +39,7 @@ struct FTempMesh
 	bool					bIsSkeletal;
 
 	// 骨骼的FbxAMatrix
-	map<int32, FbxAMatrix> SkelAMatrix;
+	map<string, FbxAMatrix> SkelAMatrix;
 
 	// link mode
 	FbxCluster::ELinkMode	LinkMode;
@@ -77,11 +75,6 @@ struct FTempMesh
 	vector<FFloat3>			SkinnedPts;
 #endif
 
-#if STORE_FBX_CONTROLPOINT
-	vector<FbxVector4>		FbxControlPoints;
-	vector<FbxVector4>		FbxControlPoints2;
-#endif
-
 	// 三角面
 	vector<FTriangle>		Triangles;
 
@@ -112,11 +105,6 @@ struct FTempMesh
 		Triangles.clear();
 		BlendIndices.clear();
 		BlendWeights.clear();
-
-#if STORE_FBX_CONTROLPOINT
-		FbxControlPoints.clear();
-		FbxControlPoints2.clear();
-#endif
 
 		Extract();
 	}
@@ -230,7 +218,7 @@ struct FTempMesh
 				}
 
 				DefaultPose[link->GetName()] = ToMatrix(GetNodeLocalMatrix(link));
-				SkelAMatrix[SkeletonIndexMap[link->GetName()]] = GetInitialClusterMatrix(Mesh, cluster, Poses[K_INITIAL_POSE]);
+				//SkelAMatrix[link->GetName()] = GetInitialClusterMatrix(Mesh, cluster, Poses[K_INITIAL_POSE]);
 
 				auto rootLink = GetRootLink(link);
 				if (rootLink != nullptr && rootLinks.find(rootLink) == rootLinks.end())
@@ -249,7 +237,8 @@ struct FTempMesh
 
 					auto weight = weights[j];
 
-					for (int k = 0; k < MAX_BONES_PER_VERTEX; ++k)
+					float totalWeight = 0.f;
+					for (int k = 0; k < 4; ++k)
 					{
 						if (outputIndices[k] < 0)
 						{
@@ -257,6 +246,8 @@ struct FTempMesh
 							outputWeights[k] = (float)weight;
 							break;
 						}
+
+						totalWeight += outputWeights[k];
 					}
 				}
 			}
@@ -352,10 +343,6 @@ struct FTempMesh
 		{
 			//mat.MultT(coordHead[i])
 			ControlPoints.push_back(ToVector3(coordHead[i]));
-
-#if STORE_FBX_CONTROLPOINT
-			FbxControlPoints.push_back(coordHead[i]);
-#endif
 		}
 
 		FbxLayerElement::EReferenceMode referenceMode;
@@ -379,9 +366,9 @@ struct FTempMesh
 					{
 						referenceMode = normalHead->GetReferenceMode();
 						mappingMode = normalHead->GetMappingMode();
-						int mapIndex = referenceMode == FbxLayerElement::eByControlPoint ? cpIndex : tmpIndex;
-						int valIndex = mappingMode == FbxLayerElement::eDirect ? mapIndex : normalHead->GetIndexArray().GetAt(mapIndex);
-						vert.Normals = ToVector3(normalHead->GetDirectArray().GetAt(valIndex));
+						int mapIndex = referenceMode == FbxLayerElement::eDirect ? cpIndex : tmpIndex;
+						int valIndex = mappingMode == FbxLayerElement::eByControlPoint ? mapIndex : normalHead->GetIndexArray().GetAt(mapIndex);
+						vert.Normals = ToVector3(normalHead->GetDirectArray().GetAt(valIndex)).GetNormal();
 						vert.Normals.Normalize();
 					}
 
@@ -389,9 +376,9 @@ struct FTempMesh
 					{
 						referenceMode = tangentHead->GetReferenceMode();
 						mappingMode = tangentHead->GetMappingMode();
-						int mapIndex = referenceMode == FbxLayerElement::eByControlPoint ? cpIndex : tmpIndex;
-						int valIndex = mappingMode == FbxLayerElement::eDirect ? mapIndex : tangentHead->GetIndexArray().GetAt(mapIndex);
-						vert.Tangents = ToVector3(tangentHead->GetDirectArray().GetAt(valIndex));
+						int mapIndex = referenceMode == FbxLayerElement::eDirect ? cpIndex : tmpIndex;
+						int valIndex = mappingMode == FbxLayerElement::eByControlPoint ? mapIndex : tangentHead->GetIndexArray().GetAt(mapIndex);
+						vert.Tangents = ToVector3(tangentHead->GetDirectArray().GetAt(valIndex)).GetNormal();
 						vert.Tangents.Normalize();
 					}
 
@@ -399,9 +386,9 @@ struct FTempMesh
 					{
 						referenceMode = binormalHead->GetReferenceMode();
 						mappingMode = binormalHead->GetMappingMode();
-						int mapIndex = referenceMode == FbxLayerElement::eByControlPoint ? cpIndex : tmpIndex;
-						int valIndex = mappingMode == FbxLayerElement::eDirect ? mapIndex : binormalHead->GetIndexArray().GetAt(mapIndex);
-						vert.Binormals = ToVector3(binormalHead->GetDirectArray().GetAt(valIndex));
+						int mapIndex = referenceMode == FbxLayerElement::eDirect ? cpIndex : tmpIndex;
+						int valIndex = mappingMode == FbxLayerElement::eByControlPoint ? mapIndex : binormalHead->GetIndexArray().GetAt(mapIndex);
+						vert.Binormals = ToVector3(binormalHead->GetDirectArray().GetAt(valIndex)).GetNormal();
 						vert.Binormals.Normalize();
 					}
 
@@ -410,8 +397,8 @@ struct FTempMesh
 					{
 						referenceMode = uvHead->GetReferenceMode();
 						mappingMode = uvHead->GetMappingMode();
-						int mapIndex = referenceMode == FbxLayerElement::eByControlPoint ? cpIndex : tmpIndex;
-						int valIndex = mappingMode == FbxLayerElement::eDirect ? mapIndex : uvHead->GetIndexArray().GetAt(mapIndex);
+						int mapIndex = referenceMode == FbxLayerElement::eDirect ? cpIndex : tmpIndex;
+						int valIndex = mappingMode == FbxLayerElement::eByControlPoint ? mapIndex : uvHead->GetIndexArray().GetAt(mapIndex);
 						vert.TexCoords = ToVector2(uvHead->GetDirectArray().GetAt(valIndex));
 					}
 
@@ -421,7 +408,7 @@ struct FTempMesh
 					//	referenceMode = vcHead->GetReferenceMode();
 					//	mappingMode = vcHead->GetMappingMode();
 					//	int mapIndex = referenceMode == FbxLayerElement::eByControlPoint ? cpIndex : tmpIndex;
-					//	int valIndex = mappingMode == FbxLayerElement::eDirect ? mapIndex : vcHead->GetIndexArray().GetAt(mapIndex);
+					//	int valIndex = mappingMode == FbxLayerElement::eByControlPoint ? mapIndex : vcHead->GetIndexArray().GetAt(mapIndex);
 					//	tri.Colors[idx] = ToVector2(vcHead->GetDirectArray().GetAt(valIndex));
 					//}
 				}
@@ -433,8 +420,46 @@ struct FTempMesh
 					ControlPoints.size(), BlendIndices.size(), BlendWeights.size());
 			}
 
+			// 标准化蒙皮权重
+			ProcessBlendWeight();
+
 			// 顶点坐标转换到本地空间
 			ProcessSkeletalVertex();
+		}
+	}
+
+	void ProcessBlendWeight()
+	{
+		for (uint32 i = 0; i < BlendWeights.size(); ++i)
+		{
+			auto& indices = BlendIndices[i];
+			auto& weights = BlendWeights[i];
+			float w = 0.f;
+			for (uint32 j = 0; j < 4; ++j)
+			{
+				if (indices[j] != -1)
+				{
+					w += weights[j];
+				}
+				else
+				{
+					break;
+				}
+			}
+
+			assert(!IsZero(w));
+
+			for (uint32 j = 0; j < 4; ++j)
+			{
+				if (indices[j] != -1)
+				{
+					weights[j] /= w;
+				}
+				else
+				{
+					break;
+				}
+			}
 		}
 	}
 
@@ -452,6 +477,7 @@ struct FTempMesh
 #endif
 
 		FPoseMapAlias globalPose;
+		Poses[K_INITIAL_POSE] = DefaultPose;
 		auto& initialPose = Poses[K_INITIAL_POSE];
 
 		LostCore::FFloat4x4 globalMat;
@@ -463,9 +489,6 @@ struct FTempMesh
 			[&](const pair<string, int32>& elem) {inverseMap[elem.second] = elem.first; });
 
 		ControlPoints2.resize(ControlPoints.size());
-#if STORE_FBX_CONTROLPOINT
-		FbxControlPoints2.resize(ControlPoints.size());
-#endif
 
 		for (uint32 vertIndex = 0; vertIndex < ControlPoints.size(); ++vertIndex)
 		{
@@ -476,12 +499,13 @@ struct FTempMesh
 			FFloat4x4 mat2;
 			memset(&mat2, 0, sizeof(mat2));
 			float w = 0.f;
+
 			for (uint32 j = 0; j < MAX_BONES_PER_VERTEX; ++j)
 			{
-				auto index = (int32)floor(indices[j] + SSmallFloat2);
+				auto index = indices[j];
 				auto val = weights[j];
 
-				if (index == -1 || val < SSmallFloat2)
+				if (index == -1)
 				{
 					break;
 				}
@@ -502,7 +526,7 @@ struct FTempMesh
 
 				/*******************************/
 
-				FbxAMatrix tmp = SkelAMatrix[index];
+				FbxAMatrix tmp = SkelAMatrix[n];
 				AMatrixScale(tmp, val);
 
 				AMatrixAdd(mat, tmp);
@@ -516,6 +540,14 @@ struct FTempMesh
 #if TEST_SOFT_SKINNED
 			skinned0[vertIndex] = mat2.ApplyPoint(ControlPoints2[vertIndex]);
 #endif
+
+#ifdef _DEBUG
+			if (vertIndex == 817)
+			{
+				printf("");
+			}
+#endif
+
 			if (LinkMode == FbxCluster::eNormalize)
 			{
 				ControlPoints2[vertIndex] *= 1.f/w;
@@ -524,19 +556,6 @@ struct FTempMesh
 			{
 				ControlPoints2[vertIndex] += ControlPoints[vertIndex] * (1.f - w);
 			}
-
-#if STORE_FBX_CONTROLPOINT
-			auto& vert = FbxControlPoints2[vertIndex];
-			vert = mat.MultT(FbxControlPoints[vertIndex]);
-			if (LinkMode == FbxCluster::eNormalize)
-			{
-				vert /= w;
-			}
-			else if (LinkMode == FbxCluster::eTotalOne)
-			{
-				vert += FbxControlPoints[vertIndex] * (1.f - w);
-			}
-#endif
 		}
 
 #if TEST_SOFT_SKINNED
@@ -603,8 +622,8 @@ struct FTempMesh
 				{
 					const auto& vert = Triangles[i].Vertices[j];
 
-#if STORE_FBX_CONTROLPOINT
-					Serialize(stream, (uint8*)&(ToVector3(FbxControlPoints2[vert.ControlPointIndices])), sizeof(FFloat3));
+#if EXPORT_ORIGINAL_GEOMETRY
+					stream << ControlPoints[vert.ControlPointIndices];
 #elif TEST_SOFT_SKINNED
 					stream << SkinnedPts[vert.ControlPointIndices];
 #else
@@ -756,10 +775,13 @@ public:
 #endif
 
 		FbxSystemUnit sysUnit = SdkScene->GetGlobalSettings().GetSystemUnit();
-		if (sysUnit.GetScaleFactor() != 1.0)
+		auto p0 = sysUnit.GetMultiplier();
+		auto p1 = sysUnit.GetScaleFactorAsString();
+		//if (sysUnit.GetScaleFactor() != 100.0)
 		{
 			//The unit in this example is centimeter.
-			FbxSystemUnit::cm.ConvertScene(SdkScene);
+			//FbxSystemUnit::m.ConvertScene(SdkScene);
+			//FbxSystemUnit::km.ConvertScene(SdkScene);
 		}
 		/*************************************************************/
 
