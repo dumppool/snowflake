@@ -66,7 +66,7 @@ bool LostCore::FBasicModel::Load(IRenderContext * rc, const char* url)
 		Root.LoadSkeleton(data.Skeleton);
 
 		if (data.Poses.size() > 0)
-		Root.LoadLocalPose(data.Poses.begin()->second);
+		Root.LoadLocalPose(data.Poses[K_INITIAL_POSE]);
 
 		SkeletonIndexMap = data.SkeletonIndexMap;
 
@@ -176,7 +176,7 @@ void LostCore::FBasicModel::Draw(IRenderContext * rc, float sec)
 	}
 }
 
-void LostCore::FBasicModel::SetWorldMatrix(const FMatrix & world)
+void LostCore::FBasicModel::SetWorldMatrix(const FFloat4x4 & world)
 {
 	Matrices.World = world;
 }

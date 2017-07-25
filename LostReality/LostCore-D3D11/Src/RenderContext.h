@@ -26,8 +26,8 @@ namespace D3D11
 		virtual void Fini() override;
 		virtual bool EnableShadeModel(LostCore::EShadeModel sm)override;
 		virtual LostCore::EShadeModel GetShadeModel() const override;
-		virtual LostCore::FMatrix GetViewProjectMatrix() const override;
-		virtual void SetViewProjectMatrix(const LostCore::FMatrix & vp) override;
+		virtual LostCore::FFloat4x4 GetViewProjectMatrix() const override;
+		virtual void SetViewProjectMatrix(const LostCore::FFloat4x4 & vp) override;
 		virtual LostCore::EContextID GetContextID() const override;
 		virtual const char * GetContextString() const override;
 		virtual void BeginFrame(float sec) override;

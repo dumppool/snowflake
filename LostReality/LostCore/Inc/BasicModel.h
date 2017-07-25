@@ -36,7 +36,7 @@ namespace LostCore
 		virtual void Draw(IRenderContext * rc, float sec) override;
 
 	public:
-		virtual void SetWorldMatrix(const FMatrix& world);
+		virtual void SetWorldMatrix(const FFloat4x4& world);
 
 	protected:
 		IPrimitiveGroup* Primitive;
@@ -44,8 +44,8 @@ namespace LostCore
 
 		struct 
 		{
-			FMatrix World;
-			array<FMatrix, MAX_BONES_PER_BATCH> Bones;
+			FFloat4x4 World;
+			array<FFloat4x4, MAX_BONES_PER_BATCH> Bones;
 		} Matrices;
 
 		map<string, int32> SkeletonIndexMap;

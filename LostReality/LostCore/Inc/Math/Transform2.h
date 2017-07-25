@@ -19,18 +19,18 @@ namespace LostCore
 	{
 	protected:
 		FQuat Orientation;
-		FVec3 Translation;
-		FVec3 Scale;
+		FFloat3 Translation;
+		FFloat3 Scale;
 
 	public:
 		INLINE FTransformNonVectorized()
 			: Orientation(FQuat::GetIdentity())
-			, Translation(FVec3::GetZero())
+			, Translation(FFloat3::GetZero())
 			, Scale(1.f, 1.f, 1.f)
 		{
 		}
 
-		INLINE explicit FTransformNonVectorized(const FVec3& translation)
+		INLINE explicit FTransformNonVectorized(const FFloat3& translation)
 			: Orientation(FQuat::GetIdentity())
 			, Translation(translation)
 			, Scale(1.f, 1.f, 1.f)
@@ -39,12 +39,12 @@ namespace LostCore
 
 		INLINE explicit FTransformNonVectorized(const FQuat& orientation)
 			: Orientation(orientation)
-			, Translation(FVec3::GetZero())
+			, Translation(FFloat3::GetZero())
 			, Scale(1.f, 1.f, 1.f)
 		{
 		}
 
-		INLINE FTransformNonVectorized(const FQuat& orientation, const FVec3& translation, const FVec3& scale = FVec3(1.f, 1.f, 1.f))
+		INLINE FTransformNonVectorized(const FQuat& orientation, const FFloat3& translation, const FFloat3& scale = FFloat3(1.f, 1.f, 1.f))
 			: Orientation(orientation)
 			, Translation(translation)
 			, Scale(scale)
@@ -54,8 +54,8 @@ namespace LostCore
 		INLINE FTransformNonVectorized GetInversed() const
 		{
 			FQuat orientation = Orientation.GetInversed();
-			FVec3 scale = FVec3::GetReciprocal(Scale);
-			FVec3 translation(orientation.RotateVector(scale * -Translation));
+			FFloat3 scale = FFloat3::GetReciprocal(Scale);
+			FFloat3 translation(orientation.RotateVector(scale * -Translation));
 			return FTransformNonVectorized(orientation, translation, scale);
 		}
 
@@ -87,20 +87,20 @@ namespace LostCore
 			return *this;
 		}
 
-		INLINE FVec3 TranformVector(const FVec3& vec) const
+		INLINE FFloat3 TranformVector(const FFloat3& vec) const
 		{
 			return (Orientation.RotateVector(vec*Scale));
 		}
 
-		INLINE FVec3 TransformPosition(const FVec3& vec) const
+		INLINE FFloat3 TransformPosition(const FFloat3& vec) const
 		{
 			return (Orientation.RotateVector(vec*Scale) + Translation);
 		}
 
-		INLINE FMatrix ToMatrix(bool withScale = true) const
+		INLINE FFloat4x4 ToMatrix(bool withScale = true) const
 		{
-			FMatrix matrix;
-			FVec3 scale(withScale ? Scale : FVec3(1.f, 1.f, 1.f));
+			FFloat4x4 matrix;
+			FFloat3 scale(withScale ? Scale : FFloat3(1.f, 1.f, 1.f));
 
 			matrix.M[3][0] = Translation.X;
 			matrix.M[3][1] = Translation.Y;
@@ -144,12 +144,12 @@ namespace LostCore
 			return matrix;
 		}
 
-		INLINE FMatrix ToMatrixNoScale() const
+		INLINE FFloat4x4 ToMatrixNoScale() const
 		{
 			return ToMatrix(false);
 		}
 
-		INLINE FTransformNonVectorized& FromMatrix(const FMatrix& matrix)
+		INLINE FTransformNonVectorized& FromMatrix(const FFloat4x4& matrix)
 		{
 			Scale = matrix.GetScale();
 			Orientation = matrix.GetOrientation();

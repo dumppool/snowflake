@@ -65,7 +65,7 @@ bool FBasicScene::Load(IRenderContext * rc, const char* url)
 			std::string p = node.find("path").value();
 			m->Load(rc, p.c_str());
 			AddModel(m);
-			FMatrix mat;
+			FFloat4x4 mat;
 			//memcpy(&mat, &(node.find("transform").value()[0]), sizeof(mat));
 
 			for (int y = 0; y < 4; ++y)

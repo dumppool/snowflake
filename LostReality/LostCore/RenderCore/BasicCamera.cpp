@@ -14,11 +14,11 @@ using namespace LostCore;
 
 LostCore::FBasicCamera::FBasicCamera()
 	: NearPlane(0.1f)
-	, FarPlane(1000.f)
+	, FarPlane(1000000.f)
 	, Fov(90.f)
 	, AspectRatio(1280.f/720.f)
 	, ViewEuler()
-	, ViewPosition(0.f, 0.f, -5.f)
+	, ViewPosition(0.f, 0.f, -600.f)
 {
 }
 
@@ -46,7 +46,7 @@ void LostCore::FBasicCamera::Draw(IRenderContext * rc, float sec)
 
 }
 
-void LostCore::FBasicCamera::AddPositionWorld(const FVec3& pos)
+void LostCore::FBasicCamera::AddPositionWorld(const FFloat3& pos)
 {
 	FQuat orientation;
 	orientation.FromEuler(ViewEuler);
@@ -55,12 +55,12 @@ void LostCore::FBasicCamera::AddPositionWorld(const FVec3& pos)
 	ViewPosition = world.TransformPosition(pos);
 }
 
-void LostCore::FBasicCamera::AddEulerWorld(const FVec3& euler)
+void LostCore::FBasicCamera::AddEulerWorld(const FFloat3& euler)
 {
 	ViewEuler += euler;
 }
 
-void LostCore::FBasicCamera::AddPositionLocal(const FVec3& pos)
+void LostCore::FBasicCamera::AddPositionLocal(const FFloat3& pos)
 {
 	FQuat orientation;
 	orientation.FromEuler(ViewEuler);
@@ -69,7 +69,7 @@ void LostCore::FBasicCamera::AddPositionLocal(const FVec3& pos)
 	ViewPosition = world.TransformPosition(pos);
 }
 
-void LostCore::FBasicCamera::AddEulerLocal(const FVec3& euler)
+void LostCore::FBasicCamera::AddEulerLocal(const FFloat3& euler)
 {
 	ViewEuler += euler;
 }
@@ -114,48 +114,48 @@ float FBasicCamera::GetAspectRatio() const
 	return AspectRatio;
 }
 
-FMatrix LostCore::FBasicCamera::GetViewMatrix() const
+FFloat4x4 LostCore::FBasicCamera::GetViewMatrix() const
 {
 	FQuat orientation;
 	orientation.FromEuler(ViewEuler);
 
-	FVec3 formattedEuler = orientation.Euler();
+	FFloat3 formattedEuler = orientation.Euler();
 	
 	//FTransform world(orientation, ViewPosition);
-	FMatrix world, world34;
+	FFloat4x4 world, world34;
 	world.SetRotateAndOrigin(orientation, ViewPosition);
 	world34.SetRotateAndOrigin(orientation, ViewPosition);
 	//return world.GetInversed().ToMatrix();
 
-	FMatrix matRot, matTrans;
+	FFloat4x4 matRot, matTrans;
 	matRot.SetRotate(orientation);
 	matTrans.SetTranslate(ViewPosition);
-	FMatrix world2 = matRot * matTrans;
+	FFloat4x4 world2 = matRot * matTrans;
 
-	FVec3 pt1 = world.ApplyPoint(FVec3(0.f, 0.f, 0.f));
-	FVec3 pt2 = world2.ApplyPoint(FVec3(0.f, 0.f, 0.f));
+	FFloat3 pt1 = world.ApplyPoint(FFloat3(0.f, 0.f, 0.f));
+	FFloat3 pt2 = world2.ApplyPoint(FFloat3(0.f, 0.f, 0.f));
 
-	FVec3 right = orientation.GetRightVector();
-	FVec3 up = orientation.GetUpVector();
-	FVec3 direction = orientation.GetForwardVector();
+	FFloat3 right = orientation.GetRightVector();
+	FFloat3 up = orientation.GetUpVector();
+	FFloat3 direction = orientation.GetForwardVector();
 	
 	world.Invert();
 	world34.Invert34();
 
 	/*************************************************/
 	const float s2 = Sqrt(2.f)*0.5;
-	FVec3 src(s2, 0.f, s2);
-	FQuat rot0; rot0.FromEuler(FVec3(0.f, 45.f, 0.f));
-	FVec3 euler0 = rot0.Euler();
-	FMatrix mat0; mat0.SetRotate(rot0);
-	FVec3 dst = mat0.ApplyPoint(src);
+	FFloat3 src(s2, 0.f, s2);
+	FQuat rot0; rot0.FromEuler(FFloat3(0.f, 45.f, 0.f));
+	FFloat3 euler0 = rot0.Euler();
+	FFloat4x4 mat0; mat0.SetRotate(rot0);
+	FFloat3 dst = mat0.ApplyPoint(src);
 
-	FMatrix mat1; mat1.SetTranslate(FVec3(0.f, 0.f, 1.f));
+	FFloat4x4 mat1; mat1.SetTranslate(FFloat3(0.f, 0.f, 1.f));
 	mat0 = mat0 * mat1;
 	dst = mat0.ApplyPoint(src);
 
-	FMatrix mat2; mat2.M[0][0] = mat2.M[2][0] = mat2.M[2][2] = s2; mat2.M[0][2] = mat2.M[3][0] = mat2.M[3][2] = -s2;
-	dst = mat2.ApplyPoint(FVec3(0.f, 0.f, 0.f));
+	FFloat4x4 mat2; mat2.M[0][0] = mat2.M[2][0] = mat2.M[2][2] = s2; mat2.M[0][2] = mat2.M[3][0] = mat2.M[3][2] = -s2;
+	dst = mat2.ApplyPoint(FFloat3(0.f, 0.f, 0.f));
 	dst = mat2.ApplyPoint(src);
 	mat2.Invert();
 	dst = mat2.ApplyPoint(src);
@@ -164,7 +164,7 @@ FMatrix LostCore::FBasicCamera::GetViewMatrix() const
 	return world;
 }
 
-FMatrix LostCore::FBasicCamera::GetProjectMatrix() const
+FFloat4x4 LostCore::FBasicCamera::GetProjectMatrix() const
 {
 	float htan = std::tan(Fov * SD2RConstant * 0.5f);
 	if (IsEqual(0.f, htan))
@@ -175,7 +175,7 @@ FMatrix LostCore::FBasicCamera::GetProjectMatrix() const
 	float h = 1 / htan;
 	float w = h / AspectRatio;
 	float q = FarPlane / (FarPlane - NearPlane);
-	FMatrix result;
+	FFloat4x4 result;
 	memset(&result, 0, sizeof(result));
 	result.M[0][0] = w;
 	result.M[1][1] = h;
@@ -186,7 +186,7 @@ FMatrix LostCore::FBasicCamera::GetProjectMatrix() const
 	return result;
 }
 
-FMatrix LostCore::FBasicCamera::GetViewProjectMatrix() const
+FFloat4x4 LostCore::FBasicCamera::GetViewProjectMatrix() const
 {
 	return GetViewMatrix() * GetProjectMatrix();
 }

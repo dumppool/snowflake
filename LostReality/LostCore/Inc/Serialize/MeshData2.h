@@ -27,15 +27,15 @@ namespace LostCore
 
 		uint32 VertexMagic;
 
-		vector<FVec3> Coordinates;
-		vector<FVec2> UV;
-		vector<FVec3> Normal;
-		vector<FVec3> Tangent;
-		vector<FVec3> Binormal;
-		vector<FVec3> VertexColor;
+		vector<FFloat3> Coordinates;
+		vector<FFloat2> UV;
+		vector<FFloat3> Normal;
+		vector<FFloat3> Tangent;
+		vector<FFloat3> Binormal;
+		vector<FFloat3> VertexColor;
 
-		vector<FVec4> BlendWeights;
-		vector<FVec4> BlendIndices;
+		vector<FFloat4> BlendWeights;
+		vector<FSInt4> BlendIndices;
 
 		FPoseMap DefaultPose;
 
@@ -232,7 +232,7 @@ namespace LostCore
 		for (uint32 i = 0; i < defaultPoseSz; ++i)
 		{
 			string boneName;
-			FMatrix boneMatrix;
+			FFloat4x4 boneMatrix;
 			stream >> boneName >> boneMatrix;
 			data.DefaultPose[boneName] = boneMatrix;
 		}

@@ -15,8 +15,8 @@ namespace LostCore
 	class FSkelPoseTree
 	{
 		string Name;
-		FMatrix Local;
-		FMatrix World;
+		FFloat4x4 Local;
+		FFloat4x4 World;
 		std::vector<FSkelPoseTree> Children;
 
 	public:
@@ -26,7 +26,7 @@ namespace LostCore
 		void LoadSkeleton(const FBone& skelRoot);
 		void LoadLocalPose(const FPoseMap& pose);
 
-		void UpdateWorldMatrix(const FMatrix& parentWorld);
+		void UpdateWorldMatrix(const FFloat4x4& parentWorld);
 		void GetWorldPose(FPoseMap& pose);
 
 		//friend FBinaryIO& operator<<(FBinaryIO& stream, const FSkelPoseData& data);

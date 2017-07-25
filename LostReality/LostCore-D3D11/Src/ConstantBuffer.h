@@ -68,7 +68,7 @@ namespace D3D11
 			float ScreenHeight;
 			float ScreenWidthRcp;
 			float ScreenHeightRcp;
-			LostCore::FMatrix ViewProject;
+			LostCore::FFloat4x4 ViewProject;
 		};
 
 		FConstantBufferRegister0() : FConstantBuffer(sizeof(FParam), false, 0)
@@ -82,7 +82,7 @@ namespace D3D11
 	{
 		struct FParam
 		{
-			LostCore::FMatrix Mat;
+			LostCore::FFloat4x4 Mat;
 		};
 
 		FConstantBufferMatrix() : FConstantBuffer(sizeof(FParam), false, 1)
@@ -111,8 +111,8 @@ namespace D3D11
 	{
 		struct FParam
 		{
-			LostCore::FMatrix World;
-			array<LostCore::FMatrix, MAX_BONES_PER_BATCH> Bones;
+			LostCore::FFloat4x4 World;
+			array<LostCore::FFloat4x4, MAX_BONES_PER_BATCH> Bones;
 		};
 
 		FConstantBufferSkinned() : FConstantBuffer(sizeof(FParam), false, 1)

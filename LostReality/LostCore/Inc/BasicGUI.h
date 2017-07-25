@@ -24,15 +24,15 @@ namespace LostCore
 		struct FParam
 		{
 			// 大小尺寸，像素
-			FVec2 Size;
+			FFloat2 Size;
 
 			// 相对父面板的位置，单位，像素
-			FVec2 Origin;
+			FFloat2 Origin;
 
 			// 相对父面板的缩放，(0.f, 1.f]
 			float Scale;
 
-			FVec3 Unused;
+			FFloat3 Unused;
 
 			FParam() : Size(0.f, 0.f), Origin(0.f, 0.f), Scale(1.f) { assert(sizeof(FParam) == 8 * sizeof(float)); }
 		};
@@ -40,24 +40,24 @@ namespace LostCore
 	public:
 		FRect();
 
-		void SetOrigin(const FVec2& origin);
-		FVec2 GetOrigin() const;
+		void SetOrigin(const FFloat2& origin);
+		FFloat2 GetOrigin() const;
 
 		void SetScale(float val);
 		float GetScale() const;
 
-		void SetSize(const FVec2& size);
-		FVec2 GetSize() const;
+		void SetSize(const FFloat2& size);
+		FFloat2 GetSize() const;
 
 		//************************************
 		// Method:    HitTest 点击测试
 		// FullName:  lostvr::FRect::HitTest
 		// Access:    public 
 		// Returns:   bool 点击成功返回true，否则false
-		// Parameter: const FVec2& ppos 测试目标位置，父面板空间坐标
+		// Parameter: const FFloat2& ppos 测试目标位置，父面板空间坐标
 		// Parameter: FRect** result 如果不为空，测试成功后写入被成功点击的面板
 		//************************************
-		bool HitTest(const FVec2& ppos, FRect** result) const;
+		bool HitTest(const FFloat2& ppos, FRect** result) const;
 
 		//************************************
 		// Method:    AddChild 添加子面板，然后根据深度重新排序
@@ -88,8 +88,8 @@ namespace LostCore
 		virtual void ReconstructPrimitive(IRenderContext * rc);
 
 	private:
-		bool HitTestPrivate(const FVec2& ppos, FRect** result) const;
-		void GetLocalPosition(const FVec2& ppos, FVec2& cpos) const;
+		bool HitTestPrivate(const FFloat2& ppos, FRect** result) const;
+		void GetLocalPosition(const FFloat2& ppos, FFloat2& cpos) const;
 		void DrawPrivate(IRenderContext* rc, float sec);
 
 		FParam Param;
@@ -104,7 +104,7 @@ namespace LostCore
 		std::vector<FRect*> Children;
 
 		IPrimitiveGroup* RectPrimitive;
-		FVec2 RectPrimitiveSize;
+		FFloat2 RectPrimitiveSize;
 		IMaterial* RectMaterial;
 	};
 

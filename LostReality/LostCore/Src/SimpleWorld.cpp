@@ -79,9 +79,9 @@ namespace LostCore
 
 	void FSimpleScene::Draw(IRenderContext * rc, float sec)
 	{
-		FTransform world(FVec3(0.f, 0.f, 5.f));
-		FMatrix mat = world.ToMatrix();
-		AMaterial->UpdateConstantBuffer(rc, (const void*)&mat, sizeof(FMatrix));
+		FTransform world(FFloat3(0.f, 0.f, 5.f));
+		FFloat4x4 mat = world.ToMatrix();
+		AMaterial->UpdateConstantBuffer(rc, (const void*)&mat, sizeof(FFloat4x4));
 
 		FBasicScene::Draw(rc, sec);
 	}
@@ -97,27 +97,27 @@ namespace LostCore
 			return false;
 		}
 
-		__declspec(align(16)) struct _Vertex { FVec3 RGB; FVec3 XYZ; FVec3 N; FVec2 UV; };
+		__declspec(align(16)) struct _Vertex { FFloat3 RGB; FFloat3 XYZ; FFloat3 N; FFloat2 UV; };
 		float scaler = 0.5f;
 
 		// Mesh vertices
 		const _Vertex vertices[] =
 		{
-			{ FVec3(1.f, 0.f, 0.f),	FVec3(0.f, 0.f, -scaler),	FVec3(0.5f, -0.5f, -0.5f),	FVec2(0.0f, 1.0f) },		// center
-			{ FVec3(1.f, 0.f, 0.f),	FVec3(0.f, scaler, 0.f),	FVec3(0.5f, -0.5f, -0.5f),	FVec2(0.0f, 0.0f) },		// top
-			{ FVec3(1.f, 0.f, 0.f),	FVec3(scaler, -scaler, 0.f),FVec3(0.5f, -0.5f, -0.5f),	FVec2(1.0f, 0.0f) },		// bottom right
+			{ FFloat3(1.f, 0.f, 0.f),	FFloat3(0.f, 0.f, -scaler),	FFloat3(0.5f, -0.5f, -0.5f),	FFloat2(0.0f, 1.0f) },		// center
+			{ FFloat3(1.f, 0.f, 0.f),	FFloat3(0.f, scaler, 0.f),	FFloat3(0.5f, -0.5f, -0.5f),	FFloat2(0.0f, 0.0f) },		// top
+			{ FFloat3(1.f, 0.f, 0.f),	FFloat3(scaler, -scaler, 0.f),FFloat3(0.5f, -0.5f, -0.5f),	FFloat2(1.0f, 0.0f) },		// bottom right
 
-			{ FVec3(0.f, 0.f, 0.f),	FVec3(0.f, scaler, 0.f),	FVec3(0.f, 0.f, 1.f),		FVec2(0.0f, 0.0f) },		// top
-			{ FVec3(0.f, 0.f, 0.f),	FVec3(-scaler, -scaler, 0), FVec3(0.f, 0.f, 1.f),		FVec2(1.0f, 1.0f) },		// bottom left
-			{ FVec3(0.f, 0.f, 0.f),	FVec3(scaler, -scaler, 0.f),FVec3(0.f, 0.f, 1.f),		FVec2(1.0f, 0.0f) },		// bottom right
+			{ FFloat3(0.f, 0.f, 0.f),	FFloat3(0.f, scaler, 0.f),	FFloat3(0.f, 0.f, 1.f),		FFloat2(0.0f, 0.0f) },		// top
+			{ FFloat3(0.f, 0.f, 0.f),	FFloat3(-scaler, -scaler, 0), FFloat3(0.f, 0.f, 1.f),		FFloat2(1.0f, 1.0f) },		// bottom left
+			{ FFloat3(0.f, 0.f, 0.f),	FFloat3(scaler, -scaler, 0.f),FFloat3(0.f, 0.f, 1.f),		FFloat2(1.0f, 0.0f) },		// bottom right
 
-			{ FVec3(0.f, 1.f, 0.f),	FVec3(0.f, scaler, 0.f),	FVec3(-0.5f, -0.5f, -0.5f),	FVec2(0.0f, 0.0f) },		// top
-			{ FVec3(0.f, 1.f, 0.f),	FVec3(0.f, 0.f, -scaler),	FVec3(-0.5f, -0.5f, -0.5f), FVec2(0.0f, 1.0f) },		// center
-			{ FVec3(0.f, 1.f, 0.f),	FVec3(-scaler, -scaler, 0), FVec3(-0.5f, -0.5f, -0.5f), FVec2(1.0f, 1.0f) },		// bottom left
+			{ FFloat3(0.f, 1.f, 0.f),	FFloat3(0.f, scaler, 0.f),	FFloat3(-0.5f, -0.5f, -0.5f),	FFloat2(0.0f, 0.0f) },		// top
+			{ FFloat3(0.f, 1.f, 0.f),	FFloat3(0.f, 0.f, -scaler),	FFloat3(-0.5f, -0.5f, -0.5f), FFloat2(0.0f, 1.0f) },		// center
+			{ FFloat3(0.f, 1.f, 0.f),	FFloat3(-scaler, -scaler, 0), FFloat3(-0.5f, -0.5f, -0.5f), FFloat2(1.0f, 1.0f) },		// bottom left
 
-			{ FVec3(0.f, 0.f, 1.f),	FVec3(-scaler, -scaler, 0), FVec3(0.f, -0.5f, -0.5f),	FVec2(1.0f, 1.0f) },		// bottom left
-			{ FVec3(0.f, 0.f, 1.f),	FVec3(0.f, 0.f, -scaler),	FVec3(0.f, -0.5f, -0.5f),	FVec2(0.0f, 1.0f) },		// center
-			{ FVec3(0.f, 0.f, 1.f),	FVec3(scaler, -scaler, 0.f),FVec3(0.f, -0.5f, -0.5f),	FVec2(1.0f, 0.0f) },		// bottom right
+			{ FFloat3(0.f, 0.f, 1.f),	FFloat3(-scaler, -scaler, 0), FFloat3(0.f, -0.5f, -0.5f),	FFloat2(1.0f, 1.0f) },		// bottom left
+			{ FFloat3(0.f, 0.f, 1.f),	FFloat3(0.f, 0.f, -scaler),	FFloat3(0.f, -0.5f, -0.5f),	FFloat2(0.0f, 1.0f) },		// center
+			{ FFloat3(0.f, 0.f, 1.f),	FFloat3(scaler, -scaler, 0.f),FFloat3(0.f, -0.5f, -0.5f),	FFloat2(1.0f, 0.0f) },		// bottom right
 		};
 
 		// Mesh indices

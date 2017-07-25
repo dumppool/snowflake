@@ -35,7 +35,6 @@ int main(int argc, char** argv)
 		}
 	}
 
-	Importer::SOptions.bFromUnreal = true;
 	Importer::SOptions.bImportTangent = false;
 	if (!src.empty() && !dst.empty())
 	{

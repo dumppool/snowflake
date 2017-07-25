@@ -126,12 +126,12 @@ EShadeModel D3D11::FRenderContext::GetShadeModel() const
 	return ShadeModel;
 }
 
-FMatrix D3D11::FRenderContext::GetViewProjectMatrix() const
+FFloat4x4 D3D11::FRenderContext::GetViewProjectMatrix() const
 {
 	return Param.ViewProject;
 }
 
-void D3D11::FRenderContext::SetViewProjectMatrix(const FMatrix & vp)
+void D3D11::FRenderContext::SetViewProjectMatrix(const FFloat4x4 & vp)
 {
 	Param.ViewProject = vp;
 }

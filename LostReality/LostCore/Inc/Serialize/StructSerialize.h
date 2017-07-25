@@ -84,10 +84,10 @@ namespace LostCore
 	struct FMatrixNode
 	{
 		string Name;
-		FMatrix Matrix;
+		FFloat4x4 Matrix;
 	};
 
-	typedef map<string, FMatrix> FPoseMap;
+	typedef map<string, FFloat4x4> FPoseMap;
 	typedef TTreeNode<FMatrixNode> FPoseTree;
 
 

@@ -467,10 +467,10 @@ EReturnCode D3D11::CreatePrimitiveIndex(ID3D11Device* device, const void* buf, u
 //	// Mesh vertices
 //	const MeshVertex rectVertices[4] =
 //	{
-//		{ FVec3(-halfw, -halfh, 0.0f),	FVec2(0.0f, 1.0f) },			// bottom left
-//		{ FVec3(-halfw, halfh, 0.0f),	FVec2(0.0f, 0.0f) },			// top left
-//		{ FVec3(halfw, halfh, 0.0f),	FVec2(1.0f, 0.0f) },			// top right
-//		{ FVec3(halfw, -halfh, 0.0f),	FVec2(1.0f, 1.0f) },			// bottom right
+//		{ FFloat3(-halfw, -halfh, 0.0f),	FFloat2(0.0f, 1.0f) },			// bottom left
+//		{ FFloat3(-halfw, halfh, 0.0f),	FFloat2(0.0f, 0.0f) },			// top left
+//		{ FFloat3(halfw, halfh, 0.0f),	FFloat2(1.0f, 0.0f) },			// top right
+//		{ FFloat3(halfw, -halfh, 0.0f),	FFloat2(1.0f, 1.0f) },			// bottom right
 //	};
 //
 //	// Mesh indices

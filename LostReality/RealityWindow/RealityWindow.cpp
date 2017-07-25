@@ -177,7 +177,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 		if (bMove)
 		{
-			FVec3 rotate;
+			FFloat3 rotate;
 			rotate.Yaw = moveX * s_factor;
 			rotate.Pitch = moveY * s_factor;
 			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddEulerWorld(rotate);
@@ -238,22 +238,22 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		switch (key)
 		{
 		case 'W':
-			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddPositionWorld(FVec3(0.f, 0.f, s_step));
+			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddPositionWorld(FFloat3(0.f, 0.f, s_step));
 			break;
 		case 'S':
-			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddPositionWorld(FVec3(0.f, 0.f, -s_step));
+			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddPositionWorld(FFloat3(0.f, 0.f, -s_step));
 			break;
 		case 'A':
-			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddPositionWorld(FVec3(-s_step, 0.f, 0.f));
+			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddPositionWorld(FFloat3(-s_step, 0.f, 0.f));
 			break;
 		case 'D':
-			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddPositionWorld(FVec3(s_step, 0.f, 0.f));
+			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddPositionWorld(FFloat3(s_step, 0.f, 0.f));
 			break;
 		case 'Q':
-			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddPositionWorld(FVec3(0.f, -s_step, 0.f));
+			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddPositionWorld(FFloat3(0.f, -s_step, 0.f));
 			break;
 		case 'E':
-			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddPositionWorld(FVec3(0.f, s_step, 0.f));
+			TESTCASE::GetRenderSampleInstance()->GetCamera()->AddPositionWorld(FFloat3(0.f, s_step, 0.f));
 			break;
 		default:
 			break;

@@ -9,6 +9,8 @@
 
 #pragma once
 
+#define CONVERT_FROM_RIGHTHAND 1
+
 namespace Importer {
 
 	INLINE float SNUM(float val)
@@ -181,9 +183,9 @@ namespace Importer {
 		auto s = amatrix.GetS();
 		auto q = amatrix.GetQ();
 		
-		LostCore::FMatrix outMatrix;
-		LostCore::FVec3 t2(SNUM(t[0]), SNUM(-t[1]), SNUM(t[2]));
-		LostCore::FVec3 s2(SNUM(s[0]), SNUM(s[1]), SNUM(s[2]));
+		LostCore::FFloat4x4 outMatrix;
+		LostCore::FFloat3 t2(SNUM(t[0]), SNUM(-t[1]), SNUM(t[2]));
+		LostCore::FFloat3 s2(SNUM(s[0]), SNUM(s[1]), SNUM(s[2]));
 		LostCore::FQuat q2(SNUM(q[0]), SNUM(-q[1]), SNUM(q[2]), SNUM(-q[3]));
 		outMatrix.SetRotateAndOrigin(q2, t2, s2);
 
@@ -208,28 +210,41 @@ namespace Importer {
 		output = f4x4;
 	}
 
-	INLINE LostCore::FVec4 ToVector4(const FbxVector4& vec)
+	INLINE LostCore::FFloat4 ToVector4(const FbxVector4& vec)
 	{
-		LostCore::FVec4 output;
+		LostCore::FFloat4 output;
+#if CONVERT_FROM_RIGHTHAND
 		output.X = SNUM(vec[0]);
 		output.Y = SNUM(vec[1]);
 		output.Z = SNUM(-vec[2]);
 		output.W = SNUM(vec[3]);
+#else
+		output.X = SNUM(vec[0]);
+		output.Y = SNUM(vec[1]);
+		output.Z = SNUM(vec[2]);
+		output.W = SNUM(vec[3]);
+#endif
 		return output;
 	}
 
-	INLINE LostCore::FVec3 ToVector3(const FbxVector4& vec)
+	INLINE LostCore::FFloat3 ToVector3(const FbxVector4& vec)
 	{
-		LostCore::FVec3 output;
+		LostCore::FFloat3 output;
+#if CONVERT_FROM_RIGHTHAND
 		output.X = SNUM(vec[0]);
 		output.Y = SNUM(vec[1]);
 		output.Z = SNUM(-vec[2]);
+#else
+		output.X = SNUM(vec[0]);
+		output.Y = SNUM(vec[1]);
+		output.Z = SNUM(vec[2]);
+#endif
 		return output;
 	}
 
-	INLINE LostCore::FVec2 ToVector2(const FbxVector2& vec)
+	INLINE LostCore::FFloat2 ToVector2(const FbxVector2& vec)
 	{
-		LostCore::FVec2 output;
+		LostCore::FFloat2 output;
 		output.X = SNUM(vec[0]);
 		output.Y = SNUM(vec[1]);
 		return output;
@@ -238,19 +253,27 @@ namespace Importer {
 	INLINE LostCore::FQuat ToQuat(const FbxQuaternion& quat)
 	{
 		LostCore::FQuat output;
+#if CONVERT_FROM_RIGHTHAND
 		output.X = SNUM(quat[0]);
 		output.Y = SNUM(quat[1]);
 		output.Z = SNUM(-quat[2]);
 		output.W = SNUM(-quat[3]);
+#else
+		output.X = SNUM(quat[0]);
+		output.Y = SNUM(quat[1]);
+		output.Z = SNUM(quat[2]);
+		output.W = SNUM(quat[3]);
+#endif
 		return output;
 	}
 
-	INLINE LostCore::FMatrix ToMatrix(const FbxAMatrix& mat)
+	INLINE LostCore::FFloat4x4 ToMatrix(const FbxAMatrix& mat)
 	{
-		LostCore::FMatrix output;
+		LostCore::FFloat4x4 output;
 		for (int row = 0; row < 4; ++row)
 		{
 			auto vec = mat.GetRow(row);
+#if CONVERT_FROM_RIGHTHAND
 			if (row == 2)
 			{
 				output.M[row][0] = SNUM(-vec[0]);
@@ -265,6 +288,13 @@ namespace Importer {
 				output.M[row][2] = SNUM(-vec[2]);
 				output.M[row][3] = SNUM(vec[3]);
 			}
+#else
+			output.M[row][0] = SNUM(vec[0]);
+			output.M[row][1] = SNUM(vec[1]);
+			output.M[row][2] = SNUM(vec[2]);
+			output.M[row][3] = SNUM(vec[3]);
+#endif
+
 		}
 
 		return output;
@@ -332,13 +362,55 @@ namespace Importer {
 		return attrType == FbxNodeAttribute::eSkeleton || attrType == FbxNodeAttribute::eMesh || attrType == FbxNodeAttribute::eNull;
 	}
 
+	static FbxAMatrix GetGlobalMatrix(FbxNode* link, const FbxTime& time, FbxPose* pose, FbxAMatrix* parentGlobalMatrix = nullptr)
+	{
+		FbxAMatrix globalMatrix;
+		bool found = false;
+		if (pose != nullptr && pose->Find(link) > -1)
+		{
+			auto linkIndex = pose->Find(link);
+			if (pose->IsBindPose() || !pose->IsLocalMatrix(linkIndex))
+			{
+				globalMatrix = *(FbxAMatrix*)&(pose->GetMatrix(linkIndex));
+			}
+			else
+			{
+				FbxAMatrix parentMatrix;
+				parentMatrix.SetIdentity();
+				if (parentGlobalMatrix != nullptr)
+				{
+					parentMatrix = *parentGlobalMatrix;
+				}
+				else
+				{
+					if (link->GetParent() != nullptr)
+					{
+						parentMatrix = GetGlobalMatrix(link->GetParent(), time, pose);
+					}
+				}
+
+				FbxAMatrix localMatrix = *(FbxAMatrix*)&(pose->GetMatrix(linkIndex));
+				globalMatrix = parentMatrix * localMatrix;
+			}
+
+			found = true;
+		}
+
+		if (!found)
+		{
+			globalMatrix = link->EvaluateGlobalTransform(time);
+		}
+
+		return globalMatrix;
+	}
+
 	// no validation at all
 	static FbxAMatrix GetLinkMatrixFromPose(FbxPose* pose, FbxNode* link)
 	{
 		//if (pose != nullptr && link != nullptr && pose->Find(link) >= 0)
-		{
-			return *((FbxAMatrix*)&pose->GetMatrix(pose->Find(link)));
-		}
+		//return *((FbxAMatrix*)&pose->GetMatrix(pose->Find(link)));
+
+		return GetGlobalMatrix(link, FbxTime(), pose);
 
 		//FbxAMatrix mat;
 		//mat.SetIdentity();
@@ -398,7 +470,7 @@ namespace Importer {
 		return FbxAMatrix(t, r, s);
 	}
 
-	static FbxAMatrix GetInitialClusterMatrix(FbxMesh* mesh, FbxCluster* cluster)
+	static FbxAMatrix GetInitialClusterMatrix(FbxMesh* mesh, FbxCluster* cluster, FPoseMapAlias& pm)
 	{
 		if (mesh == nullptr || cluster == nullptr)
 		{
@@ -411,21 +483,53 @@ namespace Importer {
 		meshGeometry = GetGeometry(mesh->GetNode());
 		clusterLocal = meshGlobal * meshGeometry;
 		clusterLocal = clusterGlobal.Inverse() * clusterLocal;
+
+		pm[cluster->GetLink()->GetName()] = ToMatrix(clusterLocal);
+
+		//auto scene = mesh->GetScene();
+		//FbxAnimStack* currAnimStack = scene->GetSrcObject<FbxAnimStack>(0);
+		//FbxTakeInfo* takeInfo = scene->GetTakeInfo(currAnimStack->GetName());
+		//auto time = takeInfo->mLocalTimeSpan.GetStart();
+		//clusterLocal = GetGlobalMatrix(cluster->GetLink(), time, 
+		//	scene->GetPoseCount()>0?scene->GetPose(0):nullptr) * clusterLocal;
+
 		return clusterLocal;
 	}
 
-	static void BuildPoseTree(FbxPose* pose, FbxNode* link, FPoseTreeAlias& output)
+	static void GetGlobalPoseMap(const LostCore::FFloat4x4& parentMat, const FSkeletonTreeAlias& skelNode, FPoseMapAlias& localPose, FPoseMapAlias& globalPose)
+	{
+		globalPose[skelNode.Data] = localPose[skelNode.Data] * parentMat;
+		for (auto& child : skelNode.Children)
+		{
+			GetGlobalPoseMap(globalPose[skelNode.Data], child, localPose, globalPose);
+		}
+	}
+
+	static FbxAMatrix GetNodeLocalMatrix(FbxNode* node)
+	{
+		auto t = node->LclTranslation.Get();
+		auto s = node->LclScaling.Get();
+		auto r = node->LclRotation.Get();
+		return FbxAMatrix(t, r, s);
+	}
+
+	static void BuildPoseTree(FbxPose* pose, FbxNode* link, FPoseTreeAlias& output, FPoseTreeAlias& output2)
 	{
 		if (pose != nullptr && IsBone(link) && pose->Find(link)>=0)
 		{
 			for (int i = 0; i < link->GetChildCount(); ++i)
 			{
-				auto childData = FPoseTreeAlias();
-				BuildPoseTree(pose, link->GetChild(i), childData);
+				auto childData = (FPoseTreeAlias());
+				auto childData2 = (FPoseTreeAlias());
+				BuildPoseTree(pose, link->GetChild(i), childData, childData2);
 				output.AddChild(childData);
+				output2.AddChild(childData2);
 			}
 
 			auto mat = GetLinkMatrixFromPose(pose, link);
+			output2.Data.Matrix = ToMatrix(mat);
+			output2.Data.Name = link->GetName();
+
 			auto parentLink = link->GetParent();
 			if (parentLink != nullptr && IsBone(parentLink))
 			{
@@ -549,7 +653,7 @@ namespace Importer {
 			RegenerateIfNotFound,
 		};
 
-		bool bFromUnreal;
+		bool bConvertFromRH;
 
 		bool bImportNormal;
 		bool bImportTangent;

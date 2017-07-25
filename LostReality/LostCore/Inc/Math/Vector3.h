@@ -13,113 +13,122 @@
 
 namespace LostCore
 {
-	class FVec3NonVectorized
+	template <typename T>
+	class TVec3NonVectorized
 	{
 	public:
 		union
 		{
-			float X;
-			float Pitch;
+			T X;
+			T Pitch;
 		};
 		
 		union
 		{
-			float Y;
-			float Yaw;
+			T Y;
+			T Yaw;
 		};
 
 		union
 		{
-			float Z;
-			float Roll;
+			T Z;
+			T Roll;
 		};
 
 	public:
-		INLINE FVec3NonVectorized() : X(0.f), Y(0.f), Z(0.f) {}
-		INLINE FVec3NonVectorized(float x, float y, float z);
+		INLINE TVec3NonVectorized() : X(0.0), Y(0.0), Z(0.0) {}
+		INLINE TVec3NonVectorized(T x, T y, T z);
 
-		INLINE FVec3NonVectorized operator-() const;
-		INLINE FVec3NonVectorized operator+(const FVec3NonVectorized& vec) const;
-		INLINE FVec3NonVectorized operator-(const FVec3NonVectorized& vec) const;
-		INLINE FVec3NonVectorized operator*(const FVec3NonVectorized& vec) const;
-		INLINE FVec3NonVectorized operator/(const FVec3NonVectorized& vec) const;
-		INLINE FVec3NonVectorized operator*(float s) const;
+		INLINE TVec3NonVectorized<T> operator-() const;
+		INLINE TVec3NonVectorized<T> operator+(const TVec3NonVectorized<T>& vec) const;
+		INLINE TVec3NonVectorized<T> operator-(const TVec3NonVectorized<T>& vec) const;
+		INLINE TVec3NonVectorized<T> operator*(const TVec3NonVectorized<T>& vec) const;
+		INLINE TVec3NonVectorized<T> operator/(const TVec3NonVectorized<T>& vec) const;
+		INLINE TVec3NonVectorized<T> operator*(T s) const;
 
-		INLINE FVec3NonVectorized& operator+=(const FVec3NonVectorized& vec);
-		INLINE FVec3NonVectorized& operator-=(const FVec3NonVectorized& vec);
-		INLINE FVec3NonVectorized& operator*=(const FVec3NonVectorized& vec);
-		INLINE FVec3NonVectorized& operator/=(const FVec3NonVectorized& vec);
-		INLINE FVec3NonVectorized& operator*=(float s);
+		INLINE TVec3NonVectorized<T>& operator+=(const TVec3NonVectorized<T>& vec);
+		INLINE TVec3NonVectorized<T>& operator-=(const TVec3NonVectorized<T>& vec);
+		INLINE TVec3NonVectorized<T>& operator*=(const TVec3NonVectorized<T>& vec);
+		INLINE TVec3NonVectorized<T>& operator/=(const TVec3NonVectorized<T>& vec);
+		INLINE TVec3NonVectorized<T>& operator*=(T s);
 
-		INLINE bool operator==(const FVec3NonVectorized& vec) const;
-		INLINE bool operator!=(const FVec3NonVectorized& vec) const;
+		INLINE bool operator==(const TVec3NonVectorized<T>& vec) const;
+		INLINE bool operator!=(const TVec3NonVectorized<T>& vec) const;
 
-		INLINE float operator[](int32 index) const;
-		INLINE float& operator[](int32 index);
+		INLINE T operator[](int32 index) const;
+		INLINE T& operator[](int32 index);
 
-		INLINE float operator|(const FVec3NonVectorized& vec) const;
-		INLINE FVec3NonVectorized operator^(const FVec3NonVectorized& vec) const;
+		INLINE T operator|(const TVec3NonVectorized<T>& vec) const;
+		INLINE TVec3NonVectorized<T> operator^(const TVec3NonVectorized<T>& vec) const;
 
-		INLINE float SizeSquared() const;
-		INLINE float Size() const;
+		INLINE T SizeSquared() const;
+		INLINE T Size() const;
 
-		INLINE FVec3NonVectorized GetNormal() const;
+		INLINE TVec3NonVectorized<T> GetNormal() const;
 		INLINE void Normalize();
 		INLINE bool IsZero() const;
 
 	public:
-		INLINE static FVec3NonVectorized& GetZero()
+		INLINE static TVec3NonVectorized<T>& GetZero()
 		{
-			static FVec3NonVectorized SZeroVec(0.f, 0.f, 0.f);
+			static TVec3NonVectorized<T> SZeroVec(0.0, 0.0, 0.0);
 			return SZeroVec;
 		}
 
-		INLINE static FVec3NonVectorized GetReciprocal(const FVec3NonVectorized& vec)
+		INLINE static TVec3NonVectorized<T> GetReciprocal(const TVec3NonVectorized<T>& vec)
 		{
-			FVec3NonVectorized result;
-			result.X = LostCore::IsZero(vec.X) ? 0.f : (1.f / vec.X);
-			result.Y = LostCore::IsZero(vec.Y) ? 0.f : (1.f / vec.Y);
-			result.Z = LostCore::IsZero(vec.Z) ? 0.f : (1.f / vec.Z);
+			TVec3NonVectorized<T> result;
+			result.X = LostCore::IsZero(vec.X) ? 0.0 : (1.0 / vec.X);
+			result.Y = LostCore::IsZero(vec.Y) ? 0.0 : (1.0 / vec.Y);
+			result.Z = LostCore::IsZero(vec.Z) ? 0.0 : (1.0 / vec.Z);
 			return result;
 		}
 	};
 
-	INLINE FVec3NonVectorized::FVec3NonVectorized(float x, float y, float z) : X(x), Y(y), Z(z)
+	template <typename T>
+	INLINE TVec3NonVectorized<T>::TVec3NonVectorized(T x, T y, T z) : X(x), Y(y), Z(z)
 	{
 
 	}
 
-	INLINE FVec3NonVectorized FVec3NonVectorized::operator-() const
+	template <typename T>
+	INLINE TVec3NonVectorized<T> TVec3NonVectorized<T>::operator-() const
 	{
-		return FVec3NonVectorized(-X, -Y, -Z);
+		return TVec3NonVectorized<T>(-X, -Y, -Z);
 	}
 
-	INLINE FVec3NonVectorized FVec3NonVectorized::operator+(const FVec3NonVectorized& vec) const
+	template <typename T>
+	INLINE TVec3NonVectorized<T> TVec3NonVectorized<T>::operator+(const TVec3NonVectorized<T>& vec) const
 	{
-		return FVec3NonVectorized(X + vec.X, Y + vec.Y, Z + vec.Z);
+		return TVec3NonVectorized<T>(X + vec.X, Y + vec.Y, Z + vec.Z);
 	}
 
-	INLINE FVec3NonVectorized FVec3NonVectorized::operator-(const FVec3NonVectorized& vec) const
+	template <typename T>
+	INLINE TVec3NonVectorized<T> TVec3NonVectorized<T>::operator-(const TVec3NonVectorized<T>& vec) const
 	{
-		return FVec3NonVectorized(X - vec.X, Y - vec.Y, Z - vec.Z);
+		return TVec3NonVectorized<T>(X - vec.X, Y - vec.Y, Z - vec.Z);
 	}
 
-	INLINE FVec3NonVectorized FVec3NonVectorized::operator*(const FVec3NonVectorized& vec) const
+	template <typename T>
+	INLINE TVec3NonVectorized<T> TVec3NonVectorized<T>::operator*(const TVec3NonVectorized<T>& vec) const
 	{
-		return FVec3NonVectorized(X * vec.X, Y * vec.Y, Z * vec.Z);
+		return TVec3NonVectorized<T>(X * vec.X, Y * vec.Y, Z * vec.Z);
 	}
 
-	INLINE FVec3NonVectorized FVec3NonVectorized::operator/(const FVec3NonVectorized& vec) const
+	template <typename T>
+	INLINE TVec3NonVectorized<T> TVec3NonVectorized<T>::operator/(const TVec3NonVectorized<T>& vec) const
 	{
-		return FVec3NonVectorized(X / vec.X, Y / vec.Y, Z / vec.Z);
+		return TVec3NonVectorized<T>(X / vec.X, Y / vec.Y, Z / vec.Z);
 	}
 
-	INLINE FVec3NonVectorized FVec3NonVectorized::operator*(float s) const
+	template <typename T>
+	INLINE TVec3NonVectorized<T> TVec3NonVectorized<T>::operator*(T s) const
 	{
-		return FVec3NonVectorized(s*X, s*Y, s*Z);
+		return TVec3NonVectorized<T>(s*X, s*Y, s*Z);
 	}
 
-	INLINE FVec3NonVectorized& FVec3NonVectorized::operator+=(const FVec3NonVectorized& vec)
+	template <typename T>
+	INLINE TVec3NonVectorized<T>& TVec3NonVectorized<T>::operator+=(const TVec3NonVectorized<T>& vec)
 	{
 		X += vec.X;
 		Y += vec.Y;
@@ -127,7 +136,8 @@ namespace LostCore
 		return *this;
 	}
 
-	INLINE FVec3NonVectorized& FVec3NonVectorized::operator-=(const FVec3NonVectorized& vec)
+	template <typename T>
+	INLINE TVec3NonVectorized<T>& TVec3NonVectorized<T>::operator-=(const TVec3NonVectorized<T>& vec)
 	{
 		X -= vec.X;
 		Y -= vec.Y;
@@ -135,7 +145,8 @@ namespace LostCore
 		return *this;
 	}
 
-	INLINE FVec3NonVectorized& FVec3NonVectorized::operator*=(const FVec3NonVectorized& vec)
+	template <typename T>
+	INLINE TVec3NonVectorized<T>& TVec3NonVectorized<T>::operator*=(const TVec3NonVectorized<T>& vec)
 	{
 		X *= vec.X;
 		Y *= vec.Y;
@@ -143,7 +154,8 @@ namespace LostCore
 		return *this;
 	}
 
-	INLINE FVec3NonVectorized& FVec3NonVectorized::operator/=(const FVec3NonVectorized& vec)
+	template <typename T>
+	INLINE TVec3NonVectorized<T>& TVec3NonVectorized<T>::operator/=(const TVec3NonVectorized<T>& vec)
 	{
 		X /= vec.X;
 		Y /= vec.Y;
@@ -151,7 +163,8 @@ namespace LostCore
 		return *this;
 	}
 
-	INLINE FVec3NonVectorized& FVec3NonVectorized::operator*=(float s)
+	template <typename T>
+	INLINE TVec3NonVectorized<T>& TVec3NonVectorized<T>::operator*=(T s)
 	{
 		X *= s;
 		Y *= s;
@@ -159,89 +172,101 @@ namespace LostCore
 		return *this;
 	}
 
-	INLINE bool FVec3NonVectorized::operator==(const FVec3NonVectorized& vec) const
+	template <typename T>
+	INLINE bool TVec3NonVectorized<T>::operator==(const TVec3NonVectorized<T>& vec) const
 	{
 		return LostCore::IsEqual(X, vec.X) &&
 			LostCore::IsEqual(Y, vec.Y) &&
 			LostCore::IsEqual(Z, vec.Z);
 	}
 
-	INLINE bool FVec3NonVectorized::operator!=(const FVec3NonVectorized& vec) const
+	template <typename T>
+	INLINE bool TVec3NonVectorized<T>::operator!=(const TVec3NonVectorized<T>& vec) const
 	{
 		return !(*this == vec);
 	}
 
-	INLINE float& FVec3NonVectorized::operator[](int32 index)
+	template <typename T>
+	INLINE T& TVec3NonVectorized<T>::operator[](int32 index)
 	{
 		return index == 0 ? X : (index == 1 ? Y : Z);
 	}
 
-	INLINE float FVec3NonVectorized::operator[](int32 index) const
+	template <typename T>
+	INLINE T TVec3NonVectorized<T>::operator[](int32 index) const
 	{
 		return (*this)[index];
 	}
 
-	INLINE float FVec3NonVectorized::operator|(const FVec3NonVectorized& vec) const
+	template <typename T>
+	INLINE T TVec3NonVectorized<T>::operator|(const TVec3NonVectorized<T>& vec) const
 	{
 		return X * vec.X + Y * vec.Y + Z * vec.Z;
 	}
 
-	INLINE FVec3NonVectorized FVec3NonVectorized::operator^(const FVec3NonVectorized& vec) const
+	template <typename T>
+	INLINE TVec3NonVectorized<T> TVec3NonVectorized<T>::operator^(const TVec3NonVectorized<T>& vec) const
 	{
-		return FVec3NonVectorized(
+		return TVec3NonVectorized<T>(
 			Y * vec.Z - Z * vec.Y,
 			Z * vec.X - X * vec.Z,
 			X * vec.Y - Y * vec.X);
 	}
 
-	INLINE float FVec3NonVectorized::SizeSquared() const
+	template <typename T>
+	INLINE T TVec3NonVectorized<T>::SizeSquared() const
 	{
 		return X * X + Y * Y + Z * Z;
 	}
 
-	INLINE float FVec3NonVectorized::Size() const
+	template <typename T>
+	INLINE T TVec3NonVectorized<T>::Size() const
 	{
 		return std::sqrtf(SizeSquared());
 	}
 
-	INLINE FVec3NonVectorized FVec3NonVectorized::GetNormal() const
+	template <typename T>
+	INLINE TVec3NonVectorized<T> TVec3NonVectorized<T>::GetNormal() const
 	{
-		const float squared = SizeSquared();
+		const T squared = SizeSquared();
 		if (squared > SSmallFloat)
 		{
-			const float scale = InvSqrt(squared);
-			return FVec3NonVectorized(X * scale, Y * scale, Z * scale);
+			const T scale = InvSqrt(squared);
+			return TVec3NonVectorized<T>(X * scale, Y * scale, Z * scale);
 		}
 		else
 		{
-			return FVec3NonVectorized(0.f, 0.f, 0.f);
+			return TVec3NonVectorized<T>(0.0, 0.0, 0.0);
 		}
 	}
 
-	INLINE void FVec3NonVectorized::Normalize()
+	template <typename T>
+	INLINE void TVec3NonVectorized<T>::Normalize()
 	{
-		const float squared = SizeSquared();
+		const T squared = SizeSquared();
 		if (squared > SSmallFloat)
 		{
-			const float scale = InvSqrt(squared);
+			const T scale = InvSqrt(squared);
 			X *= scale;
 			Y *= scale;
 			Z *= scale;
 		}
 		else
 		{
-			X = 0.f;
-			Y = 0.f;
-			Z = 0.f;
+			X = 0.0;
+			Y = 0.0;
+			Z = 0.0;
 		}
 	}
 
-	INLINE bool FVec3NonVectorized::IsZero() const
+	template <typename T>
+	INLINE bool TVec3NonVectorized<T>::IsZero() const
 	{
 		return LostCore::IsZero(X) && LostCore::IsZero(Y) && LostCore::IsZero(Z);
 	}
 
-	INLINE void from_json(const FJson& j, FVec3NonVectorized& val)
+	template <typename T>
+	INLINE void from_json(const FJson& j, TVec3NonVectorized<T>& val)
 	{
 		if (j.is_array() && j.size() >= 3)
 		{
@@ -251,17 +276,21 @@ namespace LostCore
 		}
 	}
 
-	INLINE void to_json(FJson& j, const FVec3NonVectorized& val)
+	template <typename T>
+	INLINE void to_json(FJson& j, const TVec3NonVectorized<T>& val)
 	{
 		j[0] = val.X;
 		j[1] = val.Y;
 		j[2] = val.Z;
 	}
 
-#ifdef TYPEDEF_DECL_FVEC3
-#error "FVec3 already defined somewhere else"
-#else
-	typedef FVec3NonVectorized FVec3;
-	#define TYPEDEF_DECL_FVEC3
+#ifdef TYPEDEF_DECL_VEC3
+#error "TYPEDEF_DECL_VEC3 already defined somewhere else"
 #endif
+
+typedef TVec3NonVectorized<float> FFloat3;
+typedef TVec3NonVectorized<double> FDouble3;
+typedef TVec3NonVectorized<int32> FSInt3;
+typedef TVec3NonVectorized<uint8> FByte3;
+#define TYPEDEF_DECL_VEC3
 }

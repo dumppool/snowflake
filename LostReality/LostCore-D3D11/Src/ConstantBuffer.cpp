@@ -82,6 +82,6 @@ void D3D11::FConstantBufferSkinned::UpdateBuffer(const TRefCountPtr<ID3D11Device
 	FParam p;
 	memcpy(&p, buf, sz);
 	p.World.Transpose();
-	for_each(p.Bones.begin(), p.Bones.end(), [](LostCore::FMatrix& mat) {mat.Transpose(); });
+	for_each(p.Bones.begin(), p.Bones.end(), [](LostCore::FFloat4x4& mat) {mat.Transpose(); });
 	cxt->UpdateSubresource(GetBufferRHI().GetReference(), 0, nullptr, &p, 0, 0);
 }

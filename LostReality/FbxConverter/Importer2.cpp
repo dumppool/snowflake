@@ -9,6 +9,9 @@
 
 #include "stdafx.h"
 
+#define STORE_FBX_CONTROLPOINT 0
+#define TEST_SOFT_SKINNED 1
+
 using namespace Importer;
 using namespace LostCore;
 
@@ -17,14 +20,14 @@ struct FTempMesh
 {
 	struct FVertex
 	{
-		FVec2				TexCoords;
-		FVec3				Normals;
-		FVec3				Tangents;
-		FVec3				Binormals;
+		FFloat2				TexCoords;
+		FFloat3				Normals;
+		FFloat3				Tangents;
+		FFloat3				Binormals;
 		uint32				ControlPointIndices;
 		//uint8				MaterialIndices[2];
 		//uint32			SmoothingGroups;
-		FVec3				Colors;
+		FFloat3				Colors;
 	};
 
 	struct FTriangle
@@ -48,6 +51,8 @@ struct FTempMesh
 
 	// poses
 	map<string, FPoseMapAlias>	Poses;
+	FPoseMapAlias			DefaultPose;
+	FPoseMapAlias			GlobalPose;
 
 	// 骨骼索引表
 	map<string, int32>		SkeletonIndexMap;
@@ -56,22 +61,33 @@ struct FTempMesh
 	uint32					VertexFlags;
 
 	// 矩阵[node -> scene root]
-	FMatrix					MeshToSceneRoot;
+	FFloat4x4					MeshToSceneRoot;
 
 	// MeshToSceneRoot的旋转部分
-	FMatrix					MeshToSceneRootDir;
+	FFloat4x4					MeshToSceneRootDir;
 
-	// control points都在mesh node本地空间
-	vector<FVec3>			ControlPoints;
+	// geometry space
+	vector<FFloat3>			ControlPoints;
 
-	vector<FVec3>			ControlPoints2;
+	// bone space
+	vector<FFloat3>			ControlPoints2;
+
+#if TEST_SOFT_SKINNED
+	// skinned points
+	vector<FFloat3>			SkinnedPts;
+#endif
+
+#if STORE_FBX_CONTROLPOINT
+	vector<FbxVector4>		FbxControlPoints;
+	vector<FbxVector4>		FbxControlPoints2;
+#endif
 
 	// 三角面
 	vector<FTriangle>		Triangles;
 
 	// 骨骼模型才有的骨骼索引&骨骼混合权重
-	vector<array<float, MAX_BONES_PER_VERTEX>>	BlendIndices;
-	vector<array<float, MAX_BONES_PER_VERTEX>>	BlendWeights;
+	vector<FFloat4>	BlendWeights;
+	vector<FSInt4>	BlendIndices;
 
 #ifdef _DEBUG
 	string					Name;
@@ -96,6 +112,11 @@ struct FTempMesh
 		Triangles.clear();
 		BlendIndices.clear();
 		BlendWeights.clear();
+
+#if STORE_FBX_CONTROLPOINT
+		FbxControlPoints.clear();
+		FbxControlPoints2.clear();
+#endif
 
 		Extract();
 	}
@@ -177,10 +198,12 @@ struct FTempMesh
 			int cpCount = Mesh->GetControlPointsCount();
 			
 			BlendIndices.resize(cpCount);
-			for_each(BlendIndices.begin(), BlendIndices.end(), [](array<float, MAX_BONES_PER_VERTEX>& arr) {arr.fill(-1); });
+			for_each(BlendIndices.begin(), BlendIndices.end(), [](FSInt4& arr) {arr = FSInt4(-1,-1,-1,-1); });
 			
 			BlendWeights.resize(cpCount);
-			for_each(BlendWeights.begin(), BlendWeights.end(), [](array<float, MAX_BONES_PER_VERTEX>& arr) {arr.fill(INFINITY); });
+			for_each(BlendWeights.begin(), BlendWeights.end(), [](FFloat4& arr) {arr = FFloat4(INFINITY, INFINITY, INFINITY, INFINITY); });
+
+			Poses[K_INITIAL_POSE] = FPoseMap();
 
 			set<FbxNode*> rootLinks;
 			auto skin = (FbxSkin*)Mesh->GetDeformer(0, FbxDeformer::eSkin);
@@ -206,7 +229,8 @@ struct FTempMesh
 					LVERR(head, "mesh[%s] link[%s] mode: additive", Mesh->GetName(), link->GetName());
 				}
 
-				SkelAMatrix[SkeletonIndexMap[link->GetName()]] = GetInitialClusterMatrix(Mesh, cluster);
+				DefaultPose[link->GetName()] = ToMatrix(GetNodeLocalMatrix(link));
+				SkelAMatrix[SkeletonIndexMap[link->GetName()]] = GetInitialClusterMatrix(Mesh, cluster, Poses[K_INITIAL_POSE]);
 
 				auto rootLink = GetRootLink(link);
 				if (rootLink != nullptr && rootLinks.find(rootLink) == rootLinks.end())
@@ -249,6 +273,8 @@ struct FTempMesh
 			// Get skeleton
 			BuildSkeletonTree(link0, Skeleton);
 
+			// Get the default
+
 			// Get all the poses from fbx
 			for (int i = 0; i < scene->GetPoseCount(); ++i)
 			{
@@ -278,9 +304,11 @@ struct FTempMesh
 				{
 					pose->GetMatrix(linkIndex);
 					FPoseTreeAlias poseTree;
+					FPoseTreeAlias poseTree2;
 					FPoseMapAlias poseMap;
-					BuildPoseTree(pose, link0, poseTree);
+					BuildPoseTree(pose, link0, poseTree, poseTree2);
 					GetPoseMapFromTree(poseTree, poseMap);
+					GetPoseMapFromTree(poseTree2, GlobalPose);
 					Poses[pose->GetName()] = poseMap;
 				}
 			}
@@ -324,6 +352,10 @@ struct FTempMesh
 		{
 			//mat.MultT(coordHead[i])
 			ControlPoints.push_back(ToVector3(coordHead[i]));
+
+#if STORE_FBX_CONTROLPOINT
+			FbxControlPoints.push_back(coordHead[i]);
+#endif
 		}
 
 		FbxLayerElement::EReferenceMode referenceMode;
@@ -413,23 +445,62 @@ struct FTempMesh
 			return;
 		}
 
+#if TEST_SOFT_SKINNED
+		vector<FFloat3> skinned0(ControlPoints.size());
+		vector<FFloat3> skinned1(ControlPoints.size());
+		SkinnedPts.resize(ControlPoints.size());
+#endif
+
+		FPoseMapAlias globalPose;
+		auto& initialPose = Poses[K_INITIAL_POSE];
+
+		LostCore::FFloat4x4 globalMat;
+		globalMat.SetIdentity();
+		GetGlobalPoseMap(globalMat, Skeleton, initialPose, globalPose);
+
+		map<int32, string> inverseMap;
+		for_each(SkeletonIndexMap.begin(), SkeletonIndexMap.end(),
+			[&](const pair<string, int32>& elem) {inverseMap[elem.second] = elem.first; });
+
 		ControlPoints2.resize(ControlPoints.size());
+#if STORE_FBX_CONTROLPOINT
+		FbxControlPoints2.resize(ControlPoints.size());
+#endif
+
 		for (uint32 vertIndex = 0; vertIndex < ControlPoints.size(); ++vertIndex)
 		{
 			auto& indices = BlendIndices[vertIndex];
 			auto& weights = BlendWeights[vertIndex];
 			FbxAMatrix mat;
 			memset(&mat, 0, sizeof(mat));
+			FFloat4x4 mat2;
+			memset(&mat2, 0, sizeof(mat2));
 			float w = 0.f;
 			for (uint32 j = 0; j < MAX_BONES_PER_VERTEX; ++j)
 			{
-				if (indices[j] == -1)
+				auto index = (int32)floor(indices[j] + SSmallFloat2);
+				auto val = weights[j];
+
+				if (index == -1 || val < SSmallFloat2)
 				{
 					break;
 				}
 
-				auto index = indices[j];
-				auto val = weights[j];
+				/*******************************/
+				//auto it = GlobalPose.begin();
+				//auto tmpIndex = index;
+				//while ((tmpIndex--) > 0)
+				//	++it;
+
+				//auto tmp2 = it->second;
+				//tmp2 = tmp2 * val;
+				//mat2 = mat2 + tmp2;
+
+				const auto& n = inverseMap[index];
+				auto tmp2 = globalPose[n];
+				mat2 = mat2 + globalPose[n] * val;
+
+				/*******************************/
 
 				FbxAMatrix tmp = SkelAMatrix[index];
 				AMatrixScale(tmp, val);
@@ -438,7 +509,13 @@ struct FTempMesh
 				w += val;
 			}
 
-			ControlPoints2[vertIndex] = ToMatrix(mat).ApplyPoint(ControlPoints[vertIndex]);
+			mat2 = mat2 * (1.f / w);
+			auto invMat2 = mat2;
+			invMat2.Invert();
+			ControlPoints2[vertIndex] = invMat2.ApplyPoint(ControlPoints[vertIndex]);
+#if TEST_SOFT_SKINNED
+			skinned0[vertIndex] = mat2.ApplyPoint(ControlPoints2[vertIndex]);
+#endif
 			if (LinkMode == FbxCluster::eNormalize)
 			{
 				ControlPoints2[vertIndex] *= 1.f/w;
@@ -447,7 +524,50 @@ struct FTempMesh
 			{
 				ControlPoints2[vertIndex] += ControlPoints[vertIndex] * (1.f - w);
 			}
+
+#if STORE_FBX_CONTROLPOINT
+			auto& vert = FbxControlPoints2[vertIndex];
+			vert = mat.MultT(FbxControlPoints[vertIndex]);
+			if (LinkMode == FbxCluster::eNormalize)
+			{
+				vert /= w;
+			}
+			else if (LinkMode == FbxCluster::eTotalOne)
+			{
+				vert += FbxControlPoints[vertIndex] * (1.f - w);
+			}
+#endif
 		}
+
+#if TEST_SOFT_SKINNED
+		SkinnedPts = skinned0;
+		//for (uint32 i = 0; i < ControlPoints.size(); ++i)
+		//{
+		//	auto& indices = BlendIndices[i];
+		//	auto& weights = BlendWeights[i];
+		//	FFloat4x4 totalMat;
+		//	memset(&totalMat, 0, sizeof(totalMat));
+		//	float totalWeight = 0;
+		//	for (uint32 j = 0; j < MAX_BONES_PER_VERTEX; ++j)
+		//	{
+		//		if (indices[j] == -1)
+		//		{
+		//			break;
+		//		}
+
+		//		auto index = (int32)floor(indices[j] + SSmallFloat2);
+		//		totalMat = totalMat + globalPose[inverseMap[index]] * weights[j];
+		//		totalWeight += weights[j];
+
+		//		skinned1[i] += globalPose[inverseMap[index]].ApplyPoint(ControlPoints2[i]) * weights[j];
+		//	}
+
+		//	//totalMat = totalMat * (1.f / totalWeight);
+		//	skinned0[i] = totalMat.ApplyPoint(ControlPoints2[i]);
+		//}
+		//if (skinned0[0] != skinned1[0])
+		//	printf("");
+#endif
 	}
 
 	FMeshDataAlias ToMeshDataGPU(const string& outputDir) const
@@ -483,7 +603,14 @@ struct FTempMesh
 				{
 					const auto& vert = Triangles[i].Vertices[j];
 
-					Serialize(stream, (uint8*)&(ControlPoints2[vert.ControlPointIndices]), sizeof(FVec3));
+#if STORE_FBX_CONTROLPOINT
+					Serialize(stream, (uint8*)&(ToVector3(FbxControlPoints2[vert.ControlPointIndices])), sizeof(FFloat3));
+#elif TEST_SOFT_SKINNED
+					stream << SkinnedPts[vert.ControlPointIndices];
+#else
+					stream << ControlPoints2[vert.ControlPointIndices];
+					//Serialize(stream, (uint8*)&(ControlPoints2[vert.ControlPointIndices]), sizeof(FFloat3));
+#endif
 
 					if ((VertexFlags & EVertexElement::UV) == EVertexElement::UV)
 					{
@@ -507,8 +634,7 @@ struct FTempMesh
 
 					if ((VertexFlags & EVertexElement::Skin) == EVertexElement::Skin)
 					{
-						Serialize(stream, (const uint8*)&BlendWeights[vert.ControlPointIndices][0], sizeof(float)*MAX_BONES_PER_VERTEX);
-						Serialize(stream, (const uint8*)&BlendIndices[vert.ControlPointIndices][0], sizeof(float)*MAX_BONES_PER_VERTEX);
+						stream << BlendWeights[vert.ControlPointIndices] << BlendIndices[vert.ControlPointIndices];
 					}
 
 					if (padding.size() > 0)
@@ -517,6 +643,8 @@ struct FTempMesh
 					}
 				}
 			}
+
+			assert(stream.RemainingSize() == output.VertexCount * GetAlignedSize(GetVertexDetails(VertexFlags).Stride, 16));
 
 			output.Vertices.resize(stream.RemainingSize());
 			Deserialize(stream, (uint8*)&output.Vertices[0], stream.RemainingSize());
@@ -616,6 +744,24 @@ public:
 			LVERR(head, "LoadScene failed");
 			return false;
 		}
+
+		/*************************************************************/
+#if !CONVERT_FROM_RIGHTHAND
+		FbxAxisSystem axisSys = SdkScene->GetGlobalSettings().GetAxisSystem();
+		FbxAxisSystem dstAxisSys(FbxAxisSystem::eDirectX);
+		if (axisSys != dstAxisSys)
+		{
+			dstAxisSys.ConvertScene(SdkScene);
+		}
+#endif
+
+		FbxSystemUnit sysUnit = SdkScene->GetGlobalSettings().GetSystemUnit();
+		if (sysUnit.GetScaleFactor() != 1.0)
+		{
+			//The unit in this example is centimeter.
+			FbxSystemUnit::cm.ConvertScene(SdkScene);
+		}
+		/*************************************************************/
 
 		DestDirectory = convertDst;
 		ReplaceChar(DestDirectory, "/", "\\");

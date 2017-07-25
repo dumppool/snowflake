@@ -26,10 +26,10 @@ namespace LostCore
 		virtual void Tick(float sec) override;
 		virtual void Draw(IRenderContext * rc, float sec) override;
 
-		virtual void AddPositionWorld(const FVec3& pos);
-		virtual void AddEulerWorld(const FVec3& euler);
-		virtual void AddPositionLocal(const FVec3& pos);
-		virtual void AddEulerLocal(const FVec3& euler);
+		virtual void AddPositionWorld(const FFloat3& pos);
+		virtual void AddEulerWorld(const FFloat3& euler);
+		virtual void AddPositionLocal(const FFloat3& pos);
+		virtual void AddEulerLocal(const FFloat3& euler);
 
 		virtual void SetNearPlane(float value);
 		virtual float GetNearPlane() const;
@@ -43,16 +43,16 @@ namespace LostCore
 		virtual void SetAspectRatio(float ratio);
 		virtual float GetAspectRatio() const;
 		
-		virtual FMatrix GetViewMatrix() const;
-		virtual FMatrix GetProjectMatrix() const;
-		virtual FMatrix GetViewProjectMatrix() const;
+		virtual FFloat4x4 GetViewMatrix() const;
+		virtual FFloat4x4 GetProjectMatrix() const;
+		virtual FFloat4x4 GetViewProjectMatrix() const;
 
 	private:
 		float			NearPlane;
 		float			FarPlane;
 		float			Fov;
 		float			AspectRatio;
-		FVec3			ViewEuler;
-		FVec3			ViewPosition;
+		FFloat3			ViewEuler;
+		FFloat3			ViewPosition;
 	};
 }

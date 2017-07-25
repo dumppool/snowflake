@@ -41,8 +41,8 @@ namespace LostCore
 		INLINE bool operator!=(const FQuatNonVectorized& quat) const;
 		INLINE float operator|(const FQuatNonVectorized& quat) const;
 
-		INLINE FVec3 Euler() const;
-		INLINE FQuatNonVectorized& FromEuler(const FVec3& euler);
+		INLINE FFloat3 Euler() const;
+		INLINE FQuatNonVectorized& FromEuler(const FFloat3& euler);
 
 		INLINE FQuatNonVectorized GetNormalized() const;
 		INLINE FQuatNonVectorized& Normalize();
@@ -50,13 +50,13 @@ namespace LostCore
 		INLINE float SizeSquared() const;
 		INLINE float Size() const;
 
-		INLINE FVec3 RotateVector(const FVec3& vec) const;
+		INLINE FFloat3 RotateVector(const FFloat3& vec) const;
 		INLINE FQuatNonVectorized GetInversed() const;
 		INLINE FQuatNonVectorized& Inverse();
 
-		INLINE FVec3 GetForwardVector() const;
-		INLINE FVec3 GetUpVector() const;
-		INLINE FVec3 GetRightVector() const;
+		INLINE FFloat3 GetForwardVector() const;
+		INLINE FFloat3 GetUpVector() const;
+		INLINE FFloat3 GetRightVector() const;
 
 	public:
 		static const FQuatNonVectorized& GetIdentity()
@@ -157,9 +157,9 @@ namespace LostCore
 		return X*quat.X + Y*quat.Y + Z*quat.Z + W*quat.W;
 	}
 
-	INLINE FVec3 FQuatNonVectorized::Euler() const
+	INLINE FFloat3 FQuatNonVectorized::Euler() const
 	{
-		FVec3 euler;
+		FFloat3 euler;
 
 		//const float singularity = Y*Z - W*X;
 		//const float yawY = 2.f * (W*Y + Z*X);
@@ -202,7 +202,7 @@ namespace LostCore
 		return euler;
 	}
 
-	INLINE FQuatNonVectorized& FQuatNonVectorized::FromEuler(const FVec3& euler)
+	INLINE FQuatNonVectorized& FQuatNonVectorized::FromEuler(const FFloat3& euler)
 	{
 		const float halfD2R = SD2RConstant * 0.5f;
 		float t0, t1, t2, t3, t4, t5;
@@ -258,11 +258,11 @@ namespace LostCore
 		return Sqrt(SizeSquared());
 	}
 
-	INLINE FVec3 FQuatNonVectorized::RotateVector(const FVec3& vec) const
+	INLINE FFloat3 FQuatNonVectorized::RotateVector(const FFloat3& vec) const
 	{
-		const FVec3 q(X, Y, Z);
-		const FVec3 t((q^vec) * 2.f);
-		return FVec3(vec + (t * W) + (q^t));
+		const FFloat3 q(X, Y, Z);
+		const FFloat3 t((q^vec) * 2.f);
+		return FFloat3(vec + (t * W) + (q^t));
 	}
 
 	INLINE FQuatNonVectorized FQuatNonVectorized::GetInversed() const
@@ -278,19 +278,19 @@ namespace LostCore
 		return *this;
 	}
 
-	INLINE FVec3 FQuatNonVectorized::GetForwardVector() const
+	INLINE FFloat3 FQuatNonVectorized::GetForwardVector() const
 	{
-		return RotateVector(FVec3(0.f, 0.f, 1.f));
+		return RotateVector(FFloat3(0.f, 0.f, 1.f));
 	}
 
-	INLINE FVec3 FQuatNonVectorized::GetUpVector() const
+	INLINE FFloat3 FQuatNonVectorized::GetUpVector() const
 	{
-		return RotateVector(FVec3(0.f, 1.f, 0.f));
+		return RotateVector(FFloat3(0.f, 1.f, 0.f));
 	}
 
-	INLINE FVec3 FQuatNonVectorized::GetRightVector() const
+	INLINE FFloat3 FQuatNonVectorized::GetRightVector() const
 	{
-		return RotateVector(FVec3(1.f, 0.f, 0.f));
+		return RotateVector(FFloat3(1.f, 0.f, 0.f));
 	}
 
 #ifdef TYPEDEF_DECL_FQUAT

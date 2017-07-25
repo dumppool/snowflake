@@ -16,8 +16,8 @@ namespace D3D11
 	*/
 	ALIGNED_LR(16) struct FVertex_0
 	{
-		LostCore::FVec3 XYZ;
-		LostCore::FVec2 UV;
+		LostCore::FFloat3 XYZ;
+		LostCore::FFloat2 UV;
 
 		INLINE static LostCore::FVertexTypes::Details GetDetails()
 		{
@@ -38,9 +38,9 @@ namespace D3D11
 
 	ALIGNED_LR(16) struct FVertex_1
 	{
-		LostCore::FVec3 XYZ;
-		LostCore::FVec2 UV;
-		LostCore::FVec3 N;
+		LostCore::FFloat3 XYZ;
+		LostCore::FFloat2 UV;
+		LostCore::FFloat3 N;
 
 		INLINE static LostCore::FVertexTypes::Details GetDetails()
 		{
@@ -62,10 +62,10 @@ namespace D3D11
 
 	ALIGNED_LR(16) struct FVertex_2
 	{
-		LostCore::FVec3 XYZ;
-		LostCore::FVec2 UV;
-		LostCore::FVec3 N;
-		LostCore::FVec3 RGB;
+		LostCore::FFloat3 XYZ;
+		LostCore::FFloat2 UV;
+		LostCore::FFloat3 N;
+		LostCore::FFloat3 RGB;
 
 		INLINE static LostCore::FVertexTypes::Details GetDetails()
 		{
@@ -88,8 +88,8 @@ namespace D3D11
 
 	ALIGNED_LR(16) struct FVertex_3
 	{
-		LostCore::FVec2 XY;
-		LostCore::FVec4 Color;
+		LostCore::FFloat2 XY;
+		LostCore::FFloat4 Color;
 
 		INLINE static LostCore::FVertexTypes::Details GetDetails()
 		{
@@ -110,9 +110,9 @@ namespace D3D11
 
 	ALIGNED_LR(16) struct FVertex_4
 	{
-		LostCore::FVec2 XY;
-		LostCore::FVec2 UV;
-		LostCore::FVec4 Color;
+		LostCore::FFloat2 XY;
+		LostCore::FFloat2 UV;
+		LostCore::FFloat4 Color;
 
 		INLINE static LostCore::FVertexTypes::Details GetDetails()
 		{
@@ -134,12 +134,12 @@ namespace D3D11
 
 	ALIGNED_LR(16) struct FVertex_5
 	{
-		LostCore::FVec3 XYZ;
-		LostCore::FVec2 UV;
-		LostCore::FVec3 N;
-		LostCore::FVec3 Color;
-		LostCore::FVec4 BlendWeights;
-		LostCore::FVec4 BlendIndices;
+		LostCore::FFloat3 XYZ;
+		LostCore::FFloat2 UV;
+		LostCore::FFloat3 N;
+		LostCore::FFloat3 Color;
+		LostCore::FFloat4 BlendWeights;
+		LostCore::FSInt4 BlendIndices;
 
 		INLINE static LostCore::FVertexTypes::Details GetDetails()
 		{
@@ -155,7 +155,7 @@ namespace D3D11
 				{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_5, N), D3D11_INPUT_PER_VERTEX_DATA, 0 },
 				{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, offsetof(FVertex_5, UV),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
 				{ "BLENDWEIGHTS", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(FVertex_5, BlendWeights),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "BLENDINDICES", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(FVertex_5, BlendIndices),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "BLENDINDICES", 0, DXGI_FORMAT_R32G32B32A32_SINT, 0, offsetof(FVertex_5, BlendIndices),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
 			};
 
 			return std::make_pair(SDesc, ARRAYSIZE(SDesc));
@@ -164,11 +164,11 @@ namespace D3D11
 
 	ALIGNED_LR(16) struct FVertex_6
 	{
-		LostCore::FVec3 XYZ;
-		LostCore::FVec2 UV;
-		LostCore::FVec3 N;
-		LostCore::FVec4 BlendWeights;
-		LostCore::FVec4 BlendIndices;
+		LostCore::FFloat3 XYZ;
+		LostCore::FFloat2 UV;
+		LostCore::FFloat3 N;
+		LostCore::FFloat4 BlendWeights;
+		LostCore::FSInt4 BlendIndices;
 
 		INLINE static LostCore::FVertexTypes::Details GetDetails()
 		{
@@ -183,7 +183,7 @@ namespace D3D11
 				{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_6, N), D3D11_INPUT_PER_VERTEX_DATA, 0 },
 				{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, offsetof(FVertex_6, UV),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
 				{ "BLENDWEIGHTS", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(FVertex_6, BlendWeights),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "BLENDINDICES", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(FVertex_6, BlendIndices),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "BLENDINDICES", 0, DXGI_FORMAT_R32G32B32A32_SINT, 0, offsetof(FVertex_6, BlendIndices),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
 			};
 
 			return std::make_pair(SDesc, ARRAYSIZE(SDesc));
@@ -192,10 +192,10 @@ namespace D3D11
 
 	ALIGNED_LR(16) struct FVertex_7
 	{
-		LostCore::FVec3 XYZ;
-		LostCore::FVec3 N;
-		LostCore::FVec4 BlendWeights;
-		LostCore::FVec4 BlendIndices;
+		LostCore::FFloat3 XYZ;
+		LostCore::FFloat3 N;
+		LostCore::FFloat4 BlendWeights;
+		LostCore::FSInt4 BlendIndices;
 
 		INLINE static LostCore::FVertexTypes::Details GetDetails()
 		{
@@ -209,7 +209,7 @@ namespace D3D11
 				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_7, XYZ), D3D11_INPUT_PER_VERTEX_DATA, 0 },
 				{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_7, N), D3D11_INPUT_PER_VERTEX_DATA, 0 },
 				{ "BLENDWEIGHTS", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(FVertex_7, BlendWeights),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "BLENDINDICES", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(FVertex_7, BlendIndices),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "BLENDINDICES", 0, DXGI_FORMAT_R32G32B32A32_SINT, 0, offsetof(FVertex_7, BlendIndices),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
 			};
 
 			return std::make_pair(SDesc, ARRAYSIZE(SDesc));

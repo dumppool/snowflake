@@ -27,12 +27,12 @@ LostCore::FRect::FRect()
 {
 }
 
-void LostCore::FRect::SetOrigin(const FVec2 & origin)
+void LostCore::FRect::SetOrigin(const FFloat2 & origin)
 {
 	Param.Origin = origin;
 }
 
-FVec2 LostCore::FRect::GetOrigin() const
+FFloat2 LostCore::FRect::GetOrigin() const
 {
 	if (Parent == nullptr)
 	{
@@ -61,19 +61,19 @@ float LostCore::FRect::GetScale() const
 	}
 }
 
-void LostCore::FRect::SetSize(const FVec2 & size)
+void LostCore::FRect::SetSize(const FFloat2 & size)
 {
 	Param.Size = size;
 }
 
-FVec2 LostCore::FRect::GetSize() const
+FFloat2 LostCore::FRect::GetSize() const
 {
 	return Param.Size;
 }
 
-bool LostCore::FRect::HitTest(const FVec2 & ppos, FRect** result) const
+bool LostCore::FRect::HitTest(const FFloat2 & ppos, FRect** result) const
 {
-	FVec2 cpos;
+	FFloat2 cpos;
 	GetLocalPosition(ppos, cpos);
 	if (HitTestPrivate(ppos, result))
 	{
@@ -163,19 +163,19 @@ void LostCore::FRect::ReconstructPrimitive(IRenderContext * rc)
 			return;
 		}
 
-		__declspec(align(16)) struct _Vertex { FVec2 XY; FVec2 Texcoord; FVec4 RGBA; };
+		__declspec(align(16)) struct _Vertex { FFloat2 XY; FFloat2 Texcoord; FFloat4 RGBA; };
 
 		// Mesh vertices
 		const _Vertex vertices[] =
 		{
-			//{ FVec2(0.f, 0.f), FVec2(0.f, 0.f),	FVec4(1.f, 1.f, 1.f, 0.7f) },		// top left
-			//{ FVec2(Size.X, 0.f), FVec2(1.f, 0.f),	FVec4(1.f, 1.f, 1.f, 0.7f) },		// top right
-			//{ FVec2(0.f, Size.Y), FVec2(0.f, 1.f),	FVec4(1.f, 1.f, 1.f, 0.7f) },		// bottom left
-			//{ FVec2(Size.X, Size.Y), FVec2(1.f, 1.f),	FVec4(1.f, 1.f, 1.f, 0.7f) },		// bottom right
-			{ FVec2(0.f, 0.f),	FVec2(0.f, 0.f), FVec4(1.f, 1.f, 1.f, 0.7f) },		// top left
-			{ FVec2(1.f, 0.f),	FVec2(1.f, 0.f), FVec4(1.f, 1.f, 1.f, 0.7f) },		// top right
-			{ FVec2(0.f, 1.f),	FVec2(0.f, 1.f), FVec4(1.f, 1.f, 1.f, 0.7f) },		// bottom left
-			{ FVec2(1.f, 1.f),	FVec2(1.f, 1.f), FVec4(1.f, 1.f, 1.f, 0.7f) },		// bottom right
+			//{ FFloat2(0.f, 0.f), FFloat2(0.f, 0.f),	FFloat4(1.f, 1.f, 1.f, 0.7f) },		// top left
+			//{ FFloat2(Size.X, 0.f), FFloat2(1.f, 0.f),	FFloat4(1.f, 1.f, 1.f, 0.7f) },		// top right
+			//{ FFloat2(0.f, Size.Y), FFloat2(0.f, 1.f),	FFloat4(1.f, 1.f, 1.f, 0.7f) },		// bottom left
+			//{ FFloat2(Size.X, Size.Y), FFloat2(1.f, 1.f),	FFloat4(1.f, 1.f, 1.f, 0.7f) },		// bottom right
+			{ FFloat2(0.f, 0.f),	FFloat2(0.f, 0.f), FFloat4(1.f, 1.f, 1.f, 0.7f) },		// top left
+			{ FFloat2(1.f, 0.f),	FFloat2(1.f, 0.f), FFloat4(1.f, 1.f, 1.f, 0.7f) },		// top right
+			{ FFloat2(0.f, 1.f),	FFloat2(0.f, 1.f), FFloat4(1.f, 1.f, 1.f, 0.7f) },		// bottom left
+			{ FFloat2(1.f, 1.f),	FFloat2(1.f, 1.f), FFloat4(1.f, 1.f, 1.f, 0.7f) },		// bottom right
 		};
 
 		const int32 indices[] = {0, 1, 2, 1, 3, 2};
@@ -201,14 +201,14 @@ void LostCore::FRect::ReconstructPrimitive(IRenderContext * rc)
 	return;
 }
 
-bool LostCore::FRect::HitTestPrivate(const FVec2 & ppos, FRect** result) const
+bool LostCore::FRect::HitTestPrivate(const FFloat2 & ppos, FRect** result) const
 {
-	FVec2 cpos;
+	FFloat2 cpos;
 	GetLocalPosition(ppos, cpos);
 	return (cpos.X <= Param.Size.X && 0.f <= cpos.X && cpos.Y <= Param.Size.Y && 0.f <= cpos.Y);
 }
 
-void LostCore::FRect::GetLocalPosition(const FVec2 & ppos, FVec2 & cpos) const
+void LostCore::FRect::GetLocalPosition(const FFloat2 & ppos, FFloat2 & cpos) const
 {
 	cpos = (ppos - Param.Origin);
 	cpos *= Param.Scale;
@@ -248,8 +248,8 @@ bool LostCore::FBasicGUI::Load(IRenderContext * rc, const char* url)
 	FFontProvider::Get()->Init(rc);
 
 	// ÁÙÊ±´úÂë
-	Root.SetOrigin(FVec2(0.f, 0.f));
-	Root.SetSize(FVec2(
+	Root.SetOrigin(FFloat2(0.f, 0.f));
+	Root.SetSize(FFloat2(
 		(float)FFontProvider::Get()->GetGdiFont()->GetFontTextures()[0]->GetWidth(),
 		(float)FFontProvider::Get()->GetGdiFont()->GetFontTextures()[0]->GetHeight()));
 	Root.SetScale(1.f);

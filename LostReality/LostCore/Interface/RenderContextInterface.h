@@ -52,8 +52,8 @@ namespace LostCore
 		virtual bool EnableShadeModel(EShadeModel sm) = 0;
 		virtual EShadeModel GetShadeModel() const = 0;
 
-		virtual FMatrix GetViewProjectMatrix() const = 0;
-		virtual void SetViewProjectMatrix(const FMatrix& vp) = 0;
+		virtual FFloat4x4 GetViewProjectMatrix() const = 0;
+		virtual void SetViewProjectMatrix(const FFloat4x4& vp) = 0;
 
 		virtual EContextID GetContextID() const = 0;
 		virtual const char* GetContextString() const = 0;

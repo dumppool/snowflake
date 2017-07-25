@@ -46,7 +46,7 @@ void LostCore::FSkelPoseTree::LoadLocalPose(const FPoseMap& pose)
 	}
 }
 
-void LostCore::FSkelPoseTree::UpdateWorldMatrix(const FMatrix & parentWorld)
+void LostCore::FSkelPoseTree::UpdateWorldMatrix(const FFloat4x4 & parentWorld)
 {
 	World = Local * parentWorld;
 	for (auto& child : Children)

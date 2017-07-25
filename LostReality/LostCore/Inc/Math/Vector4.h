@@ -13,31 +13,50 @@
 
 namespace LostCore
 {
-	class FVec4NonVectorized
+	template <typename T>
+	class TVec4NonVectorized
 	{
 	public:
-		float X;
-		float Y;
-		float Z;
-		float W;
+		T X;
+		T Y;
+		T Z;
+		T W;
 
-		FVec4NonVectorized()
+		TVec4NonVectorized()
 			: X(0.f)
 			, Y(0.f)
 			, Z(0.f)
 			, W(0.f)
 		{}
 
-		FVec4NonVectorized(float x, float y, float z, float w)
+		TVec4NonVectorized(T x, T y, T z, T w)
 			: X(x), Y(y), Z(z), W(w) {}
 
-		INLINE float operator|(const FVec4NonVectorized& vec) const
-		{
-			return X * vec.X + Y * vec.Y + Z * vec.Z + W * vec.W;
-		}
+		INLINE T operator|(const TVec4NonVectorized<T>& vec) const;
+		INLINE T operator[](int32 index) const;
+		INLINE T& operator[](int32 index);
 	};
 
-	INLINE void from_json(const FJson& j, FVec4NonVectorized& val)
+	template <typename T>
+	INLINE T TVec4NonVectorized<T>::operator|(const TVec4NonVectorized<T>& vec) const
+	{
+		return X * vec.X + Y * vec.Y + Z * vec.Z + W * vec.W;
+	}
+
+	template <typename T>
+	INLINE T& TVec4NonVectorized<T>::operator[](int32 index)
+	{
+		return index == 0 ? X : (index == 1 ? Y : (index == 2 ? Z : W));
+	}
+
+	template <typename T>
+	INLINE T TVec4NonVectorized<T>::operator[](int32 index) const
+	{
+		return (*this)[index];
+	}
+
+	template <typename T>
+	INLINE void from_json(const FJson& j, TVec4NonVectorized<T>& val)
 	{
 		if (j.is_array() && j.size() >= 4)
 		{
@@ -48,7 +67,8 @@ namespace LostCore
 		}
 	}
 
-	INLINE void to_json(FJson& j, const FVec4NonVectorized& val)
+	template <typename T>
+	INLINE void to_json(FJson& j, const TVec4NonVectorized<T>& val)
 	{
 		j[0] = val.X;
 		j[1] = val.Y;
@@ -56,10 +76,13 @@ namespace LostCore
 		j[3] = val.W;
 	}
 
-#ifdef TYPEDEF_DECL_FVEC4
-#error "FVec4 already defined somewhere else"
-#else
-	typedef FVec4NonVectorized FVec4;
-	#define TYPEDEF_DECL_FVEC4
+#ifdef TYPEDEF_DECL_VEC4
+#error "TYPEDEF_DECL_VEC4 already defined somewhere else"
 #endif
+
+typedef TVec4NonVectorized<float> FFloat4;
+typedef TVec4NonVectorized<double> FDouble4;
+typedef TVec4NonVectorized<int32> FSInt4;
+typedef TVec4NonVectorized<uint8> FByte4;
+#define TYPEDEF_DECL_VEC4
 }
