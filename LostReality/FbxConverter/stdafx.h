@@ -42,14 +42,15 @@ using FJson = nlohmann::json;
 #include "Math/Quat.h"
 #include "Math/Matrix.h"
 #include "Math/Transform2.h"
+#include "Math/Color.h"
 
 #include "Serialize/Serialization.h"
-#include "Serialize/MeshData2.h"
+#include "Serialize/StructSerialize.h"
 
 using FPoseTreeAlias = LostCore::FPoseTree;
 using FPoseMapAlias = LostCore::FPoseMap;
 using FSkeletonTreeAlias = LostCore::FBone;
-using FMeshDataAlias = LostCore::FMeshDataGPU;
+using FMeshDataAlias = LostCore::FMeshData;
 
 // sdk includes
 #include <fbxsdk.h>

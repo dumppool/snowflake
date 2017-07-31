@@ -19,51 +19,51 @@ cbuffer Constant : register(b1)
 
 struct VertexIn
 {
-	float3 pos : POSITION;
-	float2 tc  : TEXCOORD;
-	float3 normal : NORMAL;
-	float4 weight : BLENDWEIGHTS;
-	int4 indices : BLENDINDICES;
+	float3 Pos : POSITION;
+	float2 TexCoord  : TEXCOORD;
+	float3 Normal : NORMAL;
+	float4 Weight : BLENDWEIGHTS;
+	int4 Indices : BLENDINDICES;
 };
 
 struct VertexOut
 {
-	float4 pos : SV_POSITION;
-	float2 tc  : TEXCOORD;
-	float3 normal : NORMAL;
+	float4 Pos : SV_POSITION;
+	float2 TexCoord  : TEXCOORD;
+	float3 Normal : NORMAL;
 };
 
 VertexOut vs_main(VertexIn Input)
 {
-	int4 sIndices = int4(Input.indices);
+	int4 sIndices = int4(Input.Indices);
 
-	float4 pos = float4(Input.pos.xyz, 1.0f);
+	float4 pos = float4(Input.Pos.xyz, 1.0f);
 	if (1)
 	{
-		float4x4 mat = Bones[sIndices.x] * Input.weight.x;
+		float4x4 mat = Bones[sIndices.x] * Input.Weight.x;
 		
 		if (sIndices.y >= 0)
 		{
-			mat += Bones[sIndices.y] * Input.weight.y;
+			mat += Bones[sIndices.y] * Input.Weight.y;
 		}
 
 		if (sIndices.z >= 0)
 		{
-			mat += Bones[sIndices.z] * Input.weight.z;
+			mat += Bones[sIndices.z] * Input.Weight.z;
 		}
 
 		if (sIndices.w >= 0)
 		{
-			mat += Bones[sIndices.w] * Input.weight.w;
+			mat += Bones[sIndices.w] * Input.Weight.w;
 		}
 
 		pos = mul(pos, mat);
 
 		//pos =
-		//	sIndices.x >= 0 ? (mul(pos, Bones[sIndices.x]) * Input.weight.x) : 0.f +
-		//	sIndices.y >= 0 ? (mul(pos, Bones[sIndices.y]) * Input.weight.y) : 0.f +
-		//	sIndices.z >= 0 ? (mul(pos, Bones[sIndices.z]) * Input.weight.z) : 0.f +
-		//	sIndices.w >= 0 ? (mul(pos, Bones[sIndices.w]) * Input.weight.w) : 0.f;
+		//	sIndices.x >= 0 ? (mul(pos, Bones[sIndices.x]) * Input.Weight.x) : 0.f +
+		//	sIndices.y >= 0 ? (mul(pos, Bones[sIndices.y]) * Input.Weight.y) : 0.f +
+		//	sIndices.z >= 0 ? (mul(pos, Bones[sIndices.z]) * Input.Weight.z) : 0.f +
+		//	sIndices.w >= 0 ? (mul(pos, Bones[sIndices.w]) * Input.Weight.w) : 0.f;
 	}
 	else
 	{
@@ -73,20 +73,20 @@ VertexOut vs_main(VertexIn Input)
 	pos = mul(pos, ViewProject);
 
 	VertexOut o;
-	o.pos = pos;
-	o.tc = Input.tc;
-	o.normal = Input.normal;
+	o.Pos = pos;
+	o.TexCoord = Input.TexCoord;
+	o.Normal = mul(normalize(Input.Normal), World);
 
 	return o;
 }
 
 float4 ps_main(VertexOut Input) : SV_TARGET
 {
-	//float4 final = ColorTexture.Sample(ColorSampler, Input.tc);
-	const float3 s_ambientCol = float3(0.11f, 0.811f, 0.3f);
-	const float3 s_lightDir = float3(0.3f, -0.8f, 0.5f);
-const float3 s_lightCol = float3(0.8f, 0.7f, 0.8f);
-float3 col = dot(s_lightDir, Input.normal) * s_lightCol + s_ambientCol;
+	const float3 s_ambientCol = float3(0.11f, 0.111f, 0.3f);
+const float3 s_lightDir = normalize(float3(0.3f, -0.8f, 0.5f));
+const float3 s_lightCol = float3(1.8f, 0.7f, 0.18f);
+
+	float3 col = dot(-s_lightDir, Input.Normal) * s_lightCol + s_ambientCol;
 	float4 final = float4(col, 1.0f);
 	return final;
 }

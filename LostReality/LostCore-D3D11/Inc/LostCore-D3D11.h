@@ -88,6 +88,12 @@ namespace D3D11 {
 	extern "C" LOSTCORED3D11_API int32 DestroyPrimitiveGroup(LostCore::IPrimitiveGroup* pg);
 	static TExportFuncWrapper<LostCore::IPrimitiveGroup*> WrappedDestroyPrimitiveGroup("DestroyPrimitiveGroup", GetModule_LostCoreD3D11);
 
+	extern "C" LOSTCORED3D11_API int32 CreateMaterial_Segment(LostCore::IMaterial** material);
+	static TExportFuncWrapper<LostCore::IMaterial**> WrappedCreateMaterial_Segment("CreateMaterial_Segment", GetModule_LostCoreD3D11);
+
+	extern "C" LOSTCORED3D11_API int32 DestroyMaterial_Segment(LostCore::IMaterial* material);
+	static TExportFuncWrapper<LostCore::IMaterial*> WrappedDestroyMaterial_Segment("DestroyMaterial_Segment", GetModule_LostCoreD3D11);
+
 	extern "C" LOSTCORED3D11_API int32 CreateMaterial_SceneObject(LostCore::IMaterial** material);
 	static TExportFuncWrapper<LostCore::IMaterial**> WrappedCreateMaterial_SceneObject("CreateMaterial_SceneObject", GetModule_LostCoreD3D11);
 

@@ -10,7 +10,6 @@
 #include "stdafx.h"
 #include "BasicModel.h"
 #include "PrimitiveGroupInterface.h"
-#include "Serialize/MeshData2.h"
 #include "Resource/MeshLoader.h"
 
 using namespace LostCore;
@@ -18,7 +17,6 @@ using namespace LostCore;
 LostCore::FBasicModel::FBasicModel()
 	: Primitive(nullptr)
 	, Material(nullptr)
-	, PrimitiveFlags(0xffffffff)
 {
 }
 
@@ -58,28 +56,27 @@ bool LostCore::FBasicModel::Load(IRenderContext * rc, const char* url)
 		FBinaryIO stream;
 		stream.ReadFromFile(primitivePath.c_str());
 
-		FMeshDataGPU data;
-		stream >> data;
+		stream >> MeshData;
+		MeshData.BuildGPUData();
 
-		PrimitiveFlags = data.VertexFlags;
+		Root.LoadSkeleton(MeshData.Skeleton);
 
-		Root.LoadSkeleton(data.Skeleton);
+		assert(MeshData.Poses.find(K_INITIAL_POSE) != MeshData.Poses.end());
+		Root.LoadLocalPose(MeshData.Poses[K_INITIAL_POSE]);
 
-		if (data.Poses.size() > 0)
-		Root.LoadLocalPose(data.Poses[K_INITIAL_POSE]);
-
-		SkeletonIndexMap = data.SkeletonIndexMap;
+		SkeletonIndexMap = MeshData.SkeletonIndexMap;
 
 		if (D3D11::WrappedCreatePrimitiveGroup(&Primitive) == SSuccess)
 		{
-			if (data.IndexCount > 0)
+			if (MeshData.IndexCount > 0)
 			{
-				uint32 ibStride = data.VertexCount < (1 << 16) ? 2 : 4;
-				assert(Primitive->ConstructIB(rc, &(data.Indices[0]), data.Indices.size(), ibStride, false));
+				uint32 ibStride = MeshData.VertexCount < (1 << 16) ? 2 : 4;
+				assert(Primitive->ConstructIB(rc, &(MeshData.Indices[0]), MeshData.Indices.size(), ibStride, false));
 			}
 
-			uint32 vbStride = data.Vertices.size() / data.VertexCount;
-			assert(Primitive->ConstructVB(rc, &(data.Vertices[0]), data.Vertices.size(), vbStride, false));
+			uint32 vbStride = GetAlignedSize(GetVertexDetails(MeshData.VertexFlags).Stride, 16);
+			assert(GetPaddingSize(vbStride, 16) == 0);
+			assert(Primitive->ConstructVB(rc, &(MeshData.Vertices[0]), MeshData.Vertices.size(), vbStride, false));
 		}
 
 		//FBinaryIO stream2;
@@ -98,8 +95,8 @@ bool LostCore::FBasicModel::Load(IRenderContext * rc, const char* url)
 		return false;
 	}
 
-	if (((PrimitiveFlags & EVertexElement::Skin) == EVertexElement::Skin && D3D11::WrappedCreateMaterial_SceneObjectSkinned(&Material) == SSuccess) ||
-		((PrimitiveFlags & EVertexElement::Skin) != EVertexElement::Skin && D3D11::WrappedCreateMaterial_SceneObject(&Material) == SSuccess))
+	if (((MeshData.VertexFlags & EVertexElement::Skin) == EVertexElement::Skin && D3D11::WrappedCreateMaterial_SceneObjectSkinned(&Material) == SSuccess) ||
+		((MeshData.VertexFlags & EVertexElement::Skin) != EVertexElement::Skin && D3D11::WrappedCreateMaterial_SceneObject(&Material) == SSuccess))
 	{
 		if (modelJson.find("material") != modelJson.end())
 		{
@@ -109,7 +106,7 @@ bool LostCore::FBasicModel::Load(IRenderContext * rc, const char* url)
 		else
 		{
 			string materialPath = modelJson.find("material_prefix").value();
-			string vertexName = GetVertexDetails(PrimitiveFlags).Name;
+			string vertexName = GetVertexDetails(MeshData.VertexFlags).Name;
 			materialPath = materialPath + "_" + vertexName + ".json";
 			return Material->Initialize(rc, materialPath.c_str());
 		}
@@ -133,7 +130,7 @@ void LostCore::FBasicModel::Fini()
 
 	if (Material != nullptr)
 	{
-		if ((PrimitiveFlags & EVertexElement::Skin) == EVertexElement::Skin)
+		if ((MeshData.VertexFlags & EVertexElement::Skin) == EVertexElement::Skin)
 		{
 			D3D11::WrappedDestroyMaterial_SceneObjectSkinned(std::forward<IMaterial*>(Material));
 		}

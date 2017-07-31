@@ -60,6 +60,23 @@ namespace D3D11
 		float4x4 ViewProject;
 	};
 	*/
+
+	struct FConstantBufferDummy : public FConstantBuffer
+	{
+		struct FParam
+		{
+			uint32 Reserve;
+		};
+
+		FConstantBufferDummy() : FConstantBuffer(sizeof(FParam), false, 0)
+		{
+		}
+
+		void UpdateBuffer(const TRefCountPtr<ID3D11DeviceContext>& cxt, const void* buf, int32 sz)
+		{
+		}
+	};
+
 	struct FConstantBufferRegister0 : public FConstantBuffer
 	{
 		struct FParam

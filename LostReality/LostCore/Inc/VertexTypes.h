@@ -50,6 +50,7 @@ namespace LostCore
 			return Details(typeName, stride);
 		}
 
+		// 返回实际的stride，未对齐
 		static Details GetVertexDetail3D(
 			bool bHasTexcoord,
 			bool bHasNormal,

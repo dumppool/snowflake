@@ -11,6 +11,7 @@
 
 #include "MathBase.h"
 #include "Vector3.h"
+#include "Vector4.h"
 #include "Quat.h"
 
 namespace LostCore
@@ -20,6 +21,7 @@ namespace LostCore
 	{
 
 	public:
+		//TVec4NonVectorized<T> M[4];
 		T M[4][4];
 
 		TMatrixNonVectorized()
@@ -494,6 +496,14 @@ namespace LostCore
 			}
 
 			return result;
+		}
+
+		INLINE bool operator==(const TMatrixNonVectorized<T>& rhs) const
+		{
+			return (TVec4NonVectorized<T>(M[0]) == TVec4NonVectorized<T>(rhs.M[0])
+				&& TVec4NonVectorized<T>(M[1]) == TVec4NonVectorized<T>(rhs.M[1])
+				&& TVec4NonVectorized<T>(M[2]) == TVec4NonVectorized<T>(rhs.M[2])
+				&& TVec4NonVectorized<T>(M[3]) == TVec4NonVectorized<T>(rhs.M[3]));
 		}
 
 		INLINE TMatrixNonVectorized<T>&  Transpose()

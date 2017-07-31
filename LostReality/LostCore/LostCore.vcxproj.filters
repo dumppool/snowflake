@@ -100,8 +100,14 @@
       <Filter>Inc\Math</Filter>
     </ClInclude>
     <ClInclude Include="Inc\Math\AABB.h" />
-    <ClInclude Include="Inc\Serialize\MeshData2.h">
-      <Filter>Inc\Serialize</Filter>
+    <ClInclude Include="RenderCore\Gizmo\GizmoAxis.h">
+      <Filter>RenderCore\Gizmo</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderCore\Gizmo\GizmoLine.h">
+      <Filter>RenderCore\Gizmo</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\Math\Color.h">
+      <Filter>Inc\Math</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -137,6 +143,12 @@
     <ClCompile Include="RenderCore\BasicModel.cpp">
       <Filter>RenderCore</Filter>
     </ClCompile>
+    <ClCompile Include="RenderCore\Gizmo\GizmoAxis.cpp">
+      <Filter>RenderCore\Gizmo</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderCore\Gizmo\GizmoLine.cpp">
+      <Filter>RenderCore\Gizmo</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Interface">
@@ -165,6 +177,9 @@
     </Filter>
     <Filter Include="Inc\Serialize">
       <UniqueIdentifier>{0f0f3142-2263-4f52-9369-a21c2475add1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RenderCore\Gizmo">
+      <UniqueIdentifier>{c4913501-0a70-4738-8692-211cee22174e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

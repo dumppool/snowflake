@@ -131,7 +131,7 @@ namespace LostCore
 	{
 		ofstream file;
 		file.open(filePath, ios::out|ios::binary);
-		file.write((const char*)Data(), Size());
+		file.write((const char*)Data(), RemainingSize());
 		file.close();
 	}
 
@@ -148,8 +148,8 @@ namespace LostCore
 
 	/************************************************************
 	Serialize implementation
-	stl容器都需要特定模板，否则会试图匹配第一个模板，目前有string,map,vector,
-	set,array
+	stl容器的序列化要特别实现，否则只会拷贝数据地址
+	目前有string,map,vector,set,array
 	其中string,map测试过
 	************************************************************/
 	template<typename T>
@@ -213,6 +213,24 @@ namespace LostCore
 	}
 
 	template <typename T>
+	inline FBinaryIO& operator >> (FBinaryIO& stream, std::set<T>& data)
+	{
+		uint32 sz;
+		stream >> sz;
+		if (sz > 0)
+		{
+			for (uint32 i = 0; i < sz; ++i)
+			{
+				T val;
+				stream >> val;
+				data.insert(val);
+			}
+		}
+
+		return stream;
+	}
+
+	template <typename T>
 	inline FBinaryIO& operator<<(FBinaryIO& stream, const std::set<T>& data)
 	{
 		uint32 sz = data.size();
@@ -246,24 +264,6 @@ namespace LostCore
 		if (sz > 0)
 		{
 			Serialize(stream, (const uint8*)&data[0], sz * sizeof(T));
-		}
-
-		return stream;
-	}
-
-	template <typename T>
-	inline FBinaryIO& operator >> (FBinaryIO& stream, std::set<T>& data)
-	{
-		uint32 sz;
-		stream >> sz;
-		if (sz > 0)
-		{
-			for (uint32 i = 0; i < sz; ++i)
-			{
-				T val;
-				stream >> val;
-				data.insert(val);
-			}
 		}
 
 		return stream;

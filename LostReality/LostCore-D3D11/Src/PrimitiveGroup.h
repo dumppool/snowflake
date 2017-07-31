@@ -24,18 +24,23 @@ namespace D3D11
 		virtual void SetTopology(LostCore::EPrimitiveTopology topo) override;
 		virtual void SetMaterial(LostCore::IMaterial * mat) override;
 		virtual const LostCore::IMaterial * GetMaterial() const override;
+		virtual void UpdateVB(LostCore::IRenderContext* rc, const void* buf, uint32 bytes) override;
 
 	private:
 		TRefCountPtr<ID3D11Buffer>			VertexBuffer;
-		TRefCountPtr<ID3D11Buffer>			IndexBuffer;
 		uint32 VertexBufferSlot;
 		uint32 VertexBufferNum;
 		uint32 VertexStride;
 		uint32 VertexBufferOffset;
 		uint32 VertexCount;
+		bool bIsVBDynamic;
+
+		TRefCountPtr<ID3D11Buffer>			IndexBuffer;
 		uint32 IndexBufferOffset;
 		uint32 IndexCount;
 		DXGI_FORMAT IndexFormat;
+		bool bIsIBDynamic;
+
 		D3D11_PRIMITIVE_TOPOLOGY Topology;
 
 		LostCore::IMaterial* Material;

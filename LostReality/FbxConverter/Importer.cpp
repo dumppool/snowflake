@@ -1016,7 +1016,7 @@ public:
 					inputStream1.ReadFromFile(ConvertPath + it.key() + ".primitive");
 					inputStream2.ReadFromFile(ConvertPath + it.key() + ".primitive");
 					LostCore::FMeshData data, data2, data3;
-					LostCore::FMeshDataGPU gpuData, gpuData2;
+					LostCore::FMeshData gpuData, gpuData2;
 					inputStream1 >> gpuData;
 					inputStream2 >> data;
 

@@ -32,9 +32,15 @@ namespace LostCore
 		TVec4NonVectorized(T x, T y, T z, T w)
 			: X(x), Y(y), Z(z), W(w) {}
 
+		explicit TVec4NonVectorized(const T* p)
+		{
+			memcpy(&X, p, sizeof(T) * 4);
+		}
+
 		INLINE T operator|(const TVec4NonVectorized<T>& vec) const;
 		INLINE T operator[](int32 index) const;
 		INLINE T& operator[](int32 index);
+		INLINE bool operator==(const TVec4NonVectorized<T>& rhs) const;
 	};
 
 	template <typename T>
@@ -53,6 +59,15 @@ namespace LostCore
 	INLINE T TVec4NonVectorized<T>::operator[](int32 index) const
 	{
 		return (*this)[index];
+	}
+
+	template <typename T>
+	INLINE bool TVec4NonVectorized<T>::operator==(const TVec4NonVectorized<T>& rhs) const
+	{
+		return (X == rhs.X
+			&& Y == rhs.Y
+			&& Z == rhs.Z
+			&& W == rhs.W);
 	}
 
 	template <typename T>

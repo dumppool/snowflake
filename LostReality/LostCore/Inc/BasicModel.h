@@ -53,7 +53,7 @@ namespace LostCore
 		FSkelPoseTree Root;
 		//FAnimation Animation;
 
-		uint32 PrimitiveFlags;
+		FMeshData MeshData;
 
 		FAABoundingBox BoundingBox;
 	};

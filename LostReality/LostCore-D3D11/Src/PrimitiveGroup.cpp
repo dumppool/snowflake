@@ -77,7 +77,8 @@ bool D3D11::FPrimitiveGroup::ConstructVB(IRenderContext* rc, const void * buf, u
 	VertexBufferNum = 1;
 	VertexBufferOffset = 0;
 	VertexCount = bytes / stride;
-	return SSuccess == CreatePrimitiveVertex(device.GetReference(), buf, bytes, bDynamic, VertexBuffer.GetInitReference());
+	bIsVBDynamic = bDynamic;
+	return SSuccess == CreatePrimitiveVertex(device.GetReference(), buf, bytes, bIsVBDynamic, VertexBuffer.GetInitReference());
 }
 
 bool D3D11::FPrimitiveGroup::ConstructIB(IRenderContext* rc, const void * buf, uint32 bytes, uint32 stride, bool bDynamic)
@@ -103,13 +104,20 @@ bool D3D11::FPrimitiveGroup::ConstructIB(IRenderContext* rc, const void * buf, u
 
 	IndexBufferOffset = 0;
 	IndexCount = bytes / stride;
-	return SSuccess == CreatePrimitiveIndex(device.GetReference(), buf, bytes, bDynamic, IndexBuffer.GetInitReference());
+	bIsIBDynamic = bDynamic;
+	return SSuccess == CreatePrimitiveIndex(device.GetReference(), buf, bytes, bIsIBDynamic, IndexBuffer.GetInitReference());
 }
 
 void D3D11::FPrimitiveGroup::SetTopology(EPrimitiveTopology topo)
 {
 	switch (topo)
 	{
+	case EPrimitiveTopology::PointList:
+		Topology = D3D11_PRIMITIVE_TOPOLOGY_POINTLIST;
+		break;
+	case EPrimitiveTopology::LineList:
+		Topology = D3D11_PRIMITIVE_TOPOLOGY_LINELIST;
+		break;
 	case EPrimitiveTopology::TriangleList:
 		Topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 		break;
@@ -126,4 +134,39 @@ void D3D11::FPrimitiveGroup::SetMaterial(IMaterial * mat)
 const IMaterial * D3D11::FPrimitiveGroup::GetMaterial() const
 {
 	return Material;
+}
+
+void D3D11::FPrimitiveGroup::UpdateVB(LostCore::IRenderContext * rc, const void * buf, uint32 bytes)
+{
+	const char* head = "D3D11::FPrimitiveGroup::UpdateVB";
+	TRefCountPtr<ID3D11DeviceContext> cxt = FRenderContext::GetDeviceContext(rc, head);
+	if (!cxt.IsValid())
+	{
+		return;
+	}
+
+	// 强制释放IndexBuffer
+	IndexBuffer = nullptr;
+
+	assert(bIsVBDynamic);
+
+	// 更新的bytes大于vertex buffer，重新创建
+	if (bytes > (VertexCount * VertexStride))
+	{
+		VertexBuffer = nullptr;
+		TRefCountPtr<ID3D11Device> device = FRenderContext::GetDevice(rc, head);
+		VertexCount = bytes / VertexStride;
+		assert(SSuccess == CreatePrimitiveVertex(device.GetReference(), buf, bytes, bIsVBDynamic, VertexBuffer.GetInitReference()));
+	}
+	else
+	{
+		D3D11_BOX destRegion;
+		destRegion.left = 0;
+		destRegion.right = bytes;
+		destRegion.top = 0;
+		destRegion.bottom = 1;
+		destRegion.front = 0;
+		destRegion.back = 1;
+		cxt->UpdateSubresource(VertexBuffer.GetReference(), 0, &destRegion, buf, 0, 0);
+	}
 }

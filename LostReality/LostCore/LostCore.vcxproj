@@ -162,6 +162,7 @@
     <ClInclude Include="Inc\Keywords.h" />
     <ClInclude Include="Inc\LostCore.h" />
     <ClInclude Include="Inc\Math\AABB.h" />
+    <ClInclude Include="Inc\Math\Color.h" />
     <ClInclude Include="Inc\Math\MathBase.h" />
     <ClInclude Include="Inc\Math\Matrix.h" />
     <ClInclude Include="Inc\Math\Quat.h" />
@@ -169,7 +170,6 @@
     <ClInclude Include="Inc\Math\Vector2.h" />
     <ClInclude Include="Inc\Math\Vector3.h" />
     <ClInclude Include="Inc\Math\Vector4.h" />
-    <ClInclude Include="Inc\Serialize\MeshData2.h" />
     <ClInclude Include="Inc\Serialize\Serialization.h" />
     <ClInclude Include="Inc\Serialize\StructSerialize.h" />
     <ClInclude Include="Inc\SimpleWorld.h" />
@@ -181,6 +181,8 @@
     <ClInclude Include="Interface\RenderContextInterface.h" />
     <ClInclude Include="Interface\TextureInterface.h" />
     <ClInclude Include="RenderCore\FontProvider.h" />
+    <ClInclude Include="RenderCore\Gizmo\GizmoAxis.h" />
+    <ClInclude Include="RenderCore\Gizmo\GizmoLine.h" />
     <ClInclude Include="RenderCore\Resource\MeshLoader.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -206,6 +208,8 @@
     <ClCompile Include="RenderCore\BasicScene.cpp" />
     <ClCompile Include="RenderCore\BasicWorld.cpp" />
     <ClCompile Include="RenderCore\FontProvider.cpp" />
+    <ClCompile Include="RenderCore\Gizmo\GizmoAxis.cpp" />
+    <ClCompile Include="RenderCore\Gizmo\GizmoLine.cpp" />
     <ClCompile Include="RenderCore\Resource\MeshLoader.cpp" />
     <ClCompile Include="RenderCore\Skeleton\Animation.cpp" />
     <ClCompile Include="Src\LostCore.cpp" />
