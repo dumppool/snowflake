@@ -64,8 +64,6 @@ bool LostCore::FBasicModel::Load(IRenderContext * rc, const char* url)
 		assert(MeshData.Poses.find(K_INITIAL_POSE) != MeshData.Poses.end());
 		Root.LoadLocalPose(MeshData.Poses[K_INITIAL_POSE]);
 
-		SkeletonIndexMap = MeshData.SkeletonIndexMap;
-
 		if (D3D11::WrappedCreatePrimitiveGroup(&Primitive) == SSuccess)
 		{
 			if (MeshData.IndexCount > 0)
@@ -78,16 +76,6 @@ bool LostCore::FBasicModel::Load(IRenderContext * rc, const char* url)
 			assert(GetPaddingSize(vbStride, 16) == 0);
 			assert(Primitive->ConstructVB(rc, &(MeshData.Vertices[0]), MeshData.Vertices.size(), vbStride, false));
 		}
-
-		//FBinaryIO stream2;
-		//stream2.ReadFromFile(primitivePath.c_str());
-
-		//FMeshData data2;
-		//stream2 >> data2;
-		//for (uint32 i = 0; i < data2.XYZ.size(); ++i)
-		//{
-
-		//}
 	}
 	else
 	{
@@ -152,10 +140,53 @@ void LostCore::FBasicModel::Tick(float sec)
 	Root.GetWorldPose(pose);
 	for (const auto& it : pose)
 	{
-		if (SkeletonIndexMap.find(it.first) != SkeletonIndexMap.end())
+		if (MeshData.SkeletonIndexMap.find(it.first) != MeshData.SkeletonIndexMap.end())
 		{
-			Matrices.Bones[SkeletonIndexMap[it.first]] = it.second;
+			Matrices.Bones[MeshData.SkeletonIndexMap[it.first]] = it.second;
 		}
+	}
+
+	const float constSegLength = 1.1f;
+	const FColor96 constSegColor((uint32)0x0000ff);
+	bool bDisplayNormal = true;
+	if (bDisplayNormal)
+	{
+		for (uint32 i = 0; i < MeshData.Coordinates.size(); ++i)
+		{
+			FFloat4x4 localToWorld;
+			localToWorld.SetZero();
+			for (uint32 j = 0; j < 4; ++j)
+			{
+				if (MeshData.BlendIndices[i][j] >= 0)
+				{
+					localToWorld = localToWorld + Matrices.Bones[MeshData.BlendIndices[i][j]] * MeshData.BlendWeights[i][j];
+				}
+				else
+				{
+					if (j == 0)
+					{
+						assert(0);
+					}
+				}
+			}
+
+			FSegmentData seg;
+			seg.StartPt = localToWorld.ApplyPoint(MeshData.Coordinates[i]);
+			FFloat3 normal;
+			if (MeshData.Normals.size() > 0)
+			{
+				normal = localToWorld.ApplyVector(MeshData.Normals[i]);
+			}
+
+			seg.StopPt = seg.StartPt + normal * constSegLength;
+			seg.Color = constSegColor;
+
+			SegmentRenderer.AddSegment(seg);
+		}
+
+		FFloat4x4 w;
+		w.SetIdentity();
+		SegmentRenderer.SetWorldMatrix(w);
 	}
 }
 
@@ -170,6 +201,12 @@ void LostCore::FBasicModel::Draw(IRenderContext * rc, float sec)
 	if (Primitive != nullptr)
 	{
 		Primitive->Draw(rc, sec);
+	}
+
+	bool bDisplayNormal = true;
+	if (bDisplayNormal)
+	{
+		SegmentRenderer.Draw(rc, sec);
 	}
 }
 

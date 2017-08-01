@@ -286,7 +286,7 @@ namespace LostCore
 			return *this;
 		}
 
-		INLINE void ApplyVector4(TVec4NonVectorized<T>& ret, const TVec4NonVectorized<T>& p)
+		INLINE void ApplyVector4(TVec4NonVectorized<T>& ret, const TVec4NonVectorized<T>& p) const
 		{
 			ret.X = p | TVec4NonVectorized<T>(M[0][0], M[1][0], M[2][0], M[3][0]);
 			ret.Y = p | TVec4NonVectorized<T>(M[0][1], M[1][1], M[2][1], M[3][1]);
@@ -294,7 +294,7 @@ namespace LostCore
 			ret.W = p | TVec4NonVectorized<T>(M[0][3], M[1][3], M[2][3], M[3][3]);
 		}
 
-		INLINE void ApplyPoint(TVec3NonVectorized<T>& ret, const TVec3NonVectorized<T>& p)
+		INLINE void ApplyPoint(TVec3NonVectorized<T>& ret, const TVec3NonVectorized<T>& p) const
 		{
 			TVec4NonVectorized<T> ret4;
 			ApplyVector4(ret4, TVec4NonVectorized<T>(p.X, p.Y, p.Z, 1.0));
@@ -303,14 +303,14 @@ namespace LostCore
 			ret.Z = ret4.Z;
 		}
 
-		INLINE TVec3NonVectorized<T> ApplyPoint(const TVec3NonVectorized<T>& p)
+		INLINE TVec3NonVectorized<T> ApplyPoint(const TVec3NonVectorized<T>& p) const
 		{
 			TVec3NonVectorized<T> ret;
 			ApplyPoint(ret, p);
 			return ret;
 		}
 
-		INLINE void ApplyVector(TVec3NonVectorized<T>& ret, const TVec3NonVectorized<T>& v)
+		INLINE void ApplyVector(TVec3NonVectorized<T>& ret, const TVec3NonVectorized<T>& v) const
 		{
 			TVec4NonVectorized<T> ret4;
 			ApplyVector4(ret4, TVec4NonVectorized<T>(v.X, v.Y, v.Z, 0.0));
@@ -319,7 +319,7 @@ namespace LostCore
 			ret.Z = ret4.Z;
 		}
 
-		INLINE TVec3NonVectorized<T> ApplyVector(const TVec3NonVectorized<T>& v)
+		INLINE TVec3NonVectorized<T> ApplyVector(const TVec3NonVectorized<T>& v) const
 		{
 			TVec3NonVectorized<T> ret;
 			ApplyVector(ret, v);

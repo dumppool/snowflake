@@ -15,6 +15,17 @@ namespace LostCore
 	class IPrimitiveGroup;
 	class IMaterial;
 
+	struct FSegmentVertex
+	{
+		FFloat3 Coordinate;
+		FColor96 Color;
+		FFloat2 Unused;
+
+		FSegmentVertex() {}
+		FSegmentVertex(const FFloat3& pos, const FColor96& col)
+			: Coordinate(pos), Color(col) {}
+	};
+
 	struct FSegmentData
 	{
 		FFloat3 StartPt;
@@ -28,7 +39,7 @@ namespace LostCore
 	{
 	private:
 		FFloat4x4 World;
-		vector<FSegmentData> Data;
+		vector<FSegmentVertex> Data;
 
 		bool bConstructed;
 		uint32 CurrentPrimitiveBytes;

@@ -401,7 +401,7 @@ EReturnCode D3D11::CreatePrimitiveVertex(ID3D11Device* device, const void* buf, 
 	}
 
 	// Vertex Buffer
-	D3D11_BUFFER_DESC desc{ bytes, bDynamic ? D3D11_USAGE_DYNAMIC : D3D11_USAGE_DEFAULT, D3D11_BIND_VERTEX_BUFFER, 0, 0, 0 };
+	D3D11_BUFFER_DESC desc{ bytes, bDynamic ? D3D11_USAGE_DYNAMIC : D3D11_USAGE_DEFAULT, D3D11_BIND_VERTEX_BUFFER, bDynamic?D3D11_CPU_ACCESS_WRITE:0, 0, 0 };
 	D3D11_SUBRESOURCE_DATA data{ buf, 0, 0 };
 	HRESULT hr = device->CreateBuffer(&desc, &data, vb);
 	if (FAILED(hr))

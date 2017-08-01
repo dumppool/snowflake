@@ -216,6 +216,28 @@ namespace D3D11
 		}
 	};
 
+	ALIGNED_LR(16) struct FVertex_8
+	{
+		LostCore::FFloat3 XYZ;
+		LostCore::FColor96 COLOR;
+
+		INLINE static LostCore::FVertexTypes::Details GetDetails()
+		{
+			return LostCore::FVertexTypes::GetVertexDetail3D(false, false, false, true, false);
+		}
+
+		INLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
+		{
+			static D3D11_INPUT_ELEMENT_DESC SDesc[] =
+			{
+				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_8, XYZ), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_8, COLOR), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			};
+
+			return std::make_pair(SDesc, ARRAYSIZE(SDesc));
+		}
+	};
+
 	struct FInputElementDescMap
 	{
 		static FInputElementDescMap* Get()
@@ -253,6 +275,9 @@ namespace D3D11
 
 			DescMap.insert(std::make_pair(FVertex_7::GetDetails().Name, FVertex_7::GetDesc()));
 			LVMSG(head, "register: %s, stride: %d, aligned stride: %d", FVertex_7::GetDetails().Name.c_str(), FVertex_7::GetDetails().Stride, sizeof(FVertex_7));
+
+			DescMap.insert(std::make_pair(FVertex_8::GetDetails().Name, FVertex_8::GetDesc()));
+			LVMSG(head, "register: %s, stride: %d, aligned stride: %d", FVertex_8::GetDetails().Name.c_str(), FVertex_8::GetDetails().Stride, sizeof(FVertex_8));
 		}
 
 		INLINE std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc(const std::string& key)

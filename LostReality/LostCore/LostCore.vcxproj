@@ -159,6 +159,8 @@
     <ClInclude Include="Inc\ExportTest.h" />
     <ClInclude Include="Inc\File\DirectoryHelper.h" />
     <ClInclude Include="Inc\File\json.hpp" />
+    <ClInclude Include="Inc\Gizmo\GizmoAxis.h" />
+    <ClInclude Include="Inc\Gizmo\GizmoLine.h" />
     <ClInclude Include="Inc\Keywords.h" />
     <ClInclude Include="Inc\LostCore.h" />
     <ClInclude Include="Inc\Math\AABB.h" />
@@ -181,8 +183,6 @@
     <ClInclude Include="Interface\RenderContextInterface.h" />
     <ClInclude Include="Interface\TextureInterface.h" />
     <ClInclude Include="RenderCore\FontProvider.h" />
-    <ClInclude Include="RenderCore\Gizmo\GizmoAxis.h" />
-    <ClInclude Include="RenderCore\Gizmo\GizmoLine.h" />
     <ClInclude Include="RenderCore\Resource\MeshLoader.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />

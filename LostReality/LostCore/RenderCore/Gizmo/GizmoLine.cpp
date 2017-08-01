@@ -8,7 +8,7 @@
 */
 
 #include "stdafx.h"
-#include "GizmoLine.h"
+#include "Gizmo/GizmoLine.h"
 
 #include "LostCore-D3D11.h"
 using namespace D3D11;
@@ -50,7 +50,7 @@ bool LostCore::FSegmentTool::ConstructPrimitive(LostCore::IRenderContext* rc, co
 
 	// TODO: ÅäÖÃ
 	bConstructed &= Material->Initialize(rc, "default_xyzrgb.json");
-	bConstructed &= Primitive->ConstructVB(rc, buf, bytes, sizeof(FSegmentData), true);
+	bConstructed &= Primitive->ConstructVB(rc, buf, bytes, GetAlignedSize(sizeof(FSegmentVertex), 16), false);
 	
 	assert(bConstructed);
 	return bConstructed;
@@ -79,7 +79,7 @@ void LostCore::FSegmentTool::Draw(LostCore::IRenderContext * rc, float sec)
 		return;
 	}
 
-	vector<uint8> buf(Data.size() * sizeof(FSegmentData));
+	vector<uint8> buf(Data.size() * sizeof(FSegmentVertex));
 	memcpy(&buf[0], &Data[0], buf.size());
 	Data.clear();
 
@@ -99,7 +99,8 @@ void LostCore::FSegmentTool::Draw(LostCore::IRenderContext * rc, float sec)
 
 void LostCore::FSegmentTool::AddSegment(const FSegmentData & seg)
 {
-	Data.push_back(seg);
+	Data.push_back(FSegmentVertex(seg.StartPt, seg.Color));
+	Data.push_back(FSegmentVertex(seg.StopPt, seg.Color));
 }
 
 void LostCore::FSegmentTool::SetWorldMatrix(const FFloat4x4 & mat)

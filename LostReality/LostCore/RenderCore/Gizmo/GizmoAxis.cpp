@@ -8,7 +8,7 @@
 */
 
 #include "stdafx.h"
-#include "GizmoAxis.h"
+#include "Gizmo/GizmoAxis.h"
 
 #include "LostCore-D3D11.h"
 using namespace D3D11;

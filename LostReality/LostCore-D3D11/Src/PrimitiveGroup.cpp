@@ -148,7 +148,7 @@ void D3D11::FPrimitiveGroup::UpdateVB(LostCore::IRenderContext * rc, const void 
 	// 强制释放IndexBuffer
 	IndexBuffer = nullptr;
 
-	assert(bIsVBDynamic);
+	//assert(bIsVBDynamic);
 
 	// 更新的bytes大于vertex buffer，重新创建
 	if (bytes > (VertexCount * VertexStride))

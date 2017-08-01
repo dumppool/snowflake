@@ -11,6 +11,9 @@
 
 #include "BasicInterface.h"
 #include "Animation.h"
+#include "Gizmo/GizmoAxis.h"
+#include "Gizmo/GizmoLine.h"
+
 namespace LostCore
 {
 	class IPrimitiveGroup;
@@ -48,12 +51,13 @@ namespace LostCore
 			array<FFloat4x4, MAX_BONES_PER_BATCH> Bones;
 		} Matrices;
 
-		map<string, int32> SkeletonIndexMap;
-
 		FSkelPoseTree Root;
 		//FAnimation Animation;
 
 		FMeshData MeshData;
+
+		FAxisTool AxisRenderer;
+		FSegmentTool SegmentRenderer;
 
 		FAABoundingBox BoundingBox;
 	};

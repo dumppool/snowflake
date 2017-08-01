@@ -100,14 +100,14 @@
       <Filter>Inc\Math</Filter>
     </ClInclude>
     <ClInclude Include="Inc\Math\AABB.h" />
-    <ClInclude Include="RenderCore\Gizmo\GizmoAxis.h">
-      <Filter>RenderCore\Gizmo</Filter>
-    </ClInclude>
-    <ClInclude Include="RenderCore\Gizmo\GizmoLine.h">
-      <Filter>RenderCore\Gizmo</Filter>
-    </ClInclude>
     <ClInclude Include="Inc\Math\Color.h">
       <Filter>Inc\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\Gizmo\GizmoAxis.h">
+      <Filter>Inc\Gizmo</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\Gizmo\GizmoLine.h">
+      <Filter>Inc\Gizmo</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -180,6 +180,9 @@
     </Filter>
     <Filter Include="RenderCore\Gizmo">
       <UniqueIdentifier>{c4913501-0a70-4738-8692-211cee22174e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Inc\Gizmo">
+      <UniqueIdentifier>{ac821ada-0fa1-45a5-b8a9-a6506cb2350b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

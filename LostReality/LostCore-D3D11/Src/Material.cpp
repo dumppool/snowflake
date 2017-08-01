@@ -58,8 +58,14 @@ bool D3D11::FMaterialShader::LoadShader(LostCore::IRenderContext * rc, const str
 	}
 
 	auto desc = FInputElementDescMap::Get()->GetDesc(vertexName);
-	if (idMask == SShaderID_Vertex && desc.first != nullptr)
+	if (idMask == SShaderID_Vertex)
 	{				
+		if (desc.first == nullptr)
+		{
+			LVERR(head, "failed to find %s in FInputElementDescMap", vertexName.c_str());
+			return false;
+		}
+
 		hr = device->CreateVertexShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(),
 			nullptr, VS.GetInitReference());
 		if (FAILED(hr))

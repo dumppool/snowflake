@@ -38,6 +38,7 @@ using FJson = nlohmann::json;
 #include "Math/Vector3.h"
 #include "Math/Vector4.h"
 #include "Math/Matrix.h"
+#include "Math/Color.h"
 
 #include "File/DirectoryHelper.h"
 
