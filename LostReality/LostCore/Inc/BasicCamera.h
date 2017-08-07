@@ -21,8 +21,8 @@ namespace LostCore
 		FBasicCamera();
 		virtual ~FBasicCamera() override;
 
+		virtual bool Config(IRenderContext * rc, const FJson& config) override;
 		virtual bool Load(IRenderContext * rc, const char* url) override;
-		virtual void Fini() override;
 		virtual void Tick(float sec) override;
 		virtual void Draw(IRenderContext * rc, float sec) override;
 

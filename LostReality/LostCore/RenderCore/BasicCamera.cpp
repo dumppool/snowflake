@@ -26,14 +26,14 @@ LostCore::FBasicCamera::~FBasicCamera()
 {
 }
 
-bool LostCore::FBasicCamera::Load(IRenderContext * rc, const char* url)
+bool LostCore::FBasicCamera::Config(IRenderContext * rc, const FJson & config)
 {
 	return true;
 }
 
-void LostCore::FBasicCamera::Fini()
+bool LostCore::FBasicCamera::Load(IRenderContext * rc, const char* url)
 {
-
+	return true;
 }
 
 void LostCore::FBasicCamera::Tick(float sec)
@@ -43,7 +43,10 @@ void LostCore::FBasicCamera::Tick(float sec)
 
 void LostCore::FBasicCamera::Draw(IRenderContext * rc, float sec)
 {
-
+	if (rc != nullptr)
+	{
+		rc->SetViewProjectMatrix(GetViewProjectMatrix());
+	}
 }
 
 void LostCore::FBasicCamera::AddPositionWorld(const FFloat3& pos)

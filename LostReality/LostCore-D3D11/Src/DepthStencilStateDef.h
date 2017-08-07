@@ -19,30 +19,21 @@ namespace D3D11
 			return SName;
 		}
 
-		INLINE static TRefCountPtr<ID3D11DepthStencilState> GetState(
-			const TRefCountPtr<ID3D11Device>& device = nullptr, bool bDestroy = false)
+		INLINE static TRefCountPtr<ID3D11DepthStencilState> GetState(const TRefCountPtr<ID3D11Device>& device)
 		{
-			static TRefCountPtr<ID3D11DepthStencilState> SState;
-			static bool SCreated = false;
+			TRefCountPtr<ID3D11DepthStencilState> state;
 
-			if (device.IsValid() && !SCreated)
+			if (device.IsValid())
 			{
-				SCreated = true;
 				CD3D11_DEPTH_STENCIL_DESC desc(D3D11_DEFAULT);
-				HRESULT hr = device->CreateDepthStencilState(&desc, SState.GetInitReference());
+				HRESULT hr = device->CreateDepthStencilState(&desc, state.GetInitReference());
 				if (FAILED(hr))
 				{
 					LVERR("FDepthStencilState_0::GetState", "create depth stencil state failed: 0x%08x(%d)", hr, hr);
 				}
 			}
 
-			if (bDestroy)
-			{
-				SState = nullptr;
-				SCreated = false;
-			}
-
-			return SState;
+			return state;
 		}
 	};
 
@@ -54,32 +45,21 @@ namespace D3D11
 			return SName;
 		}
 
-		INLINE static TRefCountPtr<ID3D11DepthStencilState> GetState(
-			const TRefCountPtr<ID3D11Device>& device = nullptr, bool bDestroy = false)
+		INLINE static TRefCountPtr<ID3D11DepthStencilState> GetState(const TRefCountPtr<ID3D11Device>& device)
 		{
-			static TRefCountPtr<ID3D11DepthStencilState> SState;
-			static bool SCreated = false;
+			TRefCountPtr<ID3D11DepthStencilState> state;
 
-			if (device.IsValid() && !SCreated)
+			if (device.IsValid())
 			{
-				SCreated = true;
 				CD3D11_DEPTH_STENCIL_DESC desc(D3D11_DEFAULT);
-				//desc.StencilReadMask = 0;
-				//desc.StencilWriteMask = 0;
-				HRESULT hr = device->CreateDepthStencilState(&desc, SState.GetInitReference());
+				HRESULT hr = device->CreateDepthStencilState(&desc, state.GetInitReference());
 				if (FAILED(hr))
 				{
 					LVERR("FDepthStencilState_0::GetState", "create depth stencil state failed: 0x%08x(%d)", hr, hr);
 				}
 			}
 
-			if (bDestroy)
-			{
-				SState = nullptr;
-				SCreated = false;
-			}
-
-			return SState;
+			return state;
 		}
 	};
 
@@ -101,7 +81,11 @@ namespace D3D11
 		void ReleaseComObjects()
 		{
 			bool bDestroy = true;
-			FDepthStencilState_0::GetState(nullptr, bDestroy);
+
+			for (auto& elem : StateMap)
+			{
+				elem.second = nullptr;
+			}
 
 			StateMap.clear();
 		}

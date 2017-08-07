@@ -18,7 +18,8 @@ namespace LostCore
 	enum class ESceneNodeType : uint8
 	{
 		Undefined = 0,
-		Model = 1,
+		StaticModel,
+		SkeletalModel,
 	};
 
 	class FBasicScene : public IBasicInterface
@@ -29,14 +30,15 @@ namespace LostCore
 
 		virtual void Tick(float sec) override;
 		virtual void Draw(IRenderContext * rc, float sec) override;
+		virtual bool Config(IRenderContext * rc, const FJson& config) override;
 		virtual bool Load(IRenderContext * rc, const char* url) override;
-		virtual void Fini() override;
 
 		virtual void AddModel(FBasicModel * sm);
-		virtual void RemoveStaticMesh(FBasicModel * sm);
-		virtual void ClearStaticMesh(std::function<void(FBasicModel*)> func);
+		virtual void RemoveModel(FBasicModel * sm);
+
+		void Fini();
 
 	protected:
-		std::vector<FBasicModel*> StaticMeshArray;
+		std::vector<FBasicModel*> Models;
 	};
 }

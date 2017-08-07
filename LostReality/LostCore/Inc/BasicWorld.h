@@ -23,21 +23,22 @@ namespace LostCore
 		FBasicWorld();
 		virtual ~FBasicWorld() override;
 
+		virtual bool Config(IRenderContext * rc, const FJson& config) override;
 		virtual bool Load(IRenderContext * rc, const char* url) override;
-		virtual void Fini() override;
 		virtual void Tick(float sec) override;
 		virtual void Draw(IRenderContext * rc, float sec) override;
 
 		virtual void DrawPreScene(float sec);
 		virtual void DrawPostScene(float sec);
 
-		virtual bool InitWindow(const char* name, HWND wnd, bool bWindowed, int32 width, int32 height);
+		virtual bool InitializeWindow(const char* name, HWND wnd, bool windowed, int32 width, int32 height);
 		virtual IRenderContext* GetRenderContext();
 		virtual FBasicCamera* GetCamera();
 
 		virtual void AddScene(FBasicScene * scene);
 		virtual void RemoveScene(FBasicScene * scene);
-		virtual void ClearScene(std::function<void(FBasicScene *)> func);
+
+		void Fini();
 
 	private:
 		std::vector<FBasicScene*> SceneArray;

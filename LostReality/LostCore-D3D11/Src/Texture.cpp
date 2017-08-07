@@ -18,6 +18,8 @@ D3D11::FTexture2D::FTexture2D()
 	: Texture(nullptr)
 	, ShaderResource(nullptr)
 	, RenderTarget(nullptr)
+	, DepthStencil(nullptr)
+	, Sampler(nullptr)
 	, BindFlags(0x0)
 	, AccessFlags(0x0)
 {
@@ -28,6 +30,8 @@ D3D11::FTexture2D::~FTexture2D()
 	Texture = nullptr;
 	ShaderResource = nullptr;
 	RenderTarget = nullptr;
+	DepthStencil = nullptr;
+	Sampler = nullptr;
 	BindFlags = 0x0;
 	AccessFlags = 0x0;
 }

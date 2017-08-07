@@ -27,6 +27,11 @@ LostCore::FRect::FRect()
 {
 }
 
+LostCore::FRect::~FRect()
+{
+	Clear();
+}
+
 void LostCore::FRect::SetOrigin(const FFloat2 & origin)
 {
 	Param.Origin = origin;
@@ -130,6 +135,24 @@ void LostCore::FRect::DelChild(FRect * child)
 
 void LostCore::FRect::Clear()
 {
+	if (RectPrimitive != nullptr)
+	{
+		WrappedDestroyPrimitiveGroup(forward<IPrimitiveGroup*>(RectPrimitive));
+		RectPrimitive = nullptr;
+	}
+
+	if (RectMaterial != nullptr)
+	{
+		WrappedDestroyMaterial_UIObject(forward<IMaterial*>(RectMaterial));
+		RectMaterial = nullptr;
+	}
+
+	for (auto& c : Children)
+	{
+		SAFE_DELETE(c);
+	}
+
+	Children.clear();
 }
 
 void LostCore::FRect::Draw(IRenderContext * rc, float sec)
@@ -192,7 +215,7 @@ void LostCore::FRect::ReconstructPrimitive(IRenderContext * rc)
 			return;
 		}
 
-		RectPrimitive->SetMaterial(RectMaterial);
+		//RectPrimitive->SetMaterial(RectMaterial);
 
 		// 临时代码，查看字体贴图
 		RectMaterial->UpdateTexture(rc, FFontProvider::Get()->GetGdiFont()->GetFontTextures()[0], 0);
@@ -221,6 +244,7 @@ void LostCore::FRect::DrawPrivate(IRenderContext * rc, float sec)
 	if (RectPrimitive != nullptr && RectMaterial != nullptr)
 	{
 		RectMaterial->UpdateConstantBuffer(rc, (const void*)&Param, sizeof(Param));
+		RectMaterial->Draw(rc, sec);
 		RectPrimitive->Draw(rc, sec);
 	}
 
@@ -232,6 +256,7 @@ LostCore::FBasicGUI::FBasicGUI() : Font(nullptr)
 
 LostCore::FBasicGUI::~FBasicGUI()
 {
+	Fini();
 }
 
 void LostCore::FBasicGUI::Tick(float sec)
@@ -241,6 +266,11 @@ void LostCore::FBasicGUI::Tick(float sec)
 void LostCore::FBasicGUI::Draw(IRenderContext * rc, float sec)
 {
 	Root.Draw(rc, sec);
+}
+
+bool LostCore::FBasicGUI::Config(IRenderContext * rc, const FJson & config)
+{
+	return false;
 }
 
 bool LostCore::FBasicGUI::Load(IRenderContext * rc, const char* url)
@@ -259,4 +289,5 @@ bool LostCore::FBasicGUI::Load(IRenderContext * rc, const char* url)
 void LostCore::FBasicGUI::Fini()
 {
 	FFontProvider::Get()->Fini();
+	Root.Clear();
 }

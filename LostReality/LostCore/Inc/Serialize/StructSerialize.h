@@ -200,7 +200,7 @@ namespace LostCore
 		void Load(const string& inputDir);
 
 		// 暂时索引没有意义，只转换顶点数据流
-		void BuildGPUData();
+		void BuildGPUData(uint32 flags);
 	};
 
 	template<>
@@ -309,7 +309,12 @@ inline void LostCore::FMeshData::Save(const string & outputDir) const
 		return;
 	}
 
-	auto outputFile = outputDir + Name + "." + K_PRIMITIVE;
+	auto outputFile = outputDir;
+	if (LostCore::IsDirectory(outputFile))
+	{
+		outputFile = outputDir + Name + K_PRIMITIVE_EXT;
+	}
+	
 	FBinaryIO stream;
 	stream << *this;
 	stream.WriteToFile(outputFile);
@@ -335,8 +340,10 @@ inline void LostCore::FMeshData::Load(const string & inputFile)
 }
 
 // 暂时索引没有意义，只构造顶点数据流
-inline void LostCore::FMeshData::BuildGPUData()
+inline void LostCore::FMeshData::BuildGPUData(uint32 flags)
 {
+	assert((flags & ~VertexFlags) == 0);
+
 	// 如果下面split都为空，可以考虑构造索引缓存
 	bool splitUV = TexCoords.size() == 0;
 	bool splitNormal = Normals.size() == 0;
@@ -345,7 +352,7 @@ inline void LostCore::FMeshData::BuildGPUData()
 	Vertices.clear();
 	FBinaryIO stream;
 	vector<uint8> padding;
-	uint32 paddingSz = GetPaddingSize(GetVertexDetails(VertexFlags).Stride, 16);
+	uint32 paddingSz = GetPaddingSize(GetVertexDetails(flags).Stride, 16);
 	padding.resize(paddingSz);
 	for (const auto& tri : Triangles)
 	{
@@ -353,17 +360,17 @@ inline void LostCore::FMeshData::BuildGPUData()
 		{
 			stream << Coordinates[vert.Index];
 
-			if ((VertexFlags & EVertexElement::UV) == EVertexElement::UV)
+			if ((flags & EVertexElement::UV) == EVertexElement::UV)
 			{
 				stream << (splitUV ? vert.TexCoord : TexCoords[vert.Index]);
 			}
 
-			if ((VertexFlags & EVertexElement::Normal) == EVertexElement::Normal)
+			if ((flags & EVertexElement::Normal) == EVertexElement::Normal)
 			{
 				stream << (splitNormal ? vert.Normal : Normals[vert.Index]);
 			}
 
-			if ((VertexFlags & EVertexElement::Tangent) == EVertexElement::Tangent)
+			if ((flags & EVertexElement::Tangent) == EVertexElement::Tangent)
 			{
 				if (splitNormal)
 				{
@@ -375,7 +382,7 @@ inline void LostCore::FMeshData::BuildGPUData()
 				}
 			}
 
-			if ((VertexFlags & EVertexElement::VertexColor) == EVertexElement::VertexColor)
+			if ((flags & EVertexElement::VertexColor) == EVertexElement::VertexColor)
 			{
 				if (splitVertexColor)
 				{
@@ -387,7 +394,7 @@ inline void LostCore::FMeshData::BuildGPUData()
 				}
 			}
 
-			if ((VertexFlags & EVertexElement::Skin) == EVertexElement::Skin)
+			if ((flags & EVertexElement::Skin) == EVertexElement::Skin)
 			{
 				stream << BlendWeights[vert.Index] << BlendIndices[vert.Index];
 			}

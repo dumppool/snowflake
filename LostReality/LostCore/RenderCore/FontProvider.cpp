@@ -16,6 +16,13 @@ using namespace D3D11;
 using namespace std;
 using namespace LostCore;
 
+LostCore::FFontProvider::~FFontProvider()
+{
+	Fini();
+
+	assert(GdiFont == nullptr);
+}
+
 void LostCore::FFontProvider::Init(IRenderContext * rc)
 {
 	WrappedCreateGdiFont(&GdiFont);
@@ -46,6 +53,7 @@ void LostCore::FFontProvider::Init(IRenderContext * rc)
 void LostCore::FFontProvider::Fini()
 {
 	WrappedDestroyGdiFont(forward<IFontInterface*>(GdiFont));
+	GdiFont = nullptr;
 }
 
 IFontInterface * LostCore::FFontProvider::GetGdiFont()

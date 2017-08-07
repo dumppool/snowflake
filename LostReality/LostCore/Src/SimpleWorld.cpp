@@ -9,168 +9,12 @@
 
 #include "stdafx.h"
 #include "SimpleWorld.h"
-#include "BasicModel.h"
-#include "BasicCamera.h"
-#include "BasicScene.h"
 
 #include "LostCore-D3D11.h"
 using namespace D3D11;
 
 namespace LostCore
 {
-	class FSimpleCamera : public FBasicCamera
-	{
-	public:
-		FSimpleCamera();
-		virtual ~FSimpleCamera();
-
-		bool Load(IRenderContext * rc, const char* url) override;
-		virtual void Draw(IRenderContext * rc, float sec) override;
-	};
-
-	FSimpleCamera::FSimpleCamera()
-	{
-	}
-
-	FSimpleCamera::~FSimpleCamera()
-	{
-	}
-
-	bool FSimpleCamera::Load(IRenderContext * rc, const char* url)
-	{
-		return true;
-	}
-
-	void FSimpleCamera::Draw(IRenderContext * rc, float sec)
-	{
-		if (rc != nullptr)
-		{
-			rc->SetViewProjectMatrix(GetViewProjectMatrix());
-		}
-	}
-
-	/*
-	class FSimpleScene : public FBasicScene
-	{
-	public:
-		FSimpleScene();
-		virtual ~FSimpleScene() override;
-
-		virtual void Draw(IRenderContext * rc, float sec) override;
-		bool Load(IRenderContext * rc, const char* url) override;
-		virtual void Fini() override;
-
-	private:
-		IPrimitiveGroup*	APrimitiveGroup;
-		IMaterial*			AMaterial;
-	};
-
-	FSimpleScene::FSimpleScene()
-		: APrimitiveGroup(nullptr)
-		, AMaterial(nullptr)
-	{
-	}
-
-	FSimpleScene::~FSimpleScene()
-	{
-		//assert(APrimitiveGroup == nullptr);
-		//assert(AMaterial == nullptr);
-	}
-
-	void FSimpleScene::Draw(IRenderContext * rc, float sec)
-	{
-		FTransform world(FFloat3(0.f, 0.f, 5.f));
-		FFloat4x4 mat = world.ToMatrix();
-		AMaterial->UpdateConstantBuffer(rc, (const void*)&mat, sizeof(FFloat4x4));
-
-		FBasicScene::Draw(rc, sec);
-	}
-
-	bool FSimpleScene::Load(IRenderContext * rc, const char* url)
-	{
-		// hard coded static mesh creation.
-		FBasicModel* geo = new FBasicModel;
-		AddModel(geo);
-
-		if (SSuccess != WrappedCreatePrimitiveGroup(&APrimitiveGroup))
-		{
-			return false;
-		}
-
-		__declspec(align(16)) struct _Vertex { FFloat3 RGB; FFloat3 XYZ; FFloat3 N; FFloat2 UV; };
-		float scaler = 0.5f;
-
-		// Mesh vertices
-		const _Vertex vertices[] =
-		{
-			{ FFloat3(1.f, 0.f, 0.f),	FFloat3(0.f, 0.f, -scaler),	FFloat3(0.5f, -0.5f, -0.5f),	FFloat2(0.0f, 1.0f) },		// center
-			{ FFloat3(1.f, 0.f, 0.f),	FFloat3(0.f, scaler, 0.f),	FFloat3(0.5f, -0.5f, -0.5f),	FFloat2(0.0f, 0.0f) },		// top
-			{ FFloat3(1.f, 0.f, 0.f),	FFloat3(scaler, -scaler, 0.f),FFloat3(0.5f, -0.5f, -0.5f),	FFloat2(1.0f, 0.0f) },		// bottom right
-
-			{ FFloat3(0.f, 0.f, 0.f),	FFloat3(0.f, scaler, 0.f),	FFloat3(0.f, 0.f, 1.f),		FFloat2(0.0f, 0.0f) },		// top
-			{ FFloat3(0.f, 0.f, 0.f),	FFloat3(-scaler, -scaler, 0), FFloat3(0.f, 0.f, 1.f),		FFloat2(1.0f, 1.0f) },		// bottom left
-			{ FFloat3(0.f, 0.f, 0.f),	FFloat3(scaler, -scaler, 0.f),FFloat3(0.f, 0.f, 1.f),		FFloat2(1.0f, 0.0f) },		// bottom right
-
-			{ FFloat3(0.f, 1.f, 0.f),	FFloat3(0.f, scaler, 0.f),	FFloat3(-0.5f, -0.5f, -0.5f),	FFloat2(0.0f, 0.0f) },		// top
-			{ FFloat3(0.f, 1.f, 0.f),	FFloat3(0.f, 0.f, -scaler),	FFloat3(-0.5f, -0.5f, -0.5f), FFloat2(0.0f, 1.0f) },		// center
-			{ FFloat3(0.f, 1.f, 0.f),	FFloat3(-scaler, -scaler, 0), FFloat3(-0.5f, -0.5f, -0.5f), FFloat2(1.0f, 1.0f) },		// bottom left
-
-			{ FFloat3(0.f, 0.f, 1.f),	FFloat3(-scaler, -scaler, 0), FFloat3(0.f, -0.5f, -0.5f),	FFloat2(1.0f, 1.0f) },		// bottom left
-			{ FFloat3(0.f, 0.f, 1.f),	FFloat3(0.f, 0.f, -scaler),	FFloat3(0.f, -0.5f, -0.5f),	FFloat2(0.0f, 1.0f) },		// center
-			{ FFloat3(0.f, 0.f, 1.f),	FFloat3(scaler, -scaler, 0.f),FFloat3(0.f, -0.5f, -0.5f),	FFloat2(1.0f, 0.0f) },		// bottom right
-		};
-
-		// Mesh indices
-		const uint16 indices[] = { 0, 1, 2, 1, 3, 2, 3, 1, 0, 3, 0, 2 };
-
-		if (!APrimitiveGroup->ConstructVB(rc, vertices, sizeof(vertices), sizeof(_Vertex), false))
-			//||
-			//!APrimitiveGroup->ConstructIB(rc, indices, sizeof(indices), sizeof(uint16), false))
-		{
-			return false;
-		}
-
-		if (AMaterial != nullptr)
-		{
-			WrappedDestroyMaterial_SceneObject(std::forward<IMaterial*>(AMaterial));
-		}
-
-		if (SSuccess != WrappedCreateMaterial_SceneObject(&AMaterial) ||
-			!AMaterial->Initialize(rc, "dummy_normal.json"))
-		{
-			return false;
-		}
-
-		APrimitiveGroup->SetMaterial(AMaterial);
-		geo->AddPrimitiveGroup(APrimitiveGroup);
-		return true;
-	}
-
-	void FSimpleScene::Fini()
-	{
-		ClearStaticMesh([](FBasicModel* p) 
-		{ 
-			if (p != nullptr)
-			{
-				p->Fini();
-				delete p;
-			}
-		});
-
-		//if (APrimitiveGroup != nullptr)
-		//{
-		//	WrappedDestroyPrimitiveGroup(std::forward<IPrimitiveGroup*>(APrimitiveGroup));
-		//	APrimitiveGroup = nullptr;
-		//}
-
-		//if (AMaterial != nullptr)
-		//{
-		//	WrappedDestroyMaterial(std::forward<IMaterial*>(AMaterial));
-		//	AMaterial = nullptr;
-		//}
-	}
-	*/
-
 	class FSimpleWorld : public FBasicWorld
 	{
 	public:
@@ -178,33 +22,32 @@ namespace LostCore
 		virtual ~FSimpleWorld() override;
 
 		bool Load(IRenderContext * rc, const char* url) override;
-		virtual void Fini() override;
-		virtual void DrawPreScene(float sec) override;
+		void Fini();
 
-		virtual bool InitWindow(const char* name, HWND wnd, bool bWindowed, int32 width, int32 height) override;
+		virtual bool InitializeWindow(const char* name, HWND wnd, bool bWindowed, int32 width, int32 height) override;
 		virtual IRenderContext* GetRenderContext() override;
 		virtual FBasicCamera* GetCamera() override;
 
 	private:
+		FBasicScene*			Scene;
 		IRenderContext*			RC;
-		FSimpleCamera*			Camera;
+		FBasicCamera*			Camera;
 	};
 
-	FSimpleWorld::FSimpleWorld() : RC(nullptr), Camera(nullptr)
+	FSimpleWorld::FSimpleWorld() : Scene(nullptr), RC(nullptr), Camera(nullptr)
 	{
 	}
 
 	FSimpleWorld::~FSimpleWorld()
 	{
-		assert(RC == nullptr);
-		assert(Camera == nullptr);
+		Fini();
 	}
 
 	bool FSimpleWorld::Load(IRenderContext * rc, const char* url)
 	{
 		FBasicWorld::Load(rc, "");
 
-		Camera = new FSimpleCamera;
+		Camera = new FBasicCamera;
 		if (!Camera->Load(rc, ""))
 		{
 			return false;
@@ -224,50 +67,17 @@ namespace LostCore
 	 
 	void FSimpleWorld::Fini()
 	{
-		FBasicWorld::Fini();
+		RemoveScene(Scene);
+		SAFE_DELETE(Scene);
+		SAFE_DELETE(Camera);
 
-		ClearScene([](FBasicScene* p)
-		{ 
-			if (p != nullptr)
-			{
-				p->Fini();
-				delete p;
-			} 
-		});
+		//SAFE_DELETE(RC);
+		WrappedDestroyRenderContext(forward<IRenderContext*>(RC));
+		RC = nullptr;
 
-		if (RC != nullptr)
-		{
-			RC->Fini();
-			delete RC;
-			RC = nullptr;
-		}
-
-		if (Camera != nullptr)
-		{
-			Camera->Fini();
-			delete Camera;
-			Camera = nullptr;
-		}
 	}
 
-	void FSimpleWorld::DrawPreScene(float sec)
-	{
-		FBasicWorld::DrawPreScene(sec);
-
-		if (RC == nullptr)
-		{
-			return;
-		}
-
-		if (Camera == nullptr)
-		{
-			return;
-		}
-
-		Camera->Draw(RC, sec);
-	}
-
-	bool FSimpleWorld::InitWindow(const char* name, HWND wnd, bool bWindowed, int32 width, int32 height)
+	bool FSimpleWorld::InitializeWindow(const char* name, HWND wnd, bool bWindowed, int32 width, int32 height)
 	{
 		auto ret = WrappedCreateRenderContext(EContextID::D3D11_DXGI0, &RC);
 		assert(SSuccess == ret);

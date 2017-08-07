@@ -9,6 +9,7 @@
 
 #pragma once
 
+
 namespace D3D11
 {
 	struct FSamplerState_0
@@ -58,7 +59,9 @@ namespace D3D11
 
 		void Initialize(const TRefCountPtr<ID3D11Device>& device)
 		{
+			const char* head = "FSamplerStateMap::Initialize";
 			StateMap.insert(std::make_pair(FSamplerState_0::GetName(), FSamplerState_0::GetState(device)));
+			LVMSG(head, "insert SamplerState[%s]", FSamplerState_0::GetName().c_str());
 		}
 
 		void ReleaseComObjects()
@@ -66,12 +69,17 @@ namespace D3D11
 			bool bDestroy = true;
 			FSamplerState_0::GetState(nullptr, bDestroy);
 
+			for (auto& element : StateMap)
+			{
+				element.second = nullptr;
+			}
+
 			StateMap.clear();
 		}
 
 		INLINE TRefCountPtr<ID3D11SamplerState> GetState(const std::string& key)
 		{
-			for (auto element : StateMap)
+			for (auto& element : StateMap)
 			{
 				if (element.first.compare(key) == 0)
 				{

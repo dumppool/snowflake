@@ -22,6 +22,7 @@ D3D11::FGdiFont::FGdiFont()
 
 D3D11::FGdiFont::~FGdiFont()
 {
+	Destroy();
 }
 
 bool D3D11::FGdiFont::Initialize(LostCore::IRenderContext* rc, const LostCore::FFontConfig & config, WCHAR* chars, int32 sz)
@@ -45,11 +46,7 @@ bool D3D11::FGdiFont::Initialize(LostCore::IRenderContext* rc, const LostCore::F
 
 	std::vector<WCHAR> vecChars(inputChars.begin(), inputChars.end());
 
-	if (Property.FontTexture != nullptr)
-	{
-		delete Property.FontTexture;
-	}
-
+	SAFE_DELETE(Property.FontTexture);
 	Property.FontTexture = new FTexture2D;
 
 	auto hint = Property.Config.bAntiAliased ? TextRenderingHintAntiAliasGridFit : TextRenderingHintSingleBitPerPixelGridFit;
@@ -287,6 +284,7 @@ std::vector<LostCore::ITexture*> D3D11::FGdiFont::GetFontTextures() const
 
 void D3D11::FGdiFont::Destroy()
 {
+	SAFE_DELETE(Property.FontTexture);
 }
 
 D3D11::FGdiFontProperty::FGdiFontProperty()

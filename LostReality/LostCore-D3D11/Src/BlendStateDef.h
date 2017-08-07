@@ -19,34 +19,26 @@ namespace D3D11
 			return SName;
 		}
 
-		INLINE static TRefCountPtr<ID3D11BlendState> GetState(const TRefCountPtr<ID3D11Device>& device = nullptr, bool bDestroy = false)
+		INLINE static TRefCountPtr<ID3D11BlendState> GetState(const TRefCountPtr<ID3D11Device>& device)
 		{
-			static TRefCountPtr<ID3D11BlendState> SState;
-			static bool SCreated = false;
+			TRefCountPtr<ID3D11BlendState> state;
 
-			if (device.IsValid() && !SCreated)
+			if (device.IsValid())
 			{
-				SCreated = true;
 				D3D11_BLEND_DESC desc;
 				ZeroMemory(&desc, sizeof(D3D11_BLEND_DESC));
 				desc.AlphaToCoverageEnable = FALSE;
 				desc.IndependentBlendEnable = FALSE;
 				desc.RenderTarget[0].BlendEnable = FALSE;
 				desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-				HRESULT hr = device->CreateBlendState(&desc, SState.GetInitReference());
+				HRESULT hr = device->CreateBlendState(&desc, state.GetInitReference());
 				if (FAILED(hr))
 				{
 					LVERR("FBlendState_Solid::GetState", "create blend state failed: 0x%08x(%d)", hr, hr);
 				}
 			}
 
-			if (bDestroy)
-			{
-				SState = nullptr;
-				SCreated = false;
-			}
-
-			return SState;
+			return state;
 		}
 	};
 
@@ -58,14 +50,12 @@ namespace D3D11
 			return SName;
 		}
 
-		INLINE static TRefCountPtr<ID3D11BlendState> GetState(const TRefCountPtr<ID3D11Device>& device = nullptr, bool bDestroy = false)
+		INLINE static TRefCountPtr<ID3D11BlendState> GetState(const TRefCountPtr<ID3D11Device>& device)
 		{
-			static TRefCountPtr<ID3D11BlendState> SState;
-			static bool SCreated = false;
+			TRefCountPtr<ID3D11BlendState> state;
 
-			if (device.IsValid() && !SCreated)
+			if (device.IsValid())
 			{
-				SCreated = true;
 				D3D11_BLEND_DESC desc;
 				ZeroMemory(&desc, sizeof(D3D11_BLEND_DESC));
 				desc.AlphaToCoverageEnable = TRUE;
@@ -78,20 +68,14 @@ namespace D3D11
 				desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
 				desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
 				desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
-				HRESULT hr = device->CreateBlendState(&desc, SState.GetInitReference());
+				HRESULT hr = device->CreateBlendState(&desc, state.GetInitReference());
 				if (FAILED(hr))
 				{
 					LVERR("FBlendState_Add::GetState", "create blend state failed: 0x%08x(%d)", hr, hr);
 				}
 			}
 
-			if (bDestroy)
-			{
-				SState = nullptr; 
-				SCreated = false;
-			}
-
-			return SState;
+			return state;
 		}
 	};
 
@@ -107,15 +91,23 @@ namespace D3D11
 
 		void Initialize(const TRefCountPtr<ID3D11Device>& device)
 		{
+			const char* head = "FBlendStateMap::Initialize";
+
 			StateMap.insert(std::make_pair(FBlendState_Solid::GetName(), FBlendState_Solid::GetState(device)));
+			LVMSG(head, "Insert blend state[%s]", FBlendState_Solid::GetName().c_str());
+
 			StateMap.insert(std::make_pair(FBlendState_Add::GetName(), FBlendState_Add::GetState(device)));
+			LVMSG(head, "Insert blend state[%s]", FBlendState_Add::GetName().c_str());
 		}
 
 		void ReleaseComObjects()
 		{
 			bool bDestroy = true;
-			FBlendState_Solid::GetState(nullptr, bDestroy);
-			FBlendState_Add::GetState(nullptr, bDestroy);
+
+			for (auto& elem : StateMap)
+			{
+				elem.second = nullptr;
+			}
 
 			StateMap.clear();
 		}

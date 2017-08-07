@@ -131,6 +131,14 @@ namespace LostCore
 	{
 		ofstream file;
 		file.open(filePath, ios::out|ios::binary);
+		if (file.fail())
+		{
+			char errstr[128];
+			strerror_s(errstr, errno);
+			LVERR("FBinaryIO::WriteToFile", "failed to write[%s]: %s", filePath.c_str(), errstr);
+			return;
+		}
+
 		file.write((const char*)Data(), RemainingSize());
 		file.close();
 	}

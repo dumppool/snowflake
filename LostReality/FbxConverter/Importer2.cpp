@@ -228,9 +228,6 @@ inline void FTempMesh::Extract()
 #endif
 
 	MeshData.Name = Mesh->GetName();
-	if (MeshData.Name.empty())
-	{
-	}
 
 	MeshData.VertexFlags = 0;
 	if (IsSkeletal())
@@ -360,6 +357,12 @@ inline void FTempMesh::Extract()
 				MeshData.Poses[pose->GetName()] = poseMap;
 			}
 		}
+	}
+
+	if (MeshData.Name.empty() && !MeshData.Skeleton.Data.empty())
+	{
+		MeshData.Name = MeshData.Skeleton.Data;
+		LostCore::ReplaceChar(MeshData.Name, ":", "+");
 	}
 
 	auto layer0 = Mesh->GetLayer(0);
@@ -731,20 +734,27 @@ inline bool FFbxImporter2::ImportSceneMeshes(const string & importSrc, const str
 	}
 	/*************************************************************/
 
-	DestDirectory = convertDst;
-	ReplaceChar(DestDirectory, "/", "\\");
-	GetDirectory(DestDirectory, DestDirectory);
+	auto formatDst = convertDst;
+	ReplaceChar(formatDst, "/", "\\");
+	GetDirectory(DestDirectory, formatDst);
 
 	ImportNode(SdkScene->GetRootNode());
 
-	for (const auto& mesh : TempMeshArray)
+	if (TempMeshArray.size() == 1)
 	{
-		mesh.MeshData.Save(DestDirectory);
+		TempMeshArray[0].MeshData.Save(formatDst);
+	}
+	else
+	{
+		for (const auto& mesh : TempMeshArray)
+		{
+			mesh.MeshData.Save(DestDirectory);
 
-		string f = DestDirectory + mesh.MeshData.Name + "." + K_PRIMITIVE;
-		FMeshDataAlias test;
-		test.Load(f);
-		assert(test == mesh.MeshData);
+			//string f = DestDirectory + mesh.MeshData.Name + "." + K_PRIMITIVE;
+			//FMeshDataAlias test;
+			//test.Load(f);
+			//assert(test == mesh.MeshData);
+		}
 	}
 
 	return true;

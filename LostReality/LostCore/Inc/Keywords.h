@@ -151,7 +151,7 @@
 #define K_MESSAGE5						"Message5"
 #define K_MESSAGE6						"Message6"
 
-#define K_PRIMITIVE						"iv"
+#define K_PRIMITIVE_EXT						".iv"
 
 #define FLAG_UNKNOWN					0x0badfffa
 

@@ -39,6 +39,7 @@ namespace LostCore
 
 	public:
 		FRect();
+		~FRect();
 
 		void SetOrigin(const FFloat2& origin);
 		FFloat2 GetOrigin() const;
@@ -101,7 +102,7 @@ namespace LostCore
 		FRect* Parent;
 
 		// 次序：深度从前到后，绘制时需从后到前。
-		std::vector<FRect*> Children;
+		vector<FRect*> Children;
 
 		IPrimitiveGroup* RectPrimitive;
 		FFloat2 RectPrimitiveSize;
@@ -116,8 +117,10 @@ namespace LostCore
 
 		virtual void Tick(float sec) override;
 		virtual void Draw(IRenderContext * rc, float sec) override;
+		virtual bool Config(IRenderContext * rc, const FJson& config) override;
 		virtual bool Load(IRenderContext * rc, const char* url) override;
-		virtual void Fini() override;
+
+		void Fini();
 
 	private:
 		FRect Root;

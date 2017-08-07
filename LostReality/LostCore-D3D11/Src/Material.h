@@ -23,6 +23,9 @@ namespace D3D11
 	class FMaterialShader
 	{
 	public:
+		FMaterialShader();
+		~FMaterialShader();
+
 		bool Initialize(LostCore::IRenderContext* rc, const FJson& config);
 
 		INLINE TRefCountPtr<ID3D11InputLayout> GetInputLayout()
@@ -119,7 +122,7 @@ namespace D3D11
 
 		virtual bool Initialize(LostCore::IRenderContext * rc, const char* path) override
 		{
-			const char* head = "D3D11::FMaterial::LoadShader";
+			const char* head = "D3D11::FMaterial::Initialize";
 			auto device = FRenderContext::GetDevice(rc, head);
 			if (!device.IsValid())
 			{

@@ -49,18 +49,7 @@ namespace D3D11
 		int32		Slot;
 		TRefCountPtr<ID3D11Buffer> Buffer;
 	};
-
-	/*
-	cbuffer ViewProject : register(b0)
-	{
-		float ScreenWidth;
-		float ScreenHeight;
-		float ScreenWidthRcp;
-		float ScreenHeightRcp;
-		float4x4 ViewProject;
-	};
-	*/
-
+	
 	struct FConstantBufferDummy : public FConstantBuffer
 	{
 		struct FParam

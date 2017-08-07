@@ -655,7 +655,6 @@ namespace Importer {
 			RegenerateIfNotFound,
 		};
 
-		bool bConvertFromRH;
 
 		bool bImportNormal;
 		bool bImportTangent;
@@ -666,6 +665,8 @@ namespace Importer {
 
 		bool bForceRegenerateTangent;
 		bool bRegenerateTangentIfNotFound;
+
+		string InputFileName;
 
 		explicit FConvertOptions(EImportType import, ERegenerateType regenerate)
 		{

@@ -60,18 +60,19 @@ TESTCASE::FRenderSample::FRenderSample() : World(nullptr), LastTick(0x0badbeef)
 
 TESTCASE::FRenderSample::~FRenderSample()
 {
-	WrappedDestroySimpleWorld(std::forward<FBasicWorld*>(World));
+	Fini();
 }
 
 bool TESTCASE::FRenderSample::Init(HWND hwnd, bool bWindowed, int32 width, int32 height)
 {
 	assert(LastTick == 0x0badbeef);
-	return World->InitWindow("", hwnd, bWindowed, width, height);
+	return World->InitializeWindow("", hwnd, bWindowed, width, height);
 }
 
 void TESTCASE::FRenderSample::Fini()
 {
-	World->Fini();
+	WrappedDestroySimpleWorld(std::forward<FBasicWorld*>(World));
+	World = nullptr;
 }
 
 void TESTCASE::FRenderSample::Tick()

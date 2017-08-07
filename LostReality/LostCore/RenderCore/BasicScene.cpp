@@ -15,17 +15,19 @@ using namespace LostCore;
 
 FBasicScene::FBasicScene()
 {
-	StaticMeshArray.clear();
+	Models.clear();
 }
 
 FBasicScene::~FBasicScene()
 {
-	//assert(StaticMeshArray.size() == 0);
+	Fini();
+
+	assert(Models.size() == 0);
 }
 
 void FBasicScene::Tick(float sec)
 {
-	for (auto sm : StaticMeshArray)
+	for (auto sm : Models)
 	{
 		if (sm != nullptr)
 		{
@@ -36,13 +38,60 @@ void FBasicScene::Tick(float sec)
 
 void FBasicScene::Draw(IRenderContext * rc, float sec)
 {
-	for (auto sm : StaticMeshArray)
+	for (auto sm : Models)
 	{
 		if (sm != nullptr)
 		{
 			sm->Draw(rc, sec);
 		}
 	}
+}
+
+bool LostCore::FBasicScene::Config(IRenderContext * rc, const FJson & config)
+{
+	//assert(config.find("nodes") != config.end() && "a scene needs [nodes] section");
+	if (config.find("nodes") != config.end())
+	{
+		for (auto node : config["nodes"])
+		{
+			assert(node.find("type") != node.end() && "a node needs [type] section");
+			assert(node.find("path") != node.end() && "a node needs [path] section");
+			assert(node.find("transform") != node.end() && "a node needs [transform] section");
+			auto nodeType = (ESceneNodeType)(int32)node["type"];
+			if (nodeType == ESceneNodeType::StaticModel ||
+				nodeType == ESceneNodeType::SkeletalModel)
+			{
+				FBasicModel* m;
+				if (nodeType == ESceneNodeType::StaticModel)
+				{
+					m = new FStaticModel;
+				}
+				else
+				{
+					m = new FSkeletalModel;
+				}
+
+				std::string p = node.find("path").value();
+				m->Load(rc, p.c_str());
+				AddModel(m);
+				FFloat4x4 mat;
+				//memcpy(&mat, &(node.find("transform").value()[0]), sizeof(mat));
+
+				for (int y = 0; y < 4; ++y)
+				{
+					for (int x = 0; x < 4; ++x)
+					{
+						int r = (int)&(node.find("transform").value()[y * 4 + x]);
+						mat.M[y][x] = node.find("transform").value()[y * 4 + x];
+					}
+				}
+
+				m->SetWorldMatrix(mat);
+			}
+		}
+	}
+
+	return true;
 }
 
 bool FBasicScene::Load(IRenderContext * rc, const char* url)
@@ -52,75 +101,44 @@ bool FBasicScene::Load(IRenderContext * rc, const char* url)
 	{
 		return false;
 	}
-
-	assert(config.find("nodes") != config.end() && "a scene needs [nodes] section");
-	for (auto node : config["nodes"])
+	else
 	{
-		assert(node.find("type") != node.end() && "a node needs [type] section");
-		assert(node.find("path") != node.end() && "a node needs [path] section");
-		assert(node.find("transform") != node.end() && "a node needs [transform] section");
-		if (node["type"] == (int)ESceneNodeType::Model)
-		{
-			FBasicModel* m = new FBasicModel;
-			std::string p = node.find("path").value();
-			m->Load(rc, p.c_str());
-			AddModel(m);
-			FFloat4x4 mat;
-			//memcpy(&mat, &(node.find("transform").value()[0]), sizeof(mat));
-
-			for (int y = 0; y < 4; ++y)
-			{
-				for (int x = 0; x < 4; ++x)
-				{
-					int r = (int)&(node.find("transform").value()[y * 4 + x]);
-					mat.M[y][x] = node.find("transform").value()[y * 4 + x];
-				}
-			}
-
-			m->SetWorldMatrix(mat);
-		}
+		return Config(rc, config);
 	}
-
-	return true;
-}
-
-void FBasicScene::Fini()
-{
-	//assert(0);
 }
 
 void FBasicScene::AddModel(FBasicModel * sm)
 {
-	if (sm != nullptr && std::find(StaticMeshArray.begin(), StaticMeshArray.end(), sm) == StaticMeshArray.end())
+	if (sm != nullptr && std::find(Models.begin(), Models.end(), sm) == Models.end())
 	{
-		StaticMeshArray.push_back(sm);
+		Models.push_back(sm);
 	}
 }
 
-void FBasicScene::RemoveStaticMesh(FBasicModel * sm)
+void FBasicScene::RemoveModel(FBasicModel * sm)
 {
 	if (sm == nullptr)
 	{
 		return;
 	}
 
-	auto result = std::find(StaticMeshArray.begin(), StaticMeshArray.end(), sm);
-	if (result != StaticMeshArray.end())
+	auto result = std::find(Models.begin(), Models.end(), sm);
+	if (result != Models.end())
 	{
-		StaticMeshArray.erase(result);
+		Models.erase(result);
 	}
 }
 
-void FBasicScene::ClearStaticMesh(std::function<void(FBasicModel*)> func)
+void LostCore::FBasicScene::Fini()
 {
-	auto clear = (func != nullptr ? func : [](FBasicModel* p) { delete p; });
-	for (auto sm : StaticMeshArray)
+	for (auto& model : Models)
 	{
-		if (sm != nullptr)
+		if (model != nullptr)
 		{
-			clear(sm);
+			delete model;
+			model = nullptr;
 		}
 	}
 
-	StaticMeshArray.clear();
+	Models.clear();
 }

@@ -109,6 +109,9 @@
     <ClInclude Include="Inc\Gizmo\GizmoLine.h">
       <Filter>Inc\Gizmo</Filter>
     </ClInclude>
+    <ClInclude Include="Inc\FBXEditor.h">
+      <Filter>Inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
@@ -148,6 +151,9 @@
     </ClCompile>
     <ClCompile Include="RenderCore\Gizmo\GizmoLine.cpp">
       <Filter>RenderCore\Gizmo</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\FBXEditor.cpp">
+      <Filter>Src</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -21,7 +21,15 @@ FBasicWorld::FBasicWorld() : GUIRoot(nullptr)
 
 FBasicWorld::~FBasicWorld()
 {
+	Fini();
+
+	assert(GUIRoot == nullptr);
 	assert(SceneArray.size() == 0);
+}
+
+bool LostCore::FBasicWorld::Config(IRenderContext * rc, const FJson & config)
+{
+	return false;
 }
 
 bool FBasicWorld::Load(IRenderContext * rc, const char* url)
@@ -35,7 +43,14 @@ bool FBasicWorld::Load(IRenderContext * rc, const char* url)
 
 void FBasicWorld::Fini()
 {
-	GUIRoot->Fini();
+	SAFE_DELETE(GUIRoot);
+
+	for (auto scene : SceneArray)
+	{
+		SAFE_DELETE(scene);
+	}
+
+	SceneArray.clear();
 }
 
 void FBasicWorld::Tick(float sec)
@@ -102,23 +117,7 @@ void FBasicWorld::RemoveScene(FBasicScene * scene)
 	}
 }
 
-void FBasicWorld::ClearScene(std::function<void(FBasicScene*)> func)
-{
-	if (func != nullptr)
-	{
-		for (auto scene : SceneArray)
-		{
-			if (scene != nullptr)
-			{
-				func(scene);
-			}
-		}
-	}
-
-	SceneArray.clear();
-}
-
-bool LostCore::FBasicWorld::InitWindow(const char* name, HWND wnd, bool bWindowed, int32 width, int32 height)
+bool LostCore::FBasicWorld::InitializeWindow(const char* name, HWND wnd, bool bWindowed, int32 width, int32 height)
 {
 	return false;
 }
@@ -143,6 +142,11 @@ void FBasicWorld::DrawPreScene(float sec)
 	}
 
 	rc->BeginFrame(sec);
+
+	if (GetCamera() != nullptr)
+	{
+		GetCamera()->Draw(rc, sec);
+	}
 }
 
 void FBasicWorld::DrawPostScene(float sec)

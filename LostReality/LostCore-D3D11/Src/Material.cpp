@@ -96,6 +96,20 @@ bool D3D11::FMaterialShader::LoadShader(LostCore::IRenderContext * rc, const str
 	return true;
 }
 
+D3D11::FMaterialShader::FMaterialShader()
+	: VS(nullptr)
+	, PS(nullptr)
+	, IL(nullptr)
+{
+}
+
+D3D11::FMaterialShader::~FMaterialShader()
+{
+	VS = nullptr;
+	PS = nullptr;
+	IL = nullptr;
+}
+
 bool D3D11::FMaterialShader::Initialize(LostCore::IRenderContext * rc, const FJson & config)
 {
 	const char* head = "D3D11::FMaterialShader::InitializeMaterialShader";

@@ -1,5 +1,5 @@
 {
-	"vertex": "XYUVRGBA",
+	"vertex": "xyuvrgba",
 	"vs": {
 		"path": "gui.fx",
 		"entry": "vs_main",

@@ -112,18 +112,20 @@ namespace D3D11
 		}
 
 	private:
-		LostCore::EContextID								ContextID;
-		TRefCountPtr<ID3D11Device>				Device;
-		TRefCountPtr<ID3D11DeviceContext>	Context;
-		TRefCountPtr<IDXGISwapChain>			SwapChain;
-		LostCore::EShadeModel							ShadeModel;
-		bool															bWireframe;
-		FTexture2D*											RenderTarget;
-		FTexture2D*											DepthStencil;
-		D3D11_VIEWPORT									Viewport;
-		FConstantBufferRegister0::FParam			Param;
-		FConstantBufferRegister0						CB0;
+		void ReportLiveObjects();
 
-		FGdiFont Font;
+		LostCore::EContextID					ContextID;
+		TRefCountPtr<ID3D11Device>				Device;
+		TRefCountPtr<ID3D11DeviceContext>		Context;
+		TRefCountPtr<IDXGISwapChain>			SwapChain;
+		LostCore::EShadeModel					ShadeModel;
+		bool									bWireframe;
+		FTexture2D*								RenderTarget;
+		FTexture2D*								DepthStencil;
+		D3D11_VIEWPORT							Viewport;
+		FConstantBufferRegister0::FParam		Param;
+		FConstantBufferRegister0				CB0;
+
+		//FGdiFont* Font;
 	};
 }

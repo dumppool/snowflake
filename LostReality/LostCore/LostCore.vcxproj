@@ -157,6 +157,7 @@
     <ClInclude Include="Inc\BasicScene.h" />
     <ClInclude Include="Inc\BasicWorld.h" />
     <ClInclude Include="Inc\ExportTest.h" />
+    <ClInclude Include="Inc\FBXEditor.h" />
     <ClInclude Include="Inc\File\DirectoryHelper.h" />
     <ClInclude Include="Inc\File\json.hpp" />
     <ClInclude Include="Inc\Gizmo\GizmoAxis.h" />
@@ -212,6 +213,7 @@
     <ClCompile Include="RenderCore\Gizmo\GizmoLine.cpp" />
     <ClCompile Include="RenderCore\Resource\MeshLoader.cpp" />
     <ClCompile Include="RenderCore\Skeleton\Animation.cpp" />
+    <ClCompile Include="Src\FBXEditor.cpp" />
     <ClCompile Include="Src\LostCore.cpp" />
     <ClCompile Include="Src\SimpleWorld.cpp" />
     <ClCompile Include="stdafx.cpp">

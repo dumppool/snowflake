@@ -78,6 +78,15 @@ namespace LostCore
 		}
 	}
 
+	static string GetCurrentWorkingPath()
+	{
+		string result;
+		result.resize(MAX_PATH);
+		GetModuleFileNameA(NULL, &result[0], MAX_PATH);
+		GetDirectory(result, result);
+		return result;
+	}
+
 	static void AutoTest_FilePath()
 	{
 		string a[] = { "D:/haha/", "D:/haha", "D:", "D:/", "D:/aa.a" };
@@ -150,79 +159,126 @@ namespace LostCore
 			}
 		}
 
-		bool GetSpecifiedAbsolutePath(const std::string& specified, const std::string& relativePath, std::string& output)
+		// 如果输入相对路径的文件夹名，输出一个绝对路径，并总是返回true。
+		// 如果输入绝对路径的文件夹名，不做任何处理，返回true。
+		// 如果输入相对路径的文件名，找到这个文件输出文件绝对路径名并返回true，没找到返回false。
+		// 如果输入绝对路径的文件名，找到这个文件返回true，否则false。
+		bool GetSpecifiedAbsolutePath(const std::string& specified, const std::string& path, std::string& output)
 		{
-			auto& dirs = DirectoryMap[specified];
-			for (auto& dir : dirs)
+			bool isAbsUrl = path.length() > 1 && path[1] == ':';
+			if (!isAbsUrl)
 			{
-				std::string absPath(RootDirectory + dir + relativePath);
-				ReplaceChar(absPath, "/", "\\");
-
-				std::ifstream file;
-				file.open(absPath);
-				if (file.fail())
+				auto& dirs = DirectoryMap[specified];
+				for (auto& dir : dirs)
 				{
-					continue;
-				}
+					output = (RootDirectory + dir + path);
+					ReplaceChar(output, "/", "\\");
 
-				output = absPath;
-				file.close();
-				return true;
+					if (IsDirectory(output))
+					{
+						return true;
+					}
+					else
+					{
+						std::ifstream file;
+						file.open(output);
+						if (file.fail())
+						{
+							continue;
+						}
+
+						file.close();
+						return true;
+					}
+				}
+			}
+			else
+			{
+				if (IsDirectory(path))
+				{
+					return true;
+				}
+				else
+				{
+					std::ifstream file;
+					file.open(path);
+					if (!file.fail())
+					{
+						output = path;
+						file.close();
+						return true;
+					}
+				}
 			}
 
 			return false;
 		}
 
-		bool GetShaderAbsolutePath(const std::string& relativePath, std::string& output)
+		bool GetShaderAbsolutePath(const std::string& path, std::string& output)
 		{
-			return GetSpecifiedAbsolutePath("shader", relativePath, output);
+			return GetSpecifiedAbsolutePath("shader", path, output);
 		}
 
-		bool GetPrimitiveAbsolutePath(const std::string& relativePath, std::string& output)
+		bool GetPrimitiveAbsolutePath(const std::string& path, std::string& output)
 		{
-			return GetSpecifiedAbsolutePath("primitive", relativePath, output);
+			return GetSpecifiedAbsolutePath("primitive", path, output);
 		}
 
-		bool GetSpecifiedJson(const std::string& specified, const std::string& relativePath, FJson& output)
+		bool GetSpecifiedJson(const std::string& specified, const std::string& path, FJson& output)
 		{
-			for (auto& dir : DirectoryMap[specified.c_str()])
+			bool isAbsUrl = path.length() > 1 && path[1] == ':';
+			if (!isAbsUrl)
 			{
-				std::string absPath(RootDirectory + dir + relativePath);
-				ReplaceChar(absPath, "/", "\\");
-
-				std::ifstream file;
-				file.open(absPath);
-				if (file.fail())
+				for (auto& dir : DirectoryMap[specified.c_str()])
 				{
-					continue;
-				}
+					std::string absPath(RootDirectory + dir + path);
+					ReplaceChar(absPath, "/", "\\");
 
-				file >> output;
-				file.close();
-				return true;
+					std::ifstream file;
+					file.open(absPath);
+					if (file.fail())
+					{
+						continue;
+					}
+
+					file >> output;
+					file.close();
+					return true;
+				}
+			}
+			else
+			{
+				std::ifstream file;
+				file.open(path);
+				if (!file.fail())
+				{
+					file >> output;
+					file.close();
+					return true;
+				}
 			}
 
 			return false;
 		}
 
-		bool GetMaterialJson(const std::string& relativePath, FJson& output)
+		bool GetMaterialJson(const std::string& path, FJson& output)
 		{
-			return GetSpecifiedJson("material", relativePath, output);
+			return GetSpecifiedJson("material", path, output);
 		}
 
-		bool GetSceneJson(const std::string& relativePath, FJson& output)
+		bool GetSceneJson(const std::string& path, FJson& output)
 		{
-			return GetSpecifiedJson("scene", relativePath, output);
+			return GetSpecifiedJson("scene", path, output);
 		}
 
-		//bool GetPrimitiveJson(const std::string& relativePath, FJson& output)
+		//bool GetPrimitiveJson(const std::string& path, FJson& output)
 		//{
-		//	return GetSpecifiedJson("primitive", relativePath, output);
+		//	return GetSpecifiedJson("primitive", path, output);
 		//}
 
-		bool GetModelJson(const std::string& relativePath, FJson& output)
+		bool GetModelJson(const std::string& path, FJson& output)
 		{
-			return GetSpecifiedJson("model", relativePath, output);
+			return GetSpecifiedJson("model", path, output);
 		}
 
 	private:

@@ -32,6 +32,8 @@ D3D11::FPrimitiveGroup::~FPrimitiveGroup()
 {
 	VertexBuffer = nullptr;
 	IndexBuffer = nullptr;
+
+	assert(Material == nullptr);
 }
 
 void D3D11::FPrimitiveGroup::Draw(LostCore::IRenderContext * rc, float sec)
@@ -78,7 +80,7 @@ bool D3D11::FPrimitiveGroup::ConstructVB(IRenderContext* rc, const void * buf, u
 	VertexBufferOffset = 0;
 	VertexCount = bytes / stride;
 	bIsVBDynamic = bDynamic;
-	return SSuccess == CreatePrimitiveVertex(device.GetReference(), buf, bytes, bIsVBDynamic, VertexBuffer.GetInitReference());
+	return SSuccess == CreatePrimitiveVertex(device.GetReference(), buf, bytes, bIsVBDynamic, VertexBuffer);
 }
 
 bool D3D11::FPrimitiveGroup::ConstructIB(IRenderContext* rc, const void * buf, uint32 bytes, uint32 stride, bool bDynamic)
@@ -105,7 +107,7 @@ bool D3D11::FPrimitiveGroup::ConstructIB(IRenderContext* rc, const void * buf, u
 	IndexBufferOffset = 0;
 	IndexCount = bytes / stride;
 	bIsIBDynamic = bDynamic;
-	return SSuccess == CreatePrimitiveIndex(device.GetReference(), buf, bytes, bIsIBDynamic, IndexBuffer.GetInitReference());
+	return SSuccess == CreatePrimitiveIndex(device.GetReference(), buf, bytes, bIsIBDynamic, IndexBuffer);
 }
 
 void D3D11::FPrimitiveGroup::SetTopology(EPrimitiveTopology topo)
@@ -156,7 +158,7 @@ void D3D11::FPrimitiveGroup::UpdateVB(LostCore::IRenderContext * rc, const void 
 		VertexBuffer = nullptr;
 		TRefCountPtr<ID3D11Device> device = FRenderContext::GetDevice(rc, head);
 		VertexCount = bytes / VertexStride;
-		assert(SSuccess == CreatePrimitiveVertex(device.GetReference(), buf, bytes, bIsVBDynamic, VertexBuffer.GetInitReference()));
+		assert(SSuccess == CreatePrimitiveVertex(device.GetReference(), buf, bytes, bIsVBDynamic, VertexBuffer));
 	}
 	else
 	{
