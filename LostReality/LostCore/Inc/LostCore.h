@@ -78,8 +78,9 @@ namespace LostCore
 }
 
 #include "Keywords.h"
-
 #include "VertexTypes.h"
+
+#include "Threading/CommandQueue.h"
 
 #include "File/json.hpp"
 using FJson = nlohmann::json;

@@ -13,12 +13,12 @@
 
 namespace Importer {
 
-	INLINE float SNUM(float val)
+	FORCEINLINE float SNUM(float val)
 	{
 		return abs(val) < LostCore::SSmallFloat2 ? 0.0f : val;
 	}
 
-	INLINE float SNUM(double val)
+	FORCEINLINE float SNUM(double val)
 	{
 		return (float)abs(val) < LostCore::SSmallFloat2 ? 0.f : (float)val;
 	}
@@ -210,7 +210,7 @@ namespace Importer {
 		output = f4x4;
 	}
 
-	INLINE LostCore::FFloat4 ToVector4(const FbxVector4& vec)
+	FORCEINLINE LostCore::FFloat4 ToVector4(const FbxVector4& vec)
 	{
 		LostCore::FFloat4 output;
 #if CONVERT_FROM_RIGHTHAND
@@ -227,7 +227,7 @@ namespace Importer {
 		return output;
 	}
 
-	INLINE LostCore::FFloat3 ToVector3(const FbxVector4& vec)
+	FORCEINLINE LostCore::FFloat3 ToVector3(const FbxVector4& vec)
 	{
 		LostCore::FFloat3 output;
 #if CONVERT_FROM_RIGHTHAND
@@ -242,7 +242,7 @@ namespace Importer {
 		return output;
 	}
 
-	INLINE LostCore::FFloat2 ToVector2(const FbxVector2& vec)
+	FORCEINLINE LostCore::FFloat2 ToVector2(const FbxVector2& vec)
 	{
 		LostCore::FFloat2 output;
 		output.X = SNUM(vec[0]);
@@ -250,7 +250,7 @@ namespace Importer {
 		return output;
 	}
 
-	INLINE LostCore::FQuat ToQuat(const FbxQuaternion& quat)
+	FORCEINLINE LostCore::FQuat ToQuat(const FbxQuaternion& quat)
 	{
 		LostCore::FQuat output;
 #if CONVERT_FROM_RIGHTHAND
@@ -267,7 +267,7 @@ namespace Importer {
 		return output;
 	}
 
-	INLINE LostCore::FFloat4x4 ToMatrix(const FbxAMatrix& mat)
+	FORCEINLINE LostCore::FFloat4x4 ToMatrix(const FbxAMatrix& mat)
 	{
 		LostCore::FFloat4x4 output;
 		for (int row = 0; row < 4; ++row)
@@ -655,18 +655,20 @@ namespace Importer {
 			RegenerateIfNotFound,
 		};
 
+		bool bImportAnimation;
 
 		bool bImportNormal;
 		bool bImportTangent;
 		bool bImportVertexColor;
 
 		bool bForceRegenerateNormal;
-		bool bRegenerateNormalIfNotFound;
+		bool bGenerateNormalIfNotFound;
 
 		bool bForceRegenerateTangent;
-		bool bRegenerateTangentIfNotFound;
+		bool bGenerateTangentIfNotFound;
 
-		string InputFileName;
+		string InputPath;
+		string OutputPath;
 
 		explicit FConvertOptions(EImportType import, ERegenerateType regenerate)
 		{
@@ -700,35 +702,39 @@ namespace Importer {
 			{
 			case NoRegenerate:
 				bForceRegenerateNormal = false;
-				bRegenerateNormalIfNotFound = false;
+				bGenerateNormalIfNotFound = false;
 				bForceRegenerateTangent = false;
-				bRegenerateTangentIfNotFound = false;
+				bGenerateTangentIfNotFound = false;
 				break;
 			case ForceRegenerate:
 				bImportNormal = false;
 				bForceRegenerateNormal = true;
-				bRegenerateNormalIfNotFound = false;
+				bGenerateNormalIfNotFound = false;
 				bImportTangent = false;
 				bForceRegenerateTangent = true;
-				bRegenerateTangentIfNotFound = false;
+				bGenerateTangentIfNotFound = false;
 				break;
 			case RegenerateIfNotFound:
 				bImportNormal = true;
 				bForceRegenerateNormal = false;
-				bRegenerateNormalIfNotFound = true;
+				bGenerateNormalIfNotFound = true;
 				bImportTangent = true;
 				bForceRegenerateTangent = false;
-				bRegenerateTangentIfNotFound = true;
+				bGenerateTangentIfNotFound = true;
 				break;
 			default:
 				break;
 			}
 		}
-	};
 
-	static FConvertOptions SOptions(FConvertOptions::ImportMost, FConvertOptions::NoRegenerate);
+		static FConvertOptions* Get()
+		{
+			static FConvertOptions Inst(FConvertOptions::ImportMost, FConvertOptions::NoRegenerate);
+			return &Inst;
+		}
+	};
 
 	extern bool DumpSceneMeshes(const string& importSrc, const string& convertDst, bool outputBinary, bool exportAnimation);
 	extern bool ImportSceneMeshes(const string& importSrc, const string& convertDst, bool outputBinary, bool exportAnimation);
-	extern bool ImportSceneMeshes2(const string& importSrc, const string& convertDst, bool outputBinary, bool exportAnimation);
+	extern bool ImportSceneMeshes2();
 }

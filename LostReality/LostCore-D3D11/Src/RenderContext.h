@@ -37,17 +37,17 @@ namespace D3D11
 
 	public:
 
-		INLINE TRefCountPtr<ID3D11Device> GetDevice()
+		FORCEINLINE TRefCountPtr<ID3D11Device> GetDevice()
 		{
 			return Device;
 		}
 
-		INLINE TRefCountPtr<ID3D11DeviceContext> GetDeviceContext()
+		FORCEINLINE TRefCountPtr<ID3D11DeviceContext> GetDeviceContext()
 		{
 			return Context;
 		}
 
-		INLINE TRefCountPtr<IDXGISwapChain> GetSwapChain()
+		FORCEINLINE TRefCountPtr<IDXGISwapChain> GetSwapChain()
 		{
 			return SwapChain;
 		}
@@ -67,7 +67,7 @@ namespace D3D11
 			bWireframe = bEnable;
 		}
 
-		INLINE static TRefCountPtr<ID3D11Device> GetDevice(LostCore::IRenderContext* rc, const char* head)
+		FORCEINLINE static TRefCountPtr<ID3D11Device> GetDevice(LostCore::IRenderContext* rc, const char* head)
 		{
 			FRenderContext* crc = static_cast<FRenderContext*>(rc);
 			if (crc == nullptr)
@@ -89,7 +89,7 @@ namespace D3D11
 			return dev;
 		}
 
-		INLINE static TRefCountPtr<ID3D11DeviceContext> GetDeviceContext(LostCore::IRenderContext* rc, const char* head)
+		FORCEINLINE static TRefCountPtr<ID3D11DeviceContext> GetDeviceContext(LostCore::IRenderContext* rc, const char* head)
 		{
 			FRenderContext* crc = static_cast<FRenderContext*>(rc);
 			if (crc == nullptr)

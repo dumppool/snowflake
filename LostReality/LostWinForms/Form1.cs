@@ -14,26 +14,24 @@ namespace LostWinForms
 {
     public partial class Form1 : Form
     {
+        private String[] LevelString = { "Info: ", "Warning: ", "Error: " };
         private bool bInitialized = false;
 
         public Form1()
         {
             InitializeComponent();
 
-            panel1.Paint += Panel1_Paint;
             button1.Click += OnLoadFBX;
+            button2.Click += OnInit;
         }
 
-        private void Panel1_Paint(object sender, PaintEventArgs e)
+        private void OnInit(Object sender, EventArgs e)
         {
-            //throw new NotImplementedException();
             if (!bInitialized)
             {
                 InitializeWindow(panel1.Handle, true, (uint)panel1.Width, (uint)panel1.Height);
                 bInitialized = true;
             }
-
-            Tick();
         }
 
         private void OnLoadFBX(Object sender, EventArgs e)
@@ -50,9 +48,14 @@ namespace LostWinForms
             }
         }
 
-        private void OnLogging(Int32 level, String msg)
+        private void LoggingActually(Int32 level, StringBuilder msg)
         {
+            textBox1.Text += "\r\n" + LevelString[level] + msg;
+        }
 
+        private void OnLogging(Int32 level, StringBuilder msg)
+        {
+            textBox1.Invoke(new PFN_Logger(LoggingActually), level, msg);
         }
 
         public delegate void PFN_Logger(Int32 level, StringBuilder msg);
@@ -66,17 +69,22 @@ namespace LostWinForms
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public static extern void LoadFBX(String file, bool clearScene);
 
-        [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern void Tick();
-
         private void Form1_Load(object sender, EventArgs e)
         {
+            if (!bInitialized)
+            {
+                InitializeWindow(panel1.Handle, true, (uint)panel1.Width, (uint)panel1.Height);
+                SetLogger(OnLogging);
+                bInitialized = true;
+            }
 
+            //textBox1.Text
+            textBox1.Text += "\r\nForm1_Load";
         }
 
         private void openFileDialog1_FileOk(object sender, CancelEventArgs e)
         {
-
+            textBox1.Text += "\r\nopenFileDialog1_FileOk";
         }
     }
 }

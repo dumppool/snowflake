@@ -39,7 +39,7 @@ namespace LostCore
 		void ReadFromFile(const std::string& filePath);
 	};
 
-	inline FBinaryIO::FBinaryIO()
+	FORCEINLINE FBinaryIO::FBinaryIO()
 	{
 		uint32 sz = 64;
 		Begin = new uint8[sz];
@@ -48,7 +48,7 @@ namespace LostCore
 		End = Begin + sz;
 	}
 
-	inline FBinaryIO::FBinaryIO(uint32 size)
+	FORCEINLINE FBinaryIO::FBinaryIO(uint32 size)
 	{
 		uint32 sz = size;
 		Begin = new uint8[sz];
@@ -57,7 +57,7 @@ namespace LostCore
 		End = Begin + sz;
 	}
 
-	inline FBinaryIO::FBinaryIO(uint8* begin, uint32 sz)
+	FORCEINLINE FBinaryIO::FBinaryIO(uint8* begin, uint32 sz)
 	{
 		assert(sz > 0);
 		Begin = new uint8[sz];
@@ -67,7 +67,7 @@ namespace LostCore
 		Serialize(*this, begin, sz);
 	}
 
-	inline FBinaryIO::~FBinaryIO()
+	FORCEINLINE FBinaryIO::~FBinaryIO()
 	{
 		delete[] Begin;
 		Begin = nullptr;
@@ -76,7 +76,7 @@ namespace LostCore
 		End = nullptr;
 	}
 
-	inline const void * FBinaryIO::Retrieve(uint32 bytes)
+	FORCEINLINE const void * FBinaryIO::Retrieve(uint32 bytes)
 	{
 		uint8 * oldRead = Read;
 		if (Read + bytes <= Write)
@@ -91,7 +91,7 @@ namespace LostCore
 		}
 	}
 
-	inline void * FBinaryIO::Reserve(uint32 bytes)
+	FORCEINLINE void * FBinaryIO::Reserve(uint32 bytes)
 	{
 		uint8 * oldWrite = Write;
 		Write += bytes;
@@ -112,22 +112,22 @@ namespace LostCore
 		return oldWrite;
 	}
 
-	inline uint32 FBinaryIO::Size() const
+	FORCEINLINE uint32 FBinaryIO::Size() const
 	{
 		return End - Begin;
 	}
 
-	inline uint32 FBinaryIO::RemainingSize() const
+	FORCEINLINE uint32 FBinaryIO::RemainingSize() const
 	{
 		return Write - Read;
 	}
 
-	inline void * FBinaryIO::Data()
+	FORCEINLINE void * FBinaryIO::Data()
 	{
 		return Begin;
 	}
 
-	inline void FBinaryIO::WriteToFile(const std::string& filePath)
+	FORCEINLINE void FBinaryIO::WriteToFile(const std::string& filePath)
 	{
 		ofstream file;
 		file.open(filePath, ios::out|ios::binary);
@@ -143,7 +143,7 @@ namespace LostCore
 		file.close();
 	}
 
-	inline void FBinaryIO::ReadFromFile(const std::string& filePath)
+	FORCEINLINE void FBinaryIO::ReadFromFile(const std::string& filePath)
 	{
 		ifstream file;
 		file.open(filePath, ios::in | ios::binary | ios::ate);
@@ -175,7 +175,7 @@ namespace LostCore
 	}
 
 	template<>
-	inline FBinaryIO& operator<<(FBinaryIO& stream, const std::string& data)
+	FORCEINLINE FBinaryIO& operator<<(FBinaryIO& stream, const std::string& data)
 	{
 		uint32 sz = data.length();
 		stream << sz;
@@ -184,7 +184,7 @@ namespace LostCore
 	}
 
 	template<>
-	inline FBinaryIO& operator >> (FBinaryIO& stream, std::string& data)
+	FORCEINLINE FBinaryIO& operator >> (FBinaryIO& stream, std::string& data)
 	{
 		uint32 sz;
 		stream >> sz;
@@ -194,7 +194,7 @@ namespace LostCore
 	}
 
 	template <typename T>
-	inline FBinaryIO& operator<<(FBinaryIO& stream, const std::vector<T>& data)
+	FORCEINLINE FBinaryIO& operator<<(FBinaryIO& stream, const std::vector<T>& data)
 	{
 		uint32 sz = data.size();
 		stream << sz;
@@ -207,7 +207,7 @@ namespace LostCore
 	}
 
 	template <typename T>
-	inline FBinaryIO& operator >> (FBinaryIO& stream, std::vector<T>& data)
+	FORCEINLINE FBinaryIO& operator >> (FBinaryIO& stream, std::vector<T>& data)
 	{
 		uint32 sz;
 		stream >> sz;
@@ -221,7 +221,7 @@ namespace LostCore
 	}
 
 	template <typename T>
-	inline FBinaryIO& operator >> (FBinaryIO& stream, std::set<T>& data)
+	FORCEINLINE FBinaryIO& operator >> (FBinaryIO& stream, std::set<T>& data)
 	{
 		uint32 sz;
 		stream >> sz;
@@ -239,7 +239,7 @@ namespace LostCore
 	}
 
 	template <typename T>
-	inline FBinaryIO& operator<<(FBinaryIO& stream, const std::set<T>& data)
+	FORCEINLINE FBinaryIO& operator<<(FBinaryIO& stream, const std::set<T>& data)
 	{
 		uint32 sz = data.size();
 		stream << sz;
@@ -252,7 +252,7 @@ namespace LostCore
 	}
 
 	template <typename T, int NUM>
-	inline FBinaryIO& operator >> (FBinaryIO& stream, std::array<T, NUM>& data)
+	FORCEINLINE FBinaryIO& operator >> (FBinaryIO& stream, std::array<T, NUM>& data)
 	{
 		uint32 sz;
 		stream >> sz;
@@ -265,7 +265,7 @@ namespace LostCore
 	}
 
 	template <typename T, int NUM>
-	inline FBinaryIO& operator << (FBinaryIO& stream, const std::array<T, NUM>& data)
+	FORCEINLINE FBinaryIO& operator << (FBinaryIO& stream, const std::array<T, NUM>& data)
 	{
 		uint32 sz = data.size();
 		stream << sz;
@@ -278,7 +278,7 @@ namespace LostCore
 	}
 
 	template<typename T1, typename T2>
-	inline FBinaryIO& operator<<(FBinaryIO& stream, const std::map<T1, T2>& data)
+	FORCEINLINE FBinaryIO& operator<<(FBinaryIO& stream, const std::map<T1, T2>& data)
 	{
 		stream << data.size();
 		for (auto& it = data.begin(); it != data.end(); ++it)
@@ -290,7 +290,7 @@ namespace LostCore
 	}
 
 	template<typename T1, typename T2>
-	inline FBinaryIO& operator>>(FBinaryIO& stream, std::map<T1, T2>& data)
+	FORCEINLINE FBinaryIO& operator>>(FBinaryIO& stream, std::map<T1, T2>& data)
 	{
 		uint32 num;
 		stream >> num;
@@ -305,13 +305,13 @@ namespace LostCore
 		return stream;
 	}
 
-	inline FBinaryIO& Serialize(FBinaryIO& stream, const uint8* buf, uint32 sz)
+	FORCEINLINE FBinaryIO& Serialize(FBinaryIO& stream, const uint8* buf, uint32 sz)
 	{
 		memcpy(stream.Reserve(sz), buf, sz);
 		return stream;
 	}
 
-	inline FBinaryIO& Deserialize(FBinaryIO& stream, uint8* buf, uint32 sz)
+	FORCEINLINE FBinaryIO& Deserialize(FBinaryIO& stream, uint8* buf, uint32 sz)
 	{
 		memcpy(buf, stream.Retrieve(sz), sz);
 		return stream;

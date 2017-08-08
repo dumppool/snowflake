@@ -13,13 +13,13 @@ namespace D3D11
 {
 	struct FDepthStencilState_0
 	{
-		INLINE static std::string GetName()
+		FORCEINLINE static std::string GetName()
 		{
 			static std::string SName = "Z_ENABLE_WRITE";
 			return SName;
 		}
 
-		INLINE static TRefCountPtr<ID3D11DepthStencilState> GetState(const TRefCountPtr<ID3D11Device>& device)
+		FORCEINLINE static TRefCountPtr<ID3D11DepthStencilState> GetState(const TRefCountPtr<ID3D11Device>& device)
 		{
 			TRefCountPtr<ID3D11DepthStencilState> state;
 
@@ -39,13 +39,13 @@ namespace D3D11
 
 	struct FDepthStencilState_1
 	{
-		INLINE static std::string GetName()
+		FORCEINLINE static std::string GetName()
 		{
 			static std::string SName = "ALWAYS";
 			return SName;
 		}
 
-		INLINE static TRefCountPtr<ID3D11DepthStencilState> GetState(const TRefCountPtr<ID3D11Device>& device)
+		FORCEINLINE static TRefCountPtr<ID3D11DepthStencilState> GetState(const TRefCountPtr<ID3D11Device>& device)
 		{
 			TRefCountPtr<ID3D11DepthStencilState> state;
 
@@ -71,16 +71,35 @@ namespace D3D11
 			return &Inst;
 		}
 
+		bool bInitialized;
 		std::map<std::string, TRefCountPtr<ID3D11DepthStencilState>> StateMap;
+
+		FDepthStencilStateMap() : bInitialized(false)
+		{
+		}
+
+		~FDepthStencilStateMap()
+		{
+			ReleaseComObjects();
+		}
 
 		void Initialize(const TRefCountPtr<ID3D11Device>& device)
 		{
+			if (bInitialized)
+			{
+				return;
+			}
+
 			StateMap.insert(std::make_pair(FDepthStencilState_0::GetName(), FDepthStencilState_0::GetState(device)));
+			bInitialized = true;
 		}
 
 		void ReleaseComObjects()
 		{
-			bool bDestroy = true;
+			if (!bInitialized)
+			{
+				return;
+			}
 
 			for (auto& elem : StateMap)
 			{
@@ -88,15 +107,19 @@ namespace D3D11
 			}
 
 			StateMap.clear();
+			bInitialized = false;
 		}
 
-		INLINE TRefCountPtr<ID3D11DepthStencilState> GetState(const std::string& key)
+		FORCEINLINE TRefCountPtr<ID3D11DepthStencilState> GetState(const std::string& key)
 		{
-			for (auto element : StateMap)
+			if (bInitialized)
 			{
-				if (element.first.compare(key) == 0)
+				for (auto element : StateMap)
 				{
-					return element.second;
+					if (element.first.compare(key) == 0)
+					{
+						return element.second;
+					}
 				}
 			}
 

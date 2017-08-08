@@ -169,7 +169,7 @@ Returns an ordering that is similar to Python:
 
 @since version 1.0.0
 */
-inline bool operator<(const value_t lhs, const value_t rhs) noexcept
+FORCEINLINE bool operator<(const value_t lhs, const value_t rhs) noexcept
 {
     static constexpr std::array<uint8_t, 8> order = {{
             0, // null
@@ -13043,7 +13043,7 @@ namespace std
 @since version 1.0.0
 */
 template<>
-inline void swap(nlohmann::json& j1,
+FORCEINLINE void swap(nlohmann::json& j1,
                  nlohmann::json& j2) noexcept(
                      is_nothrow_move_constructible<nlohmann::json>::value and
                      is_nothrow_move_assignable<nlohmann::json>::value
@@ -13083,7 +13083,7 @@ if no parse error occurred.
 
 @since version 1.0.0
 */
-inline nlohmann::json operator "" _json(const char* s, std::size_t n)
+FORCEINLINE nlohmann::json operator "" _json(const char* s, std::size_t n)
 {
     return nlohmann::json::parse(s, s + n);
 }
@@ -13101,7 +13101,7 @@ object if no parse error occurred.
 
 @since version 2.0.0
 */
-inline nlohmann::json::json_pointer operator "" _json_pointer(const char* s, std::size_t n)
+FORCEINLINE nlohmann::json::json_pointer operator "" _json_pointer(const char* s, std::size_t n)
 {
     return nlohmann::json::json_pointer(std::string(s, n));
 }

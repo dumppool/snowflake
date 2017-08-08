@@ -24,6 +24,9 @@
 #include <memory>
 #include <functional>
 #include <array>
+#include <thread>
+#include <mutex>
+#include <queue>
 
 using namespace std;
 
@@ -77,9 +80,7 @@ typedef DirectX::XMMATRIX LVMatrix;
   } while((void)0, 0)
 #endif //SAFE_RELEASE
 
-#define INLINE __forceinline
-
-inline static void log_cap_cnt(const CHAR* Prefix, const CHAR* cap, const CHAR* fmt, ...)
+FORCEINLINE static void log_cap_cnt(const CHAR* Prefix, const CHAR* cap, const CHAR* fmt, ...)
 {
 	char msg[1024];
 
@@ -170,7 +171,7 @@ log_cap_cnt(Prefix, Cap, __VA_ARGS__);}
 
 #define LVASSERT(Condition, Cap, ...) LVASSERT_PREFIX(SLogPrefixError, Condition, Cap, __VA_ARGS__)
 
-//inline bool GetWndFromProcessID(DWORD pid, HWND hwnd[], UINT& nwnd)
+//FORCEINLINE bool GetWndFromProcessID(DWORD pid, HWND hwnd[], UINT& nwnd)
 //{
 //	HWND temp = NULL;
 //	nwnd = 0;
@@ -209,7 +210,7 @@ log_cap_cnt(Prefix, Cap, __VA_ARGS__);}
 //	return true;
 //}
 
-inline wstring UTF8ToWide(const string &utf8)
+FORCEINLINE wstring UTF8ToWide(const string &utf8)
 {
 	if (utf8.length() == 0) {
 		return wstring();
@@ -231,7 +232,7 @@ inline wstring UTF8ToWide(const string &utf8)
 }
 
 // static
-inline string WideToUTF8(const wstring &wide) {
+FORCEINLINE string WideToUTF8(const wstring &wide) {
 	if (wide.length() == 0) {
 		return string();
 	}
@@ -496,7 +497,7 @@ typename std::result_of<std::function<T>(Args...)>::type ExeFunction(const char*
 	return GetFunction<T>(name)(args...);
 }
 
-inline void foo()
+FORCEINLINE void foo()
 {
 	int a = 111;
 	int* b = &a;
@@ -509,9 +510,9 @@ class FHighFrequencyCounter
 	LARGE_INTEGER Timestamp;
 
 public:
-	INLINE FHighFrequencyCounter();
+	FORCEINLINE FHighFrequencyCounter();
 
-	INLINE void Start();
+	FORCEINLINE void Start();
 
 	//************************************
 	// Method:    Stop
@@ -520,11 +521,11 @@ public:
 	// Returns:   double in ms
 	// Qualifier:
 	//************************************
-	INLINE double Stop();
+	FORCEINLINE double Stop();
 
-	INLINE double Count();
+	FORCEINLINE double Count();
 
-	INLINE bool Started() const;
+	FORCEINLINE bool Started() const;
 };
 
 class FScopedHighFrequencyCounter
@@ -533,16 +534,16 @@ class FScopedHighFrequencyCounter
 	FHighFrequencyCounter Counter;
 
 public:
-	INLINE FScopedHighFrequencyCounter(const CHAR* head);
-	INLINE ~FScopedHighFrequencyCounter();
+	FORCEINLINE FScopedHighFrequencyCounter(const CHAR* head);
+	FORCEINLINE ~FScopedHighFrequencyCounter();
 };
 
-INLINE FScopedHighFrequencyCounter::FScopedHighFrequencyCounter(const CHAR * head) : MsgHead(head), Counter()
+FORCEINLINE FScopedHighFrequencyCounter::FScopedHighFrequencyCounter(const CHAR * head) : MsgHead(head), Counter()
 {
 	Counter.Start();
 }
 
-INLINE FScopedHighFrequencyCounter::~FScopedHighFrequencyCounter()
+FORCEINLINE FScopedHighFrequencyCounter::~FScopedHighFrequencyCounter()
 {
 	double duration = Counter.Stop();
 	{
@@ -552,25 +553,25 @@ INLINE FScopedHighFrequencyCounter::~FScopedHighFrequencyCounter()
 	}
 }
 
-INLINE FHighFrequencyCounter::FHighFrequencyCounter()
+FORCEINLINE FHighFrequencyCounter::FHighFrequencyCounter()
 {
 	Timestamp.QuadPart = 0;
 	QueryPerformanceFrequency(&TicksPerSec);
 }
 
-INLINE void FHighFrequencyCounter::Start()
+FORCEINLINE void FHighFrequencyCounter::Start()
 {
 	QueryPerformanceCounter(&Timestamp);
 }
 
-INLINE double FHighFrequencyCounter::Stop()
+FORCEINLINE double FHighFrequencyCounter::Stop()
 {
 	LARGE_INTEGER end;
 	QueryPerformanceCounter(&end);
 	return (double)((end.QuadPart - Timestamp.QuadPart) * 1000.0 / TicksPerSec.QuadPart);
 }
 
-INLINE double FHighFrequencyCounter::Count()
+FORCEINLINE double FHighFrequencyCounter::Count()
 {
 	LARGE_INTEGER begin, end;
 	begin = Timestamp;
@@ -579,7 +580,7 @@ INLINE double FHighFrequencyCounter::Count()
 	return (double)((end.QuadPart - begin.QuadPart) * 1000.0 / TicksPerSec.QuadPart);
 }
 
-INLINE bool FHighFrequencyCounter::Started() const
+FORCEINLINE bool FHighFrequencyCounter::Started() const
 {
 	return Timestamp.QuadPart != 0;
 }

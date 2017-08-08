@@ -36,46 +36,46 @@ namespace LostCore
 		};
 
 	public:
-		INLINE TVec3NonVectorized() : X(0.0), Y(0.0), Z(0.0) {}
-		INLINE TVec3NonVectorized(T x, T y, T z);
+		FORCEINLINE TVec3NonVectorized() : X(0.0), Y(0.0), Z(0.0) {}
+		FORCEINLINE TVec3NonVectorized(T x, T y, T z);
 
-		INLINE TVec3NonVectorized<T> operator-() const;
-		INLINE TVec3NonVectorized<T> operator+(const TVec3NonVectorized<T>& vec) const;
-		INLINE TVec3NonVectorized<T> operator-(const TVec3NonVectorized<T>& vec) const;
-		INLINE TVec3NonVectorized<T> operator*(const TVec3NonVectorized<T>& vec) const;
-		INLINE TVec3NonVectorized<T> operator/(const TVec3NonVectorized<T>& vec) const;
-		INLINE TVec3NonVectorized<T> operator*(T s) const;
+		FORCEINLINE TVec3NonVectorized<T> operator-() const;
+		FORCEINLINE TVec3NonVectorized<T> operator+(const TVec3NonVectorized<T>& vec) const;
+		FORCEINLINE TVec3NonVectorized<T> operator-(const TVec3NonVectorized<T>& vec) const;
+		FORCEINLINE TVec3NonVectorized<T> operator*(const TVec3NonVectorized<T>& vec) const;
+		FORCEINLINE TVec3NonVectorized<T> operator/(const TVec3NonVectorized<T>& vec) const;
+		FORCEINLINE TVec3NonVectorized<T> operator*(T s) const;
 
-		INLINE TVec3NonVectorized<T>& operator+=(const TVec3NonVectorized<T>& vec);
-		INLINE TVec3NonVectorized<T>& operator-=(const TVec3NonVectorized<T>& vec);
-		INLINE TVec3NonVectorized<T>& operator*=(const TVec3NonVectorized<T>& vec);
-		INLINE TVec3NonVectorized<T>& operator/=(const TVec3NonVectorized<T>& vec);
-		INLINE TVec3NonVectorized<T>& operator*=(T s);
+		FORCEINLINE TVec3NonVectorized<T>& operator+=(const TVec3NonVectorized<T>& vec);
+		FORCEINLINE TVec3NonVectorized<T>& operator-=(const TVec3NonVectorized<T>& vec);
+		FORCEINLINE TVec3NonVectorized<T>& operator*=(const TVec3NonVectorized<T>& vec);
+		FORCEINLINE TVec3NonVectorized<T>& operator/=(const TVec3NonVectorized<T>& vec);
+		FORCEINLINE TVec3NonVectorized<T>& operator*=(T s);
 
-		INLINE bool operator==(const TVec3NonVectorized<T>& vec) const;
-		INLINE bool operator!=(const TVec3NonVectorized<T>& vec) const;
+		FORCEINLINE bool operator==(const TVec3NonVectorized<T>& vec) const;
+		FORCEINLINE bool operator!=(const TVec3NonVectorized<T>& vec) const;
 
-		INLINE T operator[](int32 index) const;
-		INLINE T& operator[](int32 index);
+		FORCEINLINE T operator[](int32 index) const;
+		FORCEINLINE T& operator[](int32 index);
 
-		INLINE T operator|(const TVec3NonVectorized<T>& vec) const;
-		INLINE TVec3NonVectorized<T> operator^(const TVec3NonVectorized<T>& vec) const;
+		FORCEINLINE T operator|(const TVec3NonVectorized<T>& vec) const;
+		FORCEINLINE TVec3NonVectorized<T> operator^(const TVec3NonVectorized<T>& vec) const;
 
-		INLINE T SizeSquared() const;
-		INLINE T Size() const;
+		FORCEINLINE T SizeSquared() const;
+		FORCEINLINE T Size() const;
 
-		INLINE TVec3NonVectorized<T> GetNormal() const;
-		INLINE void Normalize();
-		INLINE bool IsZero() const;
+		FORCEINLINE TVec3NonVectorized<T> GetNormal() const;
+		FORCEINLINE void Normalize();
+		FORCEINLINE bool IsZero() const;
 
 	public:
-		INLINE static TVec3NonVectorized<T>& GetZero()
+		FORCEINLINE static TVec3NonVectorized<T>& GetZero()
 		{
 			static TVec3NonVectorized<T> SZeroVec(0.0, 0.0, 0.0);
 			return SZeroVec;
 		}
 
-		INLINE static TVec3NonVectorized<T> GetReciprocal(const TVec3NonVectorized<T>& vec)
+		FORCEINLINE static TVec3NonVectorized<T> GetReciprocal(const TVec3NonVectorized<T>& vec)
 		{
 			TVec3NonVectorized<T> result;
 			result.X = LostCore::IsZero(vec.X) ? 0.0 : (1.0 / vec.X);
@@ -86,49 +86,49 @@ namespace LostCore
 	};
 
 	template <typename T>
-	INLINE TVec3NonVectorized<T>::TVec3NonVectorized(T x, T y, T z) : X(x), Y(y), Z(z)
+	FORCEINLINE TVec3NonVectorized<T>::TVec3NonVectorized(T x, T y, T z) : X(x), Y(y), Z(z)
 	{
 
 	}
 
 	template <typename T>
-	INLINE TVec3NonVectorized<T> TVec3NonVectorized<T>::operator-() const
+	FORCEINLINE TVec3NonVectorized<T> TVec3NonVectorized<T>::operator-() const
 	{
 		return TVec3NonVectorized<T>(-X, -Y, -Z);
 	}
 
 	template <typename T>
-	INLINE TVec3NonVectorized<T> TVec3NonVectorized<T>::operator+(const TVec3NonVectorized<T>& vec) const
+	FORCEINLINE TVec3NonVectorized<T> TVec3NonVectorized<T>::operator+(const TVec3NonVectorized<T>& vec) const
 	{
 		return TVec3NonVectorized<T>(X + vec.X, Y + vec.Y, Z + vec.Z);
 	}
 
 	template <typename T>
-	INLINE TVec3NonVectorized<T> TVec3NonVectorized<T>::operator-(const TVec3NonVectorized<T>& vec) const
+	FORCEINLINE TVec3NonVectorized<T> TVec3NonVectorized<T>::operator-(const TVec3NonVectorized<T>& vec) const
 	{
 		return TVec3NonVectorized<T>(X - vec.X, Y - vec.Y, Z - vec.Z);
 	}
 
 	template <typename T>
-	INLINE TVec3NonVectorized<T> TVec3NonVectorized<T>::operator*(const TVec3NonVectorized<T>& vec) const
+	FORCEINLINE TVec3NonVectorized<T> TVec3NonVectorized<T>::operator*(const TVec3NonVectorized<T>& vec) const
 	{
 		return TVec3NonVectorized<T>(X * vec.X, Y * vec.Y, Z * vec.Z);
 	}
 
 	template <typename T>
-	INLINE TVec3NonVectorized<T> TVec3NonVectorized<T>::operator/(const TVec3NonVectorized<T>& vec) const
+	FORCEINLINE TVec3NonVectorized<T> TVec3NonVectorized<T>::operator/(const TVec3NonVectorized<T>& vec) const
 	{
 		return TVec3NonVectorized<T>(X / vec.X, Y / vec.Y, Z / vec.Z);
 	}
 
 	template <typename T>
-	INLINE TVec3NonVectorized<T> TVec3NonVectorized<T>::operator*(T s) const
+	FORCEINLINE TVec3NonVectorized<T> TVec3NonVectorized<T>::operator*(T s) const
 	{
 		return TVec3NonVectorized<T>(s*X, s*Y, s*Z);
 	}
 
 	template <typename T>
-	INLINE TVec3NonVectorized<T>& TVec3NonVectorized<T>::operator+=(const TVec3NonVectorized<T>& vec)
+	FORCEINLINE TVec3NonVectorized<T>& TVec3NonVectorized<T>::operator+=(const TVec3NonVectorized<T>& vec)
 	{
 		X += vec.X;
 		Y += vec.Y;
@@ -137,7 +137,7 @@ namespace LostCore
 	}
 
 	template <typename T>
-	INLINE TVec3NonVectorized<T>& TVec3NonVectorized<T>::operator-=(const TVec3NonVectorized<T>& vec)
+	FORCEINLINE TVec3NonVectorized<T>& TVec3NonVectorized<T>::operator-=(const TVec3NonVectorized<T>& vec)
 	{
 		X -= vec.X;
 		Y -= vec.Y;
@@ -146,7 +146,7 @@ namespace LostCore
 	}
 
 	template <typename T>
-	INLINE TVec3NonVectorized<T>& TVec3NonVectorized<T>::operator*=(const TVec3NonVectorized<T>& vec)
+	FORCEINLINE TVec3NonVectorized<T>& TVec3NonVectorized<T>::operator*=(const TVec3NonVectorized<T>& vec)
 	{
 		X *= vec.X;
 		Y *= vec.Y;
@@ -155,7 +155,7 @@ namespace LostCore
 	}
 
 	template <typename T>
-	INLINE TVec3NonVectorized<T>& TVec3NonVectorized<T>::operator/=(const TVec3NonVectorized<T>& vec)
+	FORCEINLINE TVec3NonVectorized<T>& TVec3NonVectorized<T>::operator/=(const TVec3NonVectorized<T>& vec)
 	{
 		X /= vec.X;
 		Y /= vec.Y;
@@ -164,7 +164,7 @@ namespace LostCore
 	}
 
 	template <typename T>
-	INLINE TVec3NonVectorized<T>& TVec3NonVectorized<T>::operator*=(T s)
+	FORCEINLINE TVec3NonVectorized<T>& TVec3NonVectorized<T>::operator*=(T s)
 	{
 		X *= s;
 		Y *= s;
@@ -173,7 +173,7 @@ namespace LostCore
 	}
 
 	template <typename T>
-	INLINE bool TVec3NonVectorized<T>::operator==(const TVec3NonVectorized<T>& vec) const
+	FORCEINLINE bool TVec3NonVectorized<T>::operator==(const TVec3NonVectorized<T>& vec) const
 	{
 		return LostCore::IsEqual(X, vec.X) &&
 			LostCore::IsEqual(Y, vec.Y) &&
@@ -181,31 +181,31 @@ namespace LostCore
 	}
 
 	template <typename T>
-	INLINE bool TVec3NonVectorized<T>::operator!=(const TVec3NonVectorized<T>& vec) const
+	FORCEINLINE bool TVec3NonVectorized<T>::operator!=(const TVec3NonVectorized<T>& vec) const
 	{
 		return !(*this == vec);
 	}
 
 	template <typename T>
-	INLINE T& TVec3NonVectorized<T>::operator[](int32 index)
+	FORCEINLINE T& TVec3NonVectorized<T>::operator[](int32 index)
 	{
 		return index == 0 ? X : (index == 1 ? Y : Z);
 	}
 
 	template <typename T>
-	INLINE T TVec3NonVectorized<T>::operator[](int32 index) const
+	FORCEINLINE T TVec3NonVectorized<T>::operator[](int32 index) const
 	{
 		return (*this)[index];
 	}
 
 	template <typename T>
-	INLINE T TVec3NonVectorized<T>::operator|(const TVec3NonVectorized<T>& vec) const
+	FORCEINLINE T TVec3NonVectorized<T>::operator|(const TVec3NonVectorized<T>& vec) const
 	{
 		return X * vec.X + Y * vec.Y + Z * vec.Z;
 	}
 
 	template <typename T>
-	INLINE TVec3NonVectorized<T> TVec3NonVectorized<T>::operator^(const TVec3NonVectorized<T>& vec) const
+	FORCEINLINE TVec3NonVectorized<T> TVec3NonVectorized<T>::operator^(const TVec3NonVectorized<T>& vec) const
 	{
 		return TVec3NonVectorized<T>(
 			Y * vec.Z - Z * vec.Y,
@@ -214,19 +214,19 @@ namespace LostCore
 	}
 
 	template <typename T>
-	INLINE T TVec3NonVectorized<T>::SizeSquared() const
+	FORCEINLINE T TVec3NonVectorized<T>::SizeSquared() const
 	{
 		return X * X + Y * Y + Z * Z;
 	}
 
 	template <typename T>
-	INLINE T TVec3NonVectorized<T>::Size() const
+	FORCEINLINE T TVec3NonVectorized<T>::Size() const
 	{
 		return std::sqrtf(SizeSquared());
 	}
 
 	template <typename T>
-	INLINE TVec3NonVectorized<T> TVec3NonVectorized<T>::GetNormal() const
+	FORCEINLINE TVec3NonVectorized<T> TVec3NonVectorized<T>::GetNormal() const
 	{
 		const T squared = SizeSquared();
 		if (squared > SSmallFloat)
@@ -241,7 +241,7 @@ namespace LostCore
 	}
 
 	template <typename T>
-	INLINE void TVec3NonVectorized<T>::Normalize()
+	FORCEINLINE void TVec3NonVectorized<T>::Normalize()
 	{
 		const T squared = SizeSquared();
 		if (squared > SSmallFloat)
@@ -260,13 +260,13 @@ namespace LostCore
 	}
 
 	template <typename T>
-	INLINE bool TVec3NonVectorized<T>::IsZero() const
+	FORCEINLINE bool TVec3NonVectorized<T>::IsZero() const
 	{
 		return LostCore::IsZero(X) && LostCore::IsZero(Y) && LostCore::IsZero(Z);
 	}
 
 	template <typename T>
-	INLINE void from_json(const FJson& j, TVec3NonVectorized<T>& val)
+	FORCEINLINE void from_json(const FJson& j, TVec3NonVectorized<T>& val)
 	{
 		if (j.is_array() && j.size() >= 3)
 		{
@@ -277,7 +277,7 @@ namespace LostCore
 	}
 
 	template <typename T>
-	INLINE void to_json(FJson& j, const TVec3NonVectorized<T>& val)
+	FORCEINLINE void to_json(FJson& j, const TVec3NonVectorized<T>& val)
 	{
 		j[0] = val.X;
 		j[1] = val.Y;

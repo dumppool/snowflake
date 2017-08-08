@@ -23,40 +23,40 @@ namespace LostCore
 		float W;
 
 	public:
-		INLINE FQuatNonVectorized() {}
-		INLINE FQuatNonVectorized(float x, float y, float z, float w);
-		INLINE FQuatNonVectorized(const FQuatNonVectorized& quat);
+		FORCEINLINE FQuatNonVectorized() {}
+		FORCEINLINE FQuatNonVectorized(float x, float y, float z, float w);
+		FORCEINLINE FQuatNonVectorized(const FQuatNonVectorized& quat);
 
-		INLINE FQuatNonVectorized& operator=(const FQuatNonVectorized& quat);
-		INLINE FQuatNonVectorized  operator+(const FQuatNonVectorized& quat) const;
-		INLINE FQuatNonVectorized& operator+=(const FQuatNonVectorized& quat);
-		INLINE FQuatNonVectorized  operator-(const FQuatNonVectorized& quat) const;
-		INLINE FQuatNonVectorized& operator-=(const FQuatNonVectorized& quat);
-		INLINE FQuatNonVectorized  operator*(const FQuatNonVectorized& quat) const;
-		INLINE FQuatNonVectorized& operator*=(const FQuatNonVectorized& quat);
-		INLINE FQuatNonVectorized  operator*(float value) const;
-		INLINE FQuatNonVectorized& operator*=(float value);
+		FORCEINLINE FQuatNonVectorized& operator=(const FQuatNonVectorized& quat);
+		FORCEINLINE FQuatNonVectorized  operator+(const FQuatNonVectorized& quat) const;
+		FORCEINLINE FQuatNonVectorized& operator+=(const FQuatNonVectorized& quat);
+		FORCEINLINE FQuatNonVectorized  operator-(const FQuatNonVectorized& quat) const;
+		FORCEINLINE FQuatNonVectorized& operator-=(const FQuatNonVectorized& quat);
+		FORCEINLINE FQuatNonVectorized  operator*(const FQuatNonVectorized& quat) const;
+		FORCEINLINE FQuatNonVectorized& operator*=(const FQuatNonVectorized& quat);
+		FORCEINLINE FQuatNonVectorized  operator*(float value) const;
+		FORCEINLINE FQuatNonVectorized& operator*=(float value);
 
-		INLINE bool operator==(const FQuatNonVectorized& quat) const;
-		INLINE bool operator!=(const FQuatNonVectorized& quat) const;
-		INLINE float operator|(const FQuatNonVectorized& quat) const;
+		FORCEINLINE bool operator==(const FQuatNonVectorized& quat) const;
+		FORCEINLINE bool operator!=(const FQuatNonVectorized& quat) const;
+		FORCEINLINE float operator|(const FQuatNonVectorized& quat) const;
 
-		INLINE FFloat3 Euler() const;
-		INLINE FQuatNonVectorized& FromEuler(const FFloat3& euler);
+		FORCEINLINE FFloat3 Euler() const;
+		FORCEINLINE FQuatNonVectorized& FromEuler(const FFloat3& euler);
 
-		INLINE FQuatNonVectorized GetNormalized() const;
-		INLINE FQuatNonVectorized& Normalize();
-		INLINE bool IsNormalized() const;
-		INLINE float SizeSquared() const;
-		INLINE float Size() const;
+		FORCEINLINE FQuatNonVectorized GetNormalized() const;
+		FORCEINLINE FQuatNonVectorized& Normalize();
+		FORCEINLINE bool IsNormalized() const;
+		FORCEINLINE float SizeSquared() const;
+		FORCEINLINE float Size() const;
 
-		INLINE FFloat3 RotateVector(const FFloat3& vec) const;
-		INLINE FQuatNonVectorized GetInversed() const;
-		INLINE FQuatNonVectorized& Inverse();
+		FORCEINLINE FFloat3 RotateVector(const FFloat3& vec) const;
+		FORCEINLINE FQuatNonVectorized GetInversed() const;
+		FORCEINLINE FQuatNonVectorized& Inverse();
 
-		INLINE FFloat3 GetForwardVector() const;
-		INLINE FFloat3 GetUpVector() const;
-		INLINE FFloat3 GetRightVector() const;
+		FORCEINLINE FFloat3 GetForwardVector() const;
+		FORCEINLINE FFloat3 GetUpVector() const;
+		FORCEINLINE FFloat3 GetRightVector() const;
 
 	public:
 		static const FQuatNonVectorized& GetIdentity()
@@ -66,17 +66,17 @@ namespace LostCore
 		}
 	};
 
-	INLINE FQuatNonVectorized::FQuatNonVectorized(float x, float y, float z, float w) :
+	FORCEINLINE FQuatNonVectorized::FQuatNonVectorized(float x, float y, float z, float w) :
 		X(x), Y(y), Z(z), W(w)
 	{
 	}
 
-	INLINE FQuatNonVectorized::FQuatNonVectorized(const FQuatNonVectorized& quat) :
+	FORCEINLINE FQuatNonVectorized::FQuatNonVectorized(const FQuatNonVectorized& quat) :
 		X(quat.X), Y(quat.Y), Z(quat.Z), W(quat.W)
 	{
 	}
 
-	INLINE FQuatNonVectorized& FQuatNonVectorized::operator=(const FQuatNonVectorized& quat)
+	FORCEINLINE FQuatNonVectorized& FQuatNonVectorized::operator=(const FQuatNonVectorized& quat)
 	{
 		X = quat.X;
 		Y = quat.Y;
@@ -84,12 +84,12 @@ namespace LostCore
 		W = quat.W;
 	}
 
-	INLINE FQuatNonVectorized FQuatNonVectorized::operator+(const FQuatNonVectorized& quat) const
+	FORCEINLINE FQuatNonVectorized FQuatNonVectorized::operator+(const FQuatNonVectorized& quat) const
 	{
 		return FQuatNonVectorized(X + quat.X, Y + quat.Y, Z + quat.Z, W + quat.W);
 	}
 
-	INLINE FQuatNonVectorized& FQuatNonVectorized::operator+=(const FQuatNonVectorized& quat)
+	FORCEINLINE FQuatNonVectorized& FQuatNonVectorized::operator+=(const FQuatNonVectorized& quat)
 	{
 		X += quat.X;
 		Y += quat.Y;
@@ -97,12 +97,12 @@ namespace LostCore
 		W += quat.W;
 	}
 
-	INLINE FQuatNonVectorized FQuatNonVectorized::operator-(const FQuatNonVectorized& quat) const
+	FORCEINLINE FQuatNonVectorized FQuatNonVectorized::operator-(const FQuatNonVectorized& quat) const
 	{
 		return FQuatNonVectorized(X - quat.X, Y - quat.Y, Z - quat.Z, W - quat.W);
 	}
 
-	INLINE FQuatNonVectorized& FQuatNonVectorized::operator-=(const FQuatNonVectorized& quat)
+	FORCEINLINE FQuatNonVectorized& FQuatNonVectorized::operator-=(const FQuatNonVectorized& quat)
 	{
 		X -= quat.X;
 		Y -= quat.Y;
@@ -110,7 +110,7 @@ namespace LostCore
 		W -= quat.W;
 	}
 
-	INLINE FQuatNonVectorized  FQuatNonVectorized::operator*(const FQuatNonVectorized& quat) const
+	FORCEINLINE FQuatNonVectorized  FQuatNonVectorized::operator*(const FQuatNonVectorized& quat) const
 	{
 		return FQuatNonVectorized(
 			W*quat.X + X*quat.W + Y*quat.Z - Z*quat.Y,
@@ -119,18 +119,18 @@ namespace LostCore
 			W*quat.W - X*quat.X - Y*quat.Y - Z*quat.Z);
 	}
 
-	INLINE FQuatNonVectorized& FQuatNonVectorized::operator*=(const FQuatNonVectorized& quat)
+	FORCEINLINE FQuatNonVectorized& FQuatNonVectorized::operator*=(const FQuatNonVectorized& quat)
 	{
 		*this = (*this)*quat;
 		return *this;
 	}
 
-	INLINE FQuatNonVectorized FQuatNonVectorized::operator*(float value) const
+	FORCEINLINE FQuatNonVectorized FQuatNonVectorized::operator*(float value) const
 	{
 		return FQuatNonVectorized(X*value, Y*value, Z*value, W*value);
 	}
 
-	INLINE FQuatNonVectorized& FQuatNonVectorized::operator*=(float value)
+	FORCEINLINE FQuatNonVectorized& FQuatNonVectorized::operator*=(float value)
 	{
 		X *= value;
 		Y *= value;
@@ -139,7 +139,7 @@ namespace LostCore
 		return *this;
 	}
 
-	INLINE bool FQuatNonVectorized::operator==(const FQuatNonVectorized& quat) const
+	FORCEINLINE bool FQuatNonVectorized::operator==(const FQuatNonVectorized& quat) const
 	{
 		return LostCore::IsEqual(X, quat.X) &&
 			LostCore::IsEqual(Y, quat.Y) &&
@@ -147,17 +147,17 @@ namespace LostCore
 			LostCore::IsEqual(W, quat.W);
 	}
 
-	INLINE bool FQuatNonVectorized::operator!=(const FQuatNonVectorized& quat) const
+	FORCEINLINE bool FQuatNonVectorized::operator!=(const FQuatNonVectorized& quat) const
 	{
 		return !(*this == quat);
 	}
 
-	INLINE float FQuatNonVectorized::operator|(const FQuatNonVectorized& quat) const
+	FORCEINLINE float FQuatNonVectorized::operator|(const FQuatNonVectorized& quat) const
 	{
 		return X*quat.X + Y*quat.Y + Z*quat.Z + W*quat.W;
 	}
 
-	INLINE FFloat3 FQuatNonVectorized::Euler() const
+	FORCEINLINE FFloat3 FQuatNonVectorized::Euler() const
 	{
 		FFloat3 euler;
 
@@ -202,7 +202,7 @@ namespace LostCore
 		return euler;
 	}
 
-	INLINE FQuatNonVectorized& FQuatNonVectorized::FromEuler(const FFloat3& euler)
+	FORCEINLINE FQuatNonVectorized& FQuatNonVectorized::FromEuler(const FFloat3& euler)
 	{
 		const float halfD2R = SD2RConstant * 0.5f;
 		float t0, t1, t2, t3, t4, t5;
@@ -218,13 +218,13 @@ namespace LostCore
 		return *this;
 	}
 
-	INLINE FQuatNonVectorized FQuatNonVectorized::GetNormalized() const
+	FORCEINLINE FQuatNonVectorized FQuatNonVectorized::GetNormalized() const
 	{
 		FQuatNonVectorized quat(*this);
 		return quat.Normalize();
 	}
 
-	INLINE FQuatNonVectorized& FQuatNonVectorized::Normalize()
+	FORCEINLINE FQuatNonVectorized& FQuatNonVectorized::Normalize()
 	{
 		const float squared = SizeSquared();
 		if (squared > SSmallFloat)
@@ -243,34 +243,34 @@ namespace LostCore
 		return *this;
 	}
 
-	INLINE bool FQuatNonVectorized::IsNormalized() const
+	FORCEINLINE bool FQuatNonVectorized::IsNormalized() const
 	{
 		return LostCore::IsEqual(1.f, SizeSquared());
 	}
 
-	INLINE float FQuatNonVectorized::SizeSquared() const
+	FORCEINLINE float FQuatNonVectorized::SizeSquared() const
 	{
 		return X*X + Y*Y + Z*Z + W*W;
 	}
 
-	INLINE float FQuatNonVectorized::Size() const
+	FORCEINLINE float FQuatNonVectorized::Size() const
 	{
 		return Sqrt(SizeSquared());
 	}
 
-	INLINE FFloat3 FQuatNonVectorized::RotateVector(const FFloat3& vec) const
+	FORCEINLINE FFloat3 FQuatNonVectorized::RotateVector(const FFloat3& vec) const
 	{
 		const FFloat3 q(X, Y, Z);
 		const FFloat3 t((q^vec) * 2.f);
 		return FFloat3(vec + (t * W) + (q^t));
 	}
 
-	INLINE FQuatNonVectorized FQuatNonVectorized::GetInversed() const
+	FORCEINLINE FQuatNonVectorized FQuatNonVectorized::GetInversed() const
 	{
 		return FQuatNonVectorized(-X, -Y, -Z, W);
 	}
 
-	INLINE FQuatNonVectorized& FQuatNonVectorized::Inverse()
+	FORCEINLINE FQuatNonVectorized& FQuatNonVectorized::Inverse()
 	{
 		X = -X;
 		Y = -Y;
@@ -278,17 +278,17 @@ namespace LostCore
 		return *this;
 	}
 
-	INLINE FFloat3 FQuatNonVectorized::GetForwardVector() const
+	FORCEINLINE FFloat3 FQuatNonVectorized::GetForwardVector() const
 	{
 		return RotateVector(FFloat3(0.f, 0.f, 1.f));
 	}
 
-	INLINE FFloat3 FQuatNonVectorized::GetUpVector() const
+	FORCEINLINE FFloat3 FQuatNonVectorized::GetUpVector() const
 	{
 		return RotateVector(FFloat3(0.f, 1.f, 0.f));
 	}
 
-	INLINE FFloat3 FQuatNonVectorized::GetRightVector() const
+	FORCEINLINE FFloat3 FQuatNonVectorized::GetRightVector() const
 	{
 		return RotateVector(FFloat3(1.f, 0.f, 0.f));
 	}

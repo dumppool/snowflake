@@ -14,36 +14,28 @@ namespace D3D11
 {
 	struct FSamplerState_0
 	{
-		INLINE static std::string GetName()
+		FORCEINLINE static std::string GetName()
 		{
 			static std::string SName = "DEFAULT";
 			return SName;
 		}
 
-		INLINE static TRefCountPtr<ID3D11SamplerState> GetState(
-			const TRefCountPtr<ID3D11Device>& device = nullptr, bool bDestroy = false)
+		FORCEINLINE static TRefCountPtr<ID3D11SamplerState> GetState(
+			const TRefCountPtr<ID3D11Device>& device)
 		{
-			static TRefCountPtr<ID3D11SamplerState> SState;
-			static bool SCreated = false;
+			TRefCountPtr<ID3D11SamplerState> state;
 
-			if (device.IsValid() && !SCreated)
+			if (device.IsValid())
 			{
-				SCreated = true;
 				CD3D11_SAMPLER_DESC desc(D3D11_DEFAULT);
-				HRESULT hr = device->CreateSamplerState(&desc, SState.GetInitReference());
+				HRESULT hr = device->CreateSamplerState(&desc, state.GetInitReference());
 				if (FAILED(hr))
 				{
 					LVERR("FSamplerState_0::GetState", "create sampler state failed: 0x%08x(%d)", hr, hr);
 				}
 			}
 
-			if (bDestroy)
-			{
-				SState = nullptr;
-				SCreated = false;
-			}
-
-			return SState;
+			return state;
 		}
 	};
 
@@ -55,19 +47,38 @@ namespace D3D11
 			return &Inst;
 		}
 
+		bool bInitialized;
 		std::map<std::string, TRefCountPtr<ID3D11SamplerState>> StateMap;
+
+		FSamplerStateMap() : bInitialized(false)
+		{
+		}
+
+		~FSamplerStateMap()
+		{
+			ReleaseComObjects();
+		}
 
 		void Initialize(const TRefCountPtr<ID3D11Device>& device)
 		{
+			if (bInitialized)
+			{
+				return;
+			}
+
 			const char* head = "FSamplerStateMap::Initialize";
 			StateMap.insert(std::make_pair(FSamplerState_0::GetName(), FSamplerState_0::GetState(device)));
 			LVMSG(head, "insert SamplerState[%s]", FSamplerState_0::GetName().c_str());
+
+			bInitialized = true;
 		}
 
 		void ReleaseComObjects()
 		{
-			bool bDestroy = true;
-			FSamplerState_0::GetState(nullptr, bDestroy);
+			if (!bInitialized)
+			{
+				return;
+			}
 
 			for (auto& element : StateMap)
 			{
@@ -75,15 +86,19 @@ namespace D3D11
 			}
 
 			StateMap.clear();
+			bInitialized = false;
 		}
 
-		INLINE TRefCountPtr<ID3D11SamplerState> GetState(const std::string& key)
+		FORCEINLINE TRefCountPtr<ID3D11SamplerState> GetState(const std::string& key)
 		{
-			for (auto& element : StateMap)
+			if (bInitialized)
 			{
-				if (element.first.compare(key) == 0)
+				for (auto& element : StateMap)
 				{
-					return element.second;
+					if (element.first.compare(key) == 0)
+					{
+						return element.second;
+					}
 				}
 			}
 

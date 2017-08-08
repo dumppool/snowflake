@@ -19,12 +19,12 @@ namespace D3D11
 		LostCore::FFloat3 XYZ;
 		LostCore::FFloat2 UV;
 
-		INLINE static LostCore::FVertexTypes::Details GetDetails()
+		FORCEINLINE static LostCore::FVertexTypes::Details GetDetails()
 		{
 			return LostCore::FVertexTypes::GetVertexDetail3D(true, false, false, false, false);
 		}
 
-		INLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
+		FORCEINLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
 		{
 			static D3D11_INPUT_ELEMENT_DESC SDesc[] =
 			{
@@ -42,12 +42,12 @@ namespace D3D11
 		LostCore::FFloat2 UV;
 		LostCore::FFloat3 N;
 
-		INLINE static LostCore::FVertexTypes::Details GetDetails()
+		FORCEINLINE static LostCore::FVertexTypes::Details GetDetails()
 		{
 			return LostCore::FVertexTypes::GetVertexDetail3D(true, true, false, false, false);
 		}
 
-		INLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
+		FORCEINLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
 		{
 			static D3D11_INPUT_ELEMENT_DESC SDesc[] =
 			{
@@ -67,12 +67,12 @@ namespace D3D11
 		LostCore::FFloat3 N;
 		LostCore::FFloat3 RGB;
 
-		INLINE static LostCore::FVertexTypes::Details GetDetails()
+		FORCEINLINE static LostCore::FVertexTypes::Details GetDetails()
 		{
 			return LostCore::FVertexTypes::GetVertexDetail3D(true, true, false, true, false);
 		}
 
-		INLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
+		FORCEINLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
 		{
 			static D3D11_INPUT_ELEMENT_DESC SDesc[] =
 			{
@@ -91,12 +91,12 @@ namespace D3D11
 		LostCore::FFloat2 XY;
 		LostCore::FFloat4 Color;
 
-		INLINE static LostCore::FVertexTypes::Details GetDetails()
+		FORCEINLINE static LostCore::FVertexTypes::Details GetDetails()
 		{
 			return LostCore::FVertexTypes::GetVertexDetail2D(false, true);
 		}
 
-		INLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
+		FORCEINLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
 		{
 			static D3D11_INPUT_ELEMENT_DESC SDesc[] =
 			{
@@ -114,12 +114,12 @@ namespace D3D11
 		LostCore::FFloat2 UV;
 		LostCore::FFloat4 Color;
 
-		INLINE static LostCore::FVertexTypes::Details GetDetails()
+		FORCEINLINE static LostCore::FVertexTypes::Details GetDetails()
 		{
 			return LostCore::FVertexTypes::GetVertexDetail2D(true, true);
 		}
 
-		INLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
+		FORCEINLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
 		{
 			static D3D11_INPUT_ELEMENT_DESC SDesc[] =
 			{
@@ -141,12 +141,12 @@ namespace D3D11
 		LostCore::FFloat4 BlendWeights;
 		LostCore::FSInt4 BlendIndices;
 
-		INLINE static LostCore::FVertexTypes::Details GetDetails()
+		FORCEINLINE static LostCore::FVertexTypes::Details GetDetails()
 		{
 			return LostCore::FVertexTypes::GetVertexDetail3D(true, true, false, true, true);
 		}
 
-		INLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
+		FORCEINLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
 		{
 			static D3D11_INPUT_ELEMENT_DESC SDesc[] =
 			{
@@ -170,12 +170,12 @@ namespace D3D11
 		LostCore::FFloat4 BlendWeights;
 		LostCore::FSInt4 BlendIndices;
 
-		INLINE static LostCore::FVertexTypes::Details GetDetails()
+		FORCEINLINE static LostCore::FVertexTypes::Details GetDetails()
 		{
 			return LostCore::FVertexTypes::GetVertexDetail3D(true, true, false, false, true);
 		}
 
-		INLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
+		FORCEINLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
 		{
 			static D3D11_INPUT_ELEMENT_DESC SDesc[] =
 			{
@@ -197,12 +197,12 @@ namespace D3D11
 		LostCore::FFloat4 BlendWeights;
 		LostCore::FSInt4 BlendIndices;
 
-		INLINE static LostCore::FVertexTypes::Details GetDetails()
+		FORCEINLINE static LostCore::FVertexTypes::Details GetDetails()
 		{
 			return LostCore::FVertexTypes::GetVertexDetail3D(false, true, false, false, true);
 		}
 
-		INLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
+		FORCEINLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
 		{
 			static D3D11_INPUT_ELEMENT_DESC SDesc[] =
 			{
@@ -221,12 +221,12 @@ namespace D3D11
 		LostCore::FFloat3 XYZ;
 		LostCore::FColor96 COLOR;
 
-		INLINE static LostCore::FVertexTypes::Details GetDetails()
+		FORCEINLINE static LostCore::FVertexTypes::Details GetDetails()
 		{
 			return LostCore::FVertexTypes::GetVertexDetail3D(false, false, false, true, false);
 		}
 
-		INLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
+		FORCEINLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
 		{
 			static D3D11_INPUT_ELEMENT_DESC SDesc[] =
 			{
@@ -280,7 +280,7 @@ namespace D3D11
 			LVMSG(head, "register: %s, stride: %d, aligned stride: %d", FVertex_8::GetDetails().Name.c_str(), FVertex_8::GetDetails().Stride, sizeof(FVertex_8));
 		}
 
-		INLINE std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc(const std::string& key)
+		FORCEINLINE std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc(const std::string& key)
 		{
 			for (auto element : DescMap)
 			{

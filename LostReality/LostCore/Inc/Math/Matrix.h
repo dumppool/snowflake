@@ -29,13 +29,13 @@ namespace LostCore
 			SetIdentity();
 		}
 
-		INLINE TMatrixNonVectorized<T>&  SetZero()
+		FORCEINLINE TMatrixNonVectorized<T>&  SetZero()
 		{
 			memset(this, 0, sizeof(*this));
 			return *this;
 		}
 
-		INLINE TMatrixNonVectorized<T>&  SetIdentity()
+		FORCEINLINE TMatrixNonVectorized<T>&  SetIdentity()
 		{
 			M[0][0] = 1.0; M[0][1] = 0.0; M[0][2] = 0.0; M[0][3] = 0.0;
 			M[1][0] = 0.0; M[1][1] = 1.0; M[1][2] = 0.0; M[1][3] = 0.0;
@@ -44,7 +44,7 @@ namespace LostCore
 			return *this;
 		}
 
-		INLINE TMatrixNonVectorized<T>&  SetScale(const T x, const T y, const T z)
+		FORCEINLINE TMatrixNonVectorized<T>&  SetScale(const T x, const T y, const T z)
 		{
 			M[0][0] = x;   M[0][1] = 0.0; M[0][2] = 0.0; M[0][3] = 0.0;
 			M[1][0] = 0.0; M[1][1] = y;   M[1][2] = 0.0; M[1][3] = 0.0;
@@ -53,12 +53,12 @@ namespace LostCore
 			return *this;
 		}
 
-		INLINE TMatrixNonVectorized<T>&  SetScale(const TVec3NonVectorized<T>& scale)
+		FORCEINLINE TMatrixNonVectorized<T>&  SetScale(const TVec3NonVectorized<T>& scale)
 		{
 			return SetScale(scale.X, scale.Y, scale.Z);
 		}
 
-		INLINE TMatrixNonVectorized<T>&  SetTranslate(const T x, const T y, const T z)
+		FORCEINLINE TMatrixNonVectorized<T>&  SetTranslate(const T x, const T y, const T z)
 		{
 			M[0][0] = 1.0; M[0][1] = 0.0; M[0][2] = 0.0; M[0][3] = 0.0;
 			M[1][0] = 0.0; M[1][1] = 1.0; M[1][2] = 0.0; M[1][3] = 0.0;
@@ -67,12 +67,12 @@ namespace LostCore
 			return *this;
 		}
 
-		INLINE TMatrixNonVectorized<T>&  SetTranslate(const TVec3NonVectorized<T>& translate)
+		FORCEINLINE TMatrixNonVectorized<T>&  SetTranslate(const TVec3NonVectorized<T>& translate)
 		{
 			return SetTranslate(translate.X, translate.Y, translate.Z);
 		}
 
-		INLINE void SetRotateAndOrigin(const FQuat& q, const TVec3NonVectorized<T>& origin, const TVec3NonVectorized<T>& scale = TVec3NonVectorized<T>(1.0, 1.0, 1.0))
+		FORCEINLINE void SetRotateAndOrigin(const FQuat& q, const TVec3NonVectorized<T>& origin, const TVec3NonVectorized<T>& scale = TVec3NonVectorized<T>(1.0, 1.0, 1.0))
 		{
 			SetRotate(q);
 
@@ -84,7 +84,7 @@ namespace LostCore
 			M[3][3] = 1.0;
 		}
 
-		INLINE void SetRotate(const FQuat& q)
+		FORCEINLINE void SetRotate(const FQuat& q)
 		{
 			T xx = q.X * q.X * 2.0;
 			T xy = q.X * q.Y * 2.0;
@@ -115,40 +115,40 @@ namespace LostCore
 			M[3][3] = 1.0;
 		}
 
-		INLINE void SetRotate(const TVec3NonVectorized<T>& euler)
+		FORCEINLINE void SetRotate(const TVec3NonVectorized<T>& euler)
 		{
 		}
 
-		INLINE void SetRotateInverse(const TVec3NonVectorized<T>& euler)
+		FORCEINLINE void SetRotateInverse(const TVec3NonVectorized<T>& euler)
 		{
 		}
 
-		INLINE TMatrixNonVectorized<T>&  Multiply(const TMatrixNonVectorized<T>&  m1, const TMatrixNonVectorized<T>&  m2)
-		{
-			return *this;
-		}
-
-		INLINE TMatrixNonVectorized<T>&  PreMultiply(const TMatrixNonVectorized<T>&  m)
+		FORCEINLINE TMatrixNonVectorized<T>&  Multiply(const TMatrixNonVectorized<T>&  m1, const TMatrixNonVectorized<T>&  m2)
 		{
 			return *this;
 		}
 
-		INLINE TMatrixNonVectorized<T>&  PostMultiply(const TMatrixNonVectorized<T>&  m)
+		FORCEINLINE TMatrixNonVectorized<T>&  PreMultiply(const TMatrixNonVectorized<T>&  m)
 		{
 			return *this;
 		}
 
-		INLINE TMatrixNonVectorized<T>&  InvertOrthonormal(const TMatrixNonVectorized<T>&  m)
+		FORCEINLINE TMatrixNonVectorized<T>&  PostMultiply(const TMatrixNonVectorized<T>&  m)
 		{
 			return *this;
 		}
 
-		INLINE TMatrixNonVectorized<T>&  InvertOrthonormal()
+		FORCEINLINE TMatrixNonVectorized<T>&  InvertOrthonormal(const TMatrixNonVectorized<T>&  m)
 		{
 			return *this;
 		}
 
-		INLINE TMatrixNonVectorized<T>&  Invert34()
+		FORCEINLINE TMatrixNonVectorized<T>&  InvertOrthonormal()
+		{
+			return *this;
+		}
+
+		FORCEINLINE TMatrixNonVectorized<T>&  Invert34()
 		{
 			TMatrixNonVectorized<T> m(*this);
 			T det = m.GetDeterminant34();
@@ -182,7 +182,7 @@ namespace LostCore
 			return *this;
 		}
 
-		INLINE T GetDeterminant34() const
+		FORCEINLINE T GetDeterminant34() const
 		{
 			T det = 0.0;
 			det += M[0][0] * (M[1][1] * M[2][2] - M[1][2] * M[2][1]);
@@ -191,7 +191,7 @@ namespace LostCore
 			return det;
 		}
 
-		INLINE TMatrixNonVectorized<T>&  Invert()
+		FORCEINLINE TMatrixNonVectorized<T>&  Invert()
 		{
 			T a0 = M[0][0] * M[1][1] - M[0][1] * M[1][0];
 			T a1 = M[0][0] * M[1][2] - M[0][2] * M[1][0];
@@ -244,7 +244,7 @@ namespace LostCore
 			return *this;
 		}
 
-		INLINE T GetDeterminant() const
+		FORCEINLINE T GetDeterminant() const
 		{
 			T a0 = M[0][0] * M[1][1] - M[0][1] * M[1][0];
 			T a1 = M[0][0] * M[1][2] - M[0][2] * M[1][0];
@@ -264,7 +264,7 @@ namespace LostCore
 		}
 
 		// NOTE: view matrix
-		INLINE TMatrixNonVectorized<T>&  LookAt(const TVec3NonVectorized<T>& pos, const TVec3NonVectorized<T>& dir, const TVec3NonVectorized<T>& up)
+		FORCEINLINE TMatrixNonVectorized<T>&  LookAt(const TVec3NonVectorized<T>& pos, const TVec3NonVectorized<T>& dir, const TVec3NonVectorized<T>& up)
 		{
 			TVec3NonVectorized<T> u, d, r;
 
@@ -286,7 +286,7 @@ namespace LostCore
 			return *this;
 		}
 
-		INLINE void ApplyVector4(TVec4NonVectorized<T>& ret, const TVec4NonVectorized<T>& p) const
+		FORCEINLINE void ApplyVector4(TVec4NonVectorized<T>& ret, const TVec4NonVectorized<T>& p) const
 		{
 			ret.X = p | TVec4NonVectorized<T>(M[0][0], M[1][0], M[2][0], M[3][0]);
 			ret.Y = p | TVec4NonVectorized<T>(M[0][1], M[1][1], M[2][1], M[3][1]);
@@ -294,7 +294,7 @@ namespace LostCore
 			ret.W = p | TVec4NonVectorized<T>(M[0][3], M[1][3], M[2][3], M[3][3]);
 		}
 
-		INLINE void ApplyPoint(TVec3NonVectorized<T>& ret, const TVec3NonVectorized<T>& p) const
+		FORCEINLINE void ApplyPoint(TVec3NonVectorized<T>& ret, const TVec3NonVectorized<T>& p) const
 		{
 			TVec4NonVectorized<T> ret4;
 			ApplyVector4(ret4, TVec4NonVectorized<T>(p.X, p.Y, p.Z, 1.0));
@@ -303,14 +303,14 @@ namespace LostCore
 			ret.Z = ret4.Z;
 		}
 
-		INLINE TVec3NonVectorized<T> ApplyPoint(const TVec3NonVectorized<T>& p) const
+		FORCEINLINE TVec3NonVectorized<T> ApplyPoint(const TVec3NonVectorized<T>& p) const
 		{
 			TVec3NonVectorized<T> ret;
 			ApplyPoint(ret, p);
 			return ret;
 		}
 
-		INLINE void ApplyVector(TVec3NonVectorized<T>& ret, const TVec3NonVectorized<T>& v) const
+		FORCEINLINE void ApplyVector(TVec3NonVectorized<T>& ret, const TVec3NonVectorized<T>& v) const
 		{
 			TVec4NonVectorized<T> ret4;
 			ApplyVector4(ret4, TVec4NonVectorized<T>(v.X, v.Y, v.Z, 0.0));
@@ -319,66 +319,66 @@ namespace LostCore
 			ret.Z = ret4.Z;
 		}
 
-		INLINE TVec3NonVectorized<T> ApplyVector(const TVec3NonVectorized<T>& v) const
+		FORCEINLINE TVec3NonVectorized<T> ApplyVector(const TVec3NonVectorized<T>& v) const
 		{
 			TVec3NonVectorized<T> ret;
 			ApplyVector(ret, v);
 			return ret;
 		}
 
-		INLINE TMatrixNonVectorized<T>&  PreRotateX(const T angle)
+		FORCEINLINE TMatrixNonVectorized<T>&  PreRotateX(const T angle)
 		{
 
 		}
 
-		INLINE TMatrixNonVectorized<T>&  PreRotateY(const T angle)
+		FORCEINLINE TMatrixNonVectorized<T>&  PreRotateY(const T angle)
 		{
 
 		}
 
-		INLINE TMatrixNonVectorized<T>&  PreRotateZ(const T angle)
+		FORCEINLINE TMatrixNonVectorized<T>&  PreRotateZ(const T angle)
 		{
 
 		}
 
-		INLINE TMatrixNonVectorized<T>&  PostRotateX(const T angle)
+		FORCEINLINE TMatrixNonVectorized<T>&  PostRotateX(const T angle)
 		{
 		}
 
-		INLINE TMatrixNonVectorized<T>&  PostRotateY(const T angle)
+		FORCEINLINE TMatrixNonVectorized<T>&  PostRotateY(const T angle)
 		{
 		}
 
-		INLINE TMatrixNonVectorized<T>&  PostRotateZ(const T angle)
+		FORCEINLINE TMatrixNonVectorized<T>&  PostRotateZ(const T angle)
 		{
 		}
 
-		INLINE TMatrixNonVectorized<T>&  OrthogonalProjection(T w, T h, T zn, T zf)
-		{
-
-		}
-
-		INLINE TMatrixNonVectorized<T>&  PerspectiveProjection(T fov, T aspectRatio, T np, T fp)
+		FORCEINLINE TMatrixNonVectorized<T>&  OrthogonalProjection(T w, T h, T zn, T zf)
 		{
 
 		}
 
-		INLINE T GetYaw() const
+		FORCEINLINE TMatrixNonVectorized<T>&  PerspectiveProjection(T fov, T aspectRatio, T np, T fp)
 		{
 
 		}
 
-		INLINE T GetPitch() const
+		FORCEINLINE T GetYaw() const
 		{
 
 		}
 
-		INLINE T GetRoll() const
+		FORCEINLINE T GetPitch() const
 		{
 
 		}
 
-		INLINE TVec3NonVectorized<T> GetScale() const
+		FORCEINLINE T GetRoll() const
+		{
+
+		}
+
+		FORCEINLINE TVec3NonVectorized<T> GetScale() const
 		{
 			TVec3NonVectorized<T> scale(TVec3NonVectorized<T>::GetZero());
 
@@ -404,7 +404,7 @@ namespace LostCore
 			return scale;
 		}
 
-		INLINE FQuat GetOrientation() const
+		FORCEINLINE FQuat GetOrientation() const
 		{
 			FQuat quat;
 			const T tr = M[0][0] + M[1][1] + M[2][2];
@@ -451,12 +451,12 @@ namespace LostCore
 			return quat;
 		}
 
-		INLINE TVec3NonVectorized<T> GetOrigin() const
+		FORCEINLINE TVec3NonVectorized<T> GetOrigin() const
 		{
 			return TVec3NonVectorized<T>(M[3][0], M[3][1], M[3][2]);
 		}
 
-		INLINE TMatrixNonVectorized<T> operator*(const TMatrixNonVectorized<T>&  rhs) const
+		FORCEINLINE TMatrixNonVectorized<T> operator*(const TMatrixNonVectorized<T>&  rhs) const
 		{
 			TMatrixNonVectorized<T> result;
 			for (int32 i = 0; i < 4; ++i)
@@ -470,7 +470,7 @@ namespace LostCore
 			return result;
 		}
 
-		INLINE TMatrixNonVectorized<T> operator*(T val) const
+		FORCEINLINE TMatrixNonVectorized<T> operator*(T val) const
 		{
 			TMatrixNonVectorized<T> result(*this);
 			for (int32 i = 0; i < 4; ++i)
@@ -484,7 +484,7 @@ namespace LostCore
 			return result;
 		}
 
-		INLINE TMatrixNonVectorized<T> operator+(const TMatrixNonVectorized<T>&  rhs) const
+		FORCEINLINE TMatrixNonVectorized<T> operator+(const TMatrixNonVectorized<T>&  rhs) const
 		{
 			TMatrixNonVectorized<T> result(*this);
 			for (int32 i = 0; i < 4; ++i)
@@ -498,7 +498,7 @@ namespace LostCore
 			return result;
 		}
 
-		INLINE bool operator==(const TMatrixNonVectorized<T>& rhs) const
+		FORCEINLINE bool operator==(const TMatrixNonVectorized<T>& rhs) const
 		{
 			return (TVec4NonVectorized<T>(M[0]) == TVec4NonVectorized<T>(rhs.M[0])
 				&& TVec4NonVectorized<T>(M[1]) == TVec4NonVectorized<T>(rhs.M[1])
@@ -506,7 +506,7 @@ namespace LostCore
 				&& TVec4NonVectorized<T>(M[3]) == TVec4NonVectorized<T>(rhs.M[3]));
 		}
 
-		INLINE TMatrixNonVectorized<T>&  Transpose()
+		FORCEINLINE TMatrixNonVectorized<T>&  Transpose()
 		{
 			TMatrixNonVectorized<T> m(*this);
 			for (int32 i = 0; i < 4; ++i)
@@ -520,7 +520,7 @@ namespace LostCore
 			return *this;
 		}
 
-		INLINE TMatrixNonVectorized<T>& Normalize3x3()
+		FORCEINLINE TMatrixNonVectorized<T>& Normalize3x3()
 		{
 			for (uint32 i = 0; i < 3; ++i)
 			{
@@ -535,7 +535,7 @@ namespace LostCore
 	};
 
 	template <typename T>
-	INLINE void from_json(const FJson& j, TMatrixNonVectorized<T>&  matrix)
+	FORCEINLINE void from_json(const FJson& j, TMatrixNonVectorized<T>&  matrix)
 	{
 		if (j.is_array() && j.size() >= 16)
 		{
@@ -550,7 +550,7 @@ namespace LostCore
 	}
 
 	template <typename T>
-	INLINE void to_json(FJson& j, const TMatrixNonVectorized<T>&  matrix)
+	FORCEINLINE void to_json(FJson& j, const TMatrixNonVectorized<T>&  matrix)
 	{
 		j.clear();
 		for (int row = 0; row < 4; ++row)

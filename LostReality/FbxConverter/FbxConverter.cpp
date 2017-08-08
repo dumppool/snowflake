@@ -3,11 +3,11 @@
 
 #include "stdafx.h"
 
+using namespace Importer;
+
 int main(int argc, char** argv)
 {
-	string src("");
-	string dst("");
-	bool exportAnim = false;
+	FConvertOptions options(FConvertOptions::ImportMost, FConvertOptions::NoRegenerate);
 	for (int i = 1; i < argc; ++i)
 	{
 		string cmd(argv[i]);
@@ -17,29 +17,60 @@ int main(int argc, char** argv)
 			string key(cmd.begin(), cmd.begin() + equalPos);
 			string value(cmd.begin() + equalPos + 1, cmd.end());
 
-			if (key.compare("src") == 0)
+			if (key.compare(K_INPUT_PATH) == 0)
 			{
-				src = value;
+				FConvertOptions::Get()->InputPath = value;
 			}
-			else if (key.compare("dst") == 0)
+			else if (key.compare(K_OUTPUT_PATH) == 0)
 			{
-				dst = value;
+				FConvertOptions::Get()->OutputPath = value;
 			}
 		}
 		else
 		{
-			if (cmd.compare("anim") == 0)
+			if (cmd.compare(K_IMP_ANIM) == 0)
 			{
-				exportAnim = true;
+				FConvertOptions::Get()->bImportAnimation = true;
+			}
+			else if (cmd.compare(K_IMP_NORMAL) == 0)
+			{
+				FConvertOptions::Get()->bImportNormal = true;
+			}
+			else if (cmd.compare(K_IMP_TANGENT) == 0)
+			{
+				FConvertOptions::Get()->bImportTangent = true;
+			}
+			else if (cmd.compare(K_IMP_VERTEXCOLOR) == 0)
+			{
+				FConvertOptions::Get()->bImportVertexColor = true;
+			}
+			else if (cmd.compare(K_FORCE_GEN_NORMAL) == 0)
+			{
+				FConvertOptions::Get()->bForceRegenerateNormal = true;
+			}
+			else if (cmd.compare(K_FORCE_GEN_TANGENT) == 0)
+			{
+				FConvertOptions::Get()->bForceRegenerateTangent = true;
+			}
+			else if (cmd.compare(K_GEN_NORMAL_IF_NOT_FOUND) == 0)
+			{
+				FConvertOptions::Get()->bGenerateNormalIfNotFound = true;
+			}
+			else if (cmd.compare(K_GEN_TANGENT_IF_NOT_FOUND) == 0)
+			{
+				FConvertOptions::Get()->bGenerateTangentIfNotFound = true;
 			}
 		}
 	}
 
-	Importer::SOptions.bImportTangent = false;
-	if (!src.empty() && !dst.empty())
+	if (!FConvertOptions::Get()->InputPath.empty() && !FConvertOptions::Get()->OutputPath.empty())
 	{
-		Importer::DumpSceneMeshes(src, dst, true, exportAnim);
-		Importer::ImportSceneMeshes2(src, dst, true, exportAnim);
+		//DumpSceneMeshes(FConvertOptions::Get()->InputPath, FConvertOptions::Get()->OutputPath, true, exportAnim);
+		ImportSceneMeshes2();
+	}
+	else
+	{
+		assert(0);
 	}
 
     return 0;

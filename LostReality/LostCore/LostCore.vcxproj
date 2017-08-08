@@ -176,6 +176,7 @@
     <ClInclude Include="Inc\Serialize\Serialization.h" />
     <ClInclude Include="Inc\Serialize\StructSerialize.h" />
     <ClInclude Include="Inc\SimpleWorld.h" />
+    <ClInclude Include="Inc\Threading\CommandQueue.h" />
     <ClInclude Include="Inc\VertexTypes.h" />
     <ClInclude Include="Interface\Drawable.h" />
     <ClInclude Include="Interface\FontInterface.h" />

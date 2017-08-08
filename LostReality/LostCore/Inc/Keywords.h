@@ -151,7 +151,18 @@
 #define K_MESSAGE5						"Message5"
 #define K_MESSAGE6						"Message6"
 
-#define K_PRIMITIVE_EXT						".iv"
+#define K_PATH							"Path"
+#define K_INPUT_PATH					"InputPath"
+#define K_OUTPUT_PATH					"OutputPath"
+#define K_IMP_NORMAL					"ImportNormal"
+#define K_IMP_TANGENT					"ImportTangent"
+#define K_IMP_VERTEXCOLOR				"ImportVertexColor"
+#define K_IMP_ANIM						"ImportAnimation"
+#define K_FORCE_GEN_NORMAL				"ForceGenerateNormal"
+#define K_FORCE_GEN_TANGENT				"ForceGenerateTangent"
+#define K_GEN_NORMAL_IF_NOT_FOUND		"GenrateNormalIfNotFound"
+#define K_GEN_TANGENT_IF_NOT_FOUND		"GenrateTangentIfNotFound"
+#define K_PRIMITIVE_EXT					".iv"
 
 #define FLAG_UNKNOWN					0x0badfffa
 

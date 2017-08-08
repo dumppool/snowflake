@@ -37,32 +37,32 @@ namespace LostCore
 			memcpy(&X, p, sizeof(T) * 4);
 		}
 
-		INLINE T operator|(const TVec4NonVectorized<T>& vec) const;
-		INLINE T operator[](int32 index) const;
-		INLINE T& operator[](int32 index);
-		INLINE bool operator==(const TVec4NonVectorized<T>& rhs) const;
+		FORCEINLINE T operator|(const TVec4NonVectorized<T>& vec) const;
+		FORCEINLINE T operator[](int32 index) const;
+		FORCEINLINE T& operator[](int32 index);
+		FORCEINLINE bool operator==(const TVec4NonVectorized<T>& rhs) const;
 	};
 
 	template <typename T>
-	INLINE T TVec4NonVectorized<T>::operator|(const TVec4NonVectorized<T>& vec) const
+	FORCEINLINE T TVec4NonVectorized<T>::operator|(const TVec4NonVectorized<T>& vec) const
 	{
 		return X * vec.X + Y * vec.Y + Z * vec.Z + W * vec.W;
 	}
 
 	template <typename T>
-	INLINE T& TVec4NonVectorized<T>::operator[](int32 index)
+	FORCEINLINE T& TVec4NonVectorized<T>::operator[](int32 index)
 	{
 		return index == 0 ? X : (index == 1 ? Y : (index == 2 ? Z : W));
 	}
 
 	template <typename T>
-	INLINE T TVec4NonVectorized<T>::operator[](int32 index) const
+	FORCEINLINE T TVec4NonVectorized<T>::operator[](int32 index) const
 	{
 		return (*this)[index];
 	}
 
 	template <typename T>
-	INLINE bool TVec4NonVectorized<T>::operator==(const TVec4NonVectorized<T>& rhs) const
+	FORCEINLINE bool TVec4NonVectorized<T>::operator==(const TVec4NonVectorized<T>& rhs) const
 	{
 		return (X == rhs.X
 			&& Y == rhs.Y
@@ -71,7 +71,7 @@ namespace LostCore
 	}
 
 	template <typename T>
-	INLINE void from_json(const FJson& j, TVec4NonVectorized<T>& val)
+	FORCEINLINE void from_json(const FJson& j, TVec4NonVectorized<T>& val)
 	{
 		if (j.is_array() && j.size() >= 4)
 		{
@@ -83,7 +83,7 @@ namespace LostCore
 	}
 
 	template <typename T>
-	INLINE void to_json(FJson& j, const TVec4NonVectorized<T>& val)
+	FORCEINLINE void to_json(FJson& j, const TVec4NonVectorized<T>& val)
 	{
 		j[0] = val.X;
 		j[1] = val.Y;

@@ -28,17 +28,17 @@ namespace D3D11
 
 		bool Initialize(LostCore::IRenderContext* rc, const FJson& config);
 
-		INLINE TRefCountPtr<ID3D11InputLayout> GetInputLayout()
+		FORCEINLINE TRefCountPtr<ID3D11InputLayout> GetInputLayout()
 		{
 			return IL;
 		}
 
-		INLINE TRefCountPtr<ID3D11VertexShader> GetVertexShader()
+		FORCEINLINE TRefCountPtr<ID3D11VertexShader> GetVertexShader()
 		{
 			return VS;
 		}
 
-		INLINE TRefCountPtr<ID3D11PixelShader> GetPixelShader()
+		FORCEINLINE TRefCountPtr<ID3D11PixelShader> GetPixelShader()
 		{
 			return PS;
 		}

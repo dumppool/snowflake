@@ -23,35 +23,35 @@ namespace LostCore
 		FFloat3 Scale;
 
 	public:
-		INLINE FTransformNonVectorized()
+		FORCEINLINE FTransformNonVectorized()
 			: Orientation(FQuat::GetIdentity())
 			, Translation(FFloat3::GetZero())
 			, Scale(1.f, 1.f, 1.f)
 		{
 		}
 
-		INLINE explicit FTransformNonVectorized(const FFloat3& translation)
+		FORCEINLINE explicit FTransformNonVectorized(const FFloat3& translation)
 			: Orientation(FQuat::GetIdentity())
 			, Translation(translation)
 			, Scale(1.f, 1.f, 1.f)
 		{
 		}
 
-		INLINE explicit FTransformNonVectorized(const FQuat& orientation)
+		FORCEINLINE explicit FTransformNonVectorized(const FQuat& orientation)
 			: Orientation(orientation)
 			, Translation(FFloat3::GetZero())
 			, Scale(1.f, 1.f, 1.f)
 		{
 		}
 
-		INLINE FTransformNonVectorized(const FQuat& orientation, const FFloat3& translation, const FFloat3& scale = FFloat3(1.f, 1.f, 1.f))
+		FORCEINLINE FTransformNonVectorized(const FQuat& orientation, const FFloat3& translation, const FFloat3& scale = FFloat3(1.f, 1.f, 1.f))
 			: Orientation(orientation)
 			, Translation(translation)
 			, Scale(scale)
 		{
 		}
 
-		INLINE FTransformNonVectorized GetInversed() const
+		FORCEINLINE FTransformNonVectorized GetInversed() const
 		{
 			FQuat orientation = Orientation.GetInversed();
 			FFloat3 scale = FFloat3::GetReciprocal(Scale);
@@ -59,12 +59,12 @@ namespace LostCore
 			return FTransformNonVectorized(orientation, translation, scale);
 		}
 
-		INLINE FTransformNonVectorized operator*(float value) const
+		FORCEINLINE FTransformNonVectorized operator*(float value) const
 		{
 			return FTransformNonVectorized(Orientation*value, Translation*value, Scale*value);
 		}
 
-		INLINE FTransformNonVectorized& operator*=(float value)
+		FORCEINLINE FTransformNonVectorized& operator*=(float value)
 		{
 			Orientation *= value;
 			Translation *= value;
@@ -72,7 +72,7 @@ namespace LostCore
 			return *this;
 		}
 
-		INLINE FTransformNonVectorized operator*(const FTransformNonVectorized& transform) const
+		FORCEINLINE FTransformNonVectorized operator*(const FTransformNonVectorized& transform) const
 		{
 			return FTransformNonVectorized(
 				transform.Orientation * Orientation,
@@ -81,23 +81,23 @@ namespace LostCore
 			);
 		}
 
-		INLINE FTransformNonVectorized& operator*=(const FTransformNonVectorized& transform)
+		FORCEINLINE FTransformNonVectorized& operator*=(const FTransformNonVectorized& transform)
 		{
 			*this = (*this) * transform;
 			return *this;
 		}
 
-		INLINE FFloat3 TranformVector(const FFloat3& vec) const
+		FORCEINLINE FFloat3 TranformVector(const FFloat3& vec) const
 		{
 			return (Orientation.RotateVector(vec*Scale));
 		}
 
-		INLINE FFloat3 TransformPosition(const FFloat3& vec) const
+		FORCEINLINE FFloat3 TransformPosition(const FFloat3& vec) const
 		{
 			return (Orientation.RotateVector(vec*Scale) + Translation);
 		}
 
-		INLINE FFloat4x4 ToMatrix(bool withScale = true) const
+		FORCEINLINE FFloat4x4 ToMatrix(bool withScale = true) const
 		{
 			FFloat4x4 matrix;
 			FFloat3 scale(withScale ? Scale : FFloat3(1.f, 1.f, 1.f));
@@ -144,12 +144,12 @@ namespace LostCore
 			return matrix;
 		}
 
-		INLINE FFloat4x4 ToMatrixNoScale() const
+		FORCEINLINE FFloat4x4 ToMatrixNoScale() const
 		{
 			return ToMatrix(false);
 		}
 
-		INLINE FTransformNonVectorized& FromMatrix(const FFloat4x4& matrix)
+		FORCEINLINE FTransformNonVectorized& FromMatrix(const FFloat4x4& matrix)
 		{
 			Scale = matrix.GetScale();
 			Orientation = matrix.GetOrientation();
@@ -158,7 +158,7 @@ namespace LostCore
 		}
 
 	public:
-		INLINE static FTransformNonVectorized GetIdentity()
+		FORCEINLINE static FTransformNonVectorized GetIdentity()
 		{
 			return FTransformNonVectorized();
 		}

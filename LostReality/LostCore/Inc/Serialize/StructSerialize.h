@@ -11,7 +11,7 @@
 
 namespace LostCore
 {
-	inline FVertexTypes::Details GetVertexDetails(int flag)
+	FORCEINLINE FVertexTypes::Details GetVertexDetails(int flag)
 	{
 		return LostCore::FVertexTypes::GetVertexDetail3D(
 			(flag & EVertexElement::UV) == EVertexElement::UV,
@@ -21,12 +21,12 @@ namespace LostCore
 			(flag & EVertexElement::Skin) == EVertexElement::Skin);
 	}
 
-	inline uint32 GetAlignedSize(uint32 sz, uint32 alignment)
+	FORCEINLINE uint32 GetAlignedSize(uint32 sz, uint32 alignment)
 	{
 		return (uint32)ceil(sz / (float)alignment)*alignment;
 	}
 
-	inline uint32 GetPaddingSize(uint32 sz, uint32 alignment)
+	FORCEINLINE uint32 GetPaddingSize(uint32 sz, uint32 alignment)
 	{
 		return GetAlignedSize(sz, alignment) - sz;
 	}
@@ -71,7 +71,7 @@ namespace LostCore
 	};
 
 	template<typename T>
-	inline FBinaryIO& operator<<(FBinaryIO& stream, const TTreeNode<T>& data)
+	FORCEINLINE FBinaryIO& operator<<(FBinaryIO& stream, const TTreeNode<T>& data)
 	{
 		stream << data.Data << data.Children.size();
 		for (const auto& child : data.Children)
@@ -83,7 +83,7 @@ namespace LostCore
 	}
 
 	template<typename T>
-	inline FBinaryIO& operator >> (FBinaryIO& stream, TTreeNode<T>& data)
+	FORCEINLINE FBinaryIO& operator >> (FBinaryIO& stream, TTreeNode<T>& data)
 	{
 		uint32 childNum;
 		stream >> data.Data >> childNum;
@@ -196,7 +196,7 @@ namespace LostCore
 
 		bool operator==(const FMeshData& rhs) const;
 
-		void Save(const string& outputDir) const;
+		string Save(const string& outputDir) const;
 		void Load(const string& inputDir);
 
 		// 暂时索引没有意义，只转换顶点数据流
@@ -204,7 +204,7 @@ namespace LostCore
 	};
 
 	template<>
-	inline FBinaryIO& operator<<(FBinaryIO& stream, const FMeshData& data)
+	FORCEINLINE FBinaryIO& operator<<(FBinaryIO& stream, const FMeshData& data)
 	{
 		uint32 sz = 0;
 		uint32 dsz = 0;
@@ -225,7 +225,7 @@ namespace LostCore
 	}
 
 	template<>
-	inline FBinaryIO& operator >> (FBinaryIO& stream, FMeshData& data)
+	FORCEINLINE FBinaryIO& operator >> (FBinaryIO& stream, FMeshData& data)
 	{
 		stream >> data.Name >> data.IndexCount >> data.VertexCount
 			>> data.VertexFlags >> data.Coordinates >> data.TexCoords
@@ -243,7 +243,7 @@ namespace LostCore
 	}
 }
 
-inline LostCore::FMeshData::FMeshData()
+FORCEINLINE LostCore::FMeshData::FMeshData()
 	: Name("")
 	, IndexCount(0)
 	, VertexCount(0)
@@ -265,7 +265,7 @@ inline LostCore::FMeshData::FMeshData()
 	Vertices.clear();
 }
 
-inline LostCore::FMeshData::~FMeshData()
+FORCEINLINE LostCore::FMeshData::~FMeshData()
 {
 	Coordinates.clear();
 	TexCoords.clear();
@@ -282,7 +282,7 @@ inline LostCore::FMeshData::~FMeshData()
 	Vertices.clear();
 }
 
-inline bool LostCore::FMeshData::operator==(const FMeshData& rhs) const
+FORCEINLINE bool LostCore::FMeshData::operator==(const FMeshData& rhs) const
 {
 	return (Name == rhs.Name
 		&& IndexCount == rhs.IndexCount
@@ -302,11 +302,11 @@ inline bool LostCore::FMeshData::operator==(const FMeshData& rhs) const
 		&& Triangles == rhs.Triangles);
 }
 
-inline void LostCore::FMeshData::Save(const string & outputDir) const
+FORCEINLINE string LostCore::FMeshData::Save(const string & outputDir) const
 {
 	if (outputDir.empty())
 	{
-		return;
+		return string("");
 	}
 
 	auto outputFile = outputDir;
@@ -321,9 +321,11 @@ inline void LostCore::FMeshData::Save(const string & outputDir) const
 
 	LVMSG("FMeshData::Save", "Mesh[%s, %.1fKB, %s] is saved[%s]", Name.c_str(),
 		stream.RemainingSize() / 1024.f, GetVertexDetails(VertexFlags).Name.c_str(), outputFile.c_str());
+	
+	return outputFile;
 }
 
-inline void LostCore::FMeshData::Load(const string & inputFile)
+FORCEINLINE void LostCore::FMeshData::Load(const string & inputFile)
 {
 	if (inputFile.empty())
 	{
@@ -340,7 +342,7 @@ inline void LostCore::FMeshData::Load(const string & inputFile)
 }
 
 // 暂时索引没有意义，只构造顶点数据流
-inline void LostCore::FMeshData::BuildGPUData(uint32 flags)
+FORCEINLINE void LostCore::FMeshData::BuildGPUData(uint32 flags)
 {
 	assert((flags & ~VertexFlags) == 0);
 

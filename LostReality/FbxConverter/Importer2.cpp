@@ -121,7 +121,7 @@ public:
 	bool DumpSceneMeshes(const string& importSrc, const string& convertDst, bool outputBinary, bool exportAnimation);
 
 	// 解析scene root节点，开始导入数据
-	bool ImportSceneMeshes(const string& importSrc, const string& convertDst, bool outputBinary, bool exportAnimation);
+	bool ImportSceneMeshes();
 
 	// Import node
 	void ImportNode(FbxNode* node);
@@ -143,13 +143,13 @@ bool Importer::DumpSceneMeshes(const string& importSrc, const string& convertDst
 	return FFbxImporter2::Get()->DumpSceneMeshes(importSrc, convertDst, outputBinary, exportAnimation);
 }
 
-bool Importer::ImportSceneMeshes2(const string& importSrc, const string& convertDst, bool outputBinary, bool exportAnimation)
+bool Importer::ImportSceneMeshes2()
 {
-	return FFbxImporter2::Get()->ImportSceneMeshes(importSrc, convertDst, outputBinary, exportAnimation);
+	return FFbxImporter2::Get()->ImportSceneMeshes();
 }
 
 
-inline FTempMesh::FTempMesh(FbxScene * scene, FbxMesh * mesh)
+FORCEINLINE FTempMesh::FTempMesh(FbxScene * scene, FbxMesh * mesh)
 	: Scene(scene)
 	, Mesh(mesh)
 	, bIsSkeletal(false)
@@ -164,32 +164,32 @@ inline FTempMesh::FTempMesh(FbxScene * scene, FbxMesh * mesh)
 	Extract();
 }
 
-inline bool FTempMesh::IsValid() const
+FORCEINLINE bool FTempMesh::IsValid() const
 {
 	return Mesh != nullptr;
 }
 
-inline bool FTempMesh::IsSkeletal() const
+FORCEINLINE bool FTempMesh::IsSkeletal() const
 {
 	return IsValid() && Mesh->GetDeformerCount(FbxDeformer::eSkin) > 0;
 }
 
-inline bool FTempMesh::HasElementNormal() const
+FORCEINLINE bool FTempMesh::HasElementNormal() const
 {
 	return (MeshData.VertexFlags & EVertexElement::Normal) == EVertexElement::Normal;
 }
 
-inline bool FTempMesh::HasElementTangent() const
+FORCEINLINE bool FTempMesh::HasElementTangent() const
 {
 	return (MeshData.VertexFlags & EVertexElement::Tangent) == EVertexElement::Tangent;
 }
 
-inline bool FTempMesh::HasElementVertexColor() const
+FORCEINLINE bool FTempMesh::HasElementVertexColor() const
 {
 	return (MeshData.VertexFlags & EVertexElement::VertexColor) == EVertexElement::VertexColor;
 }
 
-inline void FTempMesh::Extract()
+FORCEINLINE void FTempMesh::Extract()
 {
 	const char* head = "Extract";
 
@@ -373,10 +373,10 @@ inline void FTempMesh::Extract()
 	}
 
 	// Element heads
-	auto vcHead = SOptions.bImportVertexColor ? layer0->GetVertexColors() : nullptr;
-	auto normalHead = SOptions.bImportNormal ? layer0->GetNormals() : nullptr;
-	auto tangentHead = SOptions.bImportTangent ? layer0->GetTangents() : nullptr;
-	auto binormalHead = SOptions.bImportTangent ? layer0->GetBinormals() : nullptr;
+	auto vcHead = FConvertOptions::Get()->bImportVertexColor ? layer0->GetVertexColors() : nullptr;
+	auto normalHead = FConvertOptions::Get()->bImportNormal ? layer0->GetNormals() : nullptr;
+	auto tangentHead = FConvertOptions::Get()->bImportTangent ? layer0->GetTangents() : nullptr;
+	auto binormalHead = FConvertOptions::Get()->bImportTangent ? layer0->GetBinormals() : nullptr;
 	//auto uvHead = layer0->GetUVSets();
 	auto uvHead = Mesh->GetElementUV(0);
 	auto coordHead = Mesh->GetControlPoints();
@@ -542,7 +542,7 @@ inline void FTempMesh::Extract()
 	}
 }
 
-inline void FTempMesh::ProcessBlendWeight()
+FORCEINLINE void FTempMesh::ProcessBlendWeight()
 {
 	for (uint32 i = 0; i < MeshData.BlendWeights.size(); ++i)
 	{
@@ -577,7 +577,7 @@ inline void FTempMesh::ProcessBlendWeight()
 	}
 }
 
-inline void FTempMesh::ProcessSkeletalVertex()
+FORCEINLINE void FTempMesh::ProcessSkeletalVertex()
 {
 	if (ControlPoints.size() == 0)
 	{
@@ -689,24 +689,24 @@ inline void FTempMesh::ProcessSkeletalVertex()
 }
 
 
-inline FFbxImporter2::FFbxImporter2()
+FORCEINLINE FFbxImporter2::FFbxImporter2()
 	: SdkManager(nullptr)
 	, SdkScene(nullptr)
 {
 	InitializeSdkObjects(SdkManager, SdkScene);
 }
 
-inline bool FFbxImporter2::DumpSceneMeshes(const string & importSrc, const string & convertDst, bool outputBinary, bool exportAnimation)
+FORCEINLINE bool FFbxImporter2::DumpSceneMeshes(const string & importSrc, const string & convertDst, bool outputBinary, bool exportAnimation)
 {
 	//bool result = LoadScene(SdkManager, SdkScene, importSrc.c_str());
 
 	return true;
 }
 
-inline bool FFbxImporter2::ImportSceneMeshes(const string & importSrc, const string & convertDst, bool outputBinary, bool exportAnimation)
+FORCEINLINE bool FFbxImporter2::ImportSceneMeshes()
 {
 	const char* head = "ImportSceneMeshes";
-	bool result = LoadScene(SdkManager, SdkScene, importSrc.c_str());
+	bool result = LoadScene(SdkManager, SdkScene, FConvertOptions::Get()->InputPath.c_str());
 	if (!result || SdkManager == nullptr || SdkScene == nullptr)
 	{
 		LVERR(head, "LoadScene failed");
@@ -734,33 +734,29 @@ inline bool FFbxImporter2::ImportSceneMeshes(const string & importSrc, const str
 	}
 	/*************************************************************/
 
-	auto formatDst = convertDst;
+	auto formatDst = FConvertOptions::Get()->OutputPath;
 	ReplaceChar(formatDst, "/", "\\");
 	GetDirectory(DestDirectory, formatDst);
 
 	ImportNode(SdkScene->GetRootNode());
 
-	if (TempMeshArray.size() == 1)
+	FJson j;
+	for (const auto& mesh : TempMeshArray)
 	{
-		TempMeshArray[0].MeshData.Save(formatDst);
+		j.push_back(FJson());
+		FJson& meshJson = *(j.end() - 1);
+		meshJson[K_PATH] = mesh.MeshData.Save(DestDirectory);
+		meshJson[K_VERTEX_ELEMENT] = mesh.MeshData.VertexFlags;
 	}
-	else
-	{
-		for (const auto& mesh : TempMeshArray)
-		{
-			mesh.MeshData.Save(DestDirectory);
 
-			//string f = DestDirectory + mesh.MeshData.Name + "." + K_PRIMITIVE;
-			//FMeshDataAlias test;
-			//test.Load(f);
-			//assert(test == mesh.MeshData);
-		}
-	}
+	ofstream stream(FConvertOptions::Get()->OutputPath);
+	stream << j;
+	stream.close();
 
 	return true;
 }
 
-inline void FFbxImporter2::ImportNode(FbxNode * node)
+FORCEINLINE void FFbxImporter2::ImportNode(FbxNode * node)
 {
 	const char* head = "ImportNode";
 
@@ -804,7 +800,7 @@ inline void FFbxImporter2::ImportNode(FbxNode * node)
 	}
 }
 
-inline void FFbxImporter2::ImportMesh(FbxMesh * mesh)
+FORCEINLINE void FFbxImporter2::ImportMesh(FbxMesh * mesh)
 {
 	if (mesh == nullptr)
 	{

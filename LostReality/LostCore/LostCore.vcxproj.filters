@@ -112,6 +112,9 @@
     <ClInclude Include="Inc\FBXEditor.h">
       <Filter>Inc</Filter>
     </ClInclude>
+    <ClInclude Include="Inc\Threading\CommandQueue.h">
+      <Filter>Inc\Threading</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
@@ -189,6 +192,9 @@
     </Filter>
     <Filter Include="Inc\Gizmo">
       <UniqueIdentifier>{ac821ada-0fa1-45a5-b8a9-a6506cb2350b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Inc\Threading">
+      <UniqueIdentifier>{4889cfec-c649-4981-b14d-aa099a0769ec}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

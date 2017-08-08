@@ -28,7 +28,7 @@ namespace LostCore
 		SM5,
 	};
 
-	INLINE const char* GetContextDesc(EContextID id)
+	FORCEINLINE const char* GetContextDesc(EContextID id)
 	{
 		switch (id)
 		{

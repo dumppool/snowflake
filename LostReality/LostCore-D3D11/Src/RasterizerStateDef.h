@@ -13,20 +13,18 @@ namespace D3D11
 {
 	struct FRasterizerState_Solid
 	{
-		INLINE static std::string GetName()
+		FORCEINLINE static std::string GetName()
 		{
 			static std::string SName = "SOLID";
 			return SName;
 		}
 
-		INLINE static TRefCountPtr<ID3D11RasterizerState> GetState(const TRefCountPtr<ID3D11Device>& device = nullptr, bool bDestroy = false)
+		FORCEINLINE static TRefCountPtr<ID3D11RasterizerState> GetState(const TRefCountPtr<ID3D11Device>& device)
 		{
-			static TRefCountPtr<ID3D11RasterizerState> SState;
-			static bool SCreated = false;
+			TRefCountPtr<ID3D11RasterizerState> state;
 
-			if (device.IsValid() && !SCreated)
+			if (device.IsValid())
 			{
-				SCreated = true;
 				D3D11_RASTERIZER_DESC desc;
 				ZeroMemory(&desc, sizeof(desc));
 				desc.AntialiasedLineEnable = FALSE;
@@ -40,39 +38,31 @@ namespace D3D11
 				desc.MultisampleEnable = FALSE;
 				desc.ScissorEnable = FALSE;
 				desc.SlopeScaledDepthBias = 0.0f;
-				HRESULT hr = device->CreateRasterizerState(&desc, SState.GetInitReference());
+				HRESULT hr = device->CreateRasterizerState(&desc, state.GetInitReference());
 				if (FAILED(hr))
 				{
 					LVERR("FRasterizerState_Solid::GetState", "create rasterizer state failed: 0x%08x(%d)", hr, hr);
 				}
 			}
 
-			if (bDestroy)
-			{
-				SState = nullptr;
-				SCreated = false;
-			}
-
-			return SState;
+			return state;
 		}
 	};
 
 	struct FRasterizerState_Wireframe
 	{
-		INLINE static std::string GetName()
+		FORCEINLINE static std::string GetName()
 		{
 			static std::string SName = "WIREFRAME";
 			return SName;
 		}
 
-		INLINE static TRefCountPtr<ID3D11RasterizerState> GetState(const TRefCountPtr<ID3D11Device>& device = nullptr, bool bDestroy = false)
+		FORCEINLINE static TRefCountPtr<ID3D11RasterizerState> GetState(const TRefCountPtr<ID3D11Device>& device)
 		{
-			static TRefCountPtr<ID3D11RasterizerState> SState;
-			static bool SCreated = false;
+			TRefCountPtr<ID3D11RasterizerState> state;
 
-			if (device.IsValid() && !SCreated)
+			if (device.IsValid())
 			{
-				SCreated = true;
 				D3D11_RASTERIZER_DESC desc;
 				ZeroMemory(&desc, sizeof(desc));
 				desc.AntialiasedLineEnable = FALSE;
@@ -85,20 +75,14 @@ namespace D3D11
 				desc.MultisampleEnable = FALSE;
 				desc.ScissorEnable = FALSE;
 				desc.SlopeScaledDepthBias = 0.0f;
-				HRESULT hr = device->CreateRasterizerState(&desc, SState.GetInitReference());
+				HRESULT hr = device->CreateRasterizerState(&desc, state.GetInitReference());
 				if (FAILED(hr))
 				{
 					LVERR("FRasterizerState_Wireframe::GetState", "create rasterizer state failed: 0x%08x(%d)", hr, hr);
 				}
 			}
 
-			if (bDestroy)
-			{
-				SState = nullptr;
-				SCreated = false;
-			}
-
-			return SState;
+			return state;
 		}
 	};
 
@@ -110,30 +94,56 @@ namespace D3D11
 			return &Inst;
 		}
 
+		bool bInitialized;
 		std::map<std::string, TRefCountPtr<ID3D11RasterizerState>> StateMap;
+
+		FRasterizerStateMap() : bInitialized(false)
+		{
+		}
+
+		~FRasterizerStateMap()
+		{
+			ReleaseComObjects();
+		}
 
 		void Initialize(const TRefCountPtr<ID3D11Device>& device)
 		{
+			if (bInitialized)
+			{
+				return;
+			}
+
 			StateMap.insert(std::make_pair(FRasterizerState_Solid::GetName(), FRasterizerState_Solid::GetState(device)));
 			StateMap.insert(std::make_pair(FRasterizerState_Wireframe::GetName(), FRasterizerState_Wireframe::GetState(device)));
+			bInitialized = true;
 		}
 
 		void ReleaseComObjects()
 		{
-			bool bDestroy = true;
-			FRasterizerState_Solid::GetState(nullptr, bDestroy);
-			FRasterizerState_Wireframe::GetState(nullptr, bDestroy);
+			if (!bInitialized)
+			{
+				return;
+			}
+
+			for (auto& elem : StateMap)
+			{
+				elem.second = nullptr;
+			}
 
 			StateMap.clear();
+			bInitialized = false;
 		}
 
-		INLINE TRefCountPtr<ID3D11RasterizerState> GetState(const std::string& key)
+		FORCEINLINE TRefCountPtr<ID3D11RasterizerState> GetState(const std::string& key)
 		{
-			for (auto element : StateMap)
+			if (bInitialized)
 			{
-				if (element.first.compare(key) == 0)
+				for (auto element : StateMap)
 				{
-					return element.second;
+					if (element.first.compare(key) == 0)
+					{
+						return element.second;
+					}
 				}
 			}
 

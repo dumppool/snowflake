@@ -17,12 +17,13 @@ using namespace LostCore;
 
 class FFBXEditor : public FBasicWorld
 {
+	typedef function<void()> CommandType;
+
 public:
 	FFBXEditor();
 	~FFBXEditor();
 
-	void InitializeScene();
-	void Fini();
+	void PushCommands(const CommandType& cmd);
 	void SetLogger(PFN_Logger logger);
 	void SetOutputDirectory(const char* output);
 	void LoadFBX(const char* file, bool clearScene);
@@ -37,6 +38,11 @@ public:
 
 
 private:
+	void Fini();
+	void InitializeScene();
+	void StartRenderLoop();
+	void StartTickLoop();
+
 	void Log(int32 level, const char* fmt, ...);
 
 	IRenderContext*			RC;
@@ -45,6 +51,15 @@ private:
 
 	string OutputDir;
 	PFN_Logger Logger;
+
+	FCommandQueue<CommandType> RenderCommands;
+	bool bKeepRendering;
+	thread RenderThread;
+
+	// ‘›tick“≤‘⁄render loop¿Ô.
+	FCommandQueue<CommandType> TickCommands;
+	bool bKeepTicking;
+	thread TickThread;
 
 	static const int32 SInfo = 0;
 	static const int32 SWarning = 1;
@@ -64,6 +79,8 @@ FFBXEditor::FFBXEditor()
 	, Logger(nullptr)
 	, RC(nullptr)
 	, Camera(nullptr)
+	, TickCommands(true)
+	, RenderCommands(true)
 {
 	FDirectoryHelper::Get()->GetPrimitiveAbsolutePath(SConverterOutput, OutputDir);
 }
@@ -102,6 +119,11 @@ void FFBXEditor::InitializeScene()
 	}
 }
 
+void FFBXEditor::PushCommands(const CommandType & cmd)
+{
+	TickCommands.Push(cmd);
+}
+
 void FFBXEditor::SetLogger(PFN_Logger logger)
 {
 	Logger = logger;
@@ -120,13 +142,14 @@ void FFBXEditor::LoadFBX(const char * file, bool clearScene)
 		return;
 	}
 
-	string fileName, fileExt, fileAbsPath;
+	string fileName, fileExt, outputFile;
 	GetFileName(fileName, fileExt, file);
-	fileAbsPath = OutputDir + fileName + "." + fileExt;
-
+	outputFile = OutputDir + fileName + ".json";
 	
 	string cmd;
-	cmd = "\"" + GetCurrentWorkingPath() + string(SConverterExe) + "\" src=" + string(file) + " dst=" + fileAbsPath;
+	cmd = "\"" + GetCurrentWorkingPath() + string(SConverterExe) + "\" "
+		+ K_INPUT_PATH + "=" + string(file) + " "
+		+ K_OUTPUT_PATH + "=" + outputFile;
 
 	PROCESS_INFORMATION pi;
 	STARTUPINFOA si;
@@ -160,8 +183,20 @@ void FFBXEditor::LoadFBX(const char * file, bool clearScene)
 			GetExitCodeProcess(pi.hProcess, &code);
 		}
 
-		Log(SInfo, "Convert fbx[%s] finished, output file should be saved[%s].", file, fileAbsPath.c_str());
-		Log(SInfo, "Loading fbx[%s].", fileAbsPath.c_str());
+		Log(SInfo, "Convert fbx[%s] finished, output file should be saved[%s].", file, outputFile.c_str());
+
+		ifstream stream(outputFile, ios::in);
+		FJson j;
+		stream >> j;
+		stream.close();
+		assert(j.size() > 0);
+		for (auto& elem : j)
+		{
+			auto path = elem[K_PATH];
+			auto ve = elem[K_VERTEX_ELEMENT];
+			Log(SInfo, "Output %s, %s", elem.value(K_PATH, "").c_str(),
+				GetVertexDetails(elem[K_VERTEX_ELEMENT]).Name.c_str());
+		}
 
 		if (clearScene)
 		{
@@ -170,7 +205,7 @@ void FFBXEditor::LoadFBX(const char * file, bool clearScene)
 
 		FJson modelJson;
 		modelJson["type"] = (uint32)EPrimitiveType::PrimitiveFile;
-		modelJson["primitive"] = fileAbsPath;
+		modelJson["primitive"] = j[0][K_PATH];
 		modelJson["material_prefix"] = "default";
 
 		auto model = new FSkeletalModel;
@@ -200,6 +235,18 @@ void FFBXEditor::Fini()
 	SAFE_DELETE(RC);
 	SAFE_DELETE(Camera);
 	SAFE_DELETE(Scene);
+
+	bKeepRendering = false;
+	if (RenderThread.joinable())
+	{
+		RenderThread.join();
+	}
+
+	bKeepTicking = false;
+	if (TickThread.joinable())
+	{
+		TickThread.join();
+	}
 }
 
 bool FFBXEditor::InitializeWindow(const char * name, HWND wnd, bool windowed, int32 width, int32 height)
@@ -208,6 +255,8 @@ bool FFBXEditor::InitializeWindow(const char * name, HWND wnd, bool windowed, in
 	if (RC != nullptr && RC->Init(wnd, windowed, width, height))
 	{
 		InitializeScene();
+		RenderThread = thread([=]() {this->StartRenderLoop(); });
+		//TickThread = thread([=]() {this->StartTickLoop(); });
 		return true;
 	}
 	else
@@ -224,6 +273,40 @@ IRenderContext * FFBXEditor::GetRenderContext()
 FBasicCamera * FFBXEditor::GetCamera()
 {
 	return Camera;
+}
+
+void FFBXEditor::StartRenderLoop()
+{
+	bKeepRendering = true;
+	while (bKeepRendering)
+	{
+		RenderCommands.Swap(TickCommands);
+		CommandType cmd;
+		while (RenderCommands.Pop(cmd))
+		{
+			cmd();
+		}
+
+		Tick(0.f);
+		Draw(RC, 0.f);
+
+		this_thread::sleep_for(chrono::milliseconds(1));
+	}
+}
+
+void FFBXEditor::StartTickLoop()
+{
+	bKeepTicking = true;
+	while (bKeepTicking)
+	{
+		CommandType cmd;
+		while (RenderCommands.Pop(cmd))
+		{
+			cmd();
+		}
+
+		Tick(0.f);
+	}
 }
 
 void FFBXEditor::Log(int32 level, const char * fmt, ...)
@@ -249,11 +332,6 @@ LOSTCORE_API void LostCore::SetLogger(PFN_Logger logger)
 	SEditor.SetLogger(logger);
 }
 
-LOSTCORE_API void LostCore::SetOutputDirectory(const char * output)
-{
-	SEditor.SetOutputDirectory(output);
-}
-
 LOSTCORE_API void LostCore::InitializeWindow(HWND wnd, bool windowed, int32 width, int32 height)
 {
 	SEditor.InitializeWindow("", wnd, windowed, width, height);
@@ -261,11 +339,9 @@ LOSTCORE_API void LostCore::InitializeWindow(HWND wnd, bool windowed, int32 widt
 
 LOSTCORE_API void LostCore::LoadFBX(const char * file, bool clearScene)
 {
-	SEditor.LoadFBX(file, clearScene);
-}
-
-LOSTCORE_API void LostCore::Tick()
-{
-	SEditor.Tick(0.f);
-	SEditor.Draw(nullptr, 0.f);
+	string filePath(file);
+	SEditor.PushCommands([=]()
+	{
+		SEditor.LoadFBX(filePath.c_str(), clearScene);
+	});
 }

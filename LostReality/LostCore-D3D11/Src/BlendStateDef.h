@@ -13,13 +13,13 @@ namespace D3D11
 {
 	struct FBlendState_Solid
 	{
-		INLINE static std::string GetName()
+		FORCEINLINE static std::string GetName()
 		{
 			static std::string SName = "SOLID";
 			return SName;
 		}
 
-		INLINE static TRefCountPtr<ID3D11BlendState> GetState(const TRefCountPtr<ID3D11Device>& device)
+		FORCEINLINE static TRefCountPtr<ID3D11BlendState> GetState(const TRefCountPtr<ID3D11Device>& device)
 		{
 			TRefCountPtr<ID3D11BlendState> state;
 
@@ -44,13 +44,13 @@ namespace D3D11
 
 	struct FBlendState_Add
 	{
-		INLINE static std::string GetName()
+		FORCEINLINE static std::string GetName()
 		{
 			static std::string SName = "ADD";
 			return SName;
 		}
 
-		INLINE static TRefCountPtr<ID3D11BlendState> GetState(const TRefCountPtr<ID3D11Device>& device)
+		FORCEINLINE static TRefCountPtr<ID3D11BlendState> GetState(const TRefCountPtr<ID3D11Device>& device)
 		{
 			TRefCountPtr<ID3D11BlendState> state;
 
@@ -87,38 +87,63 @@ namespace D3D11
 			return &Inst;
 		}
 
+		bool bInitialized;
 		std::map<std::string, TRefCountPtr<ID3D11BlendState>> StateMap;
+
+		FBlendStateMap() : bInitialized(false)
+		{
+
+		}
+
+		~FBlendStateMap()
+		{
+			ReleaseComObjects();
+		}
 
 		void Initialize(const TRefCountPtr<ID3D11Device>& device)
 		{
 			const char* head = "FBlendStateMap::Initialize";
+
+			if (bInitialized)
+			{
+				return;
+			}
 
 			StateMap.insert(std::make_pair(FBlendState_Solid::GetName(), FBlendState_Solid::GetState(device)));
 			LVMSG(head, "Insert blend state[%s]", FBlendState_Solid::GetName().c_str());
 
 			StateMap.insert(std::make_pair(FBlendState_Add::GetName(), FBlendState_Add::GetState(device)));
 			LVMSG(head, "Insert blend state[%s]", FBlendState_Add::GetName().c_str());
+
+			bInitialized = true;
 		}
 
 		void ReleaseComObjects()
 		{
-			bool bDestroy = true;
-
-			for (auto& elem : StateMap)
+			if (!bInitialized)
 			{
-				elem.second = nullptr;
+				return;
+			}
+
+			for (auto it = StateMap.begin(); it != StateMap.end(); ++it)
+			{
+				it->second = nullptr;
 			}
 
 			StateMap.clear();
+			bInitialized = false;
 		}
 
-		INLINE TRefCountPtr<ID3D11BlendState> GetState(const std::string& key)
+		FORCEINLINE TRefCountPtr<ID3D11BlendState> GetState(const std::string& key)
 		{
-			for (auto element : StateMap)
+			if (bInitialized)
 			{
-				if (element.first.compare(key) == 0)
+				for (auto element : StateMap)
 				{
-					return element.second;
+					if (element.first.compare(key) == 0)
+					{
+						return element.second;
+					}
 				}
 			}
 

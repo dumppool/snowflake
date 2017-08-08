@@ -56,17 +56,17 @@ namespace LostCore
 	static const float SD2RConstant = SPI / 180.f;
 	static const float SR2DConstant = 180.f / SPI;
 
-	INLINE bool IsZero(float value, float tolerance = SSmallFloat)
+	FORCEINLINE bool IsZero(float value, float tolerance = SSmallFloat)
 	{
 		return std::abs(value) < tolerance;
 	}
 
-	INLINE bool IsEqual(float f1, float f2, float tolerance = SSmallFloat)
+	FORCEINLINE bool IsEqual(float f1, float f2, float tolerance = SSmallFloat)
 	{
 		return IsZero(f1 - f2, tolerance);
 	}
 
-	INLINE void SinCos(float& oSin, float& oCos, float rad)
+	FORCEINLINE void SinCos(float& oSin, float& oCos, float rad)
 	{
 		float quotient = (SInvPI * 0.5f) * rad;
 		if (rad >= 0.f)
@@ -107,25 +107,25 @@ namespace LostCore
 		oCos = sign*p;
 	}
 
-	INLINE void SinCos2(float& oSin, float& oCos, float rad)
+	FORCEINLINE void SinCos2(float& oSin, float& oCos, float rad)
 	{
 		oSin = sinf(rad);
 		oCos = cosf(rad);
 	}
 
-	INLINE float Sqrt(float val)
+	FORCEINLINE float Sqrt(float val)
 	{
 		return std::sqrt(val);
 	}
 
-	INLINE float InvSqrt(float val)
+	FORCEINLINE float InvSqrt(float val)
 	{
 		float s = Sqrt(val);
 		return 1.f / s;
 	}
 
 	// return angle in the range (-180, 180]
-	INLINE float ClampAngle(float deg)
+	FORCEINLINE float ClampAngle(float deg)
 	{
 		deg = std::fmod(deg, 360.f);
 		if (deg < 0.f)
@@ -141,17 +141,17 @@ namespace LostCore
 		return deg;
 	}
 
-	INLINE float Atan2(float y, float x)
+	FORCEINLINE float Atan2(float y, float x)
 	{
 		return std::atan2(y, x);
 	}
 
-	INLINE float Asin(float val)
+	FORCEINLINE float Asin(float val)
 	{
 		return std::asin(val);
 	}
 
-	INLINE bool IsValidEuler(float)
+	FORCEINLINE bool IsValidEuler(float)
 	{
 		return true;
 	}
