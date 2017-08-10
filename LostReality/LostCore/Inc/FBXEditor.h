@@ -15,5 +15,16 @@ namespace LostCore
 	extern "C" LOSTCORE_API void SetLogger(PFN_Logger logger);
 
 	extern "C" LOSTCORE_API void InitializeWindow(HWND wnd, bool windowed, int32 width, int32 height);
-	extern "C" LOSTCORE_API void LoadFBX(const char* file, bool clearScene);
+	extern "C" LOSTCORE_API void LoadFBX(
+		const char* file, 
+		bool clearScene,
+		bool importTexCoord,
+		bool importAnimation,
+		bool importVertexColor,
+		bool importNormal,
+		bool forceRegenerateNormal,
+		bool generateNormalIfNotFound,
+		bool importTangent,
+		bool forceRegenerateTangent,
+		bool generateTangentIfNotFound);
 }

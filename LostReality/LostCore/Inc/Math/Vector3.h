@@ -58,8 +58,8 @@ namespace LostCore
 		FORCEINLINE T operator[](int32 index) const;
 		FORCEINLINE T& operator[](int32 index);
 
-		FORCEINLINE T operator|(const TVec3NonVectorized<T>& vec) const;
-		FORCEINLINE TVec3NonVectorized<T> operator^(const TVec3NonVectorized<T>& vec) const;
+		FORCEINLINE T Dot(const TVec3NonVectorized<T>& vec) const;
+		FORCEINLINE TVec3NonVectorized<T> Cross(const TVec3NonVectorized<T>& vec) const;
 
 		FORCEINLINE T SizeSquared() const;
 		FORCEINLINE T Size() const;
@@ -199,13 +199,13 @@ namespace LostCore
 	}
 
 	template <typename T>
-	FORCEINLINE T TVec3NonVectorized<T>::operator|(const TVec3NonVectorized<T>& vec) const
+	FORCEINLINE T TVec3NonVectorized<T>::Dot(const TVec3NonVectorized<T>& vec) const
 	{
 		return X * vec.X + Y * vec.Y + Z * vec.Z;
 	}
 
 	template <typename T>
-	FORCEINLINE TVec3NonVectorized<T> TVec3NonVectorized<T>::operator^(const TVec3NonVectorized<T>& vec) const
+	FORCEINLINE TVec3NonVectorized<T> TVec3NonVectorized<T>::Cross(const TVec3NonVectorized<T>& vec) const
 	{
 		return TVec3NonVectorized<T>(
 			Y * vec.Z - Z * vec.Y,

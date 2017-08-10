@@ -261,8 +261,8 @@ namespace LostCore
 	FORCEINLINE FFloat3 FQuatNonVectorized::RotateVector(const FFloat3& vec) const
 	{
 		const FFloat3 q(X, Y, Z);
-		const FFloat3 t((q^vec) * 2.f);
-		return FFloat3(vec + (t * W) + (q^t));
+		const FFloat3 t((q.Cross(vec)) * 2.f);
+		return FFloat3(vec + (t * W) + (q.Cross(t)));
 	}
 
 	FORCEINLINE FQuatNonVectorized FQuatNonVectorized::GetInversed() const

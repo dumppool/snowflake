@@ -290,7 +290,7 @@ void LostCore::FSkeletalModel::Tick(float sec)
 		}
 	}
 
-	const float constSegLength = 1.1f;
+	const float constSegLength = 5.1f;
 	const FColor96 constSegColor((uint32)0x0000ff);
 	bool bDisplayNormal = true;
 	if (bDisplayNormal)

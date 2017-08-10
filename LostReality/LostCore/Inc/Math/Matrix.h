@@ -29,6 +29,18 @@ namespace LostCore
 			SetIdentity();
 		}
 
+		void SetRow(int32 row, const FFloat4& vec)
+		{
+			memcpy((T*)M + 4 * row, &vec, sizeof(vec));
+		}
+
+		FFloat4 GetRow(int32 row) const
+		{
+			FFloat4 vec;
+			memcpy(&vec, (T*)M + 4 * row, sizeof(vec));
+			return vec;
+		}
+
 		FORCEINLINE TMatrixNonVectorized<T>&  SetZero()
 		{
 			memset(this, 0, sizeof(*this));
@@ -270,9 +282,9 @@ namespace LostCore
 
 			u = up.GetNormal();
 			d = dir.GetNormal();
-			r = u ^ d;
+			r = u.Cross(d);
 			r.Normalize();
-			u = d ^ r;
+			u = d.Cross(r);
 			u.Normalize();
 
 			M[0][0] = r.X; M[0][1] = u.X; M[0][2] = d.X; M[0][3] = 0.0;

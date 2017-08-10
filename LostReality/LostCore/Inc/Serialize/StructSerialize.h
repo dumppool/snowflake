@@ -125,6 +125,7 @@ namespace LostCore
 		vector<FFloat3> Coordinates;
 
 		// 纹理坐标
+		string TexCoordName;
 		vector<FFloat2> TexCoords;
 
 		// 法线，切线，副法线
@@ -209,7 +210,8 @@ namespace LostCore
 		uint32 sz = 0;
 		uint32 dsz = 0;
 		stream << data.Name << data.IndexCount << data.VertexCount 
-			<< data.VertexFlags << data.Coordinates << data.TexCoords
+			<< data.VertexFlags << data.Coordinates 
+			<< data.TexCoordName << data.TexCoords
 			<< data.Normals << data.Tangents << data.Binormals
 			<< data.VertexColors
 			<< data.BlendWeights << data.BlendIndices
@@ -228,7 +230,8 @@ namespace LostCore
 	FORCEINLINE FBinaryIO& operator >> (FBinaryIO& stream, FMeshData& data)
 	{
 		stream >> data.Name >> data.IndexCount >> data.VertexCount
-			>> data.VertexFlags >> data.Coordinates >> data.TexCoords
+			>> data.VertexFlags >> data.Coordinates 
+			>> data.TexCoordName >> data.TexCoords
 			>> data.Normals >> data.Tangents >> data.Binormals
 			>> data.VertexColors
 			>> data.BlendWeights >> data.BlendIndices
@@ -344,7 +347,21 @@ FORCEINLINE void LostCore::FMeshData::Load(const string & inputFile)
 // 暂时索引没有意义，只构造顶点数据流
 FORCEINLINE void LostCore::FMeshData::BuildGPUData(uint32 flags)
 {
-	assert((flags & ~VertexFlags) == 0);
+	uint32 buildFlags = flags;
+	if ((flags & ~VertexFlags) != 0)
+	{
+		LVERR("FMeshData::BuildGPUData", "Invalid override flags[%s], original flags[%s]",
+			GetVertexDetails(flags).Name.c_str(), GetVertexDetails(VertexFlags).Name.c_str());
+
+		if ((VertexFlags & ~flags) == 0)
+		{
+			buildFlags = VertexFlags;
+		}
+		else
+		{
+			assert(0);
+		}
+	}
 
 	// 如果下面split都为空，可以考虑构造索引缓存
 	bool splitUV = TexCoords.size() == 0;

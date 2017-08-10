@@ -655,15 +655,15 @@ namespace Importer {
 			RegenerateIfNotFound,
 		};
 
+		bool bImportTexCoord;
 		bool bImportAnimation;
-
-		bool bImportNormal;
-		bool bImportTangent;
 		bool bImportVertexColor;
 
+		bool bImportNormal;
 		bool bForceRegenerateNormal;
 		bool bGenerateNormalIfNotFound;
 
+		bool bImportTangent;
 		bool bForceRegenerateTangent;
 		bool bGenerateTangentIfNotFound;
 
@@ -672,59 +672,17 @@ namespace Importer {
 
 		explicit FConvertOptions(EImportType import, ERegenerateType regenerate)
 		{
-			switch (import)
-			{
-			case ImportLeast:
-				bImportNormal = false;
-				bImportTangent = false;
-				bImportVertexColor = false;
-				break;
-			case ImportNormal:
-				bImportNormal = true;
-				bImportTangent = false;
-				bImportVertexColor = false;
-				break;
-			case ImportTangent:
-				bImportNormal = true;
-				bImportTangent = true;
-				bImportVertexColor = false;
-				break;
-			case ImportMost:
-				bImportNormal = true;
-				bImportTangent = true;
-				bImportVertexColor = false;
-				break;
-			default:
-				break;
-			}
+			bImportTexCoord = false;
+			bImportAnimation = false;
+			bImportVertexColor = false;
 
-			switch (regenerate)
-			{
-			case NoRegenerate:
-				bForceRegenerateNormal = false;
-				bGenerateNormalIfNotFound = false;
-				bForceRegenerateTangent = false;
-				bGenerateTangentIfNotFound = false;
-				break;
-			case ForceRegenerate:
-				bImportNormal = false;
-				bForceRegenerateNormal = true;
-				bGenerateNormalIfNotFound = false;
-				bImportTangent = false;
-				bForceRegenerateTangent = true;
-				bGenerateTangentIfNotFound = false;
-				break;
-			case RegenerateIfNotFound:
-				bImportNormal = true;
-				bForceRegenerateNormal = false;
-				bGenerateNormalIfNotFound = true;
-				bImportTangent = true;
-				bForceRegenerateTangent = false;
-				bGenerateTangentIfNotFound = true;
-				break;
-			default:
-				break;
-			}
+			bImportNormal = false;
+			bForceRegenerateNormal = false;
+			bGenerateNormalIfNotFound = false;
+
+			bImportTangent = false;
+			bForceRegenerateTangent = false;
+			bGenerateTangentIfNotFound = false;
 		}
 
 		static FConvertOptions* Get()

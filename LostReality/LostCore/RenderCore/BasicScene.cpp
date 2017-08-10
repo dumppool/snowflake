@@ -133,11 +133,7 @@ void LostCore::FBasicScene::Fini()
 {
 	for (auto& model : Models)
 	{
-		if (model != nullptr)
-		{
-			delete model;
-			model = nullptr;
-		}
+		SAFE_DELETE(model);
 	}
 
 	Models.clear();

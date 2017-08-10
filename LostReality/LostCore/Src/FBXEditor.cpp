@@ -26,7 +26,18 @@ public:
 	void PushCommands(const CommandType& cmd);
 	void SetLogger(PFN_Logger logger);
 	void SetOutputDirectory(const char* output);
-	void LoadFBX(const char* file, bool clearScene);
+	void LoadFBX(
+		const char * file,
+		bool clearScene,
+		bool importTexCoord,
+		bool importAnimation,
+		bool importVertexColor,
+		bool importNormal,
+		bool forceRegenerateNormal,
+		bool generateNormalIfNotFound,
+		bool importTangent,
+		bool forceRegenerateTangent,
+		bool generateTangentIfNotFound);
 
 	// FBasicWorld overridew 
 	virtual bool Config(IRenderContext * rc, const FJson& config) override;
@@ -48,6 +59,8 @@ private:
 	IRenderContext*			RC;
 	FBasicCamera*			Camera;
 	FBasicScene*			Scene;
+
+	vector<FBasicModel*>	Models;
 
 	string OutputDir;
 	PFN_Logger Logger;
@@ -92,6 +105,7 @@ FFBXEditor::~FFBXEditor()
 	assert(RC == nullptr);
 	assert(Camera == nullptr);
 	assert(Scene == nullptr);
+	assert(Models.size() == 0);
 }
 
 void FFBXEditor::InitializeScene()
@@ -134,7 +148,18 @@ void FFBXEditor::SetOutputDirectory(const char * output)
 	OutputDir = output;
 }
 
-void FFBXEditor::LoadFBX(const char * file, bool clearScene)
+void FFBXEditor::LoadFBX(
+	const char * file, 
+	bool clearScene,
+	bool importTexCoord,
+	bool importAnimation,
+	bool importVertexColor,
+	bool importNormal,
+	bool forceRegenerateNormal,
+	bool generateNormalIfNotFound,
+	bool importTangent,
+	bool forceRegenerateTangent,
+	bool generateTangentIfNotFound)
 {
 	if (file == nullptr)
 	{
@@ -147,9 +172,54 @@ void FFBXEditor::LoadFBX(const char * file, bool clearScene)
 	outputFile = OutputDir + fileName + ".json";
 	
 	string cmd;
-	cmd = "\"" + GetCurrentWorkingPath() + string(SConverterExe) + "\" "
-		+ K_INPUT_PATH + "=" + string(file) + " "
-		+ K_OUTPUT_PATH + "=" + outputFile;
+	cmd = string("\"").append(GetCurrentWorkingPath()).append(SConverterExe).append("\" ")
+		.append(K_INPUT_PATH).append("=").append(file).append(" ")
+		.append(K_OUTPUT_PATH).append("=").append(outputFile);
+
+	if (importTexCoord)
+	{
+		cmd.append(" ").append(K_IMP_TEXCOORD);
+	}
+
+	if (importAnimation)
+	{
+		cmd.append(" ").append(K_IMP_ANIM);
+	}
+
+	if (importVertexColor)
+	{
+		cmd.append(" ").append(K_IMP_VERTEXCOLOR);
+	}
+
+	if (importNormal)
+	{
+		cmd.append(" ").append(K_IMP_NORMAL);
+	}
+
+	if (forceRegenerateNormal)
+	{
+		cmd.append(" ").append(K_FORCE_GEN_NORMAL);
+	}
+
+	if (generateNormalIfNotFound)
+	{
+		cmd.append(" ").append(K_GEN_NORMAL_IF_NOT_FOUND);
+	}
+
+	if (importTangent)
+	{
+		cmd.append(" ").append(K_IMP_TANGENT);
+	}
+
+	if (forceRegenerateTangent)
+	{
+		cmd.append(" ").append(K_FORCE_GEN_TANGENT);
+	}
+
+	if (generateTangentIfNotFound)
+	{
+		cmd.append(" ").append(K_GEN_TANGENT_IF_NOT_FOUND);
+	}
 
 	PROCESS_INFORMATION pi;
 	STARTUPINFOA si;
@@ -164,7 +234,8 @@ void FFBXEditor::LoadFBX(const char * file, bool clearScene)
 	psec.nLength = sizeof(psec);
 	tsec.nLength = sizeof(tsec);
 
-	if (!CreateProcessA(NULL, const_cast<char*>(cmd.c_str()), &psec, &tsec, false, 0, NULL, GetCurrentWorkingPath().c_str(), &si, &pi))
+	if (!CreateProcessA(NULL, const_cast<char*>(cmd.c_str()), 
+		&psec, &tsec, false, 0, NULL, GetCurrentWorkingPath().c_str(), &si, &pi))
 	{
 		Log(SError, "Process could not be loaded: cmd[%s].", cmd.c_str());
 		CloseHandle(pi.hProcess);
@@ -176,16 +247,18 @@ void FFBXEditor::LoadFBX(const char * file, bool clearScene)
 	{
 		Log(SInfo, "Converting fbx[%s].", file);
 
-		int32 retry = 6000;
-		DWORD code = STILL_ACTIVE;
-		while (retry-- > 0 && code == STILL_ACTIVE)
-		{
-			GetExitCodeProcess(pi.hProcess, &code);
-		}
+		WaitForSingleObject(pi.hProcess, INFINITE);
 
-		Log(SInfo, "Convert fbx[%s] finished, output file should be saved[%s].", file, outputFile.c_str());
+		Log(SInfo, "Convert fbx[%s] finished, output file should be saved[%s].",
+			file, outputFile.c_str());
 
 		ifstream stream(outputFile, ios::in);
+		if (stream.fail())
+		{
+			Log(SError, "Output file notfound: %s", outputFile.c_str());
+			return;
+		}
+
 		FJson j;
 		stream >> j;
 		stream.close();
@@ -194,13 +267,19 @@ void FFBXEditor::LoadFBX(const char * file, bool clearScene)
 		{
 			auto path = elem[K_PATH];
 			auto ve = elem[K_VERTEX_ELEMENT];
-			Log(SInfo, "Output %s, %s", elem.value(K_PATH, "").c_str(),
+			Log(SInfo, "Output %s, %s", elem.value(K_PATH, "").c_str(), 
 				GetVertexDetails(elem[K_VERTEX_ELEMENT]).Name.c_str());
 		}
 
 		if (clearScene)
 		{
-			// Clear scene
+			for (auto m : Models)
+			{
+				Scene->RemoveModel(m);
+				SAFE_DELETE(m);
+			}
+
+			Models.clear();
 		}
 
 		FJson modelJson;
@@ -209,9 +288,11 @@ void FFBXEditor::LoadFBX(const char * file, bool clearScene)
 		modelJson["material_prefix"] = "default";
 
 		auto model = new FSkeletalModel;
+		Models.push_back(model);
 
 		// Fbx converter需要输出转换导出信息。
-		model->SetPrimitiveVertexFlags(EVertexElement::Coordinate | EVertexElement::Normal | EVertexElement::Skin);
+		model->SetPrimitiveVertexFlags(EVertexElement::Coordinate 
+			| EVertexElement::Normal | EVertexElement::Skin);
 
 		if (model->Config(RC, modelJson))
 		{
@@ -232,10 +313,6 @@ bool FFBXEditor::Load(IRenderContext * rc, const char * url)
 
 void FFBXEditor::Fini()
 {
-	SAFE_DELETE(RC);
-	SAFE_DELETE(Camera);
-	SAFE_DELETE(Scene);
-
 	bKeepRendering = false;
 	if (RenderThread.joinable())
 	{
@@ -247,6 +324,18 @@ void FFBXEditor::Fini()
 	{
 		TickThread.join();
 	}
+
+	for (auto m : Models)
+	{
+		Scene->RemoveModel(m);
+		SAFE_DELETE(m);
+	}
+
+	Models.clear();
+
+	SAFE_DELETE(RC);
+	SAFE_DELETE(Camera);
+	SAFE_DELETE(Scene);
 }
 
 bool FFBXEditor::InitializeWindow(const char * name, HWND wnd, bool windowed, int32 width, int32 height)
@@ -337,11 +426,33 @@ LOSTCORE_API void LostCore::InitializeWindow(HWND wnd, bool windowed, int32 widt
 	SEditor.InitializeWindow("", wnd, windowed, width, height);
 }
 
-LOSTCORE_API void LostCore::LoadFBX(const char * file, bool clearScene)
+LOSTCORE_API void LostCore::LoadFBX(
+	const char * file, 
+	bool clearScene,
+	bool importTexCoord,
+	bool importAnimation,
+	bool importVertexColor,
+	bool importNormal,
+	bool forceRegenerateNormal,
+	bool generateNormalIfNotFound,
+	bool importTangent,
+	bool forceRegenerateTangent,
+	bool generateTangentIfNotFound)
 {
 	string filePath(file);
 	SEditor.PushCommands([=]()
 	{
-		SEditor.LoadFBX(filePath.c_str(), clearScene);
+		SEditor.LoadFBX(
+			filePath.c_str(),
+			clearScene,
+			importTexCoord,
+			importAnimation,
+			importVertexColor,
+			importNormal,
+			forceRegenerateNormal,
+			generateNormalIfNotFound,
+			importTangent,
+			forceRegenerateTangent,
+			forceRegenerateTangent);
 	});
 }

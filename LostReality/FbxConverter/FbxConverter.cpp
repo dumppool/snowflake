@@ -28,7 +28,11 @@ int main(int argc, char** argv)
 		}
 		else
 		{
-			if (cmd.compare(K_IMP_ANIM) == 0)
+			if (cmd.compare(K_IMP_TEXCOORD) == 0)
+			{
+				FConvertOptions::Get()->bImportTexCoord = true;
+			}
+			else if (cmd.compare(K_IMP_ANIM) == 0)
 			{
 				FConvertOptions::Get()->bImportAnimation = true;
 			}

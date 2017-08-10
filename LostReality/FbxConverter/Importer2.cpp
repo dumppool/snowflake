@@ -70,6 +70,8 @@ struct FTempMesh
 
 	// Geometry space >>> bone local space
 	void ProcessSkeletalVertex();
+
+	void GenerateNormal(bool generateTangent = false);
 };
 
 class FFbxImporter2
@@ -305,7 +307,7 @@ FORCEINLINE void FTempMesh::Extract()
 					totalWeight += outputWeights[k];
 				}
 			}
-		}
+		} //for (int i = 0; i < clusterCount; ++i)
 
 		if (rootLinks.size() != 1)
 		{
@@ -378,7 +380,7 @@ FORCEINLINE void FTempMesh::Extract()
 	auto tangentHead = FConvertOptions::Get()->bImportTangent ? layer0->GetTangents() : nullptr;
 	auto binormalHead = FConvertOptions::Get()->bImportTangent ? layer0->GetBinormals() : nullptr;
 	//auto uvHead = layer0->GetUVSets();
-	auto uvHead = Mesh->GetElementUV(0);
+	auto uvHead = FConvertOptions::Get()->bImportTexCoord ? Mesh->GetElementUV(0) : nullptr;
 	auto coordHead = Mesh->GetControlPoints();
 	auto coordCount = Mesh->GetControlPointsCount();
 	auto polygonCount = Mesh->GetPolygonCount();
@@ -416,6 +418,13 @@ FORCEINLINE void FTempMesh::Extract()
 	if (uvHead != nullptr && (uvMM = uvHead->GetMappingMode()) != FbxLayerElement::eNone)
 	{
 		uvRM = uvHead->GetReferenceMode();
+		FbxStringList uvNames;
+		Mesh->GetUVSetNames(uvNames);
+		MeshData.TexCoordName = uvNames[0];
+		if (uvNames.GetCount() != 1)
+		{
+			LVERR(head, "This mesh has %d uv set.", uvNames.GetCount());
+		}
 	}
 	else
 	{
@@ -500,6 +509,16 @@ FORCEINLINE void FTempMesh::Extract()
 				{
 					int valIndex = normalRM == FbxLayerElement::eDirect ? tmpIndex : normalHead->GetIndexArray().GetAt(tmpIndex);
 					vert.Normal = ToVector3(normalHead->GetDirectArray().GetAt(valIndex)).GetNormal();
+
+					if (normalRM != FbxLayerElement::eDirect)
+					{
+						auto n0 = normalHead->GetDirectArray().GetAt(valIndex);
+						bool ttt;
+						FbxVector4 n1;
+						Mesh->GetPolygonVertexNormal(i, idx, n1);
+						assert(n0 == n1);
+						assert(0);
+					}
 				}
 
 				if (tangentHead != nullptr && tangentMM != FbxLayerElement::eByControlPoint)
@@ -534,11 +553,33 @@ FORCEINLINE void FTempMesh::Extract()
 				ControlPoints.size(), MeshData.BlendIndices.size(), MeshData.BlendWeights.size());
 		}
 
-		// 标准化蒙皮权重
-		ProcessBlendWeight();
+		if (IsSkeletal())
+		{
 
-		// 顶点坐标转换到本地空间
-		ProcessSkeletalVertex();
+			// 标准化蒙皮权重
+			ProcessBlendWeight();
+
+			// 顶点坐标转换到本地空间
+			ProcessSkeletalVertex();
+		}
+
+		bool genNormal = (normalHead == nullptr 
+			&& FConvertOptions::Get()->bGenerateNormalIfNotFound)
+			|| (FConvertOptions::Get()->bForceRegenerateNormal);
+
+		bool genTangent = (tangentHead == nullptr
+			&& FConvertOptions::Get()->bGenerateTangentIfNotFound)
+			|| (FConvertOptions::Get()->bForceRegenerateTangent);
+
+		genTangent &= genNormal || (normalHead != nullptr);
+
+		if (genNormal)
+		{
+			GenerateNormal(genTangent);
+		}
+
+		MeshData.VertexFlags |= genNormal ? EVertexElement::Normal : 0;
+		MeshData.VertexFlags |= genTangent ? EVertexElement::Tangent : 0;
 	}
 }
 
@@ -686,6 +727,53 @@ FORCEINLINE void FTempMesh::ProcessSkeletalVertex()
 	//if (skinned0[0] != skinned1[0])
 	//	printf("");
 #endif
+}
+
+void FTempMesh::GenerateNormal(bool generateTangent)
+{
+	bool acutallyGenTangent = (generateTangent && (MeshData.VertexFlags & EVertexElement::UV) == EVertexElement::UV);
+	for (auto& tri : MeshData.Triangles)
+	{
+		auto& p0 = MeshData.Coordinates[tri.Vertices[0].Index];
+		auto& p1 = MeshData.Coordinates[tri.Vertices[1].Index];
+		auto& p2 = MeshData.Coordinates[tri.Vertices[2].Index];
+
+		FFloat3 nx = (p2 - p0).GetNormal();
+		FFloat3 nz = (p1 - p0).GetNormal();
+		FFloat3 ny = nz.Cross(nx).GetNormal();
+
+		tri.Vertices[0].Normal = tri.Vertices[1].Normal = tri.Vertices[2].Normal = ny;
+
+		if (acutallyGenTangent)
+		{
+			FFloat4x4 ntb;
+			ntb.SetRow(0, FFloat4(nx, 0.0));
+			ntb.SetRow(1, FFloat4(ny, 0.0));
+			ntb.SetRow(2, FFloat4(nz, 0.0));
+			ntb.SetRow(3, FFloat4(0.0, 0.0, 0.0, 0.0));
+
+			bool splitUV = MeshData.TexCoords.size() == 0;
+			auto& uv0 = splitUV ? tri.Vertices[0].TexCoord : MeshData.TexCoords[tri.Vertices[0].Index];
+			auto& uv1 = splitUV ? tri.Vertices[1].TexCoord : MeshData.TexCoords[tri.Vertices[1].Index];
+			auto& uv2 = splitUV ? tri.Vertices[2].TexCoord : MeshData.TexCoords[tri.Vertices[2].Index];
+			FFloat2 uvx = uv2 - uv0;
+			FFloat2 uvz = uv1 - uv0;
+			FFloat4x4 tex;
+			tex.SetRow(0, FFloat4(uvx.X, 0.0, uvx.Y, 0.0));
+			tex.SetRow(1, FFloat4(0.0, 1.0, 0.0, 0.0));
+			tex.SetRow(2, FFloat4(uvz.X, 0.0, uvz.Y, 0.0));
+			tex.SetRow(3, FFloat4(0.0, 0.0, 0.0, 1.0));
+
+			ntb = tex.Invert() * ntb;
+			nx = ntb.ApplyVector(FFloat3(1.0, 0.0, 0.0)).GetNormal();
+			ny = ntb.ApplyVector(FFloat3(0.0, 1.0, 0.0)).GetNormal();
+			nz = ntb.ApplyVector(FFloat3(0.0, 0.0, 1.0)).GetNormal();
+
+			tri.Vertices[0].Tangent = tri.Vertices[1].Tangent = tri.Vertices[2].Tangent = nx;
+			tri.Vertices[0].Normal = tri.Vertices[1].Normal = tri.Vertices[2].Normal = ny;
+			tri.Vertices[0].Binormal = tri.Vertices[1].Binormal = tri.Vertices[2].Binormal = nz;
+		}
+	}
 }
 
 
