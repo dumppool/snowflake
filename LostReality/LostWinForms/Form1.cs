@@ -32,12 +32,29 @@ namespace LostWinForms
             bool importTexCoord,
             bool importAnimation,
             bool importVertexColor,
+            bool mergeNormalTangentAll,
             bool importNormal,
             bool forceRegenerateNormal,
             bool generateNormalIfNotFound,
             bool importTangent,
             bool forceRegenerateTangent,
             bool generateTangentIfNotFound);
+
+        [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void SetDisplayNormal(bool enable);
+
+        [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void SetDisplayTangent(bool enable);
+
+        [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void SetDisplayNormalLength(float len);
+
+        [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void MoveCamera(float x, float y, float z);
+
+        [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void RotateCamera(float p, float y, float r);
+
 
         private String[] LevelString = { "Info:                ", "Warning:             ", "Error:               " };
         private const String UserDataEncoding = "GB2312";
@@ -54,13 +71,113 @@ namespace LostWinForms
             { LastOpenPathKey, "C:\\" },
         };
 
+        private bool bMovingImportPanel = false;
+        private Point LastMouseLocation;
+
+        private PFN_Logger DelegateLogger;
+
+        private bool bMouseDownPanel1 = false;
+        private float MoveCameraStep = 0.10f;
+        private float RotateCameraStep = 0.1f; 
+
         public Form1()
         {
             InitializeComponent();
 
+            panel1.MouseDown += Panel1_MouseDown;
+            panel1.MouseUp += Panel1_MouseUp;
+            panel1.MouseMove += Panel1_MouseMove;
+            panel1.MouseWheel += Panel1_MouseWheel;
+            panel1.KeyDown += Panel1_KeyDown;
+
             loadFBXToolStripMenuItem1.Click += OnLoadFBX;
             ImportOk.Click += ImportOk_Click;
             ImportCancel.Click += ImportCancel_Click;
+
+            ViewPanelToolStripMenuItem.Click += ViewPanelToolStripMenuItem_Click;
+            ViewPanelOk.Click += ViewPanelOk_Click;
+            SegLengthSlider.Scroll += SegLengthSlider_Scroll;
+        }
+
+        private void Panel1_MouseWheel(object sender, MouseEventArgs e)
+        {
+            MoveCamera(0.0f, 0.0f, e.Delta * MoveCameraStep);
+            Console.WriteLine("{0}", e.Delta * MoveCameraStep);
+        }
+
+        private void Panel1_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
+        {
+            if (e.KeyCode <= Keys.F24 && Keys.D0 <= e.KeyCode)
+            {
+                e.IsInputKey = true;
+            }
+        }
+
+        private void Panel1_KeyDown(object sender, KeyEventArgs e)
+        {
+            float x = 0.0f, y = 0.0f, z = 0.0f;
+            switch (e.KeyCode)
+            {
+                case Keys.W:
+                    z += MoveCameraStep;
+                    break;
+                case Keys.S:
+                    z -= MoveCameraStep;
+                    break;
+                case Keys.A:
+                    x -= MoveCameraStep;
+                    break;
+                case Keys.D:
+                    x += MoveCameraStep;
+                    break;
+                case Keys.Q:
+                    y += MoveCameraStep;
+                    break;
+                case Keys.E:
+                    y -= MoveCameraStep;
+                    break;
+                default:
+                    break;
+            }
+
+            MoveCamera(x, y, z);
+            Console.WriteLine("{0} {1} {2}", x, y, z);
+        }
+
+        private void Panel1_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (bMouseDownPanel1)
+            {
+                float dx = e.Location.X - LastMouseLocation.X;
+                float dy = e.Location.Y - LastMouseLocation.Y;
+                LastMouseLocation = e.Location;
+                RotateCamera(dy * RotateCameraStep, -dx * RotateCameraStep, 0.0f);
+            }
+        }
+
+        private void Panel1_MouseUp(object sender, MouseEventArgs e)
+        {
+            bMouseDownPanel1 = false;
+            LastMouseLocation = e.Location;
+        }
+
+        private void Panel1_MouseDown(object sender, MouseEventArgs e)
+        {
+            bMouseDownPanel1 = true;
+            LastMouseLocation = e.Location;
+        }
+
+        private void SegLengthSlider_Scroll(object sender, EventArgs e)
+        {
+            SegLengthValue.Text = SegLengthSlider.Value.ToString();
+        }
+
+        private void ViewPanelOk_Click(object sender, EventArgs e)
+        {
+            SetDisplayNormal(DisplayNormal.Checked);
+            SetDisplayTangent(DisplayTangent.Checked);
+            SetDisplayNormalLength(SegLengthSlider.Value);
+            ViewPanel.Visible = false;
         }
 
         // 获取用户本地数据保存路径
@@ -156,7 +273,8 @@ namespace LostWinForms
                 InitializeWindow(panel1.Handle, true, (uint)panel1.Width, (uint)panel1.Height);
 
                 // 设置日志回调
-                SetLogger(OnLogging);
+                DelegateLogger = new PFN_Logger(OnLogging);
+                SetLogger(DelegateLogger);
 
                 // 加载用户本地数据
                 LoadLocalUserData();
@@ -180,6 +298,7 @@ namespace LostWinForms
                 ImportTexCoord.Checked,
                 ImportAnimation.Checked,
                 ImportVertexColor.Checked,
+                MergeNormalTangentAll.Checked,
                 ImportNormal.Checked,
                 ForceRegenerateNormal.Checked,
                 GenerateNormalIfNotFound.Checked,
@@ -191,6 +310,36 @@ namespace LostWinForms
         private void ImportCancel_Click(object sender, EventArgs e)
         {
             ImportPanel.Visible = false;
+        }
+
+        private void ImportPanel_MouseDown(object sender, MouseEventArgs e)
+        {
+            bMovingImportPanel = true;
+            LastMouseLocation = e.Location;
+        }
+
+        private void ImportPanel_MouseMove(object sender, MouseEventArgs e)
+        {
+            // TODO: 需要在同一个坐标系下计算
+            if (bMovingImportPanel)
+            {
+                Point final = ImportPanel.Location;
+                final.X += e.Location.X - LastMouseLocation.X;
+                final.Y += e.Location.Y - LastMouseLocation.Y;
+                LastMouseLocation = e.Location;
+                ImportPanel.Location = final;
+            }
+        }
+
+        private void ImportPanel_MouseUp(object sender, MouseEventArgs e)
+        {
+            bMovingImportPanel = false;
+            LastMouseLocation = e.Location;
+        }
+
+        private void ViewPanelToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ViewPanel.Visible = true;
         }
     }
 }

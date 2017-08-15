@@ -290,10 +290,11 @@ void LostCore::FSkeletalModel::Tick(float sec)
 		}
 	}
 
-	const float constSegLength = 5.1f;
 	const FColor96 constSegColor((uint32)0x0000ff);
-	bool bDisplayNormal = true;
-	if (bDisplayNormal)
+	const float segLen = FGlobalHandler::Get()->GetDisplayNormalLength();
+	bool displayTangent = FGlobalHandler::Get()->IsDisplayTangent(MeshData.VertexFlags);
+	bool displayNormal = FGlobalHandler::Get()->IsDisplayNormal(MeshData.VertexFlags);
+	if (displayNormal || displayTangent)
 	{
 		for (uint32 i = 0; i < MeshData.Coordinates.size(); ++i)
 		{
@@ -314,23 +315,74 @@ void LostCore::FSkeletalModel::Tick(float sec)
 				}
 			}
 
-			FSegmentData seg;
-			seg.StartPt = localToWorld.ApplyPoint(MeshData.Coordinates[i]);
-			FFloat3 normal;
-			if (MeshData.Normals.size() > 0)
+			if (displayNormal)
 			{
-				normal = localToWorld.ApplyVector(MeshData.Normals[i]);
+				FSegmentData seg;
+				seg.StartPt = localToWorld.ApplyPoint(MeshData.Coordinates[i]);
+
+				if (MeshData.Normals.size() > 0)
+				{
+					FFloat3 normal = localToWorld.ApplyVector(MeshData.Normals[i]);
+					seg.StopPt = seg.StartPt + normal * segLen;
+					seg.Color = constSegColor;
+					SegmentRenderer.AddSegment(seg);
+				}
+				else
+				{
+					for (auto& elem : MeshData.VertexPolygonMap[i])
+					{
+						FFloat3 normal = localToWorld.ApplyVector(MeshData.Triangles[elem.first].Vertices[elem.second].Normal);
+						seg.StopPt = seg.StartPt + normal * segLen;
+						seg.Color = constSegColor;
+						SegmentRenderer.AddSegment(seg);
+					}
+				}
 			}
 
-			seg.StopPt = seg.StartPt + normal * constSegLength;
-			seg.Color = constSegColor;
+			if (displayTangent)
+			{
+				FAxisData axis;
+				axis.Origin = localToWorld.ApplyPoint(MeshData.Coordinates[i]);
 
-			SegmentRenderer.AddSegment(seg);
+				if (MeshData.Normals.size() > 0)
+				{
+					FFloat3 normal = localToWorld.ApplyVector(MeshData.Normals[i]);
+					FFloat3 tangent = localToWorld.ApplyVector(MeshData.Tangents[i]);
+					FFloat3 binormal = localToWorld.ApplyVector(MeshData.Binormals[i]);
+					axis.DirX = binormal;
+					axis.DirY = normal;
+					axis.DirZ = tangent;
+					axis.Length = segLen;
+					AxisRenderer.AddAxis(axis);
+				}
+				else
+				{
+					for (auto& elem : MeshData.VertexPolygonMap[i])
+					{
+						FFloat3 normal = localToWorld.ApplyVector(MeshData.Triangles[elem.first].Vertices[elem.second].Normal);
+						FFloat3 tangent = localToWorld.ApplyVector(MeshData.Triangles[elem.first].Vertices[elem.second].Tangent);
+						FFloat3 binormal = localToWorld.ApplyVector(MeshData.Triangles[elem.first].Vertices[elem.second].Binormal);
+						axis.DirX = binormal;
+						axis.DirY = normal;
+						axis.DirZ = tangent;
+						axis.Length = segLen;
+						AxisRenderer.AddAxis(axis);
+					}
+				}
+			}
 		}
 
 		FFloat4x4 w;
 		w.SetIdentity();
-		SegmentRenderer.SetWorldMatrix(w);
+		if (displayNormal)
+		{
+			SegmentRenderer.SetWorldMatrix(w);
+		}
+
+		if (displayTangent)
+		{
+			AxisRenderer.SetWorldMatrix(w);
+		}
 	}
 }
 
@@ -347,10 +399,16 @@ void LostCore::FSkeletalModel::Draw(IRenderContext * rc, float sec)
 		Primitive->Draw(rc, sec);
 	}
 
-	bool bDisplayNormal = true;
-	if (bDisplayNormal)
+	bool displayNormal = FGlobalHandler::Get()->IsDisplayNormal(MeshData.VertexFlags);
+	if (displayNormal)
 	{
 		SegmentRenderer.Draw(rc, sec);
+	}
+
+	bool displayTangent = FGlobalHandler::Get()->IsDisplayTangent(MeshData.VertexFlags);
+	if (displayTangent)
+	{
+		AxisRenderer.Draw(rc, sec);
 	}
 }
 

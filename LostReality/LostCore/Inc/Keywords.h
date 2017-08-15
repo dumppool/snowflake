@@ -158,6 +158,7 @@
 #define K_IMP_ANIM						"ImportAnimation"
 #define K_IMP_VERTEXCOLOR				"ImportVertexColor"
 #define K_IMP_NORMAL					"ImportNormal"
+#define K_MERGE_NORMAL_TANGENT_ALL		"MergeNormalTangentAll"
 #define K_FORCE_GEN_NORMAL				"ForceGenerateNormal"
 #define K_GEN_NORMAL_IF_NOT_FOUND		"GenrateNormalIfNotFound"
 #define K_IMP_TANGENT					"ImportTangent"

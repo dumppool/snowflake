@@ -36,6 +36,7 @@ VertexOut vs_main(VertexIn Input)
 	int4 sIndices = int4(Input.Indices);
 
 	float4 pos = float4(Input.Pos.xyz, 1.0f);
+	float4 normal = float4(Input.Normal.xyz, 0.0f);
 	if (1)
 	{
 		float4x4 mat = Bones[sIndices.x] * Input.Weight.x;
@@ -56,6 +57,8 @@ VertexOut vs_main(VertexIn Input)
 		}
 
 		pos = mul(pos, mat);
+		normal = mul(normal, mat);
+		//normal = mul(normal, World);
 
 		//pos = mul(pos, Bones[sIndices.x] * Input.Weight.x);
 		//if (sIndices.y >= 0)
@@ -82,8 +85,8 @@ VertexOut vs_main(VertexIn Input)
 
 	VertexOut o;
 	o.Pos = pos;
-	o.Normal = mul(normalize(Input.Normal), World);
-	//o.Normal = Input.Normal;
+	//o.Normal = mul(normalize(Input.Normal), World);
+	o.Normal = normal;
 
 	return o;
 }
@@ -94,7 +97,8 @@ float4 ps_main(VertexOut Input) : SV_TARGET
 	const float3 s_lightDir = normalize(float3(0.3f, -0.8f, 0.5f));
 	const float3 s_lightCol = float3(1.8f, 0.7f, 0.18f);
 
-	float3 col = dot(-s_lightDir, Input.Normal) * s_lightCol + s_ambientCol;
+	float3 col = s_ambientCol;
+	col = dot(-s_lightDir, Input.Normal) * s_lightCol + s_ambientCol;
 	float4 final = float4(col, 1.0f);
 	return final;
 }

@@ -32,6 +32,7 @@ public:
 		bool importTexCoord,
 		bool importAnimation,
 		bool importVertexColor,
+		bool mergeNormalTangentAll,
 		bool importNormal,
 		bool forceRegenerateNormal,
 		bool generateNormalIfNotFound,
@@ -96,6 +97,18 @@ FFBXEditor::FFBXEditor()
 	, RenderCommands(true)
 {
 	FDirectoryHelper::Get()->GetPrimitiveAbsolutePath(SConverterOutput, OutputDir);
+	FGlobalHandler::Get()->SetMoveCameraCallback([&](float x, float y, float z) {
+		if (Camera != nullptr)
+		{
+			Camera->AddPositionLocal(FFloat3(x, y, z));
+		}
+	});
+	FGlobalHandler::Get()->SetRotateCameraCallback([&](float p, float y, float r) {
+		if (Camera != nullptr)
+		{
+			Camera->AddEulerWorld(FFloat3(p, y, r));
+		}
+	});
 }
 
 FFBXEditor::~FFBXEditor()
@@ -154,6 +167,7 @@ void FFBXEditor::LoadFBX(
 	bool importTexCoord,
 	bool importAnimation,
 	bool importVertexColor,
+	bool mergeNormalTangentAll,
 	bool importNormal,
 	bool forceRegenerateNormal,
 	bool generateNormalIfNotFound,
@@ -189,6 +203,11 @@ void FFBXEditor::LoadFBX(
 	if (importVertexColor)
 	{
 		cmd.append(" ").append(K_IMP_VERTEXCOLOR);
+	}
+
+	if (mergeNormalTangentAll)
+	{
+		cmd.append(" ").append(K_MERGE_NORMAL_TANGENT_ALL);
 	}
 
 	if (importNormal)
@@ -291,8 +310,8 @@ void FFBXEditor::LoadFBX(
 		Models.push_back(model);
 
 		// Fbx converter需要输出转换导出信息。
-		model->SetPrimitiveVertexFlags(EVertexElement::Coordinate 
-			| EVertexElement::Normal | EVertexElement::Skin);
+		//model->SetPrimitiveVertexFlags(EVertexElement::Coordinate 
+		//	| EVertexElement::Normal | EVertexElement::Skin);
 
 		if (model->Config(RC, modelJson))
 		{
@@ -313,6 +332,9 @@ bool FFBXEditor::Load(IRenderContext * rc, const char * url)
 
 void FFBXEditor::Fini()
 {
+	FGlobalHandler::Get()->SetMoveCameraCallback(nullptr);
+	FGlobalHandler::Get()->SetRotateCameraCallback(nullptr);
+
 	bKeepRendering = false;
 	if (RenderThread.joinable())
 	{
@@ -432,6 +454,7 @@ LOSTCORE_API void LostCore::LoadFBX(
 	bool importTexCoord,
 	bool importAnimation,
 	bool importVertexColor,
+	bool mergeNormalTangentAll,
 	bool importNormal,
 	bool forceRegenerateNormal,
 	bool generateNormalIfNotFound,
@@ -448,6 +471,7 @@ LOSTCORE_API void LostCore::LoadFBX(
 			importTexCoord,
 			importAnimation,
 			importVertexColor,
+			mergeNormalTangentAll,
 			importNormal,
 			forceRegenerateNormal,
 			generateNormalIfNotFound,

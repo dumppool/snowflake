@@ -19,15 +19,15 @@ namespace LostCore
 		virtual float MemFunc2(float val) = 0;
 	};
 
-	extern "C" LOSTCORE_API EReturnCode CreateHuman(ITestBasic** ppObj);
+	LOSTCORE_API EReturnCode CreateHuman(ITestBasic** ppObj);
 	static TExportFuncWrapper<ITestBasic**> WrappedCreateHuman("CreateHuman", &GetModule_LostCore);
 
-	extern "C" LOSTCORE_API EReturnCode DestroyHuman(ITestBasic* pObj);
+	LOSTCORE_API EReturnCode DestroyHuman(ITestBasic* pObj);
 	static TExportFuncWrapper<ITestBasic*> WrappedDestroyHuman("DestroyHuman", &GetModule_LostCore);
 
-	extern "C" LOSTCORE_API EReturnCode CreateMan(ITestBasic** ppObj);
+	LOSTCORE_API EReturnCode CreateMan(ITestBasic** ppObj);
 	static TExportFuncWrapper<ITestBasic**> WrappedCreateMan("CreateMan", &GetModule_LostCore);
 
-	extern "C" LOSTCORE_API EReturnCode DestroyMan(ITestBasic* pObj);
+	LOSTCORE_API EReturnCode DestroyMan(ITestBasic* pObj);
 	static TExportFuncWrapper<ITestBasic*> WrappedDestroyMan("DestroyMan", &GetModule_LostCore);
 }

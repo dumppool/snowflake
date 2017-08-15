@@ -100,15 +100,15 @@ namespace LostCore
 		{
 			T xx = q.X * q.X * 2.0;
 			T xy = q.X * q.Y * 2.0;
-			T xz = -q.X * q.Z * 2.0;
+			T xz = q.X * q.Z * 2.0;
 
 			T yy = q.Y * q.Y * 2.0;
-			T yz = -q.Y * q.Z * 2.0;
+			T yz = q.Y * q.Z * 2.0;
 
 			T zz = q.Z * q.Z * 2.0;
 
-			T wx = -q.W * q.X * 2.0;
-			T wy = -q.W * q.Y * 2.0;
+			T wx = q.W * q.X * 2.0;
+			T wy = q.W * q.Y * 2.0;
 			T wz = q.W * q.Z * 2.0;
 
 			M[0][0] = (1.0 - (yy + zz));

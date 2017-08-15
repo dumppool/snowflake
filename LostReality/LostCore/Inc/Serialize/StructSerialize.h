@@ -150,6 +150,9 @@ namespace LostCore
 		// 骨骼索引表
 		map<string, int32> SkeletonIndexMap;
 
+		// 顶点索引到三角面顶点索引的映射
+		map<uint32, map<uint32, uint32>> VertexPolygonMap;
+
 		uint32 VertexMagic;
 
 		struct FVertex
@@ -209,8 +212,8 @@ namespace LostCore
 	{
 		uint32 sz = 0;
 		uint32 dsz = 0;
-		stream << data.Name << data.IndexCount << data.VertexCount 
-			<< data.VertexFlags << data.Coordinates 
+		stream << data.Name << data.IndexCount << data.VertexCount
+			<< data.VertexFlags << data.Coordinates
 			<< data.TexCoordName << data.TexCoords
 			<< data.Normals << data.Tangents << data.Binormals
 			<< data.VertexColors
@@ -218,6 +221,7 @@ namespace LostCore
 			<< data.Poses
 			<< data.Skeleton
 			<< data.SkeletonIndexMap
+			<< data.VertexPolygonMap
 			<< data.Triangles	// TODO: Triangles的序列化/反序列化应该根据实际数据而定
 			;
 
@@ -235,7 +239,10 @@ namespace LostCore
 			>> data.Normals >> data.Tangents >> data.Binormals
 			>> data.VertexColors
 			>> data.BlendWeights >> data.BlendIndices
-			>> data.Poses >> data.Skeleton >> data.SkeletonIndexMap
+			>> data.Poses 
+			>> data.Skeleton 
+			>> data.SkeletonIndexMap
+			>> data.VertexPolygonMap
 			>> data.Triangles
 			;
 

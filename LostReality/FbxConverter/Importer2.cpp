@@ -39,6 +39,9 @@ struct FTempMesh
 	// geometry space
 	vector<FFloat3>			ControlPoints;
 
+	// Vertex index to polygon map
+	// map<[control point index], map<[polygon index], [verex index]>>
+
 #if TEST_SOFT_SKINNED
 	// skinned points
 	vector<FFloat3>			SkinnedPts;
@@ -69,9 +72,10 @@ struct FTempMesh
 	void ProcessBlendWeight();
 
 	// Geometry space >>> bone local space
-	void ProcessSkeletalVertex();
+	// 输出本地到骨骼的变换矩阵
+	void ProcessSkeletalVertex(vector<FFloat4x4>& vecLocalToBone);
 
-	void GenerateNormal(bool generateTangent = false);
+	void GenerateNormal(const vector<FFloat4x4>& localToBones, bool generateTangent = false);
 };
 
 class FFbxImporter2
@@ -505,6 +509,13 @@ FORCEINLINE void FTempMesh::Extract()
 				auto& vert = tri.Vertices[idx];
 				vert.Index = cpIndex;
 
+				if (MeshData.VertexPolygonMap.find(cpIndex) == MeshData.VertexPolygonMap.end())
+				{
+					MeshData.VertexPolygonMap[cpIndex] = map<uint32, uint32>();
+				}
+
+				MeshData.VertexPolygonMap[cpIndex][i] = idx;
+
 				if (normalHead != nullptr && normalMM != FbxLayerElement::eByControlPoint)
 				{
 					int valIndex = normalRM == FbxLayerElement::eDirect ? tmpIndex : normalHead->GetIndexArray().GetAt(tmpIndex);
@@ -553,17 +564,17 @@ FORCEINLINE void FTempMesh::Extract()
 				ControlPoints.size(), MeshData.BlendIndices.size(), MeshData.BlendWeights.size());
 		}
 
+		vector<FFloat4x4> vecLocalToBone(0);
 		if (IsSkeletal())
 		{
-
 			// 标准化蒙皮权重
 			ProcessBlendWeight();
 
 			// 顶点坐标转换到本地空间
-			ProcessSkeletalVertex();
+			ProcessSkeletalVertex(vecLocalToBone);
 		}
 
-		bool genNormal = (normalHead == nullptr 
+		bool genNormal = (normalHead == nullptr
 			&& FConvertOptions::Get()->bGenerateNormalIfNotFound)
 			|| (FConvertOptions::Get()->bForceRegenerateNormal);
 
@@ -572,10 +583,11 @@ FORCEINLINE void FTempMesh::Extract()
 			|| (FConvertOptions::Get()->bForceRegenerateTangent);
 
 		genTangent &= genNormal || (normalHead != nullptr);
+		genTangent &= (MeshData.VertexFlags & EVertexElement::UV) == EVertexElement::UV;
 
 		if (genNormal)
 		{
-			GenerateNormal(genTangent);
+			GenerateNormal(vecLocalToBone, genTangent);
 		}
 
 		MeshData.VertexFlags |= genNormal ? EVertexElement::Normal : 0;
@@ -618,7 +630,7 @@ FORCEINLINE void FTempMesh::ProcessBlendWeight()
 	}
 }
 
-FORCEINLINE void FTempMesh::ProcessSkeletalVertex()
+FORCEINLINE void FTempMesh::ProcessSkeletalVertex(vector<FFloat4x4>& vecLocalToBone)
 {
 	if (ControlPoints.size() == 0)
 	{
@@ -643,14 +655,12 @@ FORCEINLINE void FTempMesh::ProcessSkeletalVertex()
 	for_each(MeshData.SkeletonIndexMap.begin(), MeshData.SkeletonIndexMap.end(),
 		[&](const pair<string, int32>& elem) {inverseMap[elem.second] = elem.first; });
 
+	vecLocalToBone.resize(ControlPoints.size());
 	MeshData.Coordinates.resize(ControlPoints.size());
-
 	for (uint32 vertIndex = 0; vertIndex < ControlPoints.size(); ++vertIndex)
 	{
 		auto& indices = MeshData.BlendIndices[vertIndex];
 		auto& weights = MeshData.BlendWeights[vertIndex];
-		FbxAMatrix mat;
-		memset(&mat, 0, sizeof(mat));
 		FFloat4x4 mat2;
 		memset(&mat2, 0, sizeof(mat2));
 		float w = 0.f;
@@ -675,6 +685,7 @@ FORCEINLINE void FTempMesh::ProcessSkeletalVertex()
 
 		auto invMat2 = mat2;
 		invMat2.Invert();
+		vecLocalToBone[vertIndex] = invMat2;
 		MeshData.Coordinates[vertIndex] = invMat2.ApplyPoint(ControlPoints[vertIndex]);
 
 #if TEST_SOFT_SKINNED
@@ -729,22 +740,26 @@ FORCEINLINE void FTempMesh::ProcessSkeletalVertex()
 #endif
 }
 
-void FTempMesh::GenerateNormal(bool generateTangent)
+void FTempMesh::GenerateNormal(const vector<FFloat4x4>& vecLocalToBone, bool generateTangent)
 {
-	bool acutallyGenTangent = (generateTangent && (MeshData.VertexFlags & EVertexElement::UV) == EVertexElement::UV);
-	for (auto& tri : MeshData.Triangles)
+	assert((vecLocalToBone.size() > 0) == IsSkeletal());
+
+	vector<FMeshDataAlias::FTriangle> triangles(MeshData.Triangles.size());
+	for (uint32 i = 0; i < MeshData.Triangles.size(); ++i)
 	{
-		auto& p0 = MeshData.Coordinates[tri.Vertices[0].Index];
-		auto& p1 = MeshData.Coordinates[tri.Vertices[1].Index];
-		auto& p2 = MeshData.Coordinates[tri.Vertices[2].Index];
+		auto& tri = MeshData.Triangles[i];
+		auto& p0 = ControlPoints[tri.Vertices[0].Index];
+		auto& p1 = ControlPoints[tri.Vertices[1].Index];
+		auto& p2 = ControlPoints[tri.Vertices[2].Index];
 
 		FFloat3 nx = (p2 - p0).GetNormal();
 		FFloat3 nz = (p1 - p0).GetNormal();
 		FFloat3 ny = nz.Cross(nx).GetNormal();
 
-		tri.Vertices[0].Normal = tri.Vertices[1].Normal = tri.Vertices[2].Normal = ny;
+		auto& tri2 = triangles[i];
+		tri2.Vertices[0].Normal = tri2.Vertices[1].Normal = tri2.Vertices[2].Normal = ny;
 
-		if (acutallyGenTangent)
+		if (generateTangent)
 		{
 			FFloat4x4 ntb;
 			ntb.SetRow(0, FFloat4(nx, 0.0));
@@ -769,9 +784,71 @@ void FTempMesh::GenerateNormal(bool generateTangent)
 			ny = ntb.ApplyVector(FFloat3(0.0, 1.0, 0.0)).GetNormal();
 			nz = ntb.ApplyVector(FFloat3(0.0, 0.0, 1.0)).GetNormal();
 
-			tri.Vertices[0].Tangent = tri.Vertices[1].Tangent = tri.Vertices[2].Tangent = nx;
-			tri.Vertices[0].Normal = tri.Vertices[1].Normal = tri.Vertices[2].Normal = ny;
-			tri.Vertices[0].Binormal = tri.Vertices[1].Binormal = tri.Vertices[2].Binormal = nz;
+			tri2.Vertices[0].Binormal = tri2.Vertices[1].Tangent = tri2.Vertices[2].Tangent = nx;
+			tri2.Vertices[0].Normal = tri2.Vertices[1].Normal = tri2.Vertices[2].Normal = ny;
+			tri2.Vertices[0].Tangent = tri2.Vertices[1].Binormal = tri2.Vertices[2].Binormal = nz;
+		}
+	}
+
+	if (FConvertOptions::Get()->bMergeNormalTangentAll)
+	{
+		MeshData.Normals.resize(ControlPoints.size());
+		MeshData.Tangents.resize(ControlPoints.size());
+		MeshData.Binormals.resize(ControlPoints.size());
+		for (uint32 i = 0; i < ControlPoints.size(); ++i)
+		{
+			FFloat3 normal(0.0, 0.0, 0.0);
+			FFloat3 tangent(0.0, 0.0, 0.0);
+			FFloat3 binormal(0.0, 0.0, 0.0);
+			auto& indices = MeshData.VertexPolygonMap[i];
+			for (auto& polygonIndex : indices)
+			{
+				normal += triangles[polygonIndex.first].Vertices[polygonIndex.second].Normal;
+				if (generateTangent)
+				{
+					tangent += triangles[polygonIndex.first].Vertices[polygonIndex.second].Tangent;
+					binormal += triangles[polygonIndex.first].Vertices[polygonIndex.second].Binormal;
+				}
+			}
+
+			normal *= (1.0 / indices.size());
+			if (generateTangent)
+			{
+				tangent *= (1.0 / indices.size());
+				binormal *= (1.0 / indices.size());
+			}
+
+			MeshData.Normals[i] = vecLocalToBone[i].ApplyVector(normal.GetNormal());
+
+			if (generateTangent)
+			{
+				MeshData.Tangents[i] = vecLocalToBone[i].ApplyVector(tangent);
+				MeshData.Binormals[i] = vecLocalToBone[i].ApplyVector(binormal.GetNormal());
+			}
+		}
+	}
+	else // 不合并法线，同一点上在不同三角面的顶点都有自己的法线.
+	{
+		for (uint32 i = 0; i < triangles.size(); ++i)
+		{
+			for (uint32 j = 0; j < 3; ++j)
+			{
+				auto& srcVert = triangles[i].Vertices[j];
+				auto& dstVert = MeshData.Triangles[i].Vertices[j];
+				dstVert.Normal = vecLocalToBone[dstVert.Index].ApplyVector(srcVert.Normal.GetNormal());
+				if (generateTangent)
+				{
+					dstVert.Tangent = vecLocalToBone[dstVert.Index].ApplyVector(srcVert.Tangent.GetNormal());
+					dstVert.Binormal = vecLocalToBone[dstVert.Index].ApplyVector(srcVert.Binormal.GetNormal());
+				}
+			}
+		}
+
+		MeshData.Normals.clear();
+		if (generateTangent)
+		{
+			MeshData.Tangents.clear();
+			MeshData.Binormals.clear();
 		}
 	}
 }

@@ -115,6 +115,9 @@
     <ClInclude Include="Inc\Threading\CommandQueue.h">
       <Filter>Inc\Threading</Filter>
     </ClInclude>
+    <ClInclude Include="Inc\GlobalHandler.h">
+      <Filter>Inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
@@ -156,6 +159,9 @@
       <Filter>RenderCore\Gizmo</Filter>
     </ClCompile>
     <ClCompile Include="Src\FBXEditor.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\GlobalHandler.cpp">
       <Filter>Src</Filter>
     </ClCompile>
   </ItemGroup>

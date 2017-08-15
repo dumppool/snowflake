@@ -36,6 +36,10 @@ int main(int argc, char** argv)
 			{
 				FConvertOptions::Get()->bImportAnimation = true;
 			}
+			else if (cmd.compare(K_MERGE_NORMAL_TANGENT_ALL) == 0)
+			{
+				FConvertOptions::Get()->bMergeNormalTangentAll = true;
+			}
 			else if (cmd.compare(K_IMP_NORMAL) == 0)
 			{
 				FConvertOptions::Get()->bImportNormal = true;

@@ -29,7 +29,7 @@ void LostCore::FAxisTool::Draw(IRenderContext * rc, float sec)
 	}
 
 	vector<FAxisData> axises(Data.size());
-	memcpy(&axises[0], &Data[0], axises.size());
+	memcpy(&axises[0], &Data[0], axises.size() * sizeof(FAxisData));
 	Data.clear();
 
 	for (uint32 i = 0; i < axises.size(); ++i)

@@ -10,9 +10,9 @@
 #pragma once
 
 #ifdef LOSTCORE_EXPORTS
-#define LOSTCORE_API __declspec(dllexport)
+#define LOSTCORE_API extern "C" __declspec(dllexport)
 #else
-#define LOSTCORE_API __declspec(dllimport)
+#define LOSTCORE_API extern "C" __declspec(dllimport)
 #endif
 
 namespace LostCore
@@ -84,6 +84,8 @@ namespace LostCore
 
 #include "File/json.hpp"
 using FJson = nlohmann::json;
+
+#include "GlobalHandler.h"
 
 #include "Math/Vector2.h"
 #include "Math/Vector3.h"

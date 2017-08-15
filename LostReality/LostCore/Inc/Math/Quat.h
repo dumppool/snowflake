@@ -82,6 +82,7 @@ namespace LostCore
 		Y = quat.Y;
 		Z = quat.Z;
 		W = quat.W;
+		return *this;
 	}
 
 	FORCEINLINE FQuatNonVectorized FQuatNonVectorized::operator+(const FQuatNonVectorized& quat) const

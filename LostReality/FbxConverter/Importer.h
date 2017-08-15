@@ -659,6 +659,8 @@ namespace Importer {
 		bool bImportAnimation;
 		bool bImportVertexColor;
 
+		bool bMergeNormalTangentAll;
+
 		bool bImportNormal;
 		bool bForceRegenerateNormal;
 		bool bGenerateNormalIfNotFound;
@@ -675,6 +677,8 @@ namespace Importer {
 			bImportTexCoord = false;
 			bImportAnimation = false;
 			bImportVertexColor = false;
+
+			bMergeNormalTangentAll = false;
 
 			bImportNormal = false;
 			bForceRegenerateNormal = false;

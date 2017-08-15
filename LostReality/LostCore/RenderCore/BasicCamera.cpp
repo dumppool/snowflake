@@ -51,11 +51,7 @@ void LostCore::FBasicCamera::Draw(IRenderContext * rc, float sec)
 
 void LostCore::FBasicCamera::AddPositionWorld(const FFloat3& pos)
 {
-	FQuat orientation;
-	orientation.FromEuler(ViewEuler);
-
-	FTransform world(orientation, ViewPosition);
-	ViewPosition = world.TransformPosition(pos);
+	ViewPosition += pos;
 }
 
 void LostCore::FBasicCamera::AddEulerWorld(const FFloat3& euler)
@@ -122,48 +118,9 @@ FFloat4x4 LostCore::FBasicCamera::GetViewMatrix() const
 	FQuat orientation;
 	orientation.FromEuler(ViewEuler);
 
-	FFloat3 formattedEuler = orientation.Euler();
-	
-	//FTransform world(orientation, ViewPosition);
-	FFloat4x4 world, world34;
+	FFloat4x4 world;
 	world.SetRotateAndOrigin(orientation, ViewPosition);
-	world34.SetRotateAndOrigin(orientation, ViewPosition);
-	//return world.GetInversed().ToMatrix();
-
-	FFloat4x4 matRot, matTrans;
-	matRot.SetRotate(orientation);
-	matTrans.SetTranslate(ViewPosition);
-	FFloat4x4 world2 = matRot * matTrans;
-
-	FFloat3 pt1 = world.ApplyPoint(FFloat3(0.f, 0.f, 0.f));
-	FFloat3 pt2 = world2.ApplyPoint(FFloat3(0.f, 0.f, 0.f));
-
-	FFloat3 right = orientation.GetRightVector();
-	FFloat3 up = orientation.GetUpVector();
-	FFloat3 direction = orientation.GetForwardVector();
-	
 	world.Invert();
-	world34.Invert34();
-
-	/*************************************************/
-	const float s2 = Sqrt(2.f)*0.5;
-	FFloat3 src(s2, 0.f, s2);
-	FQuat rot0; rot0.FromEuler(FFloat3(0.f, 45.f, 0.f));
-	FFloat3 euler0 = rot0.Euler();
-	FFloat4x4 mat0; mat0.SetRotate(rot0);
-	FFloat3 dst = mat0.ApplyPoint(src);
-
-	FFloat4x4 mat1; mat1.SetTranslate(FFloat3(0.f, 0.f, 1.f));
-	mat0 = mat0 * mat1;
-	dst = mat0.ApplyPoint(src);
-
-	FFloat4x4 mat2; mat2.M[0][0] = mat2.M[2][0] = mat2.M[2][2] = s2; mat2.M[0][2] = mat2.M[3][0] = mat2.M[3][2] = -s2;
-	dst = mat2.ApplyPoint(FFloat3(0.f, 0.f, 0.f));
-	dst = mat2.ApplyPoint(src);
-	mat2.Invert();
-	dst = mat2.ApplyPoint(src);
-	/*************************************************/
-
 	return world;
 }
 

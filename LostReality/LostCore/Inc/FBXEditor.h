@@ -12,15 +12,16 @@
 namespace LostCore
 {
 	typedef void(WINAPI *PFN_Logger)(int32 level, const char* msg);
-	extern "C" LOSTCORE_API void SetLogger(PFN_Logger logger);
+	LOSTCORE_API void SetLogger(PFN_Logger logger);
 
-	extern "C" LOSTCORE_API void InitializeWindow(HWND wnd, bool windowed, int32 width, int32 height);
-	extern "C" LOSTCORE_API void LoadFBX(
+	LOSTCORE_API void InitializeWindow(HWND wnd, bool windowed, int32 width, int32 height);
+	LOSTCORE_API void LoadFBX(
 		const char* file, 
 		bool clearScene,
 		bool importTexCoord,
 		bool importAnimation,
 		bool importVertexColor,
+		bool mergeNormalTangentAll,
 		bool importNormal,
 		bool forceRegenerateNormal,
 		bool generateNormalIfNotFound,
