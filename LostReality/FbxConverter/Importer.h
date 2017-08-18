@@ -696,7 +696,5 @@ namespace Importer {
 		}
 	};
 
-	extern bool DumpSceneMeshes(const string& importSrc, const string& convertDst, bool outputBinary, bool exportAnimation);
-	extern bool ImportSceneMeshes(const string& importSrc, const string& convertDst, bool outputBinary, bool exportAnimation);
-	extern bool ImportSceneMeshes2();
+	extern bool Import();
 }

@@ -167,6 +167,7 @@
     <ClInclude Include="Inc\LostCore.h" />
     <ClInclude Include="Inc\Math\AABB.h" />
     <ClInclude Include="Inc\Math\Color.h" />
+    <ClInclude Include="Inc\Math\Curves.h" />
     <ClInclude Include="Inc\Math\MathBase.h" />
     <ClInclude Include="Inc\Math\Matrix.h" />
     <ClInclude Include="Inc\Math\Quat.h" />

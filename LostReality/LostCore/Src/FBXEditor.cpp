@@ -281,13 +281,19 @@ void FFBXEditor::LoadFBX(
 		FJson j;
 		stream >> j;
 		stream.close();
-		assert(j.size() > 0);
-		for (auto& elem : j)
+
+		for (auto& elem : j[K_MESH])
 		{
 			auto path = elem[K_PATH];
 			auto ve = elem[K_VERTEX_ELEMENT];
-			Log(SInfo, "Output %s, %s", elem.value(K_PATH, "").c_str(), 
+			Log(SInfo, "Output mesh: %s, %s", elem.value(K_PATH, "").c_str(), 
 				GetVertexDetails(elem[K_VERTEX_ELEMENT]).Name.c_str());
+		}
+
+		for (auto& elem : j[K_ANIMATION])
+		{
+			auto path = elem[K_PATH];
+			Log(SInfo, "Output anim: %s", elem.value(K_PATH, "").c_str());
 		}
 
 		if (clearScene)
@@ -303,7 +309,7 @@ void FFBXEditor::LoadFBX(
 
 		FJson modelJson;
 		modelJson["type"] = (uint32)EPrimitiveType::PrimitiveFile;
-		modelJson["primitive"] = j[0][K_PATH];
+		modelJson["primitive"] = j[K_MESH][0][K_PATH];
 		modelJson["material_prefix"] = "default";
 
 		auto model = new FSkeletalModel;

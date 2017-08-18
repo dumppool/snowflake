@@ -19,51 +19,39 @@ namespace LostCore
 		FFloat4x4 World;
 		std::vector<FSkelPoseTree> Children;
 
+		string CurrAnimName;
+		float CurrKeyTime;
+
 	public:
 		FSkelPoseTree();
-		FSkelPoseTree(const FBone & skelRoot);
+		explicit FSkelPoseTree(const FBone & skelRoot);
 
 		void LoadSkeleton(const FBone& skelRoot);
 		void LoadLocalPose(const FPoseMap& pose);
 
-		void UpdateWorldMatrix(const FFloat4x4& parentWorld);
+		void UpdateWorldMatrix(const FFloat4x4& parentWorld, float sec);
 		void GetWorldPose(FPoseMap& pose);
 
-		//friend FBinaryIO& operator<<(FBinaryIO& stream, const FSkelPoseData& data);
-		//friend FBinaryIO& operator>>(FBinaryIO& stream, FSkelPoseData& data);
+		void SetAnimation(const string& animName);
 	};
 
-	//static FBinaryIO& operator<<(FBinaryIO& stream, const FSkelPoseData& data)
-	//{
-	//	stream << data.Name << data.Local << data.World << data.Children.size();
-	//	for (const auto& child : data.Children)
-	//	{
-	//		stream << child.Data;
-	//	}
-	//}
+	class FAnimationLibrary
+	{
+		map<string, FAnimData> Data;
 
-	//static FBinaryIO& operator>>(FBinaryIO& stream, FSkelPoseData& data)
-	//{
-	//	uint32 childNum;
-	//	stream >> data.Name >> data.Local >> data.World >> childNum;
-	//	for (uint32 i = 0; i < childNum; ++i)
-	//	{
-	//		data.Children.push_back(FSkelPoseData());
-	//		stream >> *(data.Children.end() - 1);
-	//	}
-	//}
+	public:
 
-	//class FAnimation
-	//{
-	//public:
-	//	FAnimation();
-	//	~FAnimation();
+		static FAnimationLibrary* Get()
+		{
+			static FAnimationLibrary Inst;
+			return &Inst;
+		}
 
-	//	void LoadAnimation(const FJson& animJson);
+		FAnimationLibrary();
+		~FAnimationLibrary();
 
-	//	void Tick(float sec);
-
-	//	void GetPose(FPose& pose);
-	//};
+		void AddAnimation(const FAnimData& anim);
+		bool GetMatrix(FFloat4x4& outMatrix, float keyTime, const string& animName, const string& skeletonName) const;
+	};
 }
 

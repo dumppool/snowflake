@@ -85,6 +85,8 @@ namespace LostCore
 #include "File/json.hpp"
 using FJson = nlohmann::json;
 
+#include "Serialize/Serialization.h"
+
 #include "GlobalHandler.h"
 
 #include "Math/Vector2.h"
@@ -95,13 +97,12 @@ using FJson = nlohmann::json;
 #include "Math/Transform2.h"
 #include "Math/AABB.h"
 #include "Math/Color.h"
+#include "Math/Curves.h"
 
 #include "File/DirectoryHelper.h"
 
-#include "Serialize/Serialization.h"
+
 #include "Serialize/StructSerialize.h"
-//#include "Serialize/MeshData.h"
-//#include "Serialize/MeshData2.h"
 
 #include "ExportTest.h"
 #include "BasicCamera.h"

@@ -277,7 +277,7 @@ void LostCore::FSkeletalModel::Fini()
 
 void LostCore::FSkeletalModel::Tick(float sec)
 {
-	Root.UpdateWorldMatrix(Matrices.World);
+	Root.UpdateWorldMatrix(Matrices.World, sec);
 
 	// 是时候分开Skeleton和非Skeleton了
 	LostCore::FPoseMap pose;

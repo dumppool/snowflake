@@ -73,8 +73,7 @@ int main(int argc, char** argv)
 
 	if (!FConvertOptions::Get()->InputPath.empty() && !FConvertOptions::Get()->OutputPath.empty())
 	{
-		//DumpSceneMeshes(FConvertOptions::Get()->InputPath, FConvertOptions::Get()->OutputPath, true, exportAnim);
-		ImportSceneMeshes2();
+		Import();
 	}
 	else
 	{

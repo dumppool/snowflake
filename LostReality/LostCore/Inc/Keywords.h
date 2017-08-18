@@ -65,6 +65,7 @@
 #define K_EDGE_VISIBILITY				"EdgeVisibility"
 #define K_MATRIX						"Matrix"
 #define K_TRANSFORM						"Transform"
+
 #define K_ROTATE_X						"RX"
 #define K_ROTATE_Y						"RY"
 #define K_ROTATE_Z						"RZ"
@@ -164,78 +165,80 @@
 #define K_IMP_TANGENT					"ImportTangent"
 #define K_FORCE_GEN_TANGENT				"ForceGenerateTangent"
 #define K_GEN_TANGENT_IF_NOT_FOUND		"GenrateTangentIfNotFound"
+
 #define K_PRIMITIVE_EXT					".iv"
+#define K_ANIMATION_EXT					".anim"
 
 #define FLAG_UNKNOWN					0x0badfffa
 
-enum class EThumbnailFormat
-{
-	RGB,
-	RGBA
-};
-
-enum class EMarkerType
-{
-	Standard,
-	Optical,
-	IK_Effector,
-	FK_Effector,
-};
-
-enum class EMarkerLook
-{
-	Cube,
-	Sphere,
-	HardCross,
-	LightCross,
-};
-
-enum class EMappingMode
-{
-	None,
-	ByControlPoint,
-	ByPolygonVertex,
-	ByPolygon,
-	ByEdge,
-	AllSame,
-};
-
-enum class EReferenceMode
-{
-	Direct,
-	Index,
-	IndexToDirect
-};
-
-enum class EInterpolation
-{
-	Constant,
-	Linear,
-	Cubic,
-};
-
-enum class EConstantMode
-{
-	Standard,
-	Next,
-};
-
-enum class ECubicMode
-{
-	Auto,
-	AutoBreak,
-	Tcb,
-	User,
-	Break,
-	UserBreak,
-};
-
-enum ETangentWVMode
-{
-	None,
-	Right,
-	NextLeft,
-};
+//enum class EThumbnailFormat
+//{
+//	RGB,
+//	RGBA
+//};
+//
+//enum class EMarkerType
+//{
+//	Standard,
+//	Optical,
+//	IK_Effector,
+//	FK_Effector,
+//};
+//
+//enum class EMarkerLook
+//{
+//	Cube,
+//	Sphere,
+//	HardCross,
+//	LightCross,
+//};
+//
+//enum class EMappingMode
+//{
+//	None,
+//	ByControlPoint,
+//	ByPolygonVertex,
+//	ByPolygon,
+//	ByEdge,
+//	AllSame,
+//};
+//
+//enum class EReferenceMode
+//{
+//	Direct,
+//	Index,
+//	IndexToDirect
+//};
+//
+//enum class EInterpolation
+//{
+//	Constant,
+//	Linear,
+//	Cubic,
+//};
+//
+//enum class EConstantMode
+//{
+//	Standard,
+//	Next,
+//};
+//
+//enum class ECubicMode
+//{
+//	Auto,
+//	AutoBreak,
+//	Tcb,
+//	User,
+//	Break,
+//	UserBreak,
+//};
+//
+//enum ETangentWVMode
+//{
+//	None,
+//	Right,
+//	NextLeft,
+//};
 
 enum EVertexElement
 {

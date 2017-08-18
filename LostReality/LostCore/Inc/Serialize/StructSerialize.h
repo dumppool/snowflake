@@ -107,7 +107,6 @@ namespace LostCore
 	typedef map<string, FFloat4x4> FPoseMap;
 	typedef TTreeNode<FMatrixNode> FPoseTree;
 
-
 	struct FMeshData
 	{
 		string Name;
@@ -207,7 +206,6 @@ namespace LostCore
 		void BuildGPUData(uint32 flags);
 	};
 
-	template<>
 	FORCEINLINE FBinaryIO& operator<<(FBinaryIO& stream, const FMeshData& data)
 	{
 		uint32 sz = 0;
@@ -230,7 +228,6 @@ namespace LostCore
 		return stream;
 	}
 
-	template<>
 	FORCEINLINE FBinaryIO& operator >> (FBinaryIO& stream, FMeshData& data)
 	{
 		stream >> data.Name >> data.IndexCount >> data.VertexCount
@@ -249,6 +246,30 @@ namespace LostCore
 		stream >> data.VertexMagic;
 		assert(data.VertexMagic == MAGIC_VERTEX && "vertex data is corrupt");
 
+		return stream;
+	}
+
+	struct FAnimData
+	{
+		// Animation name.
+		string Name;
+
+		// <SkeletonName, <ComponentName, Curve>> map.
+		map<string, map<string, FRealCurve>> CurveMap;
+
+		string Save(const string& outputDir) const;
+		void Load(const string& inputDir);
+	};
+
+	FORCEINLINE FBinaryIO& operator<<(FBinaryIO& stream, const FAnimData& data)
+	{
+		stream << data.Name << data.CurveMap;
+		return stream;
+	}
+
+	FORCEINLINE FBinaryIO& operator >> (FBinaryIO& stream, FAnimData& data)
+	{
+		stream >> data.Name >> data.CurveMap;
 		return stream;
 	}
 }
@@ -320,6 +341,7 @@ FORCEINLINE string LostCore::FMeshData::Save(const string & outputDir) const
 	}
 
 	auto outputFile = outputDir;
+	LostCore::ReplaceChar(outputFile, "/", "\\");
 	if (LostCore::IsDirectory(outputFile))
 	{
 		outputFile = outputDir + Name + K_PRIMITIVE_EXT;
@@ -434,4 +456,44 @@ FORCEINLINE void LostCore::FMeshData::BuildGPUData(uint32 flags)
 
 	Vertices.resize(stream.RemainingSize());
 	Deserialize(stream, &Vertices[0], stream.RemainingSize());
+}
+
+FORCEINLINE string LostCore::FAnimData::Save(const string& outputDir) const
+{
+	if (outputDir.empty())
+	{
+		return "";
+	}
+
+	string outputFile = outputDir;
+	LostCore::ReplaceChar(outputFile, "/", "\\");
+	if (LostCore::IsDirectory(outputFile))
+	{
+		outputFile += Name + K_ANIMATION_EXT;
+	}
+
+	FBinaryIO stream;
+	stream << *this;
+	stream.WriteToFile(outputFile);
+
+	LVMSG("FAnimData::Save", "Animation is saved: %s, %.1f KB, %s",
+		Name.c_str(), stream.RemainingSize() / 1000.0f, outputFile.c_str());
+
+	return outputFile;
+}
+
+FORCEINLINE void LostCore::FAnimData::Load(const string& inputDir)
+{
+	if (inputDir.empty())
+	{
+		return;
+	}
+
+	FBinaryIO stream;
+	stream.ReadFromFile(inputDir);
+	auto sz = stream.RemainingSize();
+	stream >> *this;
+
+	LVMSG("FAnimData::Load", "Animation is loaded: %s, %.1f KB, %s",
+		Name.c_str(), sz / 1000.0f, inputDir.c_str());
 }

@@ -78,6 +78,22 @@ struct FTempMesh
 	void GenerateNormal(const vector<FFloat4x4>& localToBones, bool generateTangent = false);
 };
 
+struct FTempAnimStack
+{
+	FbxScene* Scene;
+	FbxAnimStack* AnimStack;
+	FAnimData AnimData;
+
+	FTempAnimStack(FbxScene* scene, FbxAnimStack* stack);
+	~FTempAnimStack();
+
+	void Extract();
+
+	void ParseLayer(FbxAnimLayer* layer, FbxNode* node);
+	void ParseLayerInternal(FbxAnimLayer* layer, FbxNode* node);
+	void ParseCurve(FRealCurveAlias& output, FbxAnimCurve* curve);
+};
+
 class FFbxImporter2
 {
 public:
@@ -90,42 +106,6 @@ public:
 public:
 	FFbxImporter2();
 
-	//void DumpNodeRecursively(std::function<FJson&()> outputGetter, FbxNode* node)
-	//{
-	//	FJson& output = outputGetter();
-	//	auto attr = node->GetNodeAttribute();
-	//	auto mesh = node->GetMesh();
-	//	output[K_NAME] = node->GetName();
-	//	output[K_TYPENAME] = node->GetTypeName();
-
-	//	output[K_ATTRIBUTE_TYPE] = "null_a";
-	//	if (attr != nullptr)
-	//	{
-	//		auto attrType = attr->GetAttributeType();
-	//		output[K_ATTRIBUTE_TYPE] = SAttributeTypeString[(int)attrType];
-	//	}
-
-	//	if (mesh != nullptr)
-	//	{
-	//		auto deformerCount = mesh->GetDeformerCount();
-	//		output[K_DEFORMER_COUNT] = deformerCount;
-	//		if (deformerCount > 0)
-	//		{
-	//			auto deformer = mesh->GetDeformer(0);
-	//			output[K_DEFORMER_NAME] = deformer->GetName();
-	//			output[K_DEFORMER_TYPE] = deformer->GetTypeName();
-	//		}
-	//	}
-
-	//	for (int i = 0; i < node->GetChildCount(); ++i)
-	//	{
-	//		DumpNodeRecursively([&]()->FJson& {output[K_CHILDREN].push_back(FJson()); return *(output[K_CHILDREN].end() - 1); }, node->GetChild(i));
-	//	}
-	//}
-
-	// Dump，暂时不考虑
-	bool DumpSceneMeshes(const string& importSrc, const string& convertDst, bool outputBinary, bool exportAnimation);
-
 	// 解析scene root节点，开始导入数据
 	bool ImportSceneMeshes();
 
@@ -135,6 +115,9 @@ public:
 	// Import mesh
 	void ImportMesh(FbxMesh* mesh);
 
+	// Import anim
+	void ImportAnim();
+
 private:
 	FbxManager*			SdkManager;
 	FbxScene*			SdkScene;
@@ -142,20 +125,16 @@ private:
 	string				DestDirectory;
 
 	vector<FTempMesh>	TempMeshArray;
+	vector<FTempAnimStack> TempAnimArray;
 };
 
-bool Importer::DumpSceneMeshes(const string& importSrc, const string& convertDst, bool outputBinary, bool exportAnimation)
-{
-	return FFbxImporter2::Get()->DumpSceneMeshes(importSrc, convertDst, outputBinary, exportAnimation);
-}
-
-bool Importer::ImportSceneMeshes2()
+bool Importer::Import()
 {
 	return FFbxImporter2::Get()->ImportSceneMeshes();
 }
 
 
-FORCEINLINE FTempMesh::FTempMesh(FbxScene * scene, FbxMesh * mesh)
+FTempMesh::FTempMesh(FbxScene * scene, FbxMesh * mesh)
 	: Scene(scene)
 	, Mesh(mesh)
 	, bIsSkeletal(false)
@@ -170,32 +149,32 @@ FORCEINLINE FTempMesh::FTempMesh(FbxScene * scene, FbxMesh * mesh)
 	Extract();
 }
 
-FORCEINLINE bool FTempMesh::IsValid() const
+bool FTempMesh::IsValid() const
 {
 	return Mesh != nullptr;
 }
 
-FORCEINLINE bool FTempMesh::IsSkeletal() const
+bool FTempMesh::IsSkeletal() const
 {
 	return IsValid() && Mesh->GetDeformerCount(FbxDeformer::eSkin) > 0;
 }
 
-FORCEINLINE bool FTempMesh::HasElementNormal() const
+bool FTempMesh::HasElementNormal() const
 {
 	return (MeshData.VertexFlags & EVertexElement::Normal) == EVertexElement::Normal;
 }
 
-FORCEINLINE bool FTempMesh::HasElementTangent() const
+bool FTempMesh::HasElementTangent() const
 {
 	return (MeshData.VertexFlags & EVertexElement::Tangent) == EVertexElement::Tangent;
 }
 
-FORCEINLINE bool FTempMesh::HasElementVertexColor() const
+bool FTempMesh::HasElementVertexColor() const
 {
 	return (MeshData.VertexFlags & EVertexElement::VertexColor) == EVertexElement::VertexColor;
 }
 
-FORCEINLINE void FTempMesh::Extract()
+void FTempMesh::Extract()
 {
 	const char* head = "Extract";
 
@@ -595,7 +574,7 @@ FORCEINLINE void FTempMesh::Extract()
 	}
 }
 
-FORCEINLINE void FTempMesh::ProcessBlendWeight()
+void FTempMesh::ProcessBlendWeight()
 {
 	for (uint32 i = 0; i < MeshData.BlendWeights.size(); ++i)
 	{
@@ -630,7 +609,7 @@ FORCEINLINE void FTempMesh::ProcessBlendWeight()
 	}
 }
 
-FORCEINLINE void FTempMesh::ProcessSkeletalVertex(vector<FFloat4x4>& vecLocalToBone)
+void FTempMesh::ProcessSkeletalVertex(vector<FFloat4x4>& vecLocalToBone)
 {
 	if (ControlPoints.size() == 0)
 	{
@@ -853,22 +832,14 @@ void FTempMesh::GenerateNormal(const vector<FFloat4x4>& vecLocalToBone, bool gen
 	}
 }
 
-
-FORCEINLINE FFbxImporter2::FFbxImporter2()
+FFbxImporter2::FFbxImporter2()
 	: SdkManager(nullptr)
 	, SdkScene(nullptr)
 {
 	InitializeSdkObjects(SdkManager, SdkScene);
 }
 
-FORCEINLINE bool FFbxImporter2::DumpSceneMeshes(const string & importSrc, const string & convertDst, bool outputBinary, bool exportAnimation)
-{
-	//bool result = LoadScene(SdkManager, SdkScene, importSrc.c_str());
-
-	return true;
-}
-
-FORCEINLINE bool FFbxImporter2::ImportSceneMeshes()
+bool FFbxImporter2::ImportSceneMeshes()
 {
 	const char* head = "ImportSceneMeshes";
 	bool result = LoadScene(SdkManager, SdkScene, FConvertOptions::Get()->InputPath.c_str());
@@ -899,19 +870,37 @@ FORCEINLINE bool FFbxImporter2::ImportSceneMeshes()
 	}
 	/*************************************************************/
 
+	//DisplayHierarchy(SdkScene);
+	//DisplayAnimation(SdkScene);
+
 	auto formatDst = FConvertOptions::Get()->OutputPath;
 	ReplaceChar(formatDst, "/", "\\");
 	GetDirectory(DestDirectory, formatDst);
 
 	ImportNode(SdkScene->GetRootNode());
 
+	if (FConvertOptions::Get()->bImportAnimation)
+	{
+		ImportAnim();
+	}
+
 	FJson j;
+	FJson& meshSection = j[K_MESH];
+	FJson& animSection = j[K_ANIMATION];
+
 	for (const auto& mesh : TempMeshArray)
 	{
-		j.push_back(FJson());
-		FJson& meshJson = *(j.end() - 1);
+		meshSection.push_back(FJson());
+		FJson& meshJson = *(meshSection.end() - 1);
 		meshJson[K_PATH] = mesh.MeshData.Save(DestDirectory);
 		meshJson[K_VERTEX_ELEMENT] = mesh.MeshData.VertexFlags;
+	}
+
+	for (const auto& anim : TempAnimArray)
+	{
+		animSection.push_back(FJson());
+		FJson& animJson = *(animSection.end() - 1);
+		animJson[K_PATH] = anim.AnimData.Save(DestDirectory);
 	}
 
 	ofstream stream(FConvertOptions::Get()->OutputPath);
@@ -921,7 +910,7 @@ FORCEINLINE bool FFbxImporter2::ImportSceneMeshes()
 	return true;
 }
 
-FORCEINLINE void FFbxImporter2::ImportNode(FbxNode * node)
+void FFbxImporter2::ImportNode(FbxNode * node)
 {
 	const char* head = "ImportNode";
 
@@ -965,7 +954,7 @@ FORCEINLINE void FFbxImporter2::ImportNode(FbxNode * node)
 	}
 }
 
-FORCEINLINE void FFbxImporter2::ImportMesh(FbxMesh * mesh)
+void FFbxImporter2::ImportMesh(FbxMesh * mesh)
 {
 	if (mesh == nullptr)
 	{
@@ -973,4 +962,164 @@ FORCEINLINE void FFbxImporter2::ImportMesh(FbxMesh * mesh)
 	}
 
 	TempMeshArray.push_back(FTempMesh(SdkScene, mesh));
+}
+
+void FFbxImporter2::ImportAnim()
+{
+	auto numAnimStacks = SdkScene->GetSrcObjectCount<FbxAnimStack>();
+	for (uint32 i = 0; i < numAnimStacks; ++i)
+	{
+		FTempAnimStack stack(SdkScene, SdkScene->GetSrcObject<FbxAnimStack>(i));
+		TempAnimArray.push_back(stack);
+	}
+}
+
+FTempAnimStack::FTempAnimStack(FbxScene * scene, FbxAnimStack * stack)
+	: Scene(scene), AnimStack(stack)
+{
+	Extract();
+}
+
+FTempAnimStack::~FTempAnimStack()
+{
+}
+
+void FTempAnimStack::Extract()
+{
+	assert(Scene != nullptr && AnimStack != nullptr);
+
+	AnimData.Name = AnimStack->GetName();
+	auto numAnimLayers = AnimStack->GetMemberCount<FbxAnimLayer>();
+	for (uint32 i = 0; i < numAnimLayers; ++i)
+	{
+		ParseLayer(AnimStack->GetMember<FbxAnimLayer>(i), Scene->GetRootNode());
+	}
+}
+
+void FTempAnimStack::ParseLayer(FbxAnimLayer * layer, FbxNode * node)
+{
+	ParseLayerInternal(layer, node);
+	auto numChildren = node->GetChildCount();
+	for (uint32 i = 0; i < numChildren; ++i)
+	{
+		ParseLayer(layer, node->GetChild(i));
+	}
+}
+
+void FTempAnimStack::ParseLayerInternal(FbxAnimLayer * layer, FbxNode * node)
+{
+	FbxAnimCurve* curve = nullptr;
+	string nodeName = node->GetName();
+	AnimData.CurveMap[nodeName] = map<string, FRealCurveAlias>();
+
+	curve = node->LclRotation.GetCurve(layer, FBXSDK_CURVENODE_COMPONENT_X);
+	if (curve != nullptr)
+	{
+		string compName(K_ROTATE_X);
+		AnimData.CurveMap[nodeName][compName] = FRealCurveAlias();
+		ParseCurve(AnimData.CurveMap[nodeName][compName], curve);
+	}
+
+	curve = node->LclRotation.GetCurve(layer, FBXSDK_CURVENODE_COMPONENT_Y);
+	if (curve != nullptr)
+	{
+		string compName(K_ROTATE_Y);
+		AnimData.CurveMap[nodeName][compName] = FRealCurveAlias();
+		ParseCurve(AnimData.CurveMap[nodeName][compName], curve);
+	}
+
+	curve = node->LclRotation.GetCurve(layer, FBXSDK_CURVENODE_COMPONENT_Z);
+	if (curve != nullptr)
+	{
+		string compName(K_ROTATE_Z);
+		AnimData.CurveMap[nodeName][compName] = FRealCurveAlias();
+		ParseCurve(AnimData.CurveMap[nodeName][compName], curve);
+	}
+
+	curve = node->LclTranslation.GetCurve(layer, FBXSDK_CURVENODE_COMPONENT_X);
+	if (curve != nullptr)
+	{
+		string compName(K_TRANSLATE_X);
+		AnimData.CurveMap[nodeName][compName] = FRealCurveAlias();
+		ParseCurve(AnimData.CurveMap[nodeName][compName], curve);
+	}
+
+	curve = node->LclTranslation.GetCurve(layer, FBXSDK_CURVENODE_COMPONENT_Y);
+	if (curve != nullptr)
+	{
+		string compName(K_TRANSLATE_Y);
+		AnimData.CurveMap[nodeName][compName] = FRealCurveAlias();
+		ParseCurve(AnimData.CurveMap[nodeName][compName], curve);
+	}
+
+	curve = node->LclTranslation.GetCurve(layer, FBXSDK_CURVENODE_COMPONENT_Z);
+	if (curve != nullptr)
+	{
+		string compName(K_TRANSLATE_Z);
+		AnimData.CurveMap[nodeName][compName] = FRealCurveAlias();
+		ParseCurve(AnimData.CurveMap[nodeName][compName], curve);
+	}
+
+	curve = node->LclScaling.GetCurve(layer, FBXSDK_CURVENODE_COMPONENT_X);
+	if (curve != nullptr)
+	{
+		string compName(K_SCALE_X);
+		AnimData.CurveMap[nodeName][compName] = FRealCurveAlias();
+		ParseCurve(AnimData.CurveMap[nodeName][compName], curve);
+	}
+
+	curve = node->LclScaling.GetCurve(layer, FBXSDK_CURVENODE_COMPONENT_Y);
+	if (curve != nullptr)
+	{
+		string compName(K_SCALE_Y);
+		AnimData.CurveMap[nodeName][compName] = FRealCurveAlias();
+		ParseCurve(AnimData.CurveMap[nodeName][compName], curve);
+	}
+
+	curve = node->LclScaling.GetCurve(layer, FBXSDK_CURVENODE_COMPONENT_Z);
+	if (curve != nullptr)
+	{
+		string compName(K_SCALE_Z);
+		AnimData.CurveMap[nodeName][compName] = FRealCurveAlias();
+		ParseCurve(AnimData.CurveMap[nodeName][compName], curve);
+	}
+}
+
+void FTempAnimStack::ParseCurve(FRealCurveAlias & output, FbxAnimCurve * curve)
+{
+	uint32 numKeys = curve->KeyGetCount();
+	if (numKeys == 0)
+	{
+		return;
+	}
+
+	for (uint32 i = 0; i < numKeys; ++i)
+	{
+		auto keyTime = curve->KeyGetTime(i).GetSecondDouble();
+		auto value = curve->KeyGetValue(i);
+		output.AddKey(keyTime, value);
+	}
+
+	auto curveWrapMode = FRealCurveAlias::EWrap::Clamp;
+	auto curveInterpolationMode = FRealCurveAlias::EInterpolation::Constant;
+	auto interpolation = curve->KeyGetInterpolation(0);
+	if ((interpolation & FbxAnimCurveDef::eInterpolationConstant) == FbxAnimCurveDef::eInterpolationConstant)
+	{
+		curveInterpolationMode = FRealCurveAlias::EInterpolation::Constant;
+	}
+	else if ((interpolation & FbxAnimCurveDef::eInterpolationCubic) == FbxAnimCurveDef::eInterpolationCubic)
+	{
+		curveInterpolationMode = FRealCurveAlias::EInterpolation::CatmullRom;
+	}
+	else if ((interpolation & FbxAnimCurveDef::eInterpolationLinear) == FbxAnimCurveDef::eInterpolationLinear)
+	{
+		curveInterpolationMode = FRealCurveAlias::EInterpolation::Linear;
+	}
+
+	if (curve->KeyGetValue(0) == curve->KeyGetValue(numKeys - 1))
+	{
+		curveWrapMode = FRealCurveAlias::EWrap::Wrap;
+	}
+
+	output.SetMode(curveWrapMode, curveInterpolationMode);
 }

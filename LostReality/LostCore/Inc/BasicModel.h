@@ -76,6 +76,7 @@ namespace LostCore
 
 	public:
 		void Fini();
+		//void 
 
 	protected:
 

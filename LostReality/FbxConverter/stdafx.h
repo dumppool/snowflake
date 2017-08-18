@@ -34,6 +34,8 @@ using namespace std;
 #include "File/json.hpp"
 using FJson = nlohmann::json;
 
+#include "Serialize/Serialization.h"
+
 #include "File/DirectoryHelper.h"
 
 #include "Math/Vector2.h"
@@ -43,14 +45,15 @@ using FJson = nlohmann::json;
 #include "Math/Matrix.h"
 #include "Math/Transform2.h"
 #include "Math/Color.h"
+#include "Math/Curves.h"
 
-#include "Serialize/Serialization.h"
 #include "Serialize/StructSerialize.h"
 
 using FPoseTreeAlias = LostCore::FPoseTree;
 using FPoseMapAlias = LostCore::FPoseMap;
 using FSkeletonTreeAlias = LostCore::FBone;
 using FMeshDataAlias = LostCore::FMeshData;
+using FRealCurveAlias = LostCore::FRealCurve;
 
 // sdk includes
 #include <fbxsdk.h>

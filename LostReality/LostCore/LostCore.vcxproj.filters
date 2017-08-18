@@ -118,6 +118,9 @@
     <ClInclude Include="Inc\GlobalHandler.h">
       <Filter>Inc</Filter>
     </ClInclude>
+    <ClInclude Include="Inc\Math\Curves.h">
+      <Filter>Inc\Math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />

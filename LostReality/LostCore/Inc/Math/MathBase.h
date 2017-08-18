@@ -155,4 +155,22 @@ namespace LostCore
 	{
 		return true;
 	}
+
+	template <typename T>
+	FORCEINLINE T InCircle(T value, T circle)
+	{
+		T result = value - ((int)(value / circle)) * circle;
+		if (value < 0)
+		{
+			result += circle;
+		}
+
+		return result;
+	}
+	
+	template <typename T>
+	FORCEINLINE T InRange(T value, T rangeMin, T rangeMax)
+	{
+		return InCircle(value - rangeMin, rangeMax - rangeMin) + rangeMin;
+	}
 }
