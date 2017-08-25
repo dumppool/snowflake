@@ -76,7 +76,7 @@ namespace LostCore
 
 	public:
 		void Fini();
-		//void 
+		void PlayAnimation(const string& animName);
 
 	protected:
 
@@ -88,11 +88,14 @@ namespace LostCore
 
 		IPrimitiveGroup* Primitive;
 		IMaterial* Material;
-		FSkelPoseTree Root;
+		FSkeletonTree Root;
 		FMeshData MeshData;
 		FAABoundingBox BoundingBox;
 		uint32 VertexFlags;
 		FAxisTool AxisRenderer;
 		FSegmentTool SegmentRenderer;
+		FSegmentTool SkeletonRenderer;
+
+		FSkeletonTree Root2;
 	};
 }

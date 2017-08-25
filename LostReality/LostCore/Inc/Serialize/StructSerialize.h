@@ -104,12 +104,27 @@ namespace LostCore
 		FFloat4x4 Matrix;
 	};
 
+	FORCEINLINE FBinaryIO& operator<<(FBinaryIO& stream, const FMatrixNode& data)
+	{
+		stream << data.Name << data.Matrix;
+		return stream;
+	}
+
+	FORCEINLINE FBinaryIO& operator >> (FBinaryIO& stream, FMatrixNode& data)
+	{
+		stream >> data.Name >> data.Matrix;
+		return stream;
+	}
+
 	typedef map<string, FFloat4x4> FPoseMap;
 	typedef TTreeNode<FMatrixNode> FPoseTree;
 
 	struct FMeshData
 	{
 		string Name;
+
+		// 测试
+		FPoseTree PoseT;
 
 		// 顶点索引数量
 		uint32 IndexCount;
@@ -223,6 +238,7 @@ namespace LostCore
 			<< data.Triangles	// TODO: Triangles的序列化/反序列化应该根据实际数据而定
 			;
 
+		stream << data.PoseT;
 		stream << (uint32)MAGIC_VERTEX;
 
 		return stream;
@@ -243,6 +259,7 @@ namespace LostCore
 			>> data.Triangles
 			;
 
+		stream >> data.PoseT;
 		stream >> data.VertexMagic;
 		assert(data.VertexMagic == MAGIC_VERTEX && "vertex data is corrupt");
 

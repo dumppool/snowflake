@@ -17,6 +17,8 @@ namespace LostCore
 	class TVec3NonVectorized
 	{
 	public:
+		typedef T FT;
+
 		union
 		{
 			T X;

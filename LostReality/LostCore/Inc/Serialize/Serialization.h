@@ -245,7 +245,7 @@ namespace LostCore
 		stream << sz;
 		if (sz > 0)
 		{
-			std::for_each(data.begin(), data.end(), [](T& elem) {stream << elem; });
+			std::for_each(data.begin(), data.end(), [&](const T& elem) {stream << elem; });
 		}
 
 		return stream;

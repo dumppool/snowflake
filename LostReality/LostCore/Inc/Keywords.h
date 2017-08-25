@@ -169,6 +169,9 @@
 #define K_PRIMITIVE_EXT					".iv"
 #define K_ANIMATION_EXT					".anim"
 
+#define K_DEPTH_STENCIL_Z_WRITE			"Z_ENABLE_WRITE"
+#define K_DEPTH_STENCIL_ALWAYS			"ALWAYS"
+
 #define FLAG_UNKNOWN					0x0badfffa
 
 //enum class EThumbnailFormat

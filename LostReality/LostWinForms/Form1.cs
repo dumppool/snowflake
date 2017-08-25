@@ -55,6 +55,18 @@ namespace LostWinForms
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public static extern void RotateCamera(float p, float y, float r);
 
+        [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void SetAnimateRate(float rate);
+
+        [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void SetDisplaySkeleton(uint flag);
+
+        public delegate void PFN_AnimUpdate(uint flag, StringBuilder anim);
+        [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void SetAnimUpdater(PFN_AnimUpdate animUpdate);
+
+        [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void PlayAnimation(String anim);
 
         private String[] LevelString = { "Info:                ", "Warning:             ", "Error:               " };
         private const String UserDataEncoding = "GB2312";
@@ -75,6 +87,7 @@ namespace LostWinForms
         private Point LastMouseLocation;
 
         private PFN_Logger DelegateLogger;
+        private PFN_AnimUpdate DelegateAnimUpdate;
 
         private bool bMouseDownPanel1 = false;
         private float MoveCameraStep = 0.10f;
@@ -97,12 +110,49 @@ namespace LostWinForms
             ViewPanelToolStripMenuItem.Click += ViewPanelToolStripMenuItem_Click;
             ViewPanelOk.Click += ViewPanelOk_Click;
             SegLengthSlider.Scroll += SegLengthSlider_Scroll;
+            AnimateRateSlider.Scroll += AnimateRateSlider_Scroll;
+
+            DelegateAnimUpdate = new PFN_AnimUpdate(OnAnimUpdate);
+            SetAnimUpdater(DelegateAnimUpdate);
+            listBox1.SelectedIndexChanged += ListBox1_SelectedIndexChanged;
+        }
+
+        private void ListBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            //Console.WriteLine(listBox1.Items[listBox1.SelectedIndex].ToString());
+            PlayAnimation(listBox1.Items[listBox1.SelectedIndex].ToString());
+        }
+
+        private void OnAnimUpdate(uint flag, StringBuilder anim)
+        {
+            listBox1.Invoke(new PFN_AnimUpdate(AnimUpdate), flag, anim);
+        }
+
+        private void AnimUpdate(uint flag, StringBuilder anim)
+        {
+            if ((flag & (1<<0)) == (1<<0))
+            {
+                // clear
+                listBox1.Items.Clear();
+            }
+            else if ((flag & (1<<1)) == (1<<1))
+            {
+                // add
+                listBox1.Items.Add(anim);
+            }
+        }
+
+        private void AnimateRateSlider_Scroll(object sender, EventArgs e)
+        {
+            float rate = AnimateRateSlider.Value * 0.003f;
+            AnimateRateValue.Text = rate.ToString();
+            SetAnimateRate(rate);
         }
 
         private void Panel1_MouseWheel(object sender, MouseEventArgs e)
         {
             MoveCamera(0.0f, 0.0f, e.Delta * MoveCameraStep);
-            Console.WriteLine("{0}", e.Delta * MoveCameraStep);
+            //Console.WriteLine("{0}", e.Delta * MoveCameraStep);
         }
 
         private void Panel1_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
@@ -170,13 +220,27 @@ namespace LostWinForms
         private void SegLengthSlider_Scroll(object sender, EventArgs e)
         {
             SegLengthValue.Text = SegLengthSlider.Value.ToString();
+            SetDisplayNormalLength(SegLengthSlider.Value);
         }
 
         private void ViewPanelOk_Click(object sender, EventArgs e)
         {
+            uint flag;
             SetDisplayNormal(DisplayNormal.Checked);
             SetDisplayTangent(DisplayTangent.Checked);
-            SetDisplayNormalLength(SegLengthSlider.Value);
+
+            flag = 0;
+            if (DisplaySkeleton.Checked)
+            {
+                flag |= (1 << 0);
+            }
+
+            if (DisplaySkeleton2.Checked)
+            {
+                flag |= (1 << 1);
+            }
+                
+            SetDisplaySkeleton(flag);
             ViewPanel.Visible = false;
         }
 

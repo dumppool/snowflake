@@ -9,7 +9,7 @@
 
 #pragma once
 
-//#include "Constant.h"
+#include "DepthStencilStateDef.h"
 
 namespace D3D11
 {
@@ -64,6 +64,7 @@ namespace D3D11
 		FMaterial()
 			: MaterialShader(nullptr)
 			, Param()
+			, DepthStencilName(K_DEPTH_STENCIL_Z_WRITE)
 		{}
 
 		virtual ~FMaterial() override
@@ -118,6 +119,8 @@ namespace D3D11
 					}
 				}
 			}
+
+			cxt->OMSetDepthStencilState(FDepthStencilStateMap::Get()->GetState(DepthStencilName), 0);
 		}
 
 		virtual bool Initialize(LostCore::IRenderContext * rc, const char* path) override
@@ -162,6 +165,11 @@ namespace D3D11
 			Param.UpdateBuffer(cxt, buf, sz);
 		}
 
+		virtual void SetDepthStencilState(const char* name) override
+		{
+			DepthStencilName = name;
+		}
+
 		virtual void UpdateTexture(LostCore::IRenderContext* rc, LostCore::ITexture* tex, int32 slot)
 		{
 			Textures[slot] = (FTexture2D*)tex;
@@ -177,5 +185,6 @@ namespace D3D11
 		FMaterialShader* MaterialShader;
 		T Param;
 		std::map<int32, FTexture2D*> Textures;
+		string DepthStencilName;
 	};
 }

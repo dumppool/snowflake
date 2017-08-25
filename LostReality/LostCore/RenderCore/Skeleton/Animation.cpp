@@ -12,16 +12,16 @@
 
 using namespace LostCore;
 
-LostCore::FSkelPoseTree::FSkelPoseTree()
+LostCore::FSkeletonTree::FSkeletonTree()
 {
 }
 
-LostCore::FSkelPoseTree::FSkelPoseTree(const FBone & skelRoot)
+LostCore::FSkeletonTree::FSkeletonTree(const FBone & skelRoot)
 {
 	LoadSkeleton(skelRoot);
 }
 
-void LostCore::FSkelPoseTree::LoadSkeleton(const FBone & skelRoot)
+void LostCore::FSkeletonTree::LoadSkeleton(const FBone & skelRoot)
 {
 	Name = skelRoot.Data;
 
@@ -31,16 +31,17 @@ void LostCore::FSkelPoseTree::LoadSkeleton(const FBone & skelRoot)
 	Children.clear();
 	for (auto it = skelRoot.Children.begin(); it != skelRoot.Children.end(); ++it)
 	{
-		Children.push_back(FSkelPoseTree(*it));
+		Children.push_back(FSkeletonTree(*it));
 	}
 }
 
-void LostCore::FSkelPoseTree::LoadLocalPose(const FPoseMap& pose)
+void LostCore::FSkeletonTree::LoadLocalPose(const FPoseMap& pose)
 {
 	auto it = pose.find(Name);
 	if (it != pose.end())
 	{
 		Local = it->second;
+		//Local.Invert();
 	}
 
 	for (auto& child : Children)
@@ -49,23 +50,35 @@ void LostCore::FSkelPoseTree::LoadLocalPose(const FPoseMap& pose)
 	}
 }
 
-void LostCore::FSkelPoseTree::UpdateWorldMatrix(const FFloat4x4 & parentWorld, float sec)
+void LostCore::FSkeletonTree::LoadSkeletonAndBindPose(const FPoseTree & pose)
 {
-	CurrKeyTime += sec;
-	bool useDefaultPose = true;
+	Name = pose.Data.Name;
+
+	CurrAnimName = "";
+	CurrKeyTime = 0.0f;
+	Local = pose.Data.Matrix;
+
+	Children.clear();
+	for (auto it = pose.Children.begin(); it != pose.Children.end(); ++it)
+	{
+		Children.push_back(FSkeletonTree());
+		Children.back().LoadSkeletonAndBindPose(*it);
+	}
+}
+
+void LostCore::FSkeletonTree::UpdateWorldMatrix(const FFloat4x4 & parentWorld, float sec)
+{
+	World = Local * parentWorld;
+
 	if (!CurrAnimName.empty())
 	{
+		CurrKeyTime += sec;
 		FFloat4x4 local;
 		if (FAnimationLibrary::Get()->GetMatrix(local, CurrKeyTime, CurrAnimName, Name))
 		{
-			useDefaultPose = false;
-			World = local * parentWorld;
+			FFloat4x4 invBP(Local);
+			World = local * World;
 		}
-	}
-
-	if (useDefaultPose)
-	{
-		World = Local * parentWorld;
 	}
 
 	for (auto& child : Children)
@@ -74,7 +87,7 @@ void LostCore::FSkelPoseTree::UpdateWorldMatrix(const FFloat4x4 & parentWorld, f
 	}
 }
 
-void LostCore::FSkelPoseTree::GetWorldPose(FPoseMap& pose)
+void LostCore::FSkeletonTree::GetWorldPose(FPoseMap& pose)
 {
 	pose[Name] = World;
 	for (auto& child : Children)
@@ -83,9 +96,27 @@ void LostCore::FSkelPoseTree::GetWorldPose(FPoseMap& pose)
 	}
 }
 
-void LostCore::FSkelPoseTree::SetAnimation(const string & animName)
+void LostCore::FSkeletonTree::SetAnimation(const string & animName)
 {
 	CurrAnimName = animName;
+
+	for (auto& child : Children)
+	{
+		child.SetAnimation(animName);
+	}
+}
+
+void LostCore::FSkeletonTree::GetSkeletonRenderData(map<string, pair<FFloat3, vector<FFloat3>>>& data)
+{
+	data[Name] = pair<FFloat3, vector<FFloat3>>();
+
+	pair<FFloat3, vector<FFloat3>>& selfData = data[Name];
+	selfData.first = World.GetOrigin();
+	for (auto& child : Children)
+	{
+		child.GetSkeletonRenderData(data);
+		selfData.second.push_back(child.World.GetOrigin());
+	}
 }
 
 LostCore::FAnimationLibrary::FAnimationLibrary()
@@ -94,6 +125,31 @@ LostCore::FAnimationLibrary::FAnimationLibrary()
 
 LostCore::FAnimationLibrary::~FAnimationLibrary()
 {
+}
+
+bool LostCore::FAnimationLibrary::Load(const string & path, string& animName)
+{
+	if (LoadRecord.find(path) != LoadRecord.end())
+	{
+		return false;
+	}
+
+	string animPath;
+	if (FDirectoryHelper::Get()->GetPrimitiveAbsolutePath(path, animPath))
+	{
+		FBinaryIO stream;
+		stream.ReadFromFile(animPath);
+
+		FAnimData anim;
+		stream >> anim;
+
+		LoadRecord.insert(animPath);
+		AddAnimation(anim);
+		animName = anim.Name;
+		return true;
+	}
+	
+	return false;
 }
 
 void LostCore::FAnimationLibrary::AddAnimation(const FAnimData & anim)
@@ -118,15 +174,63 @@ bool LostCore::FAnimationLibrary::GetMatrix(FFloat4x4 & outMatrix,
 		return false;
 	}
 
+	keyTime *= FGlobalHandler::Get()->GetAnimateRate();
+
 	auto& curves = (*it2).second;
-	auto rx = (*curves.find(K_ROTATE_X)).second.GetValue(keyTime);
-	auto ry = (*curves.find(K_ROTATE_Y)).second.GetValue(keyTime);
-	auto rz = (*curves.find(K_ROTATE_Z)).second.GetValue(keyTime);
-	auto tx = (*curves.find(K_TRANSLATE_X)).second.GetValue(keyTime);
-	auto ty = (*curves.find(K_TRANSLATE_Y)).second.GetValue(keyTime);
-	auto tz = (*curves.find(K_TRANSLATE_Z)).second.GetValue(keyTime);
-	auto sx = (*curves.find(K_SCALE_X)).second.GetValue(keyTime);
-	auto sy = (*curves.find(K_SCALE_Y)).second.GetValue(keyTime);
-	auto sz = (*curves.find(K_SCALE_Z)).second.GetValue(keyTime);
+	FFloat3::FT rx = 0.0;
+	if (curves.find(K_ROTATE_X) != curves.end())
+	{
+		rx = (*curves.find(K_ROTATE_X)).second.GetValue(keyTime);
+	}
+
+	FFloat3::FT ry = 0.0;
+	if (curves.find(K_ROTATE_Y) != curves.end())
+	{
+		ry = (*curves.find(K_ROTATE_Y)).second.GetValue(keyTime);
+	}
+
+	FFloat3::FT rz = 0.0;
+	if (curves.find(K_ROTATE_Z) != curves.end())
+	{
+		rz = (*curves.find(K_ROTATE_Z)).second.GetValue(keyTime);
+	}
+
+	FFloat3::FT tx = 0.0;
+	if (curves.find(K_TRANSLATE_X) != curves.end())
+	{
+		tx = (*curves.find(K_TRANSLATE_X)).second.GetValue(keyTime);
+	}
+
+	FFloat3::FT ty = 0.0;
+	if (curves.find(K_TRANSLATE_Y) != curves.end())
+	{
+		ty = (*curves.find(K_TRANSLATE_Y)).second.GetValue(keyTime);
+	}
+
+	FFloat3::FT tz = 0.0;
+	if (curves.find(K_TRANSLATE_Z) != curves.end())
+	{
+		tz = (*curves.find(K_TRANSLATE_Z)).second.GetValue(keyTime);
+	}
+
+	FFloat3::FT sx = 1.0;
+	if (curves.find(K_SCALE_X) != curves.end())
+	{
+		sx = (*curves.find(K_SCALE_X)).second.GetValue(keyTime);
+	}
+
+	FFloat3::FT sy = 1.0;
+	if (curves.find(K_SCALE_Y) != curves.end())
+	{
+		sy = (*curves.find(K_SCALE_Y)).second.GetValue(keyTime);
+	}
+
+	FFloat3::FT sz = 1.0;
+	if (curves.find(K_SCALE_Z) != curves.end())
+	{
+		sz = (*curves.find(K_SCALE_Z)).second.GetValue(keyTime);
+	}
+
 	outMatrix.SetRotateAndOrigin(FQuat().FromEuler(FFloat3(rx, ry, rz)), FFloat3(tx, ty, tz), FFloat3(sx, sy, sz));
+	return true;
 }

@@ -204,6 +204,26 @@ bool LostCore::FSkeletalModel::Config(IRenderContext * rc, const FJson & config)
 			return false;
 		}
 
+		string animListPath;
+		if (config.find("animation") != config.end())
+		{
+			auto itAnimList = config.find("animation").value();
+			for (auto it = itAnimList.begin(); it != itAnimList.end(); ++it)
+			{
+				string animPath;
+				if (FDirectoryHelper::Get()->GetPrimitiveAbsolutePath(it.value(), animPath))
+				{
+					FBinaryIO stream;
+					stream.ReadFromFile(animPath);
+					
+					FAnimData anim;
+					stream >> anim;
+
+					FAnimationLibrary::Get()->AddAnimation(anim);
+				}
+			}
+		}
+		
 		FBinaryIO stream;
 		stream.ReadFromFile(primitivePath.c_str());
 
@@ -214,7 +234,9 @@ bool LostCore::FSkeletalModel::Config(IRenderContext * rc, const FJson & config)
 
 		Root.LoadSkeleton(MeshData.Skeleton);
 
-		assert(MeshData.Poses.find(K_INITIAL_POSE) != MeshData.Poses.end());
+		Root2.LoadSkeletonAndBindPose(MeshData.PoseT);
+
+		//assert(MeshData.Poses.find(K_INITIAL_POSE) != MeshData.Poses.end());
 		Root.LoadLocalPose(MeshData.Poses[K_INITIAL_POSE]);
 
 		if (D3D11::WrappedCreatePrimitiveGroup(&Primitive) == SSuccess)
@@ -238,6 +260,7 @@ bool LostCore::FSkeletalModel::Config(IRenderContext * rc, const FJson & config)
 
 	if (D3D11::WrappedCreateMaterial_SceneObjectSkinned(&Material) == SSuccess)
 	{
+		SkeletonRenderer.SetAllowCull(false);
 		if (config.find("material") != config.end())
 		{
 			string materialPath = config.find("material").value();
@@ -273,6 +296,12 @@ void LostCore::FSkeletalModel::Fini()
 		D3D11::WrappedDestroyMaterial_SceneObjectSkinned(std::forward<IMaterial*>(Material));
 		Material = nullptr;
 	}
+}
+
+void LostCore::FSkeletalModel::PlayAnimation(const string & animName)
+{
+	Root.SetAnimation(animName);
+	Root2.SetAnimation(animName);
 }
 
 void LostCore::FSkeletalModel::Tick(float sec)
@@ -384,6 +413,42 @@ void LostCore::FSkeletalModel::Tick(float sec)
 			AxisRenderer.SetWorldMatrix(w);
 		}
 	}
+
+	if (FGlobalHandler::Get()->IsDisplaySkeleton(FLAG_SKEL_1))
+	{
+		map<string, pair<FFloat3, vector<FFloat3>>> skels;
+
+		Root.GetSkeletonRenderData(skels);
+		for (auto& skel : skels)
+		{
+			FSegmentData seg;
+			seg.StartPt = skel.second.first;
+			seg.Color = FColor96((uint32)0xffff00);
+			for (auto & childSkel : skel.second.second)
+			{
+				seg.StopPt = childSkel;
+				SkeletonRenderer.AddSegment(seg);
+			}
+		}
+	}
+	
+	if (FGlobalHandler::Get()->IsDisplaySkeleton(FLAG_SKEL_2))
+	{
+		map<string, pair<FFloat3, vector<FFloat3>>> skels;
+		Root2.UpdateWorldMatrix(Matrices.World, sec);
+		Root2.GetSkeletonRenderData(skels);
+		for (auto& skel : skels)
+		{
+			FSegmentData seg;
+			seg.StartPt = skel.second.first;
+			seg.Color = FColor96((uint32)0xff8080);
+			for (auto & childSkel : skel.second.second)
+			{
+				seg.StopPt = childSkel;
+				SkeletonRenderer.AddSegment(seg);
+			}
+		}
+	}
 }
 
 void LostCore::FSkeletalModel::Draw(IRenderContext * rc, float sec)
@@ -409,6 +474,12 @@ void LostCore::FSkeletalModel::Draw(IRenderContext * rc, float sec)
 	if (displayTangent)
 	{
 		AxisRenderer.Draw(rc, sec);
+	}
+
+	bool displaySkeleton = FGlobalHandler::Get()->GetDisplaySkeleton() > 0;
+	if (displaySkeleton)
+	{
+		SkeletonRenderer.Draw(rc, sec);
 	}
 }
 

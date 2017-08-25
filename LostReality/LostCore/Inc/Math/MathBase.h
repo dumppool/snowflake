@@ -56,14 +56,29 @@ namespace LostCore
 	static const float SD2RConstant = SPI / 180.f;
 	static const float SR2DConstant = 180.f / SPI;
 
-	FORCEINLINE bool IsZero(float value, float tolerance = SSmallFloat)
+	template <typename T>
+	FORCEINLINE bool IsZero(T value, T tolerance = (T)SSmallFloat)
 	{
 		return std::abs(value) < tolerance;
 	}
 
-	FORCEINLINE bool IsEqual(float f1, float f2, float tolerance = SSmallFloat)
+	template <typename T>
+	FORCEINLINE bool IsEqual(T f1, T f2, T tolerance = (T)SSmallFloat)
 	{
 		return IsZero(f1 - f2, tolerance);
+	}
+
+	template <typename T1, typename T2>
+	FORCEINLINE T1 SafeBy(const T1& value, const T2& by)
+	{
+		if (IsZero(by))
+		{
+			return value;
+		}
+		else
+		{
+			return value / by;
+		}
 	}
 
 	FORCEINLINE void SinCos(float& oSin, float& oCos, float rad)

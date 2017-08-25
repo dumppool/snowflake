@@ -103,10 +103,18 @@ FFBXEditor::FFBXEditor()
 			Camera->AddPositionLocal(FFloat3(x, y, z));
 		}
 	});
+
 	FGlobalHandler::Get()->SetRotateCameraCallback([&](float p, float y, float r) {
 		if (Camera != nullptr)
 		{
 			Camera->AddEulerWorld(FFloat3(p, y, r));
+		}
+	});
+
+	FGlobalHandler::Get()->SetCallbackPlayAnimation([&](const string& anim) {
+		if (!Models.empty() && reinterpret_cast<FSkeletalModel*>(Models[0]) != nullptr)
+		{
+			reinterpret_cast<FSkeletalModel*>(Models[0])->PlayAnimation(anim);
 		}
 	});
 }
@@ -282,6 +290,7 @@ void FFBXEditor::LoadFBX(
 		stream >> j;
 		stream.close();
 
+		FJson modelJson;
 		for (auto& elem : j[K_MESH])
 		{
 			auto path = elem[K_PATH];
@@ -294,6 +303,18 @@ void FFBXEditor::LoadFBX(
 		{
 			auto path = elem[K_PATH];
 			Log(SInfo, "Output anim: %s", elem.value(K_PATH, "").c_str());
+
+			vector<string> anims;
+			string animName;
+			if (FAnimationLibrary::Get()->Load(path, animName))
+			{
+				anims.push_back(animName);
+			}
+
+			for (auto& anim : anims)
+			{
+				FGlobalHandler::Get()->AddAnimation(anim.c_str());
+			}
 		}
 
 		if (clearScene)
@@ -307,21 +328,23 @@ void FFBXEditor::LoadFBX(
 			Models.clear();
 		}
 
-		FJson modelJson;
-		modelJson["type"] = (uint32)EPrimitiveType::PrimitiveFile;
-		modelJson["primitive"] = j[K_MESH][0][K_PATH];
-		modelJson["material_prefix"] = "default";
-
-		auto model = new FSkeletalModel;
-		Models.push_back(model);
-
-		// Fbx converter需要输出转换导出信息。
-		//model->SetPrimitiveVertexFlags(EVertexElement::Coordinate 
-		//	| EVertexElement::Normal | EVertexElement::Skin);
-
-		if (model->Config(RC, modelJson))
+		if (!importAnimation)
 		{
-			Scene->AddModel(model);
+			modelJson["type"] = (uint32)EPrimitiveType::PrimitiveFile;
+			modelJson["primitive"] = j[K_MESH][0][K_PATH];
+			modelJson["material_prefix"] = "default";
+
+			auto model = new FSkeletalModel;
+			Models.push_back(model);
+
+			// Fbx converter需要输出转换导出信息。
+			//model->SetPrimitiveVertexFlags(EVertexElement::Coordinate 
+			//	| EVertexElement::Normal | EVertexElement::Skin);
+
+			if (model->Config(RC, modelJson))
+			{
+				Scene->AddModel(model);
+			}
 		}
 	}
 }
@@ -397,6 +420,11 @@ void FFBXEditor::StartRenderLoop()
 	bKeepRendering = true;
 	while (bKeepRendering)
 	{
+		static auto SLastStamp = chrono::system_clock::now();
+		auto now = chrono::system_clock::now();
+		auto sec = chrono::duration<float>(now - SLastStamp);
+		SLastStamp = now;
+
 		RenderCommands.Swap(TickCommands);
 		CommandType cmd;
 		while (RenderCommands.Pop(cmd))
@@ -404,8 +432,9 @@ void FFBXEditor::StartRenderLoop()
 			cmd();
 		}
 
-		Tick(0.f);
-		Draw(RC, 0.f);
+		
+		Tick(sec.count());
+		Draw(RC, sec.count());
 
 		this_thread::sleep_for(chrono::milliseconds(1));
 	}

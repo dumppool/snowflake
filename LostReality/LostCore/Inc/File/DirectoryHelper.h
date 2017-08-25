@@ -224,6 +224,11 @@ namespace LostCore
 			return GetSpecifiedAbsolutePath("primitive", path, output);
 		}
 
+		bool GetAnimationAbsolutePath(const string& path, string& output)
+		{
+			return GetSpecifiedAbsolutePath("animation", path, output);
+		}
+
 		bool GetSpecifiedJson(const std::string& specified, const std::string& path, FJson& output)
 		{
 			bool isAbsUrl = path.length() > 1 && path[1] == ':';

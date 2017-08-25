@@ -9,7 +9,7 @@
 
 #pragma once
 
-#define CONVERT_FROM_RIGHTHAND 1
+#define CONVERT_FROM_RIGHTHAND 0
 
 namespace Importer {
 
@@ -359,7 +359,7 @@ namespace Importer {
 		}
 
 		auto attrType = attr->GetAttributeType();
-		return attrType == FbxNodeAttribute::eSkeleton || attrType == FbxNodeAttribute::eMesh || attrType == FbxNodeAttribute::eNull;
+		return attrType == FbxNodeAttribute::eSkeleton/* || attrType == FbxNodeAttribute::eMesh || attrType == FbxNodeAttribute::eNull*/;
 	}
 
 	static FbxAMatrix GetGlobalMatrix(FbxNode* link, const FbxTime& time, FbxPose* pose, FbxAMatrix* parentGlobalMatrix = nullptr)
@@ -432,6 +432,26 @@ namespace Importer {
 		}
 	}
 
+	static void BuildSkeletonPose(FbxAMatrix& parentMatrix, FbxTime& time, FbxNode* link, FPoseTreeAlias& output)
+	{
+		if (link == nullptr)
+		{
+			return;
+		}
+
+		auto globalMatrix = GetGlobalMatrix(link, time, nullptr, nullptr);
+		globalMatrix = link->EvaluateLocalTransform();
+		output.Data.Name = link->GetName();
+		output.Data.Matrix = ToMatrix(globalMatrix);
+		auto numChildren = link->GetChildCount();
+		for (uint32 i = 0; i < numChildren; ++i)
+		{
+			FPoseTreeAlias pose;
+			BuildSkeletonPose(globalMatrix, time, link->GetChild(i), pose);
+			output.AddChild(pose);
+		}
+	}
+
 	static void AMatrixScale(FbxAMatrix& mat, float val)
 	{
 		for (int i = 0; i < 4; ++i)
@@ -498,12 +518,25 @@ namespace Importer {
 		return clusterLocal;
 	}
 
-	static void GetGlobalPoseMap(const LostCore::FFloat4x4& parentMat, const FSkeletonTreeAlias& skelNode, FPoseMapAlias& localPose, FPoseMapAlias& globalPose)
+	static void GetGlobalPoseMap(const LostCore::FFloat4x4& parentMat,
+		const FSkeletonTreeAlias& skelNode, FPoseMapAlias& localPose, FPoseMapAlias& globalPose)
 	{
 		globalPose[skelNode.Data] = localPose[skelNode.Data] * parentMat;
 		for (auto& child : skelNode.Children)
 		{
 			GetGlobalPoseMap(globalPose[skelNode.Data], child, localPose, globalPose);
+		}
+	}
+
+	static void GetLocalPoseMap(const LostCore::FFloat4x4& parentMat,
+		const FSkeletonTreeAlias& skelNode, FPoseMapAlias& globalPose, FPoseMapAlias& localPose)
+	{
+		LostCore::FFloat4x4 pmat(parentMat);
+		pmat.Invert();
+		localPose[skelNode.Data] = globalPose[skelNode.Data] * pmat;
+		for (auto& child : skelNode.Children)
+		{
+			GetLocalPoseMap(globalPose[skelNode.Data], child, globalPose, localPose);
 		}
 	}
 
@@ -513,6 +546,31 @@ namespace Importer {
 		auto s = node->LclScaling.Get();
 		auto r = node->LclRotation.Get();
 		return FbxAMatrix(t, r, s);
+	}
+
+	static FbxAMatrix GetClusterLocalMatrix(FbxMesh* mesh, FbxCluster* cluster)
+	{
+		FbxAMatrix refGlobalInit, refGeometry, clusterGlobalInit, clusterGlobalCurrent, clusterRelativeInit, clusterRelativeCurrent;
+		cluster->GetTransformMatrix(refGlobalInit);
+		refGeometry = GetGeometry(mesh->GetNode());
+		refGlobalInit *= refGeometry;
+
+		cluster->GetTransformLinkMatrix(clusterGlobalInit);
+		clusterGlobalCurrent = GetGlobalMatrix(cluster->GetLink(), 0, nullptr);
+		clusterRelativeInit = clusterGlobalInit.Inverse() * refGlobalInit;
+
+		clusterRelativeCurrent = clusterRelativeInit;
+		clusterRelativeCurrent = clusterGlobalCurrent * clusterRelativeInit;
+		auto linkLocal = GetNodeLocalMatrix(cluster->GetLink());
+		FbxAMatrix clusterTransform, clusterTransformLink;
+		cluster->GetTransformMatrix(clusterTransform);
+		cluster->GetTransformLinkMatrix(clusterTransformLink);
+		auto linkGlobalEval = cluster->GetLink()->EvaluateGlobalTransform();
+		auto linkLocalEval = cluster->GetLink()->EvaluateLocalTransform();
+		//return clusterRelativeCurrent;
+		//return refGlobalInit; // looks good
+		//return linkLocalEval; // good
+		return clusterRelativeInit.Inverse();
 	}
 
 	static void BuildPoseTree(FbxPose* pose, FbxNode* link, FPoseTreeAlias& output, FPoseTreeAlias& output2)
@@ -636,6 +694,35 @@ namespace Importer {
 		FbxAMatrix selfWorld;
 		selfWorld.SetIdentity();
 		return selfWorld;
+	}
+
+	typedef LostCore::TTreeNode<FbxNode*> FFbxSkeleton;
+	static void BuildFbxSkeleton(FbxNode* skel, FbxNode* skelParent, FFbxSkeleton& fbxSkelTree)
+	{
+		fbxSkelTree.Data = skel;
+		auto numChildren = skel->GetChildCount();
+		for (auto childIndex = 0; childIndex < numChildren; ++childIndex)
+		{
+			FFbxSkeleton childTree;
+			BuildFbxSkeleton(skel->GetChild(childIndex), skel, childTree);
+			fbxSkelTree.AddChild(childTree);
+		}
+	}
+
+	static void BuildSkeleton(FbxNode* skel, FbxNode* skelParent, FSkeletonTreeAlias& outSkelTree, FPoseMapAlias& outPose)
+	{
+		auto local = ComputeMatrixLocalToParent(skel, skelParent);
+		outSkelTree.Data = skel->GetName();
+		outPose[skel->GetName()] = ToMatrix(local);
+
+		auto numChildren = skel->GetChildCount();
+		for (uint32 childIndex = 0; childIndex < numChildren; ++childIndex)
+		{
+			FSkeletonTreeAlias childTree;
+			BuildSkeleton(skel->GetChild(childIndex), skel, childTree, outPose);
+			outSkelTree.AddChild(childTree);
+		}
+		//GetGlobalMatrix(skel, FbxTime(), nullptr, parentMat);
 	}
 
 	struct FConvertOptions

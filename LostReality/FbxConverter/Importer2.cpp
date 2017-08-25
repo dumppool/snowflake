@@ -76,6 +76,8 @@ struct FTempMesh
 	void ProcessSkeletalVertex(vector<FFloat4x4>& vecLocalToBone);
 
 	void GenerateNormal(const vector<FFloat4x4>& localToBones, bool generateTangent = false);
+
+	void ExtractSkeleton(vector<FFbxSkeleton>& skeleton);
 };
 
 struct FTempAnimStack
@@ -121,6 +123,7 @@ public:
 private:
 	FbxManager*			SdkManager;
 	FbxScene*			SdkScene;
+	vector<FFbxSkeleton>	Skeletons;
 
 	string				DestDirectory;
 
@@ -132,7 +135,6 @@ bool Importer::Import()
 {
 	return FFbxImporter2::Get()->ImportSceneMeshes();
 }
-
 
 FTempMesh::FTempMesh(FbxScene * scene, FbxMesh * mesh)
 	: Scene(scene)
@@ -146,7 +148,7 @@ FTempMesh::FTempMesh(FbxScene * scene, FbxMesh * mesh)
 {
 	ControlPoints.clear();
 
-	Extract();
+	//Extract();
 }
 
 bool FTempMesh::IsValid() const
@@ -258,7 +260,10 @@ void FTempMesh::Extract()
 				LVERR(head, "mesh[%s] link[%s] mode: additive", Mesh->GetName(), link->GetName());
 			}
 
-			DefaultPose[link->GetName()] = ToMatrix(GetNodeLocalMatrix(link));
+			//DefaultPose[link->GetName()] = ToMatrix(GetNodeLocalMatrix(link));
+
+			//FbxAMatrix lm = GetClusterLocalMatrix(Mesh, cluster);
+			//DefaultPose[link->GetName()] = ToMatrix(lm);
 
 			auto rootLink = GetRootLink(link);
 			if (rootLink != nullptr && rootLinks.find(rootLink) == rootLinks.end())
@@ -302,7 +307,12 @@ void FTempMesh::Extract()
 		auto link0 = *(rootLinks.begin());
 
 		// Get skeleton
-		BuildSkeletonTree(link0, MeshData.Skeleton);
+		//BuildSkeletonTree(link0, MeshData.Skeleton);
+
+		FbxAMatrix amat;
+		amat.SetIdentity();
+		Mesh->GetNode();
+		BuildSkeletonPose(amat, FbxTime(), link0, MeshData.PoseT);
 
 		// Get the default
 
@@ -329,17 +339,6 @@ void FTempMesh::Extract()
 				bValid = false;
 
 				// TODO: 修复
-			}
-
-			if (bValid)
-			{
-				pose->GetMatrix(linkIndex);
-				FPoseTreeAlias poseTree;
-				FPoseTreeAlias poseTree2;
-				FPoseMapAlias poseMap;
-				BuildPoseTree(pose, link0, poseTree, poseTree2);
-				GetPoseMapFromTree(poseTree, poseMap);
-				MeshData.Poses[pose->GetName()] = poseMap;
 			}
 		}
 	}
@@ -439,11 +438,12 @@ void FTempMesh::Extract()
 	auto mat = ComputeMatrixLocalToParent(meshNode, scene->GetRootNode());
 	bool oddNegativeScale = IsOddNegativeScale(mat);
 	MeshToSceneRoot = ToMatrix(mat);
-	MeshToSceneRootDir = ToMatrix(mat.Inverse().Transpose());
+	auto rotMat = mat.Inverse().Transpose();
+	MeshToSceneRootDir = ToMatrix(rotMat);
 	for (int i = 0; i < coordCount; ++i)
 	{
 		//mat.MultT(coordHead[i])
-		ControlPoints.push_back(ToVector3(coordHead[i]));
+		ControlPoints.push_back(ToVector3((coordHead[i])));
 	}
 
 	for (int i = 0; i < coordCount; ++i)
@@ -451,7 +451,7 @@ void FTempMesh::Extract()
 		if (normalHead != nullptr && normalMM == FbxLayerElement::eByControlPoint)
 		{
 			int valIndex = normalRM == FbxLayerElement::eDirect ? i : normalHead->GetIndexArray().GetAt(i);
-			MeshData.Normals.push_back(ToVector3(normalHead->GetDirectArray().GetAt(valIndex)).GetNormal());
+			MeshData.Normals.push_back(ToVector3((normalHead->GetDirectArray().GetAt(valIndex))).GetNormal());
 		}
 
 		if (tangentHead != nullptr && tangentMM == FbxLayerElement::eByControlPoint)
@@ -616,19 +616,26 @@ void FTempMesh::ProcessSkeletalVertex(vector<FFloat4x4>& vecLocalToBone)
 		return;
 	}
 
+	//MeshData.Coordinates = ControlPoints;
+	//return;
+
 #if TEST_SOFT_SKINNED
 	vector<FFloat3> skinned0(ControlPoints.size());
 	vector<FFloat3> skinned1(ControlPoints.size());
 	SkinnedPts.resize(ControlPoints.size());
 #endif
 
+	//MeshData.Poses[K_INITIAL_POSE] = DefaultPose;
+	//return;
+
 	FPoseMapAlias globalPose;
-	MeshData.Poses[K_INITIAL_POSE] = DefaultPose;
-	auto& initialPose = MeshData.Poses[K_INITIAL_POSE];
+	//auto& localPose = DefaultPose;
 
 	LostCore::FFloat4x4 globalMat;
 	globalMat.SetIdentity();
-	GetGlobalPoseMap(globalMat, MeshData.Skeleton, initialPose, globalPose);
+	//GetLocalPoseMap(globalMat, MeshData.Skeleton, globalPose, initialPose);
+	MeshData.Poses[K_INITIAL_POSE] = DefaultPose;
+	GetGlobalPoseMap(globalMat, MeshData.Skeleton, DefaultPose, globalPose);
 
 	map<int32, string> inverseMap;
 	for_each(MeshData.SkeletonIndexMap.begin(), MeshData.SkeletonIndexMap.end(),
@@ -669,13 +676,6 @@ void FTempMesh::ProcessSkeletalVertex(vector<FFloat4x4>& vecLocalToBone)
 
 #if TEST_SOFT_SKINNED
 		skinned0[vertIndex] = mat2.ApplyPoint(MeshData.Coordinates[vertIndex]);
-#endif
-
-#ifdef _DEBUG
-		if (vertIndex == 817)
-		{
-			printf("");
-		}
 #endif
 
 		if (LinkMode == FbxCluster::eNormalize)
@@ -721,7 +721,7 @@ void FTempMesh::ProcessSkeletalVertex(vector<FFloat4x4>& vecLocalToBone)
 
 void FTempMesh::GenerateNormal(const vector<FFloat4x4>& vecLocalToBone, bool generateTangent)
 {
-	assert((vecLocalToBone.size() > 0) == IsSkeletal());
+	//assert((vecLocalToBone.size() > 0) == IsSkeletal());
 
 	vector<FMeshDataAlias::FTriangle> triangles(MeshData.Triangles.size());
 	for (uint32 i = 0; i < MeshData.Triangles.size(); ++i)
@@ -797,13 +797,21 @@ void FTempMesh::GenerateNormal(const vector<FFloat4x4>& vecLocalToBone, bool gen
 				binormal *= (1.0 / indices.size());
 			}
 
-			MeshData.Normals[i] = vecLocalToBone[i].ApplyVector(normal.GetNormal());
+			MeshData.Normals[i] = (normal.GetNormal());
 
 			if (generateTangent)
 			{
-				MeshData.Tangents[i] = vecLocalToBone[i].ApplyVector(tangent);
-				MeshData.Binormals[i] = vecLocalToBone[i].ApplyVector(binormal.GetNormal());
+				MeshData.Tangents[i] = (tangent.GetNormal());
+				MeshData.Binormals[i] = (binormal.GetNormal());
 			}
+
+			//MeshData.Normals[i] = vecLocalToBone[i].ApplyVector(normal.GetNormal());
+
+			//if (generateTangent)
+			//{
+			//	MeshData.Tangents[i] = vecLocalToBone[i].ApplyVector(tangent);
+			//	MeshData.Binormals[i] = vecLocalToBone[i].ApplyVector(binormal.GetNormal());
+			//}
 		}
 	}
 	else // 不合并法线，同一点上在不同三角面的顶点都有自己的法线.
@@ -814,11 +822,17 @@ void FTempMesh::GenerateNormal(const vector<FFloat4x4>& vecLocalToBone, bool gen
 			{
 				auto& srcVert = triangles[i].Vertices[j];
 				auto& dstVert = MeshData.Triangles[i].Vertices[j];
-				dstVert.Normal = vecLocalToBone[dstVert.Index].ApplyVector(srcVert.Normal.GetNormal());
+				//dstVert.Normal = vecLocalToBone[dstVert.Index].ApplyVector(srcVert.Normal.GetNormal());
+				//if (generateTangent)
+				//{
+				//	dstVert.Tangent = vecLocalToBone[dstVert.Index].ApplyVector(srcVert.Tangent.GetNormal());
+				//	dstVert.Binormal = vecLocalToBone[dstVert.Index].ApplyVector(srcVert.Binormal.GetNormal());
+				//}
+				dstVert.Normal = (srcVert.Normal.GetNormal());
 				if (generateTangent)
 				{
-					dstVert.Tangent = vecLocalToBone[dstVert.Index].ApplyVector(srcVert.Tangent.GetNormal());
-					dstVert.Binormal = vecLocalToBone[dstVert.Index].ApplyVector(srcVert.Binormal.GetNormal());
+					dstVert.Tangent = (srcVert.Tangent.GetNormal());
+					dstVert.Binormal = (srcVert.Binormal.GetNormal());
 				}
 			}
 		}
@@ -830,6 +844,15 @@ void FTempMesh::GenerateNormal(const vector<FFloat4x4>& vecLocalToBone, bool gen
 			MeshData.Binormals.clear();
 		}
 	}
+}
+
+void FTempMesh::ExtractSkeleton(vector<FFbxSkeleton>& skeleton)
+{
+	auto skelRoot = skeleton[0].Data;
+	BuildSkeleton(skelRoot, nullptr, MeshData.Skeleton, DefaultPose);
+
+	//FPoseMapAlias pm;
+	//GetPoseMapFromTree(DefaultPose, pm);
 }
 
 FFbxImporter2::FFbxImporter2()
@@ -888,12 +911,21 @@ bool FFbxImporter2::ImportSceneMeshes()
 	FJson& meshSection = j[K_MESH];
 	FJson& animSection = j[K_ANIMATION];
 
+	for (auto& mesh : TempMeshArray)
+	{
+		mesh.ExtractSkeleton(Skeletons);
+		mesh.Extract();
+	}
+
 	for (const auto& mesh : TempMeshArray)
 	{
 		meshSection.push_back(FJson());
 		FJson& meshJson = *(meshSection.end() - 1);
 		meshJson[K_PATH] = mesh.MeshData.Save(DestDirectory);
 		meshJson[K_VERTEX_ELEMENT] = mesh.MeshData.VertexFlags;
+
+		FMeshDataAlias tm;
+		tm.Load(meshJson[K_PATH]);
 	}
 
 	for (const auto& anim : TempAnimArray)
@@ -901,11 +933,13 @@ bool FFbxImporter2::ImportSceneMeshes()
 		animSection.push_back(FJson());
 		FJson& animJson = *(animSection.end() - 1);
 		animJson[K_PATH] = anim.AnimData.Save(DestDirectory);
+		animJson[K_NAME] = anim.AnimData.Name;
 	}
 
 	ofstream stream(FConvertOptions::Get()->OutputPath);
 	stream << j;
 	stream.close();
+
 
 	return true;
 }
@@ -933,6 +967,17 @@ void FFbxImporter2::ImportNode(FbxNode * node)
 				if (mesh != nullptr)
 				{
 					ImportMesh(mesh);
+				}
+
+				break;
+			}
+			case FbxNodeAttribute::eSkeleton:
+			{
+				if (node->GetParent() == nullptr || !IsBone(node->GetParent()))
+				{
+					FFbxSkeleton skelTree;
+					BuildFbxSkeleton(node, nullptr, skelTree);
+					Skeletons.push_back(skelTree);
 				}
 
 				break;
@@ -1100,7 +1145,7 @@ void FTempAnimStack::ParseCurve(FRealCurveAlias & output, FbxAnimCurve * curve)
 		output.AddKey(keyTime, value);
 	}
 
-	auto curveWrapMode = FRealCurveAlias::EWrap::Clamp;
+	auto curveWrapMode = FRealCurveAlias::EWrap::Wrap;
 	auto curveInterpolationMode = FRealCurveAlias::EInterpolation::Constant;
 	auto interpolation = curve->KeyGetInterpolation(0);
 	if ((interpolation & FbxAnimCurveDef::eInterpolationConstant) == FbxAnimCurveDef::eInterpolationConstant)

@@ -12,6 +12,7 @@ LostCore::FGlobalHandler::FGlobalHandler()
 	, DisplayNormalLength(5.0f)
 	, MoveCameraCallback(nullptr)
 	, RotateCameraCallback(nullptr)
+	, AnimateRate(1.0f)
 {
 }
 
@@ -61,6 +62,39 @@ void LostCore::FGlobalHandler::RotateCamera(float p, float y, float r)
 	}
 }
 
+void LostCore::FGlobalHandler::SetAnimateRate(float rate)
+{
+	AnimateRate = rate;
+}
+
+float LostCore::FGlobalHandler::GetAnimateRate() const
+{
+	return AnimateRate;
+}
+
+void LostCore::FGlobalHandler::SetDisplaySkeleton(uint32 flag)
+{
+	FlagDisplaySkeleton = flag;
+}
+
+uint32 LostCore::FGlobalHandler::GetDisplaySkeleton() const
+{
+	return FlagDisplaySkeleton;
+}
+
+void LostCore::FGlobalHandler::SetAnimUpdater(PFN_AnimUpdate animUpdate)
+{
+	AnimUpdateFunc = animUpdate;
+}
+
+void LostCore::FGlobalHandler::PlayAnimation(const char * anim)
+{
+	if (PlayAnimationCallback != nullptr)
+	{
+		PlayAnimationCallback(anim);
+	}
+}
+
 bool LostCore::FGlobalHandler::IsDisplayNormal(uint32 flags) const
 {
 	bool displayTangent = (flags & EVertexElement::Tangent) == EVertexElement::Tangent
@@ -76,14 +110,40 @@ bool LostCore::FGlobalHandler::IsDisplayTangent(uint32 flags) const
 		&& FGlobalHandler::Get()->GetDisplayTangent();
 }
 
-void LostCore::FGlobalHandler::SetMoveCameraCallback(FCameraCallback callback)
+void LostCore::FGlobalHandler::SetMoveCameraCallback(Callback_FFF callback)
 {
 	MoveCameraCallback = callback;
 }
 
-void LostCore::FGlobalHandler::SetRotateCameraCallback(FCameraCallback callback)
+void LostCore::FGlobalHandler::SetRotateCameraCallback(Callback_FFF callback)
 {
 	RotateCameraCallback = callback;
+}
+
+bool LostCore::FGlobalHandler::IsDisplaySkeleton(uint32 flag) const
+{
+	return (FlagDisplaySkeleton & flag) == flag;
+}
+
+void LostCore::FGlobalHandler::ClearAnimationList()
+{
+	if (AnimUpdateFunc != nullptr)
+	{
+		AnimUpdateFunc(FLAG_ANIM_CLEAR, nullptr);
+	}
+}
+
+void LostCore::FGlobalHandler::AddAnimation(const char * anim)
+{
+	if (AnimUpdateFunc != nullptr)
+	{
+		AnimUpdateFunc(FLAG_ANIM_ADD, anim);
+	}
+}
+
+void LostCore::FGlobalHandler::SetCallbackPlayAnimation(Callback_S playAnim)
+{
+	PlayAnimationCallback = playAnim;
 }
 
 LOSTCORE_API void LostCore::SetDisplayNormal(bool enable)
@@ -109,4 +169,24 @@ LOSTCORE_API void LostCore::MoveCamera(float x, float y, float z)
 LOSTCORE_API void LostCore::RotateCamera(float p, float y, float r)
 {
 	FGlobalHandler::Get()->RotateCamera(p, y, r);
+}
+
+LOSTCORE_API void LostCore::SetAnimateRate(float rate)
+{
+	FGlobalHandler::Get()->SetAnimateRate(rate);
+}
+
+LOSTCORE_API void LostCore::SetDisplaySkeleton(bool enable)
+{
+	FGlobalHandler::Get()->SetDisplaySkeleton(enable);
+}
+
+LOSTCORE_API void LostCore::SetAnimUpdater(PFN_AnimUpdate animUpdate)
+{
+	FGlobalHandler::Get()->SetAnimUpdater(animUpdate);
+}
+
+LOSTCORE_API void LostCore::PlayAnimation(const char * anim)
+{
+	FGlobalHandler::Get()->PlayAnimation(anim);
 }

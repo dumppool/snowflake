@@ -15,7 +15,7 @@ namespace D3D11
 	{
 		FORCEINLINE static std::string GetName()
 		{
-			static std::string SName = "Z_ENABLE_WRITE";
+			static std::string SName = K_DEPTH_STENCIL_Z_WRITE;
 			return SName;
 		}
 
@@ -41,7 +41,7 @@ namespace D3D11
 	{
 		FORCEINLINE static std::string GetName()
 		{
-			static std::string SName = "ALWAYS";
+			static std::string SName = K_DEPTH_STENCIL_ALWAYS;
 			return SName;
 		}
 
@@ -51,11 +51,27 @@ namespace D3D11
 
 			if (device.IsValid())
 			{
-				CD3D11_DEPTH_STENCIL_DESC desc(D3D11_DEFAULT);
+				CD3D11_DEPTH_STENCIL_DESC desc(
+					false,
+					D3D11_DEPTH_WRITE_MASK_ZERO,
+					D3D11_COMPARISON_NEVER,
+					false,
+					0,
+					0,
+					D3D11_STENCIL_OP_KEEP,
+					D3D11_STENCIL_OP_KEEP,
+					D3D11_STENCIL_OP_KEEP,
+					D3D11_COMPARISON_NEVER,
+					D3D11_STENCIL_OP_KEEP,
+					D3D11_STENCIL_OP_KEEP,
+					D3D11_STENCIL_OP_KEEP,
+					D3D11_COMPARISON_NEVER
+				);
+
 				HRESULT hr = device->CreateDepthStencilState(&desc, state.GetInitReference());
 				if (FAILED(hr))
 				{
-					LVERR("FDepthStencilState_0::GetState", "create depth stencil state failed: 0x%08x(%d)", hr, hr);
+					LVERR("FDepthStencilState_1::GetState", "create depth stencil state failed: 0x%08x(%d)", hr, hr);
 				}
 			}
 
@@ -91,6 +107,7 @@ namespace D3D11
 			}
 
 			StateMap.insert(std::make_pair(FDepthStencilState_0::GetName(), FDepthStencilState_0::GetState(device)));
+			StateMap.insert(std::make_pair(FDepthStencilState_1::GetName(), FDepthStencilState_1::GetState(device)));
 			bInitialized = true;
 		}
 

@@ -162,6 +162,7 @@ void D3D11::FPrimitiveGroup::UpdateVB(LostCore::IRenderContext * rc, const void 
 	}
 	else
 	{
+		VertexCount = bytes / VertexStride;
 		D3D11_BOX destRegion;
 		destRegion.left = 0;
 		destRegion.right = bytes;

@@ -45,6 +45,7 @@ namespace LostCore
 		uint32 CurrentPrimitiveBytes;
 		IPrimitiveGroup* Primitive;
 		IMaterial* Material;
+		bool bAllowCull;
 
 		void ResetData();
 		bool ConstructPrimitive(LostCore::IRenderContext* rc, const void* buf, uint32 bytes);
@@ -58,6 +59,7 @@ namespace LostCore
 		void AddSegment(const FSegmentData& seg);
 
 		void SetWorldMatrix(const FFloat4x4& mat);
+		void SetAllowCull(bool enable);
 
 		static FSegmentTool* Get()
 		{

@@ -17,7 +17,7 @@ using namespace std;
 using namespace LostCore;
 
 LostCore::FSegmentTool::FSegmentTool()
-	: bConstructed(false), Material(nullptr), Primitive(nullptr)
+	: bConstructed(false), Material(nullptr), Primitive(nullptr), bAllowCull(true)
 {
 	ResetData();
 }
@@ -46,12 +46,15 @@ bool LostCore::FSegmentTool::ConstructPrimitive(LostCore::IRenderContext* rc, co
 	bConstructed &= SSuccess == D3D11::WrappedCreatePrimitiveGroup(&Primitive);
 
 	assert(bConstructed);
-	Primitive->SetTopology(LostCore::EPrimitiveTopology::LineList);
 
 	// TODO: ÅäÖÃ
+	Material->SetDepthStencilState(bAllowCull ? K_DEPTH_STENCIL_Z_WRITE : K_DEPTH_STENCIL_ALWAYS);
+	Primitive->SetTopology(LostCore::EPrimitiveTopology::LineList);
+
 	bConstructed &= Material->Initialize(rc, "default_xyzrgb.json");
 	bConstructed &= Primitive->ConstructVB(rc, buf, bytes, GetAlignedSize(sizeof(FSegmentVertex), 16), false);
-	
+
+
 	assert(bConstructed);
 	return bConstructed;
 }
@@ -106,4 +109,13 @@ void LostCore::FSegmentTool::AddSegment(const FSegmentData & seg)
 void LostCore::FSegmentTool::SetWorldMatrix(const FFloat4x4 & mat)
 {
 	World = mat;
+}
+
+void LostCore::FSegmentTool::SetAllowCull(bool enable)
+{
+	bAllowCull = enable;
+	if (Material != nullptr)
+	{
+		Material->SetDepthStencilState(bAllowCull ? K_DEPTH_STENCIL_Z_WRITE : K_DEPTH_STENCIL_ALWAYS);
+	}
 }

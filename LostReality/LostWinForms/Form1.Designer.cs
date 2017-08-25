@@ -31,6 +31,10 @@
             this.components = new System.ComponentModel.Container();
             this.panel1 = new System.Windows.Forms.Panel();
             this.ViewPanel = new System.Windows.Forms.Panel();
+            this.DisplaySkeleton2 = new System.Windows.Forms.CheckBox();
+            this.DisplaySkeleton = new System.Windows.Forms.CheckBox();
+            this.AnimateRateValue = new System.Windows.Forms.TextBox();
+            this.AnimateRateSlider = new System.Windows.Forms.TrackBar();
             this.SegLengthValue = new System.Windows.Forms.TextBox();
             this.SegLengthSlider = new System.Windows.Forms.TrackBar();
             this.DisplayNormal = new System.Windows.Forms.CheckBox();
@@ -61,9 +65,14 @@
             this.loadFBXToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
             this.ViewPanelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripComboBox1 = new System.Windows.Forms.ToolStripComboBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.listBox1 = new System.Windows.Forms.ListBox();
             this.panel1.SuspendLayout();
             this.ViewPanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.AnimateRateSlider)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.SegLengthSlider)).BeginInit();
             this.ImportPanel.SuspendLayout();
             this.tabControl1.SuspendLayout();
@@ -78,6 +87,7 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panel1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.panel1.Controls.Add(this.listBox1);
             this.panel1.Controls.Add(this.ViewPanel);
             this.panel1.Controls.Add(this.ImportPanel);
             this.panel1.Location = new System.Drawing.Point(-1, 59);
@@ -88,6 +98,10 @@
             // 
             // ViewPanel
             // 
+            this.ViewPanel.Controls.Add(this.DisplaySkeleton2);
+            this.ViewPanel.Controls.Add(this.DisplaySkeleton);
+            this.ViewPanel.Controls.Add(this.AnimateRateValue);
+            this.ViewPanel.Controls.Add(this.AnimateRateSlider);
             this.ViewPanel.Controls.Add(this.SegLengthValue);
             this.ViewPanel.Controls.Add(this.SegLengthSlider);
             this.ViewPanel.Controls.Add(this.DisplayNormal);
@@ -98,6 +112,50 @@
             this.ViewPanel.Size = new System.Drawing.Size(222, 412);
             this.ViewPanel.TabIndex = 6;
             this.ViewPanel.Visible = false;
+            // 
+            // DisplaySkeleton2
+            // 
+            this.DisplaySkeleton2.AutoSize = true;
+            this.DisplaySkeleton2.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.DisplaySkeleton2.ForeColor = System.Drawing.SystemColors.AppWorkspace;
+            this.DisplaySkeleton2.Location = new System.Drawing.Point(32, 232);
+            this.DisplaySkeleton2.Name = "DisplaySkeleton2";
+            this.DisplaySkeleton2.Size = new System.Drawing.Size(126, 21);
+            this.DisplaySkeleton2.TabIndex = 19;
+            this.DisplaySkeleton2.Text = "DisplaySkeleton2";
+            this.DisplaySkeleton2.UseVisualStyleBackColor = true;
+            // 
+            // DisplaySkeleton
+            // 
+            this.DisplaySkeleton.AutoSize = true;
+            this.DisplaySkeleton.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.DisplaySkeleton.ForeColor = System.Drawing.SystemColors.AppWorkspace;
+            this.DisplaySkeleton.Location = new System.Drawing.Point(32, 216);
+            this.DisplaySkeleton.Name = "DisplaySkeleton";
+            this.DisplaySkeleton.Size = new System.Drawing.Size(119, 21);
+            this.DisplaySkeleton.TabIndex = 18;
+            this.DisplaySkeleton.Text = "DisplaySkeleton";
+            this.DisplaySkeleton.UseVisualStyleBackColor = true;
+            // 
+            // AnimateRateValue
+            // 
+            this.AnimateRateValue.Cursor = System.Windows.Forms.Cursors.Arrow;
+            this.AnimateRateValue.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.AnimateRateValue.Location = new System.Drawing.Point(132, 181);
+            this.AnimateRateValue.Name = "AnimateRateValue";
+            this.AnimateRateValue.ReadOnly = true;
+            this.AnimateRateValue.Size = new System.Drawing.Size(51, 23);
+            this.AnimateRateValue.TabIndex = 17;
+            // 
+            // AnimateRateSlider
+            // 
+            this.AnimateRateSlider.LargeChange = 10;
+            this.AnimateRateSlider.Location = new System.Drawing.Point(22, 181);
+            this.AnimateRateSlider.Minimum = 1;
+            this.AnimateRateSlider.Name = "AnimateRateSlider";
+            this.AnimateRateSlider.Size = new System.Drawing.Size(104, 45);
+            this.AnimateRateSlider.TabIndex = 16;
+            this.AnimateRateSlider.Value = 10;
             // 
             // SegLengthValue
             // 
@@ -379,7 +437,8 @@
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripMenuItem1,
-            this.toolStripMenuItem2});
+            this.toolStripMenuItem2,
+            this.toolStripMenuItem3});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(981, 25);
@@ -418,6 +477,36 @@
             this.ViewPanelToolStripMenuItem.Size = new System.Drawing.Size(124, 22);
             this.ViewPanelToolStripMenuItem.Text = "显示选项";
             // 
+            // toolStripMenuItem3
+            // 
+            this.toolStripMenuItem3.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItem4});
+            this.toolStripMenuItem3.Name = "toolStripMenuItem3";
+            this.toolStripMenuItem3.Size = new System.Drawing.Size(25, 21);
+            this.toolStripMenuItem3.Text = "*";
+            // 
+            // toolStripMenuItem4
+            // 
+            this.toolStripMenuItem4.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripComboBox1});
+            this.toolStripMenuItem4.Name = "toolStripMenuItem4";
+            this.toolStripMenuItem4.Size = new System.Drawing.Size(192, 22);
+            this.toolStripMenuItem4.Text = "toolStripMenuItem4";
+            // 
+            // toolStripComboBox1
+            // 
+            this.toolStripComboBox1.Name = "toolStripComboBox1";
+            this.toolStripComboBox1.Size = new System.Drawing.Size(121, 25);
+            // 
+            // listBox1
+            // 
+            this.listBox1.FormattingEnabled = true;
+            this.listBox1.ItemHeight = 12;
+            this.listBox1.Location = new System.Drawing.Point(58, 60);
+            this.listBox1.Name = "listBox1";
+            this.listBox1.Size = new System.Drawing.Size(120, 220);
+            this.listBox1.TabIndex = 7;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -435,6 +524,7 @@
             this.panel1.ResumeLayout(false);
             this.ViewPanel.ResumeLayout(false);
             this.ViewPanel.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.AnimateRateSlider)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.SegLengthSlider)).EndInit();
             this.ImportPanel.ResumeLayout(false);
             this.ImportPanel.PerformLayout();
@@ -484,6 +574,14 @@
         private System.Windows.Forms.CheckBox DisplayTangent;
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.TextBox SegLengthValue;
+        private System.Windows.Forms.TextBox AnimateRateValue;
+        private System.Windows.Forms.TrackBar AnimateRateSlider;
+        private System.Windows.Forms.CheckBox DisplaySkeleton;
+        private System.Windows.Forms.CheckBox DisplaySkeleton2;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem3;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem4;
+        private System.Windows.Forms.ToolStripComboBox toolStripComboBox1;
+        private System.Windows.Forms.ListBox listBox1;
     }
 }
 

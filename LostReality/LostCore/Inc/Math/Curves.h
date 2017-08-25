@@ -21,9 +21,23 @@ namespace LostCore
 		template <typename XType, typename YType>
 		friend FBinaryIO& operator>>(FBinaryIO& stream, TCurve<XType, YType>& data);
 
-		typedef map<XType, YType> FKeyFrameMap;
-		typedef typename FKeyFrameMap::iterator FKeyFrameMapIter;
-		typedef typename FKeyFrameMap::const_iterator FKeyFrameMapConstIter;
+		struct KeyPair
+		{
+			XType first;
+			YType second;
+
+			KeyPair() {}
+			KeyPair(const XType& x, const YType& y) : first(x), second(y) {}
+
+			bool operator<(const KeyPair& rhs) const
+			{
+				return first < rhs.first;
+			}
+		};
+
+		typedef set<KeyPair> KeyFrames;
+		typedef typename KeyFrames::iterator KeyFramesIter;
+		typedef typename KeyFrames::const_iterator KeyFramesConstIter;
 
 		enum class EWrap : uint8
 		{
@@ -51,9 +65,9 @@ namespace LostCore
 		uint32 GetNumKeys() const;
 
 	protected:
-		typename FKeyFrameMapConstIter Get(int32 index) const;
+		typename KeyFramesConstIter Get(int32 index) const;
 
-		FKeyFrameMap Keys;
+		KeyFrames Keys;
 
 		EWrap WrapMode;
 		EInterpolation InterpolationMode;
@@ -79,7 +93,7 @@ namespace LostCore
 	template<typename XType, typename YType>
 	FORCEINLINE void TCurve<XType, YType>::AddKey(const XType & keyTime, const YType & value)
 	{
-		Keys[keyTime] = value;
+		Keys.insert(KeyPair(keyTime, value));
 	}
 
 	template<typename XType, typename YType>
@@ -115,12 +129,12 @@ namespace LostCore
 			auto it2 = Get(index);
 			auto it3 = Get(index + 1);
 
-			auto m1 = ((*it2).second - (*it0).second) * ((XType)1 / ((*it2).first - (*it0).first));
-			auto m2 = ((*it3).second - (*it1).second) * ((XType)1 / ((*it3).first - (*it1).first));
+			auto m1 = SafeBy((*it2).second - (*it0).second, (*it2).first - (*it0).first);
+			auto m2 = SafeBy((*it3).second - (*it1).second, (*it3).first - (*it1).first);
 			auto p1 = (*it1).second;
 			auto p2 = (*it2).second;
-			auto t = (validKeyTime - (*it1).first) / ((*it2).first - (*it1).first);
 
+			auto t = SafeBy(validKeyTime - (*it1).first, (*it2).first - (*it1).first);
 			auto t2 = t * t;
 			auto t3 = t2 * t;
 
@@ -135,7 +149,7 @@ namespace LostCore
 		{
 			auto it1 = Get(index - 1);
 			auto it2 = Get(index);
-			auto t = (validKeyTime - (*it1).first) / ((*it2).first - (*it1).first);
+			auto t = SafeBy(validKeyTime - (*it1).first, (*it2).first - (*it1).first);
 			result = (*it1).second + ((*it2).second - (*it1).second) * t;
 		}
 		else
@@ -157,7 +171,7 @@ namespace LostCore
 	FORCEINLINE XType TCurve<XType, YType>::GetRangeMax() const
 	{
 		assert(GetNumKeys() > 0);
-		return (*(Keys.end() - 1)).second;
+		return ((*Keys.rbegin()).first);
 	}
 
 	template<typename XType, typename YType>
@@ -168,7 +182,7 @@ namespace LostCore
 			return static_cast<XType>(0);
 		}
 
-		return (Keys.end() - 1)->first - Keys.begin()->first;
+		return GetRangeMax() - GetRangeMin();
 	}
 
 	template<typename XType, typename YType>
@@ -178,7 +192,7 @@ namespace LostCore
 	}
 
 	template<typename XType, typename YType>
-	FORCEINLINE typename TCurve<XType, YType>::FKeyFrameMapConstIter LostCore::TCurve<XType, YType>::Get(int32 index) const
+	FORCEINLINE typename TCurve<XType, YType>::KeyFramesConstIter LostCore::TCurve<XType, YType>::Get(int32 index) const
 	{
 		assert(GetNumKeys() > 0);
 		assert(InterpolationMode != EInterpolation::Constant && GetNumKeys() > 1);
@@ -221,7 +235,14 @@ namespace LostCore
 			validIndex = index;
 		}
 
-		return Keys.begin() + validIndex;
+		TCurve<XType, YType>::KeyFramesConstIter it = Keys.begin();
+		while (validIndex > 0)
+		{
+			++it;
+			--validIndex;
+		}
+
+		return it;
 	}
 
 	// 曲线的序列化/反序列化
