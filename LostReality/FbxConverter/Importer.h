@@ -630,7 +630,7 @@ namespace Importer {
 		}
 	}
 
-	static void SortSkeletalLink(FbxMesh* mesh, vector<FbxNode*>& links)
+	static void SortSkeletalMeshLink(FbxMesh* mesh, vector<FbxNode*>& links)
 	{
 		if (mesh == nullptr)
 		{
@@ -640,7 +640,7 @@ namespace Importer {
 		auto deformerCount = mesh->GetDeformerCount(FbxDeformer::eSkin);
 		if (deformerCount > 1)
 		{
-			LVMSG("SortSkeletalLink", "mesh[%s] has %d deformers.", mesh->GetName(), deformerCount);
+			LVMSG("SortSkeletalMeshLink", "mesh[%s] has %d deformers.", mesh->GetName(), deformerCount);
 		}
 
 		vector<FbxNode*> rootLinks;
@@ -767,7 +767,9 @@ namespace Importer {
 		bool bGenerateTangentIfNotFound;
 
 		string InputPath;
+		string InputFileNameNoExt;
 		string OutputPath;
+		string OutputFileNameNoExt;
 
 		explicit FConvertOptions(EImportType import, ERegenerateType regenerate)
 		{

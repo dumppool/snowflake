@@ -30,14 +30,14 @@ static void FindExtraSkeletonRecursively(const FPoseTreeAlias& tree, const set<s
 	}
 }
 
-static FbxTimeSpan GetAnimTimeSpan(FbxNode* meshNode, FbxAnimStack* animStack)
+static FbxTimeSpan GetAnimTimeSpan(FbxNode* node, FbxAnimStack* animStack)
 {
 	FbxTimeSpan timeSpan(FBXSDK_TIME_INFINITE, FBXSDK_TIME_MINUS_INFINITE);
 	FbxTimeSpan timeSpan2(FBXSDK_TIME_INFINITE, FBXSDK_TIME_MINUS_INFINITE);
 	timeSpan = animStack->GetLocalTimeSpan();
-	meshNode->GetAnimationInterval(timeSpan2, animStack);
-	LVMSG("GetAnimTimeSpan", "Mesh:%s, Anim:%s, FbxAnimStack::GetLocalTimeSpan: %f, FbxNode::GetAnimationInterval: %f",
-		meshNode->GetName(), animStack->GetName(), timeSpan.GetDuration().GetSecondDouble(), timeSpan2.GetDuration().GetSecondDouble());
+	node->GetAnimationInterval(timeSpan2, animStack);
+	LVMSG("GetAnimTimeSpan", "Node:%s, Anim:%s, FbxAnimStack::GetLocalTimeSpan: %f, FbxNode::GetAnimationInterval: %f",
+		node->GetName(), animStack->GetName(), timeSpan.GetDuration().GetSecondDouble(), timeSpan2.GetDuration().GetSecondDouble());
 
 	return timeSpan;
 }
@@ -102,6 +102,14 @@ static int32 GetMaxSampleRate(FbxAnimStack* animStack, const FbxTimeSpan& timeSp
 	}
 
 	return sampleRate;
+}
+
+static string GetProperName(const string& inName)
+{
+	string outName = inName;
+	LostCore::ReplaceChar(outName, ":", "+");
+	LostCore::ReplaceChar(outName, " ", "+");
+	return outName;
 }
 
 struct FTempMesh
@@ -176,6 +184,7 @@ struct FTempAnimStack
 {
 	FbxAnimStack* AnimStack;
 	FAnimCurveData AnimData;
+	string NameOverride;
 
 	float SampleRate;
 	float Length;
@@ -196,12 +205,14 @@ struct FTempAnimStack2
 	vector<FbxNode*> SortedLinks;
 
 	FAnimKeyFrameData AnimData;
+	string NameOverride;
 
 	explicit FTempAnimStack2(FbxAnimStack* stack);
 	~FTempAnimStack2();
 
 	void Extract(const vector<FbxNode*>& sortedLinks);
 	void ParseLayerInternal(FbxAnimLayer* layer, FbxNode* node, const FbxTimeSpan& timeSpan, FMatrixCurveAlias& curve);
+	void RetrieveSortedLinks();
 };
 
 class FFbxImporter2
@@ -310,7 +321,7 @@ void FTempMesh::ExtractVertex()
 	auto parentNode = meshNode->GetParent();
 
 #ifdef _DEBUG
-	Name = Mesh->GetName();
+	Name = GetProperName(Mesh->GetName());
 
 	if (parentNode == nullptr)
 	{
@@ -323,7 +334,7 @@ void FTempMesh::ExtractVertex()
 	}
 #endif
 
-	MeshData.Name = Mesh->GetName();
+	MeshData.Name = GetProperName(Mesh->GetName());
 
 	MeshData.VertexFlags = 0;
 	if (IsSkeletal())
@@ -334,7 +345,6 @@ void FTempMesh::ExtractVertex()
 	if (MeshData.Name.empty() && !MeshData.Skeleton.Data.Name.empty())
 	{
 		MeshData.Name = MeshData.Skeleton.Data.Name;
-		LostCore::ReplaceChar(MeshData.Name, ":", "+");
 	}
 
 	auto layer0 = Mesh->GetLayer(0);
@@ -863,9 +873,6 @@ void FTempMesh::ExtractSkeleton()
 	MeshData.BlendWeights.resize(cpCount);
 	for_each(MeshData.BlendWeights.begin(), MeshData.BlendWeights.end(), [](FFloat4& arr) {arr = FFloat4(INFINITY, INFINITY, INFINITY, INFINITY); });
 
-	set<FbxNode*> rootLinks;
-	vector<string> vecSkelNames;
-	set<string> setSkelNames;
 	auto skin = (FbxSkin*)Mesh->GetDeformer(0, FbxDeformer::eSkin);
 	int clusterCount = skin->GetClusterCount();
 	for (int i = 0; i < clusterCount; ++i)
@@ -875,12 +882,12 @@ void FTempMesh::ExtractSkeleton()
 		auto link = cluster->GetLink();
 		if (IsBone(link))
 		{
-			MeshData.SkeletonIndexMap[link->GetName()] = i;
-			LVMSG(head, "Cluster: %s", link->GetName());
+			MeshData.SkeletonIndexMap[GetProperName(link->GetName())] = i;
+			LVMSG(head, "Processing cluster: %s", link->GetName());
 		}
 		else
 		{
-			LVERR(head, "cluster[%s] is not a bone", cluster->GetName());
+			LVERR(head, "Cluster[%s] is not a bone", cluster->GetName());
 			continue;
 		}
 
@@ -888,15 +895,6 @@ void FTempMesh::ExtractSkeleton()
 		if (LinkMode == FbxCluster::eAdditive)
 		{
 			LVERR(head, "mesh[%s] link[%s] mode: additive", Mesh->GetName(), link->GetName());
-		}
-
-		setSkelNames.insert(cluster->GetLink()->GetName());
-		vecSkelNames.push_back(cluster->GetLink()->GetName());
-
-		auto rootLink = GetRootLink(link);
-		if (rootLink != nullptr && rootLinks.find(rootLink) == rootLinks.end())
-		{
-			rootLinks.insert(rootLink);
 		}
 
 		int cpIndexCount = cluster->GetControlPointIndicesCount();
@@ -925,27 +923,8 @@ void FTempMesh::ExtractSkeleton()
 		}
 	} //for (int i = 0; i < clusterCount; ++i)
 
-	if (rootLinks.size() != 1)
-	{
-		LVERR(head, "Mesh[%s] has %d roots", Mesh->GetName(), rootLinks.size());
-		return;
-	}
-
-	SortSkeletalLink(Mesh, SortedLinks);
-
-	//CheckSkeletonRecursively(*(rootLinks.begin()), Mesh->GetNode());
-	BuildSkeletonBindPoseRecursively(nullptr, *(rootLinks.begin()), bindPose, MeshData.Skeleton);
-
-	vector<FPoseTreeAlias> extra;
-	FindExtraSkeletonRecursively(MeshData.Skeleton, setSkelNames, extra);
-
-	vector<string> linkNames;
-	for (int i = 0; i < SortedLinks.size(); ++i)
-	{
-		linkNames.push_back(SortedLinks[i]->GetName());
-	}
-
-	LVMSG(head, "%s has %d clusters while %d skeletons.", Mesh->GetName(), clusterCount, MeshData.Skeleton.GetChildCount());
+	SortSkeletalMeshLink(Mesh, SortedLinks);
+	BuildSkeletonBindPoseRecursively(nullptr, SortedLinks[0], bindPose, MeshData.Skeleton);
 }
 
 FbxPose * FTempMesh::RetrieveBindPose()
@@ -1050,7 +1029,7 @@ bool FTempMesh::BuildSkeletonBindPoseRecursively(FbxAMatrix* parentMatrix, FbxNo
 	}
 
 	treeNode.Data.Matrix = ToMatrix(localmat);
-	treeNode.Data.Name = link->GetName();
+	treeNode.Data.Name = GetProperName(link->GetName());
 
 	auto numChildren = link->GetChildCount();
 	for (auto childIndex = 0; childIndex < numChildren; ++childIndex)
@@ -1173,11 +1152,13 @@ bool FFbxImporter2::ImportSceneMeshes()
 	//	animJson[K_NAME] = anim.AnimData.Name;
 	//}
 
-	if (TempMeshArray.size() > 0)
+	for (auto& anim : TempAnimArray)
 	{
-		for (auto& anim : TempAnimArray)
+		if (Skeletons.size() > 0)
 		{
-			anim.Extract(TempMeshArray[0].SortedLinks);
+			vector<FbxNode*> sortedLinks;
+			SortLinkRecursively(Skeletons[0].Data, sortedLinks);
+			anim.Extract(sortedLinks);
 
 			animSection.push_back(FJson());
 			FJson& animJson = *(animSection.end() - 1);
@@ -1271,6 +1252,13 @@ void FFbxImporter2::ImportAnim()
 #endif
 		TempAnimArray.push_back(stack);
 	}
+
+	// UE4导出的动画FbxAnimStack::GetName总是"Unreal Take"，不能用作转换输出动画名，
+	// 但是如果动画fbx文件包含不止一个FbxAnimStack时，这样会覆盖原本应该合适的名字.
+	if (TempAnimArray.size() == 1)
+	{
+		TempAnimArray[0].NameOverride = FConvertOptions::Get()->InputFileNameNoExt;
+	}
 }
 
 FTempAnimStack::FTempAnimStack(FbxAnimStack * stack)
@@ -1286,7 +1274,7 @@ void FTempAnimStack::Extract(const vector<FbxNode*>& sortedLinks)
 {
 	assert(AnimStack != nullptr);
 
-	AnimData.Name = AnimStack->GetName();
+	AnimData.Name = GetProperName(NameOverride.empty() ? AnimStack->GetName() : NameOverride);
 	auto numAnimLayers = AnimStack->GetMemberCount<FbxAnimLayer>();
 	for (uint32 i = 0; i < numAnimLayers; ++i)
 	{
@@ -1307,7 +1295,7 @@ void FTempAnimStack::ParseLayer(FbxAnimLayer * layer, FbxNode * node)
 void FTempAnimStack::ParseLayerInternal(FbxAnimLayer * layer, FbxNode * node)
 {
 	FbxAnimCurve* curve = nullptr;
-	string nodeName = node->GetName();
+	string nodeName = GetProperName(node->GetName());
 	AnimData.CurveMap[nodeName] = map<string, FRealCurveAlias>();
 
 	curve = node->LclRotation.GetCurve(layer, FBXSDK_CURVENODE_COMPONENT_X);
@@ -1441,13 +1429,15 @@ FTempAnimStack2::~FTempAnimStack2()
 void FTempAnimStack2::Extract(const vector<FbxNode*>& sortedLinks)
 {
 	SortedLinks = sortedLinks;
-	AnimStack->GetScene()->SetCurrentAnimationStack(AnimStack);
 	auto timeSpan = AnimStack->GetLocalTimeSpan();
-	AnimData.Name = AnimStack->GetName();
+	auto scene = AnimStack->GetScene();
+	AnimData.Name = GetProperName(NameOverride.empty()?AnimStack->GetName():NameOverride);
 	AnimData.SampleRate = GetMaxSampleRate(AnimStack, timeSpan, SortedLinks);
 	AnimData.Length = timeSpan.GetDuration().GetSecondDouble();
 	AnimData.NumKeys = AnimData.Length * AnimData.SampleRate;
 
+	scene->SetCurrentAnimationStack(AnimStack);
+	AnimStack->BakeLayers(scene->GetAnimationEvaluator(), timeSpan.GetStart(), timeSpan.GetStop(), timeSpan.GetDuration() / AnimData.NumKeys);
 	assert(AnimStack->GetMemberCount() > 0);
 	FbxAnimLayer* layer = (FbxAnimLayer*)AnimStack->GetMember(0);
 	for (int32 linkIndex = 0; linkIndex < SortedLinks.size(); ++linkIndex)
@@ -1455,7 +1445,7 @@ void FTempAnimStack2::Extract(const vector<FbxNode*>& sortedLinks)
 		FMatrixCurveAlias curve;
 		curve.SetMode(FMatrixCurveAlias::EWrap::Wrap, FMatrixCurveAlias::EInterpolation::Constant);
 		ParseLayerInternal(layer, SortedLinks[linkIndex], timeSpan, curve);
-		AnimData.KeyFrameMap[SortedLinks[linkIndex]->GetName()] = curve;
+		AnimData.KeyFrameMap[GetProperName(SortedLinks[linkIndex]->GetName())] = curve;
 	}
 }
 
@@ -1476,4 +1466,9 @@ void FTempAnimStack2::ParseLayerInternal(FbxAnimLayer * layer, FbxNode * node, c
 		local = parentGlobal.Inverse() * local;
 		curve.AddKey(cur.GetSecondDouble(), ToMatrix(local));
 	}
+}
+
+void FTempAnimStack2::RetrieveSortedLinks()
+{
+	//SortSkeletalMeshLink()
 }

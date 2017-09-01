@@ -43,7 +43,7 @@ void LostCore::FSkeletonTree::UpdateWorldMatrix(const FFloat4x4 & parentWorld, f
 {
 	if (!CurrAnimName.empty())
 	{
-		CurrKeyTime += sec;
+		CurrKeyTime += sec * FGlobalHandler::Get()->GetAnimateRate();
 		FFloat4x4 offset;
 		if (FAnimationLibrary::Get()->GetMatrix(offset, CurrKeyTime, CurrAnimName, Name))
 		{
@@ -186,7 +186,6 @@ bool LostCore::FAnimationLibrary::GetMatrixCurve(FFloat4x4 & outMatrix, float ke
 		return false;
 	}
 
-	keyTime *= FGlobalHandler::Get()->GetAnimateRate();
 	auto& curves = (*it2).second;
 
 	FFloat3::FT rx = 0.0;
@@ -262,7 +261,6 @@ bool LostCore::FAnimationLibrary::GetMatrixKeyFrame(FFloat4x4 & outMatrix, float
 		return false;
 	}
 
-	keyTime *= FGlobalHandler::Get()->GetAnimateRate();
 	auto& curve = (*it2).second;
 	outMatrix.SetIdentity();
 	outMatrix = curve.Eval(keyTime);

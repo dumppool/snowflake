@@ -20,10 +20,18 @@ int main(int argc, char** argv)
 			if (key.compare(K_INPUT_PATH) == 0)
 			{
 				FConvertOptions::Get()->InputPath = value;
+				LostCore::ReplaceChar(FConvertOptions::Get()->InputPath, "/", "\\");
+
+				string ext;
+				LostCore::GetFileName(FConvertOptions::Get()->InputFileNameNoExt, ext, FConvertOptions::Get()->InputPath);
 			}
 			else if (key.compare(K_OUTPUT_PATH) == 0)
 			{
 				FConvertOptions::Get()->OutputPath = value;
+				LostCore::ReplaceChar(FConvertOptions::Get()->OutputPath, "/", "\\");
+
+				string ext;
+				LostCore::GetFileName(FConvertOptions::Get()->OutputFileNameNoExt, ext, FConvertOptions::Get()->OutputPath);
 			}
 		}
 		else

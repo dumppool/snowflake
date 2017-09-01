@@ -275,14 +275,12 @@ void LostCore::FSkeletalModel::Fini()
 void LostCore::FSkeletalModel::PlayAnimation(const string & animName)
 {
 	Root.SetAnimation(animName);
-	Root2.SetAnimation(animName);
 }
 
 void LostCore::FSkeletalModel::Tick(float sec)
 {
 	Root.UpdateWorldMatrix(Matrices.World, sec);
 
-	// 是时候分开Skeleton和非Skeleton了
 	LostCore::FPoseMap pose;
 	Root.GetWorldPose(pose);
 	for (const auto& it : pose)
@@ -394,25 +392,6 @@ void LostCore::FSkeletalModel::Tick(float sec)
 		map<string, pair<FFloat3, vector<FFloat3>>> skels;
 
 		Root.GetSkeletonRenderData(skels);
-		for (auto& skel : skels)
-		{
-			FSegmentData seg;
-			seg.StartPt = skel.second.first;
-			seg.StartPtColor = FColor96((uint32)0xffff00);
-			seg.StopPtColor = FColor96((uint32)0xff8000);
-			for (auto & childSkel : skel.second.second)
-			{
-				seg.StopPt = childSkel;
-				SkeletonRenderer.AddSegment(seg);
-			}
-		}
-	}
-	
-	if (FGlobalHandler::Get()->IsDisplaySkeleton(FLAG_SKEL_2))
-	{
-		map<string, pair<FFloat3, vector<FFloat3>>> skels;
-		Root2.UpdateWorldMatrix(Matrices.World, sec);
-		Root2.GetSkeletonRenderData(skels);
 		for (auto& skel : skels)
 		{
 			FSegmentData seg;
