@@ -345,7 +345,7 @@ namespace Importer {
 		return root;
 	}
 
-	static bool IsBone(FbxNode* link)
+	static bool IsBone(FbxNode* link, bool strict = true)
 	{
 		if (link == nullptr)
 		{
@@ -359,7 +359,15 @@ namespace Importer {
 		}
 
 		auto attrType = attr->GetAttributeType();
-		return attrType == FbxNodeAttribute::eSkeleton/* || attrType == FbxNodeAttribute::eMesh || attrType == FbxNodeAttribute::eNull*/;
+
+		if (strict)
+		{
+			return attrType == FbxNodeAttribute::eSkeleton/* || attrType == FbxNodeAttribute::eMesh || attrType == FbxNodeAttribute::eNull*/;
+		}
+		else
+		{
+			return attrType == FbxNodeAttribute::eSkeleton || attrType == FbxNodeAttribute::eMesh || attrType == FbxNodeAttribute::eNull;
+		}
 	}
 
 	static FbxAMatrix GetGlobalMatrix(FbxNode* link, const FbxTime& time, FbxPose* pose, FbxAMatrix* parentGlobalMatrix = nullptr)
@@ -417,20 +425,20 @@ namespace Importer {
 		//return mat;
 	}
 
-	static void BuildSkeletonTree(FbxNode* link, FSkeletonTreeAlias& output)
-	{
-		if (IsBone(link))
-		{
-			for (int i = 0; i < link->GetChildCount(); ++i)
-			{
-				auto childData = FSkeletonTreeAlias();
-				BuildSkeletonTree(link->GetChild(i), childData);
-				output.AddChild(childData);
-			}
+	//static void BuildSkeletonTree(FbxNode* link, FSkeletonTreeAlias& output)
+	//{
+	//	if (IsBone(link))
+	//	{
+	//		for (int i = 0; i < link->GetChildCount(); ++i)
+	//		{
+	//			auto childData = FSkeletonTreeAlias();
+	//			BuildSkeletonTree(link->GetChild(i), childData);
+	//			output.AddChild(childData);
+	//		}
 
-			output.Data = link->GetName();
-		}
-	}
+	//		output.Data = link->GetName();
+	//	}
+	//}
 
 	static void BuildSkeletonPose(FbxAMatrix& parentMatrix, FbxTime& time, FbxNode* link, FPoseTreeAlias& output)
 	{
@@ -518,27 +526,27 @@ namespace Importer {
 		return clusterLocal;
 	}
 
-	static void GetGlobalPoseMap(const LostCore::FFloat4x4& parentMat,
-		const FSkeletonTreeAlias& skelNode, FPoseMapAlias& localPose, FPoseMapAlias& globalPose)
-	{
-		globalPose[skelNode.Data] = localPose[skelNode.Data] * parentMat;
-		for (auto& child : skelNode.Children)
-		{
-			GetGlobalPoseMap(globalPose[skelNode.Data], child, localPose, globalPose);
-		}
-	}
+	//static void GetGlobalPoseMap(const LostCore::FFloat4x4& parentMat,
+	//	const FSkeletonTreeAlias& skelNode, FPoseMapAlias& localPose, FPoseMapAlias& globalPose)
+	//{
+	//	globalPose[skelNode.Data] = localPose[skelNode.Data] * parentMat;
+	//	for (auto& child : skelNode.Children)
+	//	{
+	//		GetGlobalPoseMap(globalPose[skelNode.Data], child, localPose, globalPose);
+	//	}
+	//}
 
-	static void GetLocalPoseMap(const LostCore::FFloat4x4& parentMat,
-		const FSkeletonTreeAlias& skelNode, FPoseMapAlias& globalPose, FPoseMapAlias& localPose)
-	{
-		LostCore::FFloat4x4 pmat(parentMat);
-		pmat.Invert();
-		localPose[skelNode.Data] = globalPose[skelNode.Data] * pmat;
-		for (auto& child : skelNode.Children)
-		{
-			GetLocalPoseMap(globalPose[skelNode.Data], child, globalPose, localPose);
-		}
-	}
+	//static void GetLocalPoseMap(const LostCore::FFloat4x4& parentMat,
+	//	const FSkeletonTreeAlias& skelNode, FPoseMapAlias& globalPose, FPoseMapAlias& localPose)
+	//{
+	//	LostCore::FFloat4x4 pmat(parentMat);
+	//	pmat.Invert();
+	//	localPose[skelNode.Data] = globalPose[skelNode.Data] * pmat;
+	//	for (auto& child : skelNode.Children)
+	//	{
+	//		GetLocalPoseMap(globalPose[skelNode.Data], child, globalPose, localPose);
+	//	}
+	//}
 
 	static FbxAMatrix GetNodeLocalMatrix(FbxNode* node)
 	{
@@ -612,7 +620,7 @@ namespace Importer {
 
 	static void SortLinkRecursively(FbxNode* link, vector<FbxNode*>& links)
 	{
-		if (IsBone(link))
+		if (IsBone(link, false))
 		{
 			links.push_back(link);
 			for (int index = 0; index < link->GetChildCount(); ++index)
@@ -622,7 +630,7 @@ namespace Importer {
 		}
 	}
 
-	static void SortSkeletalLink(FbxScene* scene, FbxMesh* mesh, vector<FbxNode*>& links)
+	static void SortSkeletalLink(FbxMesh* mesh, vector<FbxNode*>& links)
 	{
 		if (mesh == nullptr)
 		{
@@ -695,6 +703,8 @@ namespace Importer {
 		selfWorld.SetIdentity();
 		return selfWorld;
 	}
+	
+	//static FbxAMatrix ComputeSkelTotalMatrix()
 
 	typedef LostCore::TTreeNode<FbxNode*> FFbxSkeleton;
 	static void BuildFbxSkeleton(FbxNode* skel, FbxNode* skelParent, FFbxSkeleton& fbxSkelTree)
@@ -709,21 +719,21 @@ namespace Importer {
 		}
 	}
 
-	static void BuildSkeleton(FbxNode* skel, FbxNode* skelParent, FSkeletonTreeAlias& outSkelTree, FPoseMapAlias& outPose)
-	{
-		auto local = ComputeMatrixLocalToParent(skel, skelParent);
-		outSkelTree.Data = skel->GetName();
-		outPose[skel->GetName()] = ToMatrix(local);
+	//static void BuildSkeleton(FbxNode* skel, FbxNode* skelParent, FSkeletonTreeAlias& outSkelTree, FPoseMapAlias& outPose)
+	//{
+	//	auto local = ComputeMatrixLocalToParent(skel, skelParent);
+	//	outSkelTree.Data = skel->GetName();
+	//	outPose[skel->GetName()] = ToMatrix(local);
 
-		auto numChildren = skel->GetChildCount();
-		for (uint32 childIndex = 0; childIndex < numChildren; ++childIndex)
-		{
-			FSkeletonTreeAlias childTree;
-			BuildSkeleton(skel->GetChild(childIndex), skel, childTree, outPose);
-			outSkelTree.AddChild(childTree);
-		}
-		//GetGlobalMatrix(skel, FbxTime(), nullptr, parentMat);
-	}
+	//	auto numChildren = skel->GetChildCount();
+	//	for (uint32 childIndex = 0; childIndex < numChildren; ++childIndex)
+	//	{
+	//		FSkeletonTreeAlias childTree;
+	//		BuildSkeleton(skel->GetChild(childIndex), skel, childTree, outPose);
+	//		outSkelTree.AddChild(childTree);
+	//	}
+	//	//GetGlobalMatrix(skel, FbxTime(), nullptr, parentMat);
+	//}
 
 	struct FConvertOptions
 	{

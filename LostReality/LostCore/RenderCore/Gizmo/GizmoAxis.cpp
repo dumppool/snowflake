@@ -39,19 +39,19 @@ void LostCore::FAxisTool::Draw(IRenderContext * rc, float sec)
 		// axis x
 		seg.StartPt = axises[i].Origin;
 		seg.StopPt = seg.StartPt + axises[i].DirX * axises[i].Length;
-		seg.Color = FColor96((uint32)0xff0000);
+		seg.StartPtColor = FColor96((uint32)0xff0000);
 		SegmentTool.AddSegment(seg);
 
 		// axis y
 		seg.StartPt = axises[i].Origin;
 		seg.StopPt = seg.StartPt + axises[i].DirY * axises[i].Length;
-		seg.Color = FColor96((uint32)0x0000ff);
+		seg.StartPtColor = FColor96((uint32)0x0000ff);
 		SegmentTool.AddSegment(seg);
 
 		// axis z
 		seg.StartPt = axises[i].Origin;
 		seg.StopPt = seg.StartPt + axises[i].DirZ * axises[i].Length;
-		seg.Color = FColor96((uint32)0x00ff00);
+		seg.StartPtColor = FColor96((uint32)0x00ff00);
 		SegmentTool.AddSegment(seg);
 	}
 

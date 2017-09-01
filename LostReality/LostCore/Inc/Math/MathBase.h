@@ -77,7 +77,7 @@ namespace LostCore
 		}
 		else
 		{
-			return value / by;
+			return value * (1.0 / by);
 		}
 	}
 

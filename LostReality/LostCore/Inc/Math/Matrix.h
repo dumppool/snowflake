@@ -468,9 +468,139 @@ namespace LostCore
 			return TVec3NonVectorized<T>(M[3][0], M[3][1], M[3][2]);
 		}
 
-		FORCEINLINE TMatrixNonVectorized<T> operator*(const TMatrixNonVectorized<T>&  rhs) const
+		FORCEINLINE bool operator==(const TMatrixNonVectorized<T>& rhs) const
+		{
+			return (TVec4NonVectorized<T>(M[0]) == TVec4NonVectorized<T>(rhs.M[0])
+				&& TVec4NonVectorized<T>(M[1]) == TVec4NonVectorized<T>(rhs.M[1])
+				&& TVec4NonVectorized<T>(M[2]) == TVec4NonVectorized<T>(rhs.M[2])
+				&& TVec4NonVectorized<T>(M[3]) == TVec4NonVectorized<T>(rhs.M[3]));
+		}
+
+		FORCEINLINE TMatrixNonVectorized<T>& operator=(const TMatrixNonVectorized<T>& rhs)
+		{
+			memcpy(M, rhs.M, sizeof(T) * 4 * 4);
+			return *this;
+		}
+
+		FORCEINLINE TMatrixNonVectorized<T> operator-() const
 		{
 			TMatrixNonVectorized<T> result;
+
+			result.M[0][0] = -M[0][0];
+			result.M[0][1] = -M[0][1];
+			result.M[0][2] = -M[0][2];
+			result.M[0][3] = -M[0][3];
+
+			result.M[1][0] = -M[1][0];
+			result.M[1][1] = -M[1][1];
+			result.M[1][2] = -M[1][2];
+			result.M[1][3] = -M[1][3];
+
+			result.M[2][0] = -M[2][0];
+			result.M[2][1] = -M[2][1];
+			result.M[2][2] = -M[2][2];
+			result.M[2][3] = -M[2][3];
+
+			result.M[3][0] = -M[3][0];
+			result.M[3][1] = -M[3][1];
+			result.M[3][2] = -M[3][2];
+			result.M[3][3] = -M[3][3];
+
+			return result;
+		}
+
+		FORCEINLINE TMatrixNonVectorized<T> operator+(const TMatrixNonVectorized<T>& rhs) const
+		{
+			TMatrixNonVectorized<T> result(*this);
+
+			result.M[0][0] += rhs.M[0][0];
+			result.M[0][1] += rhs.M[0][1];
+			result.M[0][2] += rhs.M[0][2];
+			result.M[0][3] += rhs.M[0][3];
+
+			result.M[1][0] += rhs.M[1][0];
+			result.M[1][1] += rhs.M[1][1];
+			result.M[1][2] += rhs.M[1][2];
+			result.M[1][3] += rhs.M[1][3];
+
+			result.M[2][0] += rhs.M[2][0];
+			result.M[2][1] += rhs.M[2][1];
+			result.M[2][2] += rhs.M[2][2];
+			result.M[2][3] += rhs.M[2][3];
+
+			result.M[3][0] += rhs.M[3][0];
+			result.M[3][1] += rhs.M[3][1];
+			result.M[3][2] += rhs.M[3][2];
+			result.M[3][3] += rhs.M[3][3];
+
+			return result;
+		}
+
+		template <typename T2>
+		FORCEINLINE TMatrixNonVectorized<T> operator+(const T2& rhs) const
+		{
+			TMatrixNonVectorized<T> result(*this);
+
+			result.M[0][0] += rhs.M[0][0];
+			result.M[0][1] += rhs.M[0][1];
+			result.M[0][2] += rhs.M[0][2];
+			result.M[0][3] += rhs.M[0][3];
+
+			result.M[1][0] += rhs.M[1][0];
+			result.M[1][1] += rhs.M[1][1];
+			result.M[1][2] += rhs.M[1][2];
+			result.M[1][3] += rhs.M[1][3];
+
+			result.M[2][0] += rhs.M[2][0];
+			result.M[2][1] += rhs.M[2][1];
+			result.M[2][2] += rhs.M[2][2];
+			result.M[2][3] += rhs.M[2][3];
+
+			result.M[3][0] += rhs.M[3][0];
+			result.M[3][1] += rhs.M[3][1];
+			result.M[3][2] += rhs.M[3][2];
+			result.M[3][3] += rhs.M[3][3];
+			return TMatrixNonVectorized<T>;
+		}
+
+		template <typename T2>
+		FORCEINLINE TMatrixNonVectorized<T> operator-(const T2& rhs) const
+		{
+			return *this + (-rhs);
+		}
+
+		template <typename T2>
+		FORCEINLINE TMatrixNonVectorized<T> operator*(const T2& rhs) const
+		{
+			TMatrixNonVectorized<T> result(*this);
+
+			result.M[0][0] *= rhs;
+			result.M[0][1] *= rhs;
+			result.M[0][2] *= rhs;
+			result.M[0][3] *= rhs;
+
+			result.M[1][0] *= rhs;
+			result.M[1][1] *= rhs;
+			result.M[1][2] *= rhs;
+			result.M[1][3] *= rhs;
+
+			result.M[2][0] *= rhs;
+			result.M[2][1] *= rhs;
+			result.M[2][2] *= rhs;
+			result.M[2][3] *= rhs;
+
+			result.M[3][0] *= rhs;
+			result.M[3][1] *= rhs;
+			result.M[3][2] *= rhs;
+			result.M[3][3] *= rhs;
+
+			return result;
+		}
+
+		FORCEINLINE TMatrixNonVectorized<T> operator*(const TMatrixNonVectorized<T>& rhs) const
+		{
+			TMatrixNonVectorized<T> result(*this);
+
 			for (int32 i = 0; i < 4; ++i)
 			{
 				for (int32 j = 0; j < 4; ++j)
@@ -480,42 +610,6 @@ namespace LostCore
 			}
 
 			return result;
-		}
-
-		FORCEINLINE TMatrixNonVectorized<T> operator*(T val) const
-		{
-			TMatrixNonVectorized<T> result(*this);
-			for (int32 i = 0; i < 4; ++i)
-			{
-				for (int32 j = 0; j < 4; ++j)
-				{
-					result.M[i][j] *= val;
-				}
-			}
-
-			return result;
-		}
-
-		FORCEINLINE TMatrixNonVectorized<T> operator+(const TMatrixNonVectorized<T>&  rhs) const
-		{
-			TMatrixNonVectorized<T> result(*this);
-			for (int32 i = 0; i < 4; ++i)
-			{
-				for (int32 j = 0; j < 4; ++j)
-				{
-					result.M[i][j] += rhs.M[i][j];
-				}
-			}
-
-			return result;
-		}
-
-		FORCEINLINE bool operator==(const TMatrixNonVectorized<T>& rhs) const
-		{
-			return (TVec4NonVectorized<T>(M[0]) == TVec4NonVectorized<T>(rhs.M[0])
-				&& TVec4NonVectorized<T>(M[1]) == TVec4NonVectorized<T>(rhs.M[1])
-				&& TVec4NonVectorized<T>(M[2]) == TVec4NonVectorized<T>(rhs.M[2])
-				&& TVec4NonVectorized<T>(M[3]) == TVec4NonVectorized<T>(rhs.M[3]));
 		}
 
 		FORCEINLINE TMatrixNonVectorized<T>&  Transpose()

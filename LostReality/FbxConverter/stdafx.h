@@ -49,11 +49,13 @@ using FJson = nlohmann::json;
 
 #include "Serialize/StructSerialize.h"
 
+using FMatrixNodeAlias = LostCore::FMatrixNode;
 using FPoseTreeAlias = LostCore::FPoseTree;
 using FPoseMapAlias = LostCore::FPoseMap;
-using FSkeletonTreeAlias = LostCore::FBone;
+//using FSkeletonTreeAlias = LostCore::FBone;
 using FMeshDataAlias = LostCore::FMeshData;
 using FRealCurveAlias = LostCore::FRealCurve;
+using FMatrixCurveAlias = LostCore::FMatrixCurve;
 
 // sdk includes
 #include <fbxsdk.h>

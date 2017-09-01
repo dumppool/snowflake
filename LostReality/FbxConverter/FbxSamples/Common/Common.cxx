@@ -183,13 +183,24 @@ bool LoadScene(FbxManager* pManager, FbxDocument* pScene, const char* pFilename)
 
         // Set the import states. By default, the import states are always set to 
         // true. The code below shows how to change these states.
-        IOS_REF.SetBoolProp(IMP_FBX_MATERIAL,        true);
-        IOS_REF.SetBoolProp(IMP_FBX_TEXTURE,         true);
-        IOS_REF.SetBoolProp(IMP_FBX_LINK,            true);
-        IOS_REF.SetBoolProp(IMP_FBX_SHAPE,           true);
-        IOS_REF.SetBoolProp(IMP_FBX_GOBO,            true);
-        IOS_REF.SetBoolProp(IMP_FBX_ANIMATION,       true);
-        IOS_REF.SetBoolProp(IMP_FBX_GLOBAL_SETTINGS, true);
+        //IOS_REF.SetBoolProp(IMP_FBX_MATERIAL,        true);
+        //IOS_REF.SetBoolProp(IMP_FBX_TEXTURE,         true);
+        //IOS_REF.SetBoolProp(IMP_FBX_LINK,            true);
+        //IOS_REF.SetBoolProp(IMP_FBX_SHAPE,           true);
+        //IOS_REF.SetBoolProp(IMP_FBX_GOBO,            true);
+        //IOS_REF.SetBoolProp(IMP_FBX_ANIMATION,       true);
+        //IOS_REF.SetBoolProp(IMP_FBX_GLOBAL_SETTINGS, true);
+
+		IOS_REF.SetBoolProp(IMP_FBX_MATERIAL, true);
+		IOS_REF.SetBoolProp(IMP_FBX_TEXTURE, true);
+		IOS_REF.SetBoolProp(IMP_FBX_LINK, true);
+		IOS_REF.SetBoolProp(IMP_FBX_SHAPE, true);
+		IOS_REF.SetBoolProp(IMP_FBX_GOBO, true);
+		IOS_REF.SetBoolProp(IMP_FBX_ANIMATION, true);
+		IOS_REF.SetBoolProp(IMP_SKINS, true);
+		IOS_REF.SetBoolProp(IMP_DEFORMATION, true);
+		IOS_REF.SetBoolProp(IMP_FBX_GLOBAL_SETTINGS, true);
+		IOS_REF.SetBoolProp(IMP_TAKE, true);
     }
 
     // Import the scene.

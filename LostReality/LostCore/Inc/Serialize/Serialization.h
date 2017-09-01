@@ -36,7 +36,7 @@ namespace LostCore
 		void * Data();
 
 		void WriteToFile(const std::string& filePath);
-		void ReadFromFile(const std::string& filePath);
+		bool ReadFromFile(const std::string& filePath);
 	};
 
 	FORCEINLINE FBinaryIO::FBinaryIO()
@@ -143,15 +143,18 @@ namespace LostCore
 		file.close();
 	}
 
-	FORCEINLINE void FBinaryIO::ReadFromFile(const std::string& filePath)
+	FORCEINLINE bool FBinaryIO::ReadFromFile(const std::string& filePath)
 	{
 		ifstream file;
 		file.open(filePath, ios::in | ios::binary | ios::ate);
+		bool failed = file.fail();
 		auto sz = file.tellg();
 		Reserve((uint32)sz);
 		file.seekg(0);
 		file.read((char*)Begin, sz);
 		file.close();
+
+		return !failed;
 	}
 
 	/************************************************************

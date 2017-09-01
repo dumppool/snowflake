@@ -166,8 +166,9 @@
 #define K_FORCE_GEN_TANGENT				"ForceGenerateTangent"
 #define K_GEN_TANGENT_IF_NOT_FOUND		"GenrateTangentIfNotFound"
 
-#define K_PRIMITIVE_EXT					".iv"
-#define K_ANIMATION_EXT					".anim"
+#define K_PRIMITIVE_EXT					"iv"
+#define K_ANIM_EXT_CURVE				"animc"
+#define K_ANIM_EXT_KEYFRAME				"animk"
 
 #define K_DEPTH_STENCIL_Z_WRITE			"Z_ENABLE_WRITE"
 #define K_DEPTH_STENCIL_ALWAYS			"ALWAYS"

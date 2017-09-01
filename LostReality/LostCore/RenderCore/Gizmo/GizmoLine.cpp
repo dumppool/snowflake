@@ -102,8 +102,8 @@ void LostCore::FSegmentTool::Draw(LostCore::IRenderContext * rc, float sec)
 
 void LostCore::FSegmentTool::AddSegment(const FSegmentData & seg)
 {
-	Data.push_back(FSegmentVertex(seg.StartPt, seg.Color));
-	Data.push_back(FSegmentVertex(seg.StopPt, seg.Color));
+	Data.push_back(FSegmentVertex(seg.StartPt, seg.StartPtColor));
+	Data.push_back(FSegmentVertex(seg.StopPt, seg.StopPtColor));
 }
 
 void LostCore::FSegmentTool::SetWorldMatrix(const FFloat4x4 & mat)

@@ -160,7 +160,7 @@ namespace LostCore
 		}
 
 		// 如果输入相对路径的文件夹名，输出一个绝对路径，并总是返回true。
-		// 如果输入绝对路径的文件夹名，不做任何处理，返回true。
+		// 如果输入绝对路径的文件夹名，返回true。
 		// 如果输入相对路径的文件名，找到这个文件输出文件绝对路径名并返回true，没找到返回false。
 		// 如果输入绝对路径的文件名，找到这个文件返回true，否则false。
 		bool GetSpecifiedAbsolutePath(const std::string& specified, const std::string& path, std::string& output)
@@ -194,19 +194,25 @@ namespace LostCore
 			}
 			else
 			{
-				if (IsDirectory(path))
+				output = path;
+				ReplaceChar(output, "/", "\\");
+				if (IsDirectory(output))
 				{
 					return true;
 				}
 				else
 				{
 					std::ifstream file;
-					file.open(path);
+					file.open(output);
 					if (!file.fail())
 					{
-						output = path;
 						file.close();
 						return true;
+					}
+					else
+					{
+						file.close();
+						return false;
 					}
 				}
 			}

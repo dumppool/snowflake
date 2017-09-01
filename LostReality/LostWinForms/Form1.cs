@@ -144,7 +144,7 @@ namespace LostWinForms
 
         private void AnimateRateSlider_Scroll(object sender, EventArgs e)
         {
-            float rate = AnimateRateSlider.Value * 0.003f;
+            float rate = AnimateRateSlider.Value * 0.05f;
             AnimateRateValue.Text = rate.ToString();
             SetAnimateRate(rate);
         }

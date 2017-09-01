@@ -49,6 +49,30 @@ namespace LostCore
 			Children.push_back(node);
 		}
 
+		int32 GetDescendantCount() const
+		{
+			int32 count = 0;
+			auto numChildren = Children.size();
+			count += numChildren;
+			for (int32 childIndex = 0; childIndex < numChildren; ++childIndex)
+			{
+				count += Children[childIndex].GetChildCount();
+			}
+
+			return count;
+		}
+
+		int32 GetChildCount() const
+		{
+			return Children.size();
+		}
+
+		const TTreeNode<T>& GetChild(int32 index) const
+		{
+			assert(index < Children.size());
+			return Children[index];
+		}
+
 		bool operator==(const TTreeNode<T>& rhs) const
 		{
 			bool equal = (Data == rhs.Data && Children.size() == rhs.Children.size());
@@ -96,13 +120,23 @@ namespace LostCore
 		return stream;
 	}
 
-	typedef TTreeNode<string> FBone;
-
 	struct FMatrixNode
 	{
 		string Name;
 		FFloat4x4 Matrix;
+
+		FMatrixNode& operator=(const FMatrixNode& rhs)
+		{
+			Name = rhs.Name;
+			Matrix = rhs.Matrix;
+		}
+
+		bool operator==(const FMatrixNode& rhs) const
+		{
+			return Name.compare(rhs.Name) == 0;
+		}
 	};
+
 
 	FORCEINLINE FBinaryIO& operator<<(FBinaryIO& stream, const FMatrixNode& data)
 	{
@@ -156,10 +190,8 @@ namespace LostCore
 		// ¹Ç÷À»ìºÏÈ¨ÖØ
 		vector<FSInt4>	BlendIndices;
 
-		map<string, FPoseMap> Poses;
-
 		// ¹Ç÷À
-		FBone Skeleton;
+		FPoseTree Skeleton;
 
 		// ¹Ç÷ÀË÷Òý±í
 		map<string, int32> SkeletonIndexMap;
@@ -231,7 +263,6 @@ namespace LostCore
 			<< data.Normals << data.Tangents << data.Binormals
 			<< data.VertexColors
 			<< data.BlendWeights << data.BlendIndices
-			<< data.Poses
 			<< data.Skeleton
 			<< data.SkeletonIndexMap
 			<< data.VertexPolygonMap
@@ -252,7 +283,6 @@ namespace LostCore
 			>> data.Normals >> data.Tangents >> data.Binormals
 			>> data.VertexColors
 			>> data.BlendWeights >> data.BlendIndices
-			>> data.Poses 
 			>> data.Skeleton 
 			>> data.SkeletonIndexMap
 			>> data.VertexPolygonMap
@@ -266,10 +296,13 @@ namespace LostCore
 		return stream;
 	}
 
-	struct FAnimData
+	struct FAnimCurveData
 	{
 		// Animation name.
 		string Name;
+		float SampleRate;
+		float Length;
+		int32 NumKeys;
 
 		// <SkeletonName, <ComponentName, Curve>> map.
 		map<string, map<string, FRealCurve>> CurveMap;
@@ -278,15 +311,40 @@ namespace LostCore
 		void Load(const string& inputDir);
 	};
 
-	FORCEINLINE FBinaryIO& operator<<(FBinaryIO& stream, const FAnimData& data)
+	FORCEINLINE FBinaryIO& operator<<(FBinaryIO& stream, const FAnimCurveData& data)
 	{
-		stream << data.Name << data.CurveMap;
+		stream << data.Name << data.SampleRate << data.Length << data.NumKeys << data.CurveMap;
 		return stream;
 	}
 
-	FORCEINLINE FBinaryIO& operator >> (FBinaryIO& stream, FAnimData& data)
+	FORCEINLINE FBinaryIO& operator >> (FBinaryIO& stream, FAnimCurveData& data)
 	{
-		stream >> data.Name >> data.CurveMap;
+		stream >> data.Name >> data.SampleRate >> data.Length >> data.NumKeys >> data.CurveMap;
+		return stream;
+	}
+
+	struct FAnimKeyFrameData
+	{
+		string Name;
+		float SampleRate;
+		float Length;
+		int32 NumKeys;
+
+		map<string, FMatrixCurve> KeyFrameMap;
+
+		string Save(const string& outputDir) const;
+		void Load(const string& inputDir);
+	};
+
+	FORCEINLINE FBinaryIO& operator<<(FBinaryIO& stream, const FAnimKeyFrameData& data)
+	{
+		stream << data.Name << data.SampleRate << data.Length << data.NumKeys << data.KeyFrameMap;
+		return stream;
+	}
+
+	FORCEINLINE FBinaryIO& operator >> (FBinaryIO& stream, FAnimKeyFrameData& data)
+	{
+		stream >> data.Name >> data.SampleRate >> data.Length >> data.NumKeys >> data.KeyFrameMap;
 		return stream;
 	}
 }
@@ -306,7 +364,6 @@ FORCEINLINE LostCore::FMeshData::FMeshData()
 	VertexColors.clear();
 	BlendWeights.clear();
 	BlendIndices.clear();
-	Poses.clear();
 	SkeletonIndexMap.clear();
 	Triangles.clear();
 	Indices.clear();
@@ -323,7 +380,6 @@ FORCEINLINE LostCore::FMeshData::~FMeshData()
 	VertexColors.clear();
 	BlendWeights.clear();
 	BlendIndices.clear();
-	Poses.clear();
 	SkeletonIndexMap.clear();
 	Triangles.clear();
 	Indices.clear();
@@ -344,7 +400,6 @@ FORCEINLINE bool LostCore::FMeshData::operator==(const FMeshData& rhs) const
 		&& VertexColors == rhs.VertexColors
 		&& BlendIndices == rhs.BlendIndices
 		&& BlendWeights == rhs.BlendWeights
-		&& Poses == rhs.Poses
 		&& SkeletonIndexMap == rhs.SkeletonIndexMap
 		&& Skeleton == rhs.Skeleton
 		&& Triangles == rhs.Triangles);
@@ -361,7 +416,7 @@ FORCEINLINE string LostCore::FMeshData::Save(const string & outputDir) const
 	LostCore::ReplaceChar(outputFile, "/", "\\");
 	if (LostCore::IsDirectory(outputFile))
 	{
-		outputFile = outputDir + Name + K_PRIMITIVE_EXT;
+		outputFile = outputDir + Name + "." + K_PRIMITIVE_EXT;
 	}
 	
 	FBinaryIO stream;
@@ -475,7 +530,7 @@ FORCEINLINE void LostCore::FMeshData::BuildGPUData(uint32 flags)
 	Deserialize(stream, &Vertices[0], stream.RemainingSize());
 }
 
-FORCEINLINE string LostCore::FAnimData::Save(const string& outputDir) const
+FORCEINLINE string LostCore::FAnimCurveData::Save(const string& outputDir) const
 {
 	if (outputDir.empty())
 	{
@@ -486,20 +541,20 @@ FORCEINLINE string LostCore::FAnimData::Save(const string& outputDir) const
 	LostCore::ReplaceChar(outputFile, "/", "\\");
 	if (LostCore::IsDirectory(outputFile))
 	{
-		outputFile += Name + K_ANIMATION_EXT;
+		outputFile += Name + "." + K_ANIM_EXT_CURVE;
 	}
 
 	FBinaryIO stream;
 	stream << *this;
 	stream.WriteToFile(outputFile);
 
-	LVMSG("FAnimData::Save", "Animation is saved: %s, %.1f KB, %s",
+	LVMSG("FAnimCurveData::Save", "Animation is saved: %s, %.1f KB, %s",
 		Name.c_str(), stream.RemainingSize() / 1000.0f, outputFile.c_str());
 
 	return outputFile;
 }
 
-FORCEINLINE void LostCore::FAnimData::Load(const string& inputDir)
+FORCEINLINE void LostCore::FAnimCurveData::Load(const string& inputDir)
 {
 	if (inputDir.empty())
 	{
@@ -511,6 +566,47 @@ FORCEINLINE void LostCore::FAnimData::Load(const string& inputDir)
 	auto sz = stream.RemainingSize();
 	stream >> *this;
 
-	LVMSG("FAnimData::Load", "Animation is loaded: %s, %.1f KB, %s",
+	LVMSG("FAnimCurveData::Load", "Animation is loaded: %s, %.1f KB, %s",
+		Name.c_str(), sz / 1000.0f, inputDir.c_str());
+}
+
+
+FORCEINLINE string LostCore::FAnimKeyFrameData::Save(const string& outputDir) const
+{
+	if (outputDir.empty())
+	{
+		return "";
+	}
+
+	string outputFile = outputDir;
+	LostCore::ReplaceChar(outputFile, "/", "\\");
+	if (LostCore::IsDirectory(outputFile))
+	{
+		outputFile += Name + "." + K_ANIM_EXT_KEYFRAME;
+	}
+
+	FBinaryIO stream;
+	stream << *this;
+	stream.WriteToFile(outputFile);
+
+	LVMSG("FAnimKeyFrameData::Save", "Animation is saved: %s, %.1f KB, %s",
+		Name.c_str(), stream.RemainingSize() / 1000.0f, outputFile.c_str());
+
+	return outputFile;
+}
+
+FORCEINLINE void LostCore::FAnimKeyFrameData::Load(const string& inputDir)
+{
+	if (inputDir.empty())
+	{
+		return;
+	}
+
+	FBinaryIO stream;
+	stream.ReadFromFile(inputDir);
+	auto sz = stream.RemainingSize();
+	stream >> *this;
+
+	LVMSG("FAnimKeyFrameData::Load", "Animation is loaded: %s, %.1f KB, %s",
 		Name.c_str(), sz / 1000.0f, inputDir.c_str());
 }

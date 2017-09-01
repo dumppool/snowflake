@@ -73,8 +73,6 @@ bool LostCore::FStaticModel::Config(IRenderContext * rc, const FJson & config)
 
 		MeshData.BuildGPUData(vertexFlags);
 
-		assert(MeshData.Poses.find(K_INITIAL_POSE) != MeshData.Poses.end());
-
 		if (D3D11::WrappedCreatePrimitiveGroup(&Primitive) == SSuccess)
 		{
 			if (MeshData.IndexCount > 0)
@@ -195,33 +193,12 @@ bool LostCore::FSkeletalModel::Config(IRenderContext * rc, const FJson & config)
 	{
 		assert(config.find("primitive") != config.end() && "model needs [primitive] section");
 
-		bool isAbsUrl = config.find("abs_url") != config.end();
 		string primitivePath;
 		if (!FDirectoryHelper::Get()->GetPrimitiveAbsolutePath(config.find("primitive").value(), primitivePath))
 		{
 			string path = config.find("primitive").value();
 			LVERR(head, "failed to find primitive json: %s", path.c_str());
 			return false;
-		}
-
-		string animListPath;
-		if (config.find("animation") != config.end())
-		{
-			auto itAnimList = config.find("animation").value();
-			for (auto it = itAnimList.begin(); it != itAnimList.end(); ++it)
-			{
-				string animPath;
-				if (FDirectoryHelper::Get()->GetPrimitiveAbsolutePath(it.value(), animPath))
-				{
-					FBinaryIO stream;
-					stream.ReadFromFile(animPath);
-					
-					FAnimData anim;
-					stream >> anim;
-
-					FAnimationLibrary::Get()->AddAnimation(anim);
-				}
-			}
 		}
 		
 		FBinaryIO stream;
@@ -232,12 +209,9 @@ bool LostCore::FSkeletalModel::Config(IRenderContext * rc, const FJson & config)
 
 		MeshData.BuildGPUData(vertexFlags);
 
-		Root.LoadSkeleton(MeshData.Skeleton);
-
-		Root2.LoadSkeletonAndBindPose(MeshData.PoseT);
-
-		//assert(MeshData.Poses.find(K_INITIAL_POSE) != MeshData.Poses.end());
-		Root.LoadLocalPose(MeshData.Poses[K_INITIAL_POSE]);
+		FFloat4x4 world;
+		world.SetIdentity();
+		Root.LoadSkeleton(MeshData.Skeleton, world);
 
 		if (D3D11::WrappedCreatePrimitiveGroup(&Primitive) == SSuccess)
 		{
@@ -320,6 +294,7 @@ void LostCore::FSkeletalModel::Tick(float sec)
 	}
 
 	const FColor96 constSegColor((uint32)0x0000ff);
+	const FColor96 constSegColor2((uint32)0xff00ff);
 	const float segLen = FGlobalHandler::Get()->GetDisplayNormalLength();
 	bool displayTangent = FGlobalHandler::Get()->IsDisplayTangent(MeshData.VertexFlags);
 	bool displayNormal = FGlobalHandler::Get()->IsDisplayNormal(MeshData.VertexFlags);
@@ -348,12 +323,13 @@ void LostCore::FSkeletalModel::Tick(float sec)
 			{
 				FSegmentData seg;
 				seg.StartPt = localToWorld.ApplyPoint(MeshData.Coordinates[i]);
+				seg.StartPtColor = constSegColor;
+				seg.StopPtColor = constSegColor2;
 
 				if (MeshData.Normals.size() > 0)
 				{
 					FFloat3 normal = localToWorld.ApplyVector(MeshData.Normals[i]);
 					seg.StopPt = seg.StartPt + normal * segLen;
-					seg.Color = constSegColor;
 					SegmentRenderer.AddSegment(seg);
 				}
 				else
@@ -362,7 +338,6 @@ void LostCore::FSkeletalModel::Tick(float sec)
 					{
 						FFloat3 normal = localToWorld.ApplyVector(MeshData.Triangles[elem.first].Vertices[elem.second].Normal);
 						seg.StopPt = seg.StartPt + normal * segLen;
-						seg.Color = constSegColor;
 						SegmentRenderer.AddSegment(seg);
 					}
 				}
@@ -423,7 +398,8 @@ void LostCore::FSkeletalModel::Tick(float sec)
 		{
 			FSegmentData seg;
 			seg.StartPt = skel.second.first;
-			seg.Color = FColor96((uint32)0xffff00);
+			seg.StartPtColor = FColor96((uint32)0xffff00);
+			seg.StopPtColor = FColor96((uint32)0xff8000);
 			for (auto & childSkel : skel.second.second)
 			{
 				seg.StopPt = childSkel;
@@ -441,7 +417,8 @@ void LostCore::FSkeletalModel::Tick(float sec)
 		{
 			FSegmentData seg;
 			seg.StartPt = skel.second.first;
-			seg.Color = FColor96((uint32)0xff8080);
+			seg.StartPtColor = FColor96((uint32)0xffff00);
+			seg.StopPtColor = FColor96((uint32)0xff8000);
 			for (auto & childSkel : skel.second.second)
 			{
 				seg.StopPt = childSkel;

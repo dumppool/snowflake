@@ -58,7 +58,7 @@ namespace LostCore
 
 		void SetMode(EWrap wrap, EInterpolation interp);
 		void AddKey(const XType& keyTime, const YType& value);
-		YType GetValue(const XType& keyTime) const;
+		YType Eval(const XType& keyTime) const;
 		XType GetRangeMin() const;
 		XType GetRangeMax() const;
 		XType GetRange() const;
@@ -97,7 +97,7 @@ namespace LostCore
 	}
 
 	template<typename XType, typename YType>
-	FORCEINLINE YType TCurve<XType, YType>::GetValue(const XType & keyTime) const
+	FORCEINLINE YType TCurve<XType, YType>::Eval(const XType & keyTime) const
 	{
 		assert(GetNumKeys() > 1);
 
@@ -108,10 +108,19 @@ namespace LostCore
 		{
 			validKeyTime = InRange(keyTime, GetRangeMin(), GetRangeMax());
 		}
-		else if (WrapMode == EWrap::Clamp && keyTime < (*Keys.begin()).first)
+		else if (WrapMode == EWrap::Clamp)
 		{
-			validKeyTime = (*Keys.begin()).first;
+			if (keyTime < (*Keys.begin()).first)
+			{
+				validKeyTime = (*Keys.begin()).first;
+			}
+			else if (keyTime > (*Keys.rbegin()).first)
+			{
+				validKeyTime = (*Keys.rbegin()).first;
+			}
 		}
+
+		assert((*Keys.begin()).first < (validKeyTime + SSmallFloat2) && validKeyTime < ((*Keys.rbegin()).first + SSmallFloat2));
 
 		int32 index = 0;
 		for (auto it = Keys.begin(); it != Keys.end(); ++it, ++index)
@@ -138,7 +147,7 @@ namespace LostCore
 			auto t2 = t * t;
 			auto t3 = t2 * t;
 
-			result = (2 * t3 - 3 * t2 + 1) * p1 + (t3 - 2 * t2 + t)*m1 + (-2 * t3 + 3 * t2)*p2 + (t3 - t2)*m2;
+			result = p1 * (t3 * 2.0 - t2 * 3.0 + 1.0) + m1 * (t3 - t2 * 2.0 + t) + p2 * (t3 * -2.0 + t2 * 3.0) + m2 * (t3 - t2);
 		}
 		else if (InterpolationMode == EInterpolation::Constant)
 		{
@@ -195,7 +204,8 @@ namespace LostCore
 	FORCEINLINE typename TCurve<XType, YType>::KeyFramesConstIter LostCore::TCurve<XType, YType>::Get(int32 index) const
 	{
 		assert(GetNumKeys() > 0);
-		assert(InterpolationMode != EInterpolation::Constant && GetNumKeys() > 1);
+		assert((InterpolationMode != EInterpolation::Constant && GetNumKeys() > 1) ||
+		InterpolationMode == EInterpolation::Constant);
 
 		int32 numKeys = GetNumKeys();
 		int32 maxIndex = numKeys - 1;
@@ -265,4 +275,5 @@ namespace LostCore
 
 	typedef TCurve<float, float> FRealCurve;
 	typedef TCurve<float, FFloat3> FVec3Curve;
+	typedef TCurve<float, FFloat4x4> FMatrixCurve;
 }

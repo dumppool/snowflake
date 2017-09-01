@@ -29,9 +29,10 @@ namespace LostCore
 	struct FSegmentData
 	{
 		FFloat3 StartPt;
+		FColor96 StartPtColor;
+
 		FFloat3 StopPt;
-		FColor96 Color;
-		FFloat3 Unused;
+		FColor96 StopPtColor;
 	};
 
 	// 坐标轴绘制工具

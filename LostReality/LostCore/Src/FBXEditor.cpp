@@ -317,19 +317,19 @@ void FFBXEditor::LoadFBX(
 			}
 		}
 
-		if (clearScene)
-		{
-			for (auto m : Models)
-			{
-				Scene->RemoveModel(m);
-				SAFE_DELETE(m);
-			}
-
-			Models.clear();
-		}
-
 		if (!importAnimation)
 		{
+			if (clearScene)
+			{
+				for (auto m : Models)
+				{
+					Scene->RemoveModel(m);
+					SAFE_DELETE(m);
+				}
+
+				Models.clear();
+			}
+
 			modelJson["type"] = (uint32)EPrimitiveType::PrimitiveFile;
 			modelJson["primitive"] = j[K_MESH][0][K_PATH];
 			modelJson["material_prefix"] = "default";
@@ -418,7 +418,7 @@ FBasicCamera * FFBXEditor::GetCamera()
 void FFBXEditor::StartRenderLoop()
 {
 	bKeepRendering = true;
-	while (bKeepRendering)
+	while (bKeepRendering) 
 	{
 		static auto SLastStamp = chrono::system_clock::now();
 		auto now = chrono::system_clock::now();

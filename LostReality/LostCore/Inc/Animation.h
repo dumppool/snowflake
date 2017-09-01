@@ -16,7 +16,9 @@ namespace LostCore
 	{
 		string Name;
 		FFloat4x4 Local;
+		FFloat4x4 InvBindPose;
 		FFloat4x4 World;
+		FFloat4x4 BoneWorld;
 		std::vector<FSkeletonTree> Children;
 
 		string CurrAnimName;
@@ -24,12 +26,9 @@ namespace LostCore
 
 	public:
 		FSkeletonTree();
-		explicit FSkeletonTree(const FBone & skelRoot);
+		FSkeletonTree(const FPoseTree & skelRoot, const FFloat4x4& parentInvBindPose);
 
-		void LoadSkeleton(const FBone& skelRoot);
-		void LoadLocalPose(const FPoseMap& pose);
-
-		void LoadSkeletonAndBindPose(const FPoseTree& pose);
+		void LoadSkeleton(const FPoseTree& skelRoot, const FFloat4x4& parentInvBindPose);
 
 		void UpdateWorldMatrix(const FFloat4x4& parentWorld, float sec);
 		void GetWorldPose(FPoseMap& pose);
@@ -41,7 +40,8 @@ namespace LostCore
 
 	class FAnimationLibrary
 	{
-		map<string, FAnimData> Data;
+		map<string, FAnimCurveData> Curves;
+		map<string, FAnimKeyFrameData> KeyFrames;
 		set<string> LoadRecord;
 
 	public:
@@ -56,8 +56,11 @@ namespace LostCore
 		~FAnimationLibrary();
 
 		bool Load(const string& path, string& animName);
-		void AddAnimation(const FAnimData& anim);
+		void AddAnimationCurve(const FAnimCurveData& anim);
+		void AddAnimationKeyFrame(const FAnimKeyFrameData& anim);
 		bool GetMatrix(FFloat4x4& outMatrix, float keyTime, const string& animName, const string& skeletonName) const;
+		bool GetMatrixCurve(FFloat4x4& outMatrix, float keyTime, const string& animName, const string& skeletonName) const;
+		bool GetMatrixKeyFrame(FFloat4x4& outMatrix, float keyTime, const string& animName, const string& skeletonName) const;
 	};
 }
 
