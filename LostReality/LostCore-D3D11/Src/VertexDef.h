@@ -194,6 +194,28 @@ namespace D3D11
 	{
 		LostCore::FFloat3 XYZ;
 		LostCore::FFloat3 N;
+
+		FORCEINLINE static LostCore::FVertexTypes::Details GetDetails()
+		{
+			return LostCore::FVertexTypes::GetVertexDetail3D(false, true, false, false, false);
+		}
+
+		FORCEINLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
+		{
+			static D3D11_INPUT_ELEMENT_DESC SDesc[] =
+			{
+				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_7, XYZ), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_7, N), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			};
+
+			return std::make_pair(SDesc, ARRAYSIZE(SDesc));
+		}
+	};
+
+	ALIGNED_LR(16) struct FVertex_7_Skinned
+	{
+		LostCore::FFloat3 XYZ;
+		LostCore::FFloat3 N;
 		LostCore::FFloat4 BlendWeights;
 		LostCore::FSInt4 BlendIndices;
 
@@ -206,10 +228,10 @@ namespace D3D11
 		{
 			static D3D11_INPUT_ELEMENT_DESC SDesc[] =
 			{
-				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_7, XYZ), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_7, N), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "BLENDWEIGHTS", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(FVertex_7, BlendWeights),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "BLENDINDICES", 0, DXGI_FORMAT_R32G32B32A32_SINT, 0, offsetof(FVertex_7, BlendIndices),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_7_Skinned, XYZ), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_7_Skinned, N), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "BLENDWEIGHTS", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(FVertex_7_Skinned, BlendWeights),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "BLENDINDICES", 0, DXGI_FORMAT_R32G32B32A32_SINT, 0, offsetof(FVertex_7_Skinned, BlendIndices),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
 			};
 
 			return std::make_pair(SDesc, ARRAYSIZE(SDesc));
@@ -307,6 +329,9 @@ namespace D3D11
 
 			DescMap.insert(std::make_pair(FVertex_7::GetDetails().Name, FVertex_7::GetDesc()));
 			LVMSG(head, "register: %s, stride: %d, aligned stride: %d", FVertex_7::GetDetails().Name.c_str(), FVertex_7::GetDetails().Stride, sizeof(FVertex_7));
+
+			DescMap.insert(std::make_pair(FVertex_7_Skinned::GetDetails().Name, FVertex_7_Skinned::GetDesc()));
+			LVMSG(head, "register: %s, stride: %d, aligned stride: %d", FVertex_7_Skinned::GetDetails().Name.c_str(), FVertex_7_Skinned::GetDetails().Stride, sizeof(FVertex_7_Skinned));
 
 			DescMap.insert(std::make_pair(FVertex_8::GetDetails().Name, FVertex_8::GetDesc()));
 			LVMSG(head, "register: %s, stride: %d, aligned stride: %d", FVertex_8::GetDetails().Name.c_str(), FVertex_8::GetDetails().Stride, sizeof(FVertex_8));

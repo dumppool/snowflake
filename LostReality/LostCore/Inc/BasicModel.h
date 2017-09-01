@@ -53,6 +53,7 @@ namespace LostCore
 		void Fini();
 
 	protected:
+		FFloat4x4 World;
 		IPrimitiveGroup* Primitive;
 		IMaterial* Material;
 		FMeshData MeshData;

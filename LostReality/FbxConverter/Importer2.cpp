@@ -212,7 +212,6 @@ struct FTempAnimStack2
 
 	void Extract(const vector<FbxNode*>& sortedLinks);
 	void ParseLayerInternal(FbxAnimLayer* layer, FbxNode* node, const FbxTimeSpan& timeSpan, FMatrixCurveAlias& curve);
-	void RetrieveSortedLinks();
 };
 
 class FFbxImporter2
@@ -536,16 +535,16 @@ void FTempMesh::ExtractVertex()
 			}
 		}
 
-		if ((ControlPoints.size() != MeshData.BlendIndices.size() || ControlPoints.size() != MeshData.BlendWeights.size()))
-		{
-			LVERR(head, "Size of control points mismatch in mesh[%s]: cp[%d], bi[%d], bw[%d]", Mesh->GetName(),
-				ControlPoints.size(), MeshData.BlendIndices.size(), MeshData.BlendWeights.size());
-		}
-
 		MeshData.Coordinates = ControlPoints;
 		vector<FFloat4x4> vecLocalToBone(0);
 		if (IsSkeletal())
 		{
+			if ((ControlPoints.size() != MeshData.BlendIndices.size() || ControlPoints.size() != MeshData.BlendWeights.size()))
+			{
+				LVERR(head, "Size of control points mismatch in mesh[%s]: cp[%d], bi[%d], bw[%d]", Mesh->GetName(),
+					ControlPoints.size(), MeshData.BlendIndices.size(), MeshData.BlendWeights.size());
+			}
+
 			// 标准化蒙皮权重
 			ProcessBlendWeight();
 
@@ -1129,7 +1128,11 @@ bool FFbxImporter2::ImportSceneMeshes()
 
 	for (auto& mesh : TempMeshArray)
 	{
-		mesh.ExtractSkeleton();
+		if (mesh.IsSkeletal())
+		{
+			mesh.ExtractSkeleton();
+		}
+		
 		mesh.ExtractVertex();
 	}
 
@@ -1466,9 +1469,4 @@ void FTempAnimStack2::ParseLayerInternal(FbxAnimLayer * layer, FbxNode * node, c
 		local = parentGlobal.Inverse() * local;
 		curve.AddKey(cur.GetSecondDouble(), ToMatrix(local));
 	}
-}
-
-void FTempAnimStack2::RetrieveSortedLinks()
-{
-	//SortSkeletalMeshLink()
 }

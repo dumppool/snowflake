@@ -122,11 +122,11 @@ void LostCore::FStaticModel::Tick(float sec)
 
 void LostCore::FStaticModel::Draw(IRenderContext * rc, float sec)
 {
-	//if (Material != nullptr)
-	//{
-	//	Material->UpdateConstantBuffer(rc, (const void*)&Matrices, sizeof(Matrices));
-	//	Material->Draw(rc, sec);
-	//}
+	if (Material != nullptr)
+	{
+		Material->UpdateConstantBuffer(rc, (const void*)&World, sizeof(World));
+		Material->Draw(rc, sec);
+	}
 
 	if (Primitive != nullptr)
 	{

@@ -61,7 +61,7 @@ private:
 	FBasicCamera*			Camera;
 	FBasicScene*			Scene;
 
-	vector<FBasicModel*>	Models;
+	FBasicModel*			CurrSelectedModel;
 
 	string OutputDir;
 	PFN_Logger Logger;
@@ -95,6 +95,7 @@ FFBXEditor::FFBXEditor()
 	, Camera(nullptr)
 	, TickCommands(true)
 	, RenderCommands(true)
+	, CurrSelectedModel(nullptr)
 {
 	FDirectoryHelper::Get()->GetPrimitiveAbsolutePath(SConverterOutput, OutputDir);
 	FGlobalHandler::Get()->SetMoveCameraCallback([&](float x, float y, float z) {
@@ -112,9 +113,9 @@ FFBXEditor::FFBXEditor()
 	});
 
 	FGlobalHandler::Get()->SetCallbackPlayAnimation([&](const string& anim) {
-		if (!Models.empty() && reinterpret_cast<FSkeletalModel*>(Models[0]) != nullptr)
+		if (reinterpret_cast<FSkeletalModel*>(CurrSelectedModel) != nullptr)
 		{
-			reinterpret_cast<FSkeletalModel*>(Models[0])->PlayAnimation(anim);
+			reinterpret_cast<FSkeletalModel*>(CurrSelectedModel)->PlayAnimation(anim);
 		}
 	});
 }
@@ -126,7 +127,7 @@ FFBXEditor::~FFBXEditor()
 	assert(RC == nullptr);
 	assert(Camera == nullptr);
 	assert(Scene == nullptr);
-	assert(Models.size() == 0);
+	assert(CurrSelectedModel == nullptr);
 }
 
 void FFBXEditor::InitializeScene()
@@ -290,11 +291,9 @@ void FFBXEditor::LoadFBX(
 		stream >> j;
 		stream.close();
 
-		FJson modelJson;
+		FJson config;
 		for (auto& elem : j[K_MESH])
 		{
-			auto path = elem[K_PATH];
-			auto ve = elem[K_VERTEX_ELEMENT];
 			Log(SInfo, "Output mesh: %s, %s", elem.value(K_PATH, "").c_str(), 
 				GetVertexDetails(elem[K_VERTEX_ELEMENT]).Name.c_str());
 		}
@@ -317,33 +316,40 @@ void FFBXEditor::LoadFBX(
 			}
 		}
 
+		clearScene |= !importAnimation;
+
+		if (clearScene)
+		{
+			// RemoveModel只是从场景移除model，不释放内存.
+			Scene->RemoveModel(CurrSelectedModel);
+			SAFE_DELETE(CurrSelectedModel);
+		}
+
 		if (!importAnimation)
 		{
-			if (clearScene)
+			for (auto& elem : j[K_MESH])
 			{
-				for (auto m : Models)
+				string path = elem[K_PATH];
+				uint32 flag = elem[K_VERTEX_ELEMENT];
+				config["type"] = (uint32)EPrimitiveType::PrimitiveFile;
+				config["primitive"] = path;
+				config["material_prefix"] = "default";
+				FBasicModel* model = nullptr;
+				if ((flag & EVertexElement::Skin) == EVertexElement::Skin)
 				{
-					Scene->RemoveModel(m);
-					SAFE_DELETE(m);
+					model = new FSkeletalModel;
+				}
+				else
+				{
+					model = new FStaticModel;
 				}
 
-				Models.clear();
-			}
-
-			modelJson["type"] = (uint32)EPrimitiveType::PrimitiveFile;
-			modelJson["primitive"] = j[K_MESH][0][K_PATH];
-			modelJson["material_prefix"] = "default";
-
-			auto model = new FSkeletalModel;
-			Models.push_back(model);
-
-			// Fbx converter需要输出转换导出信息。
-			//model->SetPrimitiveVertexFlags(EVertexElement::Coordinate 
-			//	| EVertexElement::Normal | EVertexElement::Skin);
-
-			if (model->Config(RC, modelJson))
-			{
-				Scene->AddModel(model);
+				assert(CurrSelectedModel == nullptr);
+				CurrSelectedModel = model;
+				if (model->Config(RC, config))
+				{
+					Scene->AddModel(model);
+				}
 			}
 		}
 	}
@@ -376,13 +382,7 @@ void FFBXEditor::Fini()
 		TickThread.join();
 	}
 
-	for (auto m : Models)
-	{
-		Scene->RemoveModel(m);
-		SAFE_DELETE(m);
-	}
-
-	Models.clear();
+	CurrSelectedModel = nullptr;
 
 	SAFE_DELETE(RC);
 	SAFE_DELETE(Camera);
