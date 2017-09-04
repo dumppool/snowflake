@@ -30,6 +30,7 @@
         {
             this.components = new System.ComponentModel.Container();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.listBox1 = new System.Windows.Forms.ListBox();
             this.ViewPanel = new System.Windows.Forms.Panel();
             this.DisplaySkeleton2 = new System.Windows.Forms.CheckBox();
             this.DisplaySkeleton = new System.Windows.Forms.CheckBox();
@@ -54,7 +55,6 @@
             this.ForceRegenerateNormal = new System.Windows.Forms.CheckBox();
             this.ImportNormal = new System.Windows.Forms.CheckBox();
             this.textBox1 = new System.Windows.Forms.TextBox();
-            this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.tabPage2 = new System.Windows.Forms.TabPage();
@@ -69,7 +69,12 @@
             this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripComboBox1 = new System.Windows.Forms.ToolStripComboBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.listBox1 = new System.Windows.Forms.ListBox();
+            this.载入模型ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.载入动画ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.textBox2 = new System.Windows.Forms.TextBox();
+            this.textBox3 = new System.Windows.Forms.TextBox();
+            this.AnimationOutputText = new System.Windows.Forms.TextBox();
+            this.PrimitiveOutputText = new System.Windows.Forms.TextBox();
             this.panel1.SuspendLayout();
             this.ViewPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.AnimateRateSlider)).BeginInit();
@@ -88,13 +93,22 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panel1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
             this.panel1.Controls.Add(this.listBox1);
-            this.panel1.Controls.Add(this.ViewPanel);
             this.panel1.Controls.Add(this.ImportPanel);
+            this.panel1.Controls.Add(this.ViewPanel);
             this.panel1.Location = new System.Drawing.Point(-1, 59);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(984, 406);
             this.panel1.TabIndex = 0;
             this.panel1.PreviewKeyDown += new System.Windows.Forms.PreviewKeyDownEventHandler(this.Panel1_PreviewKeyDown);
+            // 
+            // listBox1
+            // 
+            this.listBox1.FormattingEnabled = true;
+            this.listBox1.ItemHeight = 12;
+            this.listBox1.Location = new System.Drawing.Point(58, 60);
+            this.listBox1.Name = "listBox1";
+            this.listBox1.Size = new System.Drawing.Size(120, 220);
+            this.listBox1.TabIndex = 7;
             // 
             // ViewPanel
             // 
@@ -213,7 +227,11 @@
             // 
             // ImportPanel
             // 
+            this.ImportPanel.Controls.Add(this.AnimationOutputText);
+            this.ImportPanel.Controls.Add(this.textBox3);
+            this.ImportPanel.Controls.Add(this.textBox2);
             this.ImportPanel.Controls.Add(this.MergeNormalTangentAll);
+            this.ImportPanel.Controls.Add(this.PrimitiveOutputText);
             this.ImportPanel.Controls.Add(this.ImportTexCoord);
             this.ImportPanel.Controls.Add(this.ImportCancel);
             this.ImportPanel.Controls.Add(this.ImportOk);
@@ -225,21 +243,18 @@
             this.ImportPanel.Controls.Add(this.GenerateNormalIfNotFound);
             this.ImportPanel.Controls.Add(this.ForceRegenerateNormal);
             this.ImportPanel.Controls.Add(this.ImportNormal);
-            this.ImportPanel.Location = new System.Drawing.Point(323, -15);
+            this.ImportPanel.Location = new System.Drawing.Point(260, 17);
             this.ImportPanel.Name = "ImportPanel";
-            this.ImportPanel.Size = new System.Drawing.Size(243, 412);
+            this.ImportPanel.Size = new System.Drawing.Size(243, 411);
             this.ImportPanel.TabIndex = 5;
             this.ImportPanel.Visible = false;
-            this.ImportPanel.MouseDown += new System.Windows.Forms.MouseEventHandler(this.ImportPanel_MouseDown);
-            this.ImportPanel.MouseMove += new System.Windows.Forms.MouseEventHandler(this.ImportPanel_MouseMove);
-            this.ImportPanel.MouseUp += new System.Windows.Forms.MouseEventHandler(this.ImportPanel_MouseUp);
             // 
             // MergeNormalTangentAll
             // 
             this.MergeNormalTangentAll.AutoSize = true;
             this.MergeNormalTangentAll.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.MergeNormalTangentAll.ForeColor = System.Drawing.SystemColors.AppWorkspace;
-            this.MergeNormalTangentAll.Location = new System.Drawing.Point(29, 61);
+            this.MergeNormalTangentAll.Location = new System.Drawing.Point(25, 78);
             this.MergeNormalTangentAll.Name = "MergeNormalTangentAll";
             this.MergeNormalTangentAll.Size = new System.Drawing.Size(171, 21);
             this.MergeNormalTangentAll.TabIndex = 11;
@@ -251,7 +266,7 @@
             this.ImportTexCoord.AutoSize = true;
             this.ImportTexCoord.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.ImportTexCoord.ForeColor = System.Drawing.SystemColors.AppWorkspace;
-            this.ImportTexCoord.Location = new System.Drawing.Point(29, 240);
+            this.ImportTexCoord.Location = new System.Drawing.Point(25, 257);
             this.ImportTexCoord.Name = "ImportTexCoord";
             this.ImportTexCoord.Size = new System.Drawing.Size(124, 21);
             this.ImportTexCoord.TabIndex = 10;
@@ -261,7 +276,7 @@
             // ImportCancel
             // 
             this.ImportCancel.Font = new System.Drawing.Font("微软雅黑", 7.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.ImportCancel.Location = new System.Drawing.Point(146, 345);
+            this.ImportCancel.Location = new System.Drawing.Point(142, 362);
             this.ImportCancel.Name = "ImportCancel";
             this.ImportCancel.Size = new System.Drawing.Size(53, 23);
             this.ImportCancel.TabIndex = 9;
@@ -271,7 +286,7 @@
             // ImportOk
             // 
             this.ImportOk.Font = new System.Drawing.Font("微软雅黑", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.ImportOk.Location = new System.Drawing.Point(29, 339);
+            this.ImportOk.Location = new System.Drawing.Point(25, 356);
             this.ImportOk.Name = "ImportOk";
             this.ImportOk.Size = new System.Drawing.Size(109, 29);
             this.ImportOk.TabIndex = 8;
@@ -283,7 +298,7 @@
             this.ImportAnimation.AutoSize = true;
             this.ImportAnimation.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.ImportAnimation.ForeColor = System.Drawing.SystemColors.AppWorkspace;
-            this.ImportAnimation.Location = new System.Drawing.Point(29, 267);
+            this.ImportAnimation.Location = new System.Drawing.Point(25, 284);
             this.ImportAnimation.Name = "ImportAnimation";
             this.ImportAnimation.Size = new System.Drawing.Size(125, 21);
             this.ImportAnimation.TabIndex = 7;
@@ -295,7 +310,7 @@
             this.ImportVertexColor.AutoSize = true;
             this.ImportVertexColor.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.ImportVertexColor.ForeColor = System.Drawing.SystemColors.AppWorkspace;
-            this.ImportVertexColor.Location = new System.Drawing.Point(29, 294);
+            this.ImportVertexColor.Location = new System.Drawing.Point(25, 311);
             this.ImportVertexColor.Name = "ImportVertexColor";
             this.ImportVertexColor.Size = new System.Drawing.Size(136, 21);
             this.ImportVertexColor.TabIndex = 6;
@@ -307,7 +322,7 @@
             this.GenerateTangentIfNotFound.AutoSize = true;
             this.GenerateTangentIfNotFound.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.GenerateTangentIfNotFound.ForeColor = System.Drawing.SystemColors.AppWorkspace;
-            this.GenerateTangentIfNotFound.Location = new System.Drawing.Point(29, 203);
+            this.GenerateTangentIfNotFound.Location = new System.Drawing.Point(25, 220);
             this.GenerateTangentIfNotFound.Name = "GenerateTangentIfNotFound";
             this.GenerateTangentIfNotFound.Size = new System.Drawing.Size(193, 21);
             this.GenerateTangentIfNotFound.TabIndex = 5;
@@ -319,7 +334,7 @@
             this.ForceRegenerateTangent.AutoSize = true;
             this.ForceRegenerateTangent.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.ForceRegenerateTangent.ForeColor = System.Drawing.SystemColors.AppWorkspace;
-            this.ForceRegenerateTangent.Location = new System.Drawing.Point(29, 181);
+            this.ForceRegenerateTangent.Location = new System.Drawing.Point(25, 198);
             this.ForceRegenerateTangent.Name = "ForceRegenerateTangent";
             this.ForceRegenerateTangent.Size = new System.Drawing.Size(173, 21);
             this.ForceRegenerateTangent.TabIndex = 4;
@@ -331,7 +346,7 @@
             this.ImportTangent.AutoSize = true;
             this.ImportTangent.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.ImportTangent.ForeColor = System.Drawing.SystemColors.AppWorkspace;
-            this.ImportTangent.Location = new System.Drawing.Point(29, 159);
+            this.ImportTangent.Location = new System.Drawing.Point(25, 176);
             this.ImportTangent.Name = "ImportTangent";
             this.ImportTangent.Size = new System.Drawing.Size(114, 21);
             this.ImportTangent.TabIndex = 3;
@@ -343,7 +358,7 @@
             this.GenerateNormalIfNotFound.AutoSize = true;
             this.GenerateNormalIfNotFound.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.GenerateNormalIfNotFound.ForeColor = System.Drawing.SystemColors.AppWorkspace;
-            this.GenerateNormalIfNotFound.Location = new System.Drawing.Point(29, 132);
+            this.GenerateNormalIfNotFound.Location = new System.Drawing.Point(25, 149);
             this.GenerateNormalIfNotFound.Name = "GenerateNormalIfNotFound";
             this.GenerateNormalIfNotFound.Size = new System.Drawing.Size(190, 21);
             this.GenerateNormalIfNotFound.TabIndex = 2;
@@ -355,7 +370,7 @@
             this.ForceRegenerateNormal.AutoSize = true;
             this.ForceRegenerateNormal.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.ForceRegenerateNormal.ForeColor = System.Drawing.SystemColors.AppWorkspace;
-            this.ForceRegenerateNormal.Location = new System.Drawing.Point(29, 110);
+            this.ForceRegenerateNormal.Location = new System.Drawing.Point(25, 127);
             this.ForceRegenerateNormal.Name = "ForceRegenerateNormal";
             this.ForceRegenerateNormal.Size = new System.Drawing.Size(170, 21);
             this.ForceRegenerateNormal.TabIndex = 1;
@@ -367,7 +382,7 @@
             this.ImportNormal.AutoSize = true;
             this.ImportNormal.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.ImportNormal.ForeColor = System.Drawing.SystemColors.AppWorkspace;
-            this.ImportNormal.Location = new System.Drawing.Point(29, 88);
+            this.ImportNormal.Location = new System.Drawing.Point(25, 105);
             this.ImportNormal.Name = "ImportNormal";
             this.ImportNormal.Size = new System.Drawing.Size(111, 21);
             this.ImportNormal.TabIndex = 0;
@@ -386,10 +401,6 @@
             this.textBox1.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.textBox1.Size = new System.Drawing.Size(984, 134);
             this.textBox1.TabIndex = 2;
-            // 
-            // openFileDialog1
-            // 
-            this.openFileDialog1.FileName = "openFileDialog1";
             // 
             // tabControl1
             // 
@@ -449,7 +460,9 @@
             // 
             this.toolStripMenuItem1.BackColor = System.Drawing.SystemColors.WindowFrame;
             this.toolStripMenuItem1.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.loadFBXToolStripMenuItem1});
+            this.loadFBXToolStripMenuItem1,
+            this.载入模型ToolStripMenuItem,
+            this.载入动画ToolStripMenuItem});
             this.toolStripMenuItem1.ForeColor = System.Drawing.SystemColors.ButtonFace;
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
             this.toolStripMenuItem1.Size = new System.Drawing.Size(27, 21);
@@ -460,7 +473,7 @@
             this.loadFBXToolStripMenuItem1.BackColor = System.Drawing.SystemColors.WindowFrame;
             this.loadFBXToolStripMenuItem1.ForeColor = System.Drawing.SystemColors.ControlLight;
             this.loadFBXToolStripMenuItem1.Name = "loadFBXToolStripMenuItem1";
-            this.loadFBXToolStripMenuItem1.Size = new System.Drawing.Size(146, 22);
+            this.loadFBXToolStripMenuItem1.Size = new System.Drawing.Size(152, 22);
             this.loadFBXToolStripMenuItem1.Text = "载入FBX文件";
             // 
             // toolStripMenuItem2
@@ -498,14 +511,58 @@
             this.toolStripComboBox1.Name = "toolStripComboBox1";
             this.toolStripComboBox1.Size = new System.Drawing.Size(121, 25);
             // 
-            // listBox1
+            // 载入模型ToolStripMenuItem
             // 
-            this.listBox1.FormattingEnabled = true;
-            this.listBox1.ItemHeight = 12;
-            this.listBox1.Location = new System.Drawing.Point(58, 60);
-            this.listBox1.Name = "listBox1";
-            this.listBox1.Size = new System.Drawing.Size(120, 220);
-            this.listBox1.TabIndex = 7;
+            this.载入模型ToolStripMenuItem.Name = "载入模型ToolStripMenuItem";
+            this.载入模型ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.载入模型ToolStripMenuItem.Text = "载入模型";
+            // 
+            // 载入动画ToolStripMenuItem
+            // 
+            this.载入动画ToolStripMenuItem.Name = "载入动画ToolStripMenuItem";
+            this.载入动画ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.载入动画ToolStripMenuItem.Text = "载入动画";
+            // 
+            // textBox2
+            // 
+            this.textBox2.BackColor = System.Drawing.SystemColors.Desktop;
+            this.textBox2.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.textBox2.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.textBox2.ForeColor = System.Drawing.Color.Silver;
+            this.textBox2.Location = new System.Drawing.Point(11, 20);
+            this.textBox2.Name = "textBox2";
+            this.textBox2.ReadOnly = true;
+            this.textBox2.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
+            this.textBox2.Size = new System.Drawing.Size(98, 16);
+            this.textBox2.TabIndex = 12;
+            this.textBox2.Text = "primitive文件夹";
+            // 
+            // textBox3
+            // 
+            this.textBox3.BackColor = System.Drawing.SystemColors.Desktop;
+            this.textBox3.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.textBox3.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.textBox3.ForeColor = System.Drawing.Color.Silver;
+            this.textBox3.Location = new System.Drawing.Point(11, 51);
+            this.textBox3.Name = "textBox3";
+            this.textBox3.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
+            this.textBox3.Size = new System.Drawing.Size(98, 16);
+            this.textBox3.TabIndex = 13;
+            this.textBox3.Text = "animation文件夹";
+            // 
+            // AnimationOutputText
+            // 
+            this.AnimationOutputText.Location = new System.Drawing.Point(118, 48);
+            this.AnimationOutputText.Name = "AnimationOutputText";
+            this.AnimationOutputText.Size = new System.Drawing.Size(122, 21);
+            this.AnimationOutputText.TabIndex = 15;
+            // 
+            // PrimitiveOutputText
+            // 
+            this.PrimitiveOutputText.Location = new System.Drawing.Point(118, 17);
+            this.PrimitiveOutputText.Name = "PrimitiveOutputText";
+            this.PrimitiveOutputText.Size = new System.Drawing.Size(122, 21);
+            this.PrimitiveOutputText.TabIndex = 14;
             // 
             // Form1
             // 
@@ -543,7 +600,6 @@
 
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.TextBox textBox1;
-        private System.Windows.Forms.OpenFileDialog openFileDialog1;
         private System.Windows.Forms.TabControl tabControl1;
         private System.Windows.Forms.TabPage tabPage1;
         private System.Windows.Forms.TabPage tabPage2;
@@ -582,6 +638,12 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem4;
         private System.Windows.Forms.ToolStripComboBox toolStripComboBox1;
         private System.Windows.Forms.ListBox listBox1;
+        private System.Windows.Forms.ToolStripMenuItem 载入模型ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 载入动画ToolStripMenuItem;
+        private System.Windows.Forms.TextBox AnimationOutputText;
+        private System.Windows.Forms.TextBox textBox3;
+        private System.Windows.Forms.TextBox textBox2;
+        private System.Windows.Forms.TextBox PrimitiveOutputText;
     }
 }
 

@@ -16,7 +16,9 @@ namespace LostCore
 
 	LOSTCORE_API void InitializeWindow(HWND wnd, bool windowed, int32 width, int32 height);
 	LOSTCORE_API void LoadFBX(
-		const char* file, 
+		const char* file,
+		const char* primitiveOutput,
+		const char* animationOutput,
 		bool clearScene,
 		bool importTexCoord,
 		bool importAnimation,

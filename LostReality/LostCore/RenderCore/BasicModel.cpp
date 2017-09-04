@@ -56,9 +56,8 @@ bool LostCore::FStaticModel::Config(IRenderContext * rc, const FJson & config)
 	{
 		assert(config.find("primitive") != config.end() && "model needs [primitive] section");
 
-		bool isAbsUrl = config.find("abs_url") != config.end();
 		string primitivePath;
-		if (!FDirectoryHelper::Get()->GetPrimitiveAbsolutePath(config.find("primitive").value(), primitivePath))
+		if (!FDirectoryHelper::Get()->GetPrimitiveAbsolutePath(config["primitive"], primitivePath))
 		{
 			string path = config.find("primitive").value();
 			LVERR(head, "failed to find primitive json: %s", path.c_str());

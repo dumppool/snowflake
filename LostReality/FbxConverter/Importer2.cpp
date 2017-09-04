@@ -547,9 +547,6 @@ void FTempMesh::ExtractVertex()
 
 			// 标准化蒙皮权重
 			ProcessBlendWeight();
-
-			// 顶点坐标转换到本地空间
-			//ProcessSkeletalVertex(vecLocalToBone);
 		}
 
 		bool genNormal = (normalHead == nullptr

@@ -28,6 +28,8 @@ public:
 	void SetOutputDirectory(const char* output);
 	void LoadFBX(
 		const char * file,
+		const char* primitiveOutput,
+		const char* animationOutput,
 		bool clearScene,
 		bool importTexCoord,
 		bool importAnimation,
@@ -97,7 +99,18 @@ FFBXEditor::FFBXEditor()
 	, RenderCommands(true)
 	, CurrSelectedModel(nullptr)
 {
-	FDirectoryHelper::Get()->GetPrimitiveAbsolutePath(SConverterOutput, OutputDir);
+	char* temp = nullptr;
+	size_t sz = 0;
+	if (!_dupenv_s(&temp, &sz, "APPDATA") == 0 || temp == nullptr)
+	{
+		::MessageBoxA(0, "FFBXEditor", "failed to get environment path", 0);
+		return;
+	}
+
+	OutputDir = string(temp).append("\\_LostReality\\");
+	free(temp);
+
+	//FDirectoryHelper::Get()->GetPrimitiveAbsolutePath(SConverterOutput, OutputDir);
 	FGlobalHandler::Get()->SetMoveCameraCallback([&](float x, float y, float z) {
 		if (Camera != nullptr)
 		{
@@ -171,7 +184,9 @@ void FFBXEditor::SetOutputDirectory(const char * output)
 }
 
 void FFBXEditor::LoadFBX(
-	const char * file, 
+	const char * file,
+	const char* primitiveOutput,
+	const char* animationOutput,
 	bool clearScene,
 	bool importTexCoord,
 	bool importAnimation,
@@ -192,6 +207,7 @@ void FFBXEditor::LoadFBX(
 
 	string fileName, fileExt, outputFile;
 	GetFileName(fileName, fileExt, file);
+
 	outputFile = OutputDir + fileName + ".json";
 	
 	string cmd;
@@ -277,6 +293,10 @@ void FFBXEditor::LoadFBX(
 
 		WaitForSingleObject(pi.hProcess, INFINITE);
 
+		string primitiveOutputAbs(""), animationOutputAbs("");
+		FDirectoryHelper::Get()->GetPrimitiveAbsolutePath(primitiveOutput, primitiveOutputAbs);
+		FDirectoryHelper::Get()->GetAnimationAbsolutePath(animationOutput, animationOutputAbs);
+
 		Log(SInfo, "Convert fbx[%s] finished, output file should be saved[%s].",
 			file, outputFile.c_str());
 
@@ -291,21 +311,17 @@ void FFBXEditor::LoadFBX(
 		stream >> j;
 		stream.close();
 
-		FJson config;
-		for (auto& elem : j[K_MESH])
-		{
-			Log(SInfo, "Output mesh: %s, %s", elem.value(K_PATH, "").c_str(), 
-				GetVertexDetails(elem[K_VERTEX_ELEMENT]).Name.c_str());
-		}
-
 		for (auto& elem : j[K_ANIMATION])
 		{
-			auto path = elem[K_PATH];
-			Log(SInfo, "Output anim: %s", elem.value(K_PATH, "").c_str());
+			string path = elem.value(K_PATH, "");
+			ReplaceChar(path, "/", "\\");
+			string fileAbs(CopyFileTo(animationOutputAbs, path)), fileRel;
+			assert(FDirectoryHelper::Get()->GetPrimitiveRelativePath(fileAbs, fileRel));
+			Log(SInfo, "Output anim: %s, [%s]", fileRel.c_str(), fileAbs.c_str());
 
 			vector<string> anims;
 			string animName;
-			if (FAnimationLibrary::Get()->Load(path, animName))
+			if (FAnimationLibrary::Get()->Load(fileRel, animName))
 			{
 				anims.push_back(animName);
 			}
@@ -329,11 +345,18 @@ void FFBXEditor::LoadFBX(
 		{
 			for (auto& elem : j[K_MESH])
 			{
-				string path = elem[K_PATH];
+				string path = elem.value(K_PATH, "");
+				ReplaceChar(path, "/", "\\");
+				string fileAbs(CopyFileTo(primitiveOutputAbs, path)), fileRel;
+				assert(FDirectoryHelper::Get()->GetPrimitiveRelativePath(fileAbs, fileRel));
+				Log(SInfo, "Output primitive: %s, [%s]", fileRel.c_str(), fileAbs.c_str());
+
 				uint32 flag = elem[K_VERTEX_ELEMENT];
+				FJson config;
 				config["type"] = (uint32)EPrimitiveType::PrimitiveFile;
-				config["primitive"] = path;
+				config["primitive"] = fileRel;
 				config["material_prefix"] = "default";
+
 				FBasicModel* model = nullptr;
 				if ((flag & EVertexElement::Skin) == EVertexElement::Skin)
 				{
@@ -484,7 +507,9 @@ LOSTCORE_API void LostCore::InitializeWindow(HWND wnd, bool windowed, int32 widt
 }
 
 LOSTCORE_API void LostCore::LoadFBX(
-	const char * file, 
+	const char * file,
+	const char* primitiveOutput,
+	const char* animationOutput,
 	bool clearScene,
 	bool importTexCoord,
 	bool importAnimation,
@@ -497,11 +522,13 @@ LOSTCORE_API void LostCore::LoadFBX(
 	bool forceRegenerateTangent,
 	bool generateTangentIfNotFound)
 {
-	string filePath(file);
+	string filePath(file), primPath(primitiveOutput), animPath(animationOutput);
 	SEditor.PushCommands([=]()
 	{
 		SEditor.LoadFBX(
 			filePath.c_str(),
+			primPath.c_str(),
+			animPath.c_str(),
 			clearScene,
 			importTexCoord,
 			importAnimation,

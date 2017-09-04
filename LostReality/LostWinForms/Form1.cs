@@ -28,6 +28,8 @@ namespace LostWinForms
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public static extern void LoadFBX(
             String file,
+            String primitiveDir,
+            String animationDir,
             bool clearScene,
             bool importTexCoord,
             bool importAnimation,
@@ -76,11 +78,15 @@ namespace LostWinForms
         private const String UserDataOptionSeperator = ",\r\n";
         private bool bInitialized = false;
 
-        private const String LastOpenPathKey = "UserData[LastOpenPathKey]";
+        private const String LastOpenPathKey = "LastOpenPathKey";
+        private const String PrimitiveOutputKey = "PrimitiveOutput";
+        private const String AnimationOutputKey = "AnimationOutput";
 
         private Dictionary<string, string> UserData = new Dictionary<string, string>
         {
             { LastOpenPathKey, "C:\\" },
+            { PrimitiveOutputKey, "" },
+            { AnimationOutputKey, "" },
         };
 
         private bool bMovingImportPanel = false;
@@ -247,7 +253,7 @@ namespace LostWinForms
         // 获取用户本地数据保存路径
         private String GetLocalUserDataPath()
         {
-            String userDataPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData);
+            String userDataPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData);
 
             // 如果文件夹不存在，创建
             userDataPath += UserDataDirectory;
@@ -281,7 +287,8 @@ namespace LostWinForms
                 }
                 else
                 {
-                    throw new InvalidDataException();
+                    // 也许是注释
+                    continue;
                 }
             }
         }
@@ -292,7 +299,7 @@ namespace LostWinForms
             String content = "";
             foreach (var elem in UserData)
             {
-                content += string.Format("{0}{1}{2}", elem.Key, UserDataKeyValueSeperator, elem.Value);
+                content += string.Format("{0}{1}{2}{3}", elem.Key, UserDataKeyValueSeperator, elem.Value, UserDataOptionSeperator);
             }
 
             File.WriteAllText(GetLocalUserDataPath(), content, Encoding.GetEncoding(UserDataEncoding));
@@ -301,16 +308,21 @@ namespace LostWinForms
         // 加载FBX按钮点击事件
         private void OnLoadFBX(Object sender, EventArgs e)
         {
-            openFileDialog1.Title = "选择要打开的FBX文件";
-            openFileDialog1.Filter = "FBX文件|*.fbx";
-            openFileDialog1.RestoreDirectory = false;
-            openFileDialog1.InitialDirectory = UserData[LastOpenPathKey];
-            openFileDialog1.Multiselect = true;
-            if (openFileDialog1.ShowDialog() == DialogResult.OK)
+            OpenFileDialog dlg = new OpenFileDialog();
+            dlg.Title = "选择要打开的FBX文件";
+            dlg.Filter = "FBX文件|*.fbx";
+            dlg.RestoreDirectory = false;
+            dlg.InitialDirectory = UserData[LastOpenPathKey];
+            dlg.Multiselect = true;
+            if (dlg.ShowDialog(panel1) == DialogResult.OK)
             {
+                UserData[LastOpenPathKey] = dlg.FileName;
+                PrimitiveOutputText.Text = UserData[PrimitiveOutputKey];
+                AnimationOutputText.Text = UserData[AnimationOutputKey];
                 ImportPanel.Visible = true;
-                UserData[LastOpenPathKey] = openFileDialog1.FileName;
             }
+
+            dlg.Dispose();
         }
 
         // 日志界面线程输出日志
@@ -357,7 +369,9 @@ namespace LostWinForms
         {
             ImportPanel.Visible = false;
             LoadFBX(
-                openFileDialog1.FileName,
+                UserData[LastOpenPathKey],
+                PrimitiveOutputText.Text,
+                AnimationOutputText.Text,
                 true,
                 ImportTexCoord.Checked,
                 ImportAnimation.Checked,
@@ -369,6 +383,9 @@ namespace LostWinForms
                 ImportTangent.Checked,
                 ForceRegenerateTangent.Checked,
                 GenerateTangentIfNotFound.Checked);
+
+            UserData[PrimitiveOutputKey] = PrimitiveOutputText.Text;
+            UserData[AnimationOutputKey] = AnimationOutputText.Text;
         }
 
         private void ImportCancel_Click(object sender, EventArgs e)

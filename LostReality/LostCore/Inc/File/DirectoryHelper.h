@@ -9,12 +9,15 @@
 
 #pragma once
 
+#include <Shlwapi.h>
+#pragma comment(lib, "Shlwapi.lib")
+
 namespace LostCore
 {
-	static void ReplaceChar(std::string& target, const char* replaceFrom, const char* replaceTo)
+	static void ReplaceChar(string& target, const char* replaceFrom, const char* replaceTo)
 	{
-		auto pos = std::string::npos;
-		while ((pos = target.find(replaceFrom)) != std::string::npos)
+		auto pos = string::npos;
+		while ((pos = target.find(replaceFrom)) != string::npos)
 		{
 			target.replace(pos, strlen(replaceFrom), replaceTo);
 		}
@@ -87,6 +90,18 @@ namespace LostCore
 		return result;
 	}
 
+	static string CopyFileTo(const string& dstDirAbs, const string& srcFileAbs, bool overwrite = true)
+	{
+		string fileName, fileExt;
+		GetFileName(fileName, fileExt, srcFileAbs);
+
+		string dstFileAbs(dstDirAbs);
+		dstFileAbs = dstFileAbs.append(fileName).append(".").append(fileExt);
+		CopyFileA(srcFileAbs.c_str(), dstFileAbs.c_str(), overwrite ? FALSE : TRUE);
+
+		return dstFileAbs;
+	}
+
 	static void AutoTest_FilePath()
 	{
 		string a[] = { "D:/haha/", "D:/haha", "D:", "D:/", "D:/aa.a" };
@@ -129,7 +144,7 @@ namespace LostCore
 			RootDirectory.resize(RootDirectory.rfind('\\') + 1);
 
 			// hard coded path file name
-			std::string pathFilePath = RootDirectory + "paths.json";
+			string pathFilePath = RootDirectory + "paths.json";
 
 			//RootDirectory.append("paths.json");
 
@@ -151,7 +166,7 @@ namespace LostCore
 				auto pval = it.value();
 				if (DirectoryMap.find(it.key()) == DirectoryMap.end())
 				{
-					DirectoryMap[it.key()] = std::vector<std::string>();
+					DirectoryMap[it.key()] = std::vector<string>();
 				}
 
 				DirectoryMap[it.key()].push_back(it.value());
@@ -163,7 +178,7 @@ namespace LostCore
 		// 如果输入绝对路径的文件夹名，返回true。
 		// 如果输入相对路径的文件名，找到这个文件输出文件绝对路径名并返回true，没找到返回false。
 		// 如果输入绝对路径的文件名，找到这个文件返回true，否则false。
-		bool GetSpecifiedAbsolutePath(const std::string& specified, const std::string& path, std::string& output)
+		bool GetSpecifiedAbsolutePath(const string& specified, const string& path, string& output)
 		{
 			bool isAbsUrl = path.length() > 1 && path[1] == ':';
 			if (!isAbsUrl)
@@ -172,6 +187,7 @@ namespace LostCore
 				for (auto& dir : dirs)
 				{
 					output = (RootDirectory + dir + path);
+
 					ReplaceChar(output, "/", "\\");
 
 					if (IsDirectory(output))
@@ -180,15 +196,10 @@ namespace LostCore
 					}
 					else
 					{
-						std::ifstream file;
-						file.open(output);
-						if (file.fail())
+						if (PathFileExistsA(output.c_str()))
 						{
-							continue;
+							return true;
 						}
-
-						file.close();
-						return true;
 					}
 				}
 			}
@@ -200,19 +211,57 @@ namespace LostCore
 				{
 					return true;
 				}
+				else if (PathFileExistsA(output.c_str()))
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		bool GetSpecifiedRelativePath(const string& specified, const string& path, string& output)
+		{
+			bool isAbsUrl = path.length() > 1 && path[1] == ':';
+			if (!isAbsUrl)
+			{
+				output = path;
+				ReplaceChar(output, "/", "\\");
+				if (IsDirectory(output))
+				{
+					return true;
+				}
 				else
 				{
-					std::ifstream file;
-					file.open(output);
-					if (!file.fail())
+					auto& dirs = DirectoryMap[specified];
+					for (auto& dir : dirs)
 					{
-						file.close();
-						return true;
+						string pathAbs = (RootDirectory + dir + output);
+						ReplaceChar(pathAbs, "/", "\\");
+						if (TRUE == PathFileExistsA(pathAbs.c_str()))
+						{
+							return true;
+						}
 					}
-					else
+				}
+			}
+			else
+			{
+				bool isDir = IsDirectory(path);
+				if (!isDir && FALSE == PathFileExistsA(path.c_str()))
+				{
+					return false;
+				}
+
+				auto& dirs = DirectoryMap[specified];
+				for (auto& dir : dirs)
+				{
+					string specifiedRoot = (RootDirectory + dir);
+					ReplaceChar(specifiedRoot, "/", "\\");
+					if (path.find(specifiedRoot) == 0)
 					{
-						file.close();
-						return false;
+						output = string(path.begin() + specifiedRoot.size(), path.end());
+						return true;
 					}
 				}
 			}
@@ -220,14 +269,19 @@ namespace LostCore
 			return false;
 		}
 
-		bool GetShaderAbsolutePath(const std::string& path, std::string& output)
+		bool GetShaderAbsolutePath(const string& path, string& output)
 		{
 			return GetSpecifiedAbsolutePath("shader", path, output);
 		}
 
-		bool GetPrimitiveAbsolutePath(const std::string& path, std::string& output)
+		bool GetPrimitiveAbsolutePath(const string& path, string& output)
 		{
 			return GetSpecifiedAbsolutePath("primitive", path, output);
+		}
+
+		bool GetPrimitiveRelativePath(const string& path, string& output)
+		{
+			return GetSpecifiedRelativePath("primitive", path, output);
 		}
 
 		bool GetAnimationAbsolutePath(const string& path, string& output)
@@ -235,14 +289,19 @@ namespace LostCore
 			return GetSpecifiedAbsolutePath("animation", path, output);
 		}
 
-		bool GetSpecifiedJson(const std::string& specified, const std::string& path, FJson& output)
+		bool GetAnimationRelativePath(const string& path, string& output)
+		{
+			return GetSpecifiedRelativePath("animation", path, output);
+		}
+
+		bool GetSpecifiedJson(const string& specified, const string& path, FJson& output)
 		{
 			bool isAbsUrl = path.length() > 1 && path[1] == ':';
 			if (!isAbsUrl)
 			{
 				for (auto& dir : DirectoryMap[specified.c_str()])
 				{
-					std::string absPath(RootDirectory + dir + path);
+					string absPath(RootDirectory + dir + path);
 					ReplaceChar(absPath, "/", "\\");
 
 					std::ifstream file;
@@ -272,28 +331,28 @@ namespace LostCore
 			return false;
 		}
 
-		bool GetMaterialJson(const std::string& path, FJson& output)
+		bool GetMaterialJson(const string& path, FJson& output)
 		{
 			return GetSpecifiedJson("material", path, output);
 		}
 
-		bool GetSceneJson(const std::string& path, FJson& output)
+		bool GetSceneJson(const string& path, FJson& output)
 		{
 			return GetSpecifiedJson("scene", path, output);
 		}
 
-		//bool GetPrimitiveJson(const std::string& path, FJson& output)
+		//bool GetPrimitiveJson(const string& path, FJson& output)
 		//{
 		//	return GetSpecifiedJson("primitive", path, output);
 		//}
 
-		bool GetModelJson(const std::string& path, FJson& output)
+		bool GetModelJson(const string& path, FJson& output)
 		{
 			return GetSpecifiedJson("model", path, output);
 		}
-
+		
 	private:
-		std::string RootDirectory;
-		std::map<std::string, std::vector<std::string>> DirectoryMap;
+		string RootDirectory;
+		std::map<string, std::vector<string>> DirectoryMap;
 	};
 }

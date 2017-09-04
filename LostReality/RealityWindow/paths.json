@@ -3,5 +3,6 @@
 	"shader": "res/shader/",
 	"primitive": "res/primitive/",
 	"model": "res/model/",
-	"scene": "res/scene/"
+	"scene": "res/scene/",
+	"animation": "res/animation/"
 }
