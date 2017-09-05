@@ -20,13 +20,6 @@ namespace LostCore
 	class IMaterial;
 	class IResourceLoader;
 
-	enum class EPrimitiveType : uint8
-	{
-		Undefined = 0,
-		PrimitiveFile,
-		TriangularPyramid,
-	};
-
 	class FBasicModel : public IBasicInterface
 	{
 	public:

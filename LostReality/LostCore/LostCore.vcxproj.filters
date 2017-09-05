@@ -121,6 +121,9 @@
     <ClInclude Include="Inc\Math\Curves.h">
       <Filter>Inc\Math</Filter>
     </ClInclude>
+    <ClInclude Include="Inc\ModelFactory.h">
+      <Filter>Inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
@@ -166,6 +169,9 @@
     </ClCompile>
     <ClCompile Include="Src\GlobalHandler.cpp">
       <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderCore\ModelFactory.cpp">
+      <Filter>RenderCore</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

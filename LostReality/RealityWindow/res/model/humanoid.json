@@ -1,6 +1,0 @@
-{
-	"type": 1,
-	"primitive": "humanoid.iv",
-	"animation": ["run.anim", "punch.anim", "shot.anim"],
-	"material_prefix": "default"
-}

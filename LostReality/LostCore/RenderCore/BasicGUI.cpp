@@ -265,7 +265,7 @@ void LostCore::FBasicGUI::Tick(float sec)
 
 void LostCore::FBasicGUI::Draw(IRenderContext * rc, float sec)
 {
-	Root.Draw(rc, sec);
+	//Root.Draw(rc, sec);
 }
 
 bool LostCore::FBasicGUI::Config(IRenderContext * rc, const FJson & config)

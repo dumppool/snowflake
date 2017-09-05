@@ -32,7 +32,7 @@ namespace LostCore
 	{
 		auto lastSlash = path.rfind('\\');
 		auto lastDot = path.rfind('.');
-		return (lastDot == string::npos) || (lastDot < lastSlash) || (path.back() == ':');
+		return (lastDot == string::npos) || (lastSlash != string::npos && lastDot < lastSlash) || (path.back() == ':');
 	}
 
 	// 输出路径以'\\'结束
@@ -40,14 +40,20 @@ namespace LostCore
 	{
 		outPath = path;
 		auto lastSlash = outPath.rfind('\\');
-		if (!IsDirectory(outPath))
+		if (IsDirectory(outPath))
+		{
+			if (outPath.back() != '\\')
+			{
+				outPath += '\\';
+			}
+		}
+		else if (lastSlash != string::npos)
 		{
 			outPath.resize(lastSlash + 1);
 		}
-
-		if (outPath.back() != '\\')
+		else
 		{
-			outPath += '\\';
+			outPath = "";
 		}
 	}
 
@@ -66,7 +72,10 @@ namespace LostCore
 		}
 
 		auto lastSlash = tmp.rfind('\\');
-		tmp.assign(tmp.begin() + lastSlash + 1, tmp.end());
+		if (lastSlash != string::npos)
+		{
+			tmp.assign(tmp.begin() + lastSlash + 1, tmp.end());
+		}
 
 		auto lastDot = tmp.rfind('.');
 		if (lastDot == string::npos)
@@ -124,6 +133,22 @@ namespace LostCore
 	}
 
 	/***************************************************************************/
+
+	static void SaveJson(const FJson& json, const string& path)
+	{
+		ofstream file;
+		file.open(path);
+		if (file.fail())
+		{
+			char errstr[128];
+			strerror_s(errstr, errno);
+			LVERR("FBinaryIO::WriteToFile", "failed to write[%s]: %s", path.c_str(), errstr);
+			return;
+		}
+
+		file << json;
+		file.close();
+	}
 
 	class FDirectoryHelper
 	{
@@ -271,27 +296,32 @@ namespace LostCore
 
 		bool GetShaderAbsolutePath(const string& path, string& output)
 		{
-			return GetSpecifiedAbsolutePath("shader", path, output);
+			return GetSpecifiedAbsolutePath(K_SHADER, path, output);
 		}
 
 		bool GetPrimitiveAbsolutePath(const string& path, string& output)
 		{
-			return GetSpecifiedAbsolutePath("primitive", path, output);
+			return GetSpecifiedAbsolutePath(K_PRIMITIVE, path, output);
 		}
 
 		bool GetPrimitiveRelativePath(const string& path, string& output)
 		{
-			return GetSpecifiedRelativePath("primitive", path, output);
+			return GetSpecifiedRelativePath(K_PRIMITIVE, path, output);
 		}
 
 		bool GetAnimationAbsolutePath(const string& path, string& output)
 		{
-			return GetSpecifiedAbsolutePath("animation", path, output);
+			return GetSpecifiedAbsolutePath(K_ANIMATION, path, output);
 		}
 
 		bool GetAnimationRelativePath(const string& path, string& output)
 		{
-			return GetSpecifiedRelativePath("animation", path, output);
+			return GetSpecifiedRelativePath(K_ANIMATION, path, output);
+		}
+
+		bool GetModelAbsolutePath(const string& path, string& output)
+		{
+			return GetSpecifiedAbsolutePath(K_MODEL, path, output);
 		}
 
 		bool GetSpecifiedJson(const string& specified, const string& path, FJson& output)
@@ -333,12 +363,12 @@ namespace LostCore
 
 		bool GetMaterialJson(const string& path, FJson& output)
 		{
-			return GetSpecifiedJson("material", path, output);
+			return GetSpecifiedJson(K_MATERIAL, path, output);
 		}
 
 		bool GetSceneJson(const string& path, FJson& output)
 		{
-			return GetSpecifiedJson("scene", path, output);
+			return GetSpecifiedJson(K_SCENE, path, output);
 		}
 
 		//bool GetPrimitiveJson(const string& path, FJson& output)
@@ -348,7 +378,7 @@ namespace LostCore
 
 		bool GetModelJson(const string& path, FJson& output)
 		{
-			return GetSpecifiedJson("model", path, output);
+			return GetSpecifiedJson(K_MODEL, path, output);
 		}
 		
 	private:

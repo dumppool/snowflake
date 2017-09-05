@@ -23,7 +23,7 @@ public:
 	FFBXEditor();
 	~FFBXEditor();
 
-	void PushCommands(const CommandType& cmd);
+	void PushCommand(const CommandType& cmd);
 	void LoadFBX(
 		const char * file,
 		const char* primitiveOutput,
@@ -39,6 +39,11 @@ public:
 		bool importTangent,
 		bool forceRegenerateTangent,
 		bool generateTangentIfNotFound);
+
+	void LoadModel(const string& url);
+	void LoadModel(const FJson& config);
+	void LoadAnimation(const string& url);
+	void ClearEditorScene();
 
 	// FBasicWorld overridew 
 	virtual bool Config(IRenderContext * rc, const FJson& config) override;
@@ -129,7 +134,10 @@ FFBXEditor::FFBXEditor()
 	});
 
 	FGlobalHandler::Get()->SetCallbackLoadModel([&](const char* url) {
-		// load model
+		string localUrl(url);
+		PushCommand([=]() {
+			LoadModel(localUrl);
+		});
 	});
 
 	FGlobalHandler::Get()->SetCallbackInitializeWindow([&](HWND wnd, bool windowed, int32 width, int32 height) {
@@ -137,7 +145,10 @@ FFBXEditor::FFBXEditor()
 	});
 
 	FGlobalHandler::Get()->SetCallbackLoadAnimation([&](const char* url) {
-		// load animation
+		string localUrl(url);
+		PushCommand([=]() {
+			LoadAnimation(localUrl);
+		});
 	});
 
 	FGlobalHandler::Get()->SetCallbackLoadFBX([&](
@@ -156,7 +167,7 @@ FFBXEditor::FFBXEditor()
 		bool forceRegenerateTangent,
 		bool generateTangentIfNotFound) {
 		string filePath(file), primPath(primitiveOutput), animPath(animationOutput);
-		this->PushCommands([=]()
+		this->PushCommand([=]()
 		{
 			LoadFBX(
 				filePath.c_str(),
@@ -174,6 +185,10 @@ FFBXEditor::FFBXEditor()
 				forceRegenerateTangent,
 				forceRegenerateTangent);
 		});
+	});
+
+	FGlobalHandler::Get()->SetCallbackClearScene([&]() {
+		ClearEditorScene();
 	});
 }
 
@@ -212,7 +227,7 @@ void FFBXEditor::InitializeScene()
 	}
 }
 
-void FFBXEditor::PushCommands(const CommandType & cmd)
+void FFBXEditor::PushCommand(const CommandType & cmd)
 {
 	TickCommands.Push(cmd);
 }
@@ -350,29 +365,17 @@ void FFBXEditor::LoadFBX(
 			string path = elem.value(K_PATH, "");
 			ReplaceChar(path, "/", "\\");
 			string fileAbs(CopyFileTo(animationOutputAbs, path)), fileRel;
-			assert(FDirectoryHelper::Get()->GetPrimitiveRelativePath(fileAbs, fileRel));
+			assert(FDirectoryHelper::Get()->GetAnimationRelativePath(fileAbs, fileRel));
 			Log(SInfo, "Output anim: %s, [%s]", fileRel.c_str(), fileAbs.c_str());
 
-			vector<string> anims;
-			string animName;
-			if (FAnimationLibrary::Get()->Load(fileRel, animName))
-			{
-				anims.push_back(animName);
-			}
-
-			for (auto& anim : anims)
-			{
-				FGlobalHandler::Get()->AddAnimation(anim.c_str());
-			}
+			LoadAnimation(fileRel);
 		}
 
 		clearScene |= !importAnimation;
 
 		if (clearScene)
 		{
-			// RemoveModel只是从场景移除model，不释放内存.
-			Scene->RemoveModel(CurrSelectedModel);
-			SAFE_DELETE(CurrSelectedModel);
+			ClearEditorScene();
 		}
 
 		if (!importAnimation)
@@ -385,31 +388,55 @@ void FFBXEditor::LoadFBX(
 				assert(FDirectoryHelper::Get()->GetPrimitiveRelativePath(fileAbs, fileRel));
 				Log(SInfo, "Output primitive: %s, [%s]", fileRel.c_str(), fileAbs.c_str());
 
-				uint32 flag = elem[K_VERTEX_ELEMENT];
 				FJson config;
-				config["type"] = (uint32)EPrimitiveType::PrimitiveFile;
+				config[K_VERTEX_ELEMENT] = (uint32)elem[K_VERTEX_ELEMENT];
 				config["primitive"] = fileRel;
-				config["material_prefix"] = "default";
+				config[K_AUTO] = "default";
 
-				FBasicModel* model = nullptr;
-				if ((flag & EVertexElement::Skin) == EVertexElement::Skin)
-				{
-					model = new FSkeletalModel;
-				}
-				else
-				{
-					model = new FStaticModel;
-				}
+				string modelFileAbs, modelFileName;
+				GetDirectory(modelFileAbs, fileRel);
+				GetFileName(modelFileName, string(), fileRel);
+				modelFileAbs.append(modelFileName).append(".json");
+				FDirectoryHelper::Get()->GetModelAbsolutePath(modelFileAbs, modelFileAbs);
+				SaveJson(config, modelFileAbs);
 
-				assert(CurrSelectedModel == nullptr);
-				CurrSelectedModel = model;
-				if (model->Config(RC, config))
-				{
-					Scene->AddModel(model);
-				}
+				LoadModel(config);
 			}
 		}
 	}
+}
+
+void FFBXEditor::LoadModel(const string & url)
+{
+	FJson config;
+	if (FDirectoryHelper::Get()->GetModelJson(url, config))
+	{
+		LoadModel(config);
+	}
+}
+
+void FFBXEditor::LoadModel(const FJson & config)
+{
+	auto model = FModelFactory::NewModel(RC, config);
+	CurrSelectedModel = model;
+	if (model != nullptr)
+	{
+		Scene->AddModel(model);
+	}
+}
+
+void FFBXEditor::LoadAnimation(const string & url)
+{
+	string anim;
+	FAnimationLibrary::Get()->Load(url, anim);
+	FGlobalHandler::Get()->AddAnimation(anim);
+}
+
+void FFBXEditor::ClearEditorScene()
+{
+	PushCommand([=]() {
+		Scene->ClearModels();
+	});
 }
 
 bool FFBXEditor::Config(IRenderContext * rc, const FJson & config)

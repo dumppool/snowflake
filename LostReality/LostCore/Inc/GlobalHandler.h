@@ -12,21 +12,22 @@
 #define FLAG_SKEL_1 (1<<0)
 #define FLAG_SKEL_2 (1<<1)
 
-#define FLAG_LOG_INFO (1<<0)
-#define FLAG_LOG_WARN (1<<1)
-#define FLAG_LOG_ERROR (1<<2)
+#define FLAG_LOG_INFO (0)
+#define FLAG_LOG_WARN (1)
+#define FLAG_LOG_ERROR (2)
 
 #define FLAG_ANIM_CLEAR (1<<0)
 #define FLAG_ANIM_ADD (1<<1)
 
-#define FLAG_ASSET_MODEL (1<<0)
-#define FLAG_ASSET_ANIMATION (1<<1)
+#define FLAG_ASSET_MODEL (0)
+#define FLAG_ASSET_ANIMATION (1)
 
 namespace LostCore
 {
 	typedef void(WINAPI *PFN_AnimUpdate)(int32 flag, const char* anim);
 	typedef void(WINAPI *PFN_Logger)(int32 level, const char* msg);
 
+	typedef function<void()> Callback_V;
 	typedef function<void(float, float, float)> Callback_FFF;
 	typedef function<void(const char*)> Callback_S;
 	typedef function<void(HWND wnd, bool windowed, int32 width, int32 height)> Callback_HBII;
@@ -59,26 +60,21 @@ namespace LostCore
 	private:
 		bool bDisplayNormal;
 		bool bDisplayTangent;
-
 		float DisplayNormalLength;
 
 		Callback_FFF MoveCameraCallback;
 		Callback_FFF RotateCameraCallback;
 
 		float AnimateRate;
-
 		uint32 FlagDisplaySkeleton;
-
 		Callback_S PlayAnimationCallback;
-
 		PFN_AnimUpdate AnimUpdateFunc;
-
 		Callback_S LoadModelCallback;
 		Callback_S LoadAnimationCallback;
-
 		PFN_Logger LoggingFunc;
 		Callback_HBII InitializeWindowCallback;
 		Callback_X LoadFBXCallback;
+		Callback_V ClearSceneCallback;
 
 	public:
 		FGlobalHandler();
@@ -104,12 +100,12 @@ namespace LostCore
 		void SetAnimUpdater(PFN_AnimUpdate animUpdate);
 		void PlayAnimation(const char* anim);
 
-		void LoadAsset(uint32 flag, const char* name);
+		void LoadAsset(uint32 flag, const char* url);
 
 		void SetLogger(PFN_Logger logger);
 		void InitializeWindow(HWND wnd, bool windowed, int32 width, int32 height);
 		void LoadFBX(
-			const char* file,
+			const char* url,
 			const char* primitiveOutput,
 			const char* animationOutput,
 			bool clearScene,
@@ -124,6 +120,8 @@ namespace LostCore
 			bool forceRegenerateTangent,
 			bool generateTangentIfNotFound);
 
+		void ClearScene();
+
 	public:
 		bool IsDisplayNormal(uint32 flags) const;
 
@@ -137,7 +135,7 @@ namespace LostCore
 		bool IsDisplaySkeleton(uint32 flag) const;
 
 		void ClearAnimationList();
-		void AddAnimation(const char* anim);
+		void AddAnimation(const string& anim);
 		void SetCallbackPlayAnimation(Callback_S playAnim);
 
 		void SetCallbackLoadModel(Callback_S loadModel);
@@ -146,6 +144,8 @@ namespace LostCore
 		void Logging(int32 level, const string& msg);
 		void SetCallbackInitializeWindow(Callback_HBII initWin);
 		void SetCallbackLoadFBX(Callback_X loadFBX);
+
+		void SetCallbackClearScene(Callback_V clearScene);
 	};
 
 }
@@ -163,3 +163,4 @@ EXPORT_WRAP_2_DCL(LoadAsset, uint32, const char*);
 EXPORT_WRAP_1_DCL(SetLogger, LostCore::PFN_Logger);
 EXPORT_WRAP_4_DCL(InitializeWindow, HWND, bool, int32, int32);
 EXPORT_WRAP_14_DCL(LoadFBX, const char*, const char*, const char*, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool);
+EXPORT_WRAP_0_DCL(ClearScene);

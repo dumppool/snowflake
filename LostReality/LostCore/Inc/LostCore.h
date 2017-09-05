@@ -109,6 +109,7 @@ using FJson = nlohmann::json;
 #include "BasicModel.h"
 #include "BasicGUI.h"
 #include "BasicScene.h"
+#include "ModelFactory.h"
 
 #include "SimpleWorld.h"
 #include "FBXEditor.h"

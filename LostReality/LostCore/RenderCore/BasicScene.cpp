@@ -54,10 +54,10 @@ bool LostCore::FBasicScene::Config(IRenderContext * rc, const FJson & config)
 	{
 		for (auto node : config["nodes"])
 		{
-			assert(node.find("type") != node.end() && "a node needs [type] section");
+			assert(node.find(K_TYPE) != node.end() && "a node needs [type] section");
 			assert(node.find("path") != node.end() && "a node needs [path] section");
 			assert(node.find("transform") != node.end() && "a node needs [transform] section");
-			auto nodeType = (ESceneNodeType)(int32)node["type"];
+			auto nodeType = (ESceneNodeType)(int32)node[K_TYPE];
 			if (nodeType == ESceneNodeType::StaticModel ||
 				nodeType == ESceneNodeType::SkeletalModel)
 			{
@@ -129,7 +129,7 @@ void FBasicScene::RemoveModel(FBasicModel * sm)
 	}
 }
 
-void LostCore::FBasicScene::Fini()
+void LostCore::FBasicScene::ClearModels()
 {
 	for (auto& model : Models)
 	{
@@ -137,4 +137,9 @@ void LostCore::FBasicScene::Fini()
 	}
 
 	Models.clear();
+}
+
+void LostCore::FBasicScene::Fini()
+{
+	ClearModels();
 }

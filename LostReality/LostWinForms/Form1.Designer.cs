@@ -31,18 +31,12 @@
             this.components = new System.ComponentModel.Container();
             this.panel1 = new System.Windows.Forms.Panel();
             this.listBox1 = new System.Windows.Forms.ListBox();
-            this.ViewPanel = new System.Windows.Forms.Panel();
-            this.DisplaySkeleton2 = new System.Windows.Forms.CheckBox();
-            this.DisplaySkeleton = new System.Windows.Forms.CheckBox();
-            this.AnimateRateValue = new System.Windows.Forms.TextBox();
-            this.AnimateRateSlider = new System.Windows.Forms.TrackBar();
-            this.SegLengthValue = new System.Windows.Forms.TextBox();
-            this.SegLengthSlider = new System.Windows.Forms.TrackBar();
-            this.DisplayNormal = new System.Windows.Forms.CheckBox();
-            this.DisplayTangent = new System.Windows.Forms.CheckBox();
-            this.ViewPanelOk = new System.Windows.Forms.Button();
             this.ImportPanel = new System.Windows.Forms.Panel();
+            this.AnimationOutputText = new System.Windows.Forms.TextBox();
+            this.textBox3 = new System.Windows.Forms.TextBox();
+            this.textBox2 = new System.Windows.Forms.TextBox();
             this.MergeNormalTangentAll = new System.Windows.Forms.CheckBox();
+            this.PrimitiveOutputText = new System.Windows.Forms.TextBox();
             this.ImportTexCoord = new System.Windows.Forms.CheckBox();
             this.ImportCancel = new System.Windows.Forms.Button();
             this.ImportOk = new System.Windows.Forms.Button();
@@ -54,6 +48,16 @@
             this.GenerateNormalIfNotFound = new System.Windows.Forms.CheckBox();
             this.ForceRegenerateNormal = new System.Windows.Forms.CheckBox();
             this.ImportNormal = new System.Windows.Forms.CheckBox();
+            this.ViewPanel = new System.Windows.Forms.Panel();
+            this.DisplaySkeleton2 = new System.Windows.Forms.CheckBox();
+            this.DisplaySkeleton = new System.Windows.Forms.CheckBox();
+            this.AnimateRateValue = new System.Windows.Forms.TextBox();
+            this.AnimateRateSlider = new System.Windows.Forms.TrackBar();
+            this.SegLengthValue = new System.Windows.Forms.TextBox();
+            this.SegLengthSlider = new System.Windows.Forms.TrackBar();
+            this.DisplayNormal = new System.Windows.Forms.CheckBox();
+            this.DisplayTangent = new System.Windows.Forms.CheckBox();
+            this.ViewPanelOk = new System.Windows.Forms.Button();
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
@@ -63,23 +67,20 @@
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.loadFBXToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.LoadModelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.LoadAnimationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
             this.ViewPanelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripComboBox1 = new System.Windows.Forms.ToolStripComboBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.载入模型ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.载入动画ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.textBox2 = new System.Windows.Forms.TextBox();
-            this.textBox3 = new System.Windows.Forms.TextBox();
-            this.AnimationOutputText = new System.Windows.Forms.TextBox();
-            this.PrimitiveOutputText = new System.Windows.Forms.TextBox();
+            this.ClearSceneToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panel1.SuspendLayout();
+            this.ImportPanel.SuspendLayout();
             this.ViewPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.AnimateRateSlider)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.SegLengthSlider)).BeginInit();
-            this.ImportPanel.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
@@ -110,121 +111,6 @@
             this.listBox1.Size = new System.Drawing.Size(120, 220);
             this.listBox1.TabIndex = 7;
             // 
-            // ViewPanel
-            // 
-            this.ViewPanel.Controls.Add(this.DisplaySkeleton2);
-            this.ViewPanel.Controls.Add(this.DisplaySkeleton);
-            this.ViewPanel.Controls.Add(this.AnimateRateValue);
-            this.ViewPanel.Controls.Add(this.AnimateRateSlider);
-            this.ViewPanel.Controls.Add(this.SegLengthValue);
-            this.ViewPanel.Controls.Add(this.SegLengthSlider);
-            this.ViewPanel.Controls.Add(this.DisplayNormal);
-            this.ViewPanel.Controls.Add(this.DisplayTangent);
-            this.ViewPanel.Controls.Add(this.ViewPanelOk);
-            this.ViewPanel.Location = new System.Drawing.Point(603, -15);
-            this.ViewPanel.Name = "ViewPanel";
-            this.ViewPanel.Size = new System.Drawing.Size(222, 412);
-            this.ViewPanel.TabIndex = 6;
-            this.ViewPanel.Visible = false;
-            // 
-            // DisplaySkeleton2
-            // 
-            this.DisplaySkeleton2.AutoSize = true;
-            this.DisplaySkeleton2.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.DisplaySkeleton2.ForeColor = System.Drawing.SystemColors.AppWorkspace;
-            this.DisplaySkeleton2.Location = new System.Drawing.Point(32, 232);
-            this.DisplaySkeleton2.Name = "DisplaySkeleton2";
-            this.DisplaySkeleton2.Size = new System.Drawing.Size(126, 21);
-            this.DisplaySkeleton2.TabIndex = 19;
-            this.DisplaySkeleton2.Text = "DisplaySkeleton2";
-            this.DisplaySkeleton2.UseVisualStyleBackColor = true;
-            // 
-            // DisplaySkeleton
-            // 
-            this.DisplaySkeleton.AutoSize = true;
-            this.DisplaySkeleton.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.DisplaySkeleton.ForeColor = System.Drawing.SystemColors.AppWorkspace;
-            this.DisplaySkeleton.Location = new System.Drawing.Point(32, 216);
-            this.DisplaySkeleton.Name = "DisplaySkeleton";
-            this.DisplaySkeleton.Size = new System.Drawing.Size(119, 21);
-            this.DisplaySkeleton.TabIndex = 18;
-            this.DisplaySkeleton.Text = "DisplaySkeleton";
-            this.DisplaySkeleton.UseVisualStyleBackColor = true;
-            // 
-            // AnimateRateValue
-            // 
-            this.AnimateRateValue.Cursor = System.Windows.Forms.Cursors.Arrow;
-            this.AnimateRateValue.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.AnimateRateValue.Location = new System.Drawing.Point(132, 181);
-            this.AnimateRateValue.Name = "AnimateRateValue";
-            this.AnimateRateValue.ReadOnly = true;
-            this.AnimateRateValue.Size = new System.Drawing.Size(51, 23);
-            this.AnimateRateValue.TabIndex = 17;
-            // 
-            // AnimateRateSlider
-            // 
-            this.AnimateRateSlider.LargeChange = 10;
-            this.AnimateRateSlider.Location = new System.Drawing.Point(22, 181);
-            this.AnimateRateSlider.Minimum = 1;
-            this.AnimateRateSlider.Name = "AnimateRateSlider";
-            this.AnimateRateSlider.Size = new System.Drawing.Size(104, 45);
-            this.AnimateRateSlider.TabIndex = 16;
-            this.AnimateRateSlider.Value = 10;
-            // 
-            // SegLengthValue
-            // 
-            this.SegLengthValue.Cursor = System.Windows.Forms.Cursors.Arrow;
-            this.SegLengthValue.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.SegLengthValue.Location = new System.Drawing.Point(132, 115);
-            this.SegLengthValue.Name = "SegLengthValue";
-            this.SegLengthValue.ReadOnly = true;
-            this.SegLengthValue.Size = new System.Drawing.Size(51, 23);
-            this.SegLengthValue.TabIndex = 15;
-            // 
-            // SegLengthSlider
-            // 
-            this.SegLengthSlider.LargeChange = 10;
-            this.SegLengthSlider.Location = new System.Drawing.Point(22, 115);
-            this.SegLengthSlider.Minimum = 1;
-            this.SegLengthSlider.Name = "SegLengthSlider";
-            this.SegLengthSlider.Size = new System.Drawing.Size(104, 45);
-            this.SegLengthSlider.TabIndex = 14;
-            this.SegLengthSlider.Value = 10;
-            // 
-            // DisplayNormal
-            // 
-            this.DisplayNormal.AutoSize = true;
-            this.DisplayNormal.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.DisplayNormal.ForeColor = System.Drawing.SystemColors.AppWorkspace;
-            this.DisplayNormal.Location = new System.Drawing.Point(32, 61);
-            this.DisplayNormal.Name = "DisplayNormal";
-            this.DisplayNormal.Size = new System.Drawing.Size(113, 21);
-            this.DisplayNormal.TabIndex = 13;
-            this.DisplayNormal.Text = "DisplayNormal";
-            this.DisplayNormal.UseVisualStyleBackColor = true;
-            // 
-            // DisplayTangent
-            // 
-            this.DisplayTangent.AutoSize = true;
-            this.DisplayTangent.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.DisplayTangent.ForeColor = System.Drawing.SystemColors.AppWorkspace;
-            this.DisplayTangent.Location = new System.Drawing.Point(32, 88);
-            this.DisplayTangent.Name = "DisplayTangent";
-            this.DisplayTangent.Size = new System.Drawing.Size(116, 21);
-            this.DisplayTangent.TabIndex = 12;
-            this.DisplayTangent.Text = "DisplayTangent";
-            this.DisplayTangent.UseVisualStyleBackColor = true;
-            // 
-            // ViewPanelOk
-            // 
-            this.ViewPanelOk.Font = new System.Drawing.Font("微软雅黑", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.ViewPanelOk.Location = new System.Drawing.Point(84, 333);
-            this.ViewPanelOk.Name = "ViewPanelOk";
-            this.ViewPanelOk.Size = new System.Drawing.Size(61, 29);
-            this.ViewPanelOk.TabIndex = 11;
-            this.ViewPanelOk.Text = "确定";
-            this.ViewPanelOk.UseVisualStyleBackColor = true;
-            // 
             // ImportPanel
             // 
             this.ImportPanel.Controls.Add(this.AnimationOutputText);
@@ -249,6 +135,40 @@
             this.ImportPanel.TabIndex = 5;
             this.ImportPanel.Visible = false;
             // 
+            // AnimationOutputText
+            // 
+            this.AnimationOutputText.Location = new System.Drawing.Point(118, 48);
+            this.AnimationOutputText.Name = "AnimationOutputText";
+            this.AnimationOutputText.Size = new System.Drawing.Size(122, 21);
+            this.AnimationOutputText.TabIndex = 15;
+            // 
+            // textBox3
+            // 
+            this.textBox3.BackColor = System.Drawing.SystemColors.Desktop;
+            this.textBox3.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.textBox3.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.textBox3.ForeColor = System.Drawing.Color.Silver;
+            this.textBox3.Location = new System.Drawing.Point(11, 51);
+            this.textBox3.Name = "textBox3";
+            this.textBox3.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
+            this.textBox3.Size = new System.Drawing.Size(98, 16);
+            this.textBox3.TabIndex = 13;
+            this.textBox3.Text = "animation文件夹";
+            // 
+            // textBox2
+            // 
+            this.textBox2.BackColor = System.Drawing.SystemColors.Desktop;
+            this.textBox2.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.textBox2.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.textBox2.ForeColor = System.Drawing.Color.Silver;
+            this.textBox2.Location = new System.Drawing.Point(11, 20);
+            this.textBox2.Name = "textBox2";
+            this.textBox2.ReadOnly = true;
+            this.textBox2.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
+            this.textBox2.Size = new System.Drawing.Size(98, 16);
+            this.textBox2.TabIndex = 12;
+            this.textBox2.Text = "primitive文件夹";
+            // 
             // MergeNormalTangentAll
             // 
             this.MergeNormalTangentAll.AutoSize = true;
@@ -260,6 +180,13 @@
             this.MergeNormalTangentAll.TabIndex = 11;
             this.MergeNormalTangentAll.Text = "MergeNormalTangentAll";
             this.MergeNormalTangentAll.UseVisualStyleBackColor = true;
+            // 
+            // PrimitiveOutputText
+            // 
+            this.PrimitiveOutputText.Location = new System.Drawing.Point(118, 17);
+            this.PrimitiveOutputText.Name = "PrimitiveOutputText";
+            this.PrimitiveOutputText.Size = new System.Drawing.Size(122, 21);
+            this.PrimitiveOutputText.TabIndex = 14;
             // 
             // ImportTexCoord
             // 
@@ -389,6 +316,121 @@
             this.ImportNormal.Text = "ImportNormal";
             this.ImportNormal.UseVisualStyleBackColor = true;
             // 
+            // ViewPanel
+            // 
+            this.ViewPanel.Controls.Add(this.DisplaySkeleton2);
+            this.ViewPanel.Controls.Add(this.DisplaySkeleton);
+            this.ViewPanel.Controls.Add(this.AnimateRateValue);
+            this.ViewPanel.Controls.Add(this.AnimateRateSlider);
+            this.ViewPanel.Controls.Add(this.SegLengthValue);
+            this.ViewPanel.Controls.Add(this.SegLengthSlider);
+            this.ViewPanel.Controls.Add(this.DisplayNormal);
+            this.ViewPanel.Controls.Add(this.DisplayTangent);
+            this.ViewPanel.Controls.Add(this.ViewPanelOk);
+            this.ViewPanel.Location = new System.Drawing.Point(603, -15);
+            this.ViewPanel.Name = "ViewPanel";
+            this.ViewPanel.Size = new System.Drawing.Size(222, 412);
+            this.ViewPanel.TabIndex = 6;
+            this.ViewPanel.Visible = false;
+            // 
+            // DisplaySkeleton2
+            // 
+            this.DisplaySkeleton2.AutoSize = true;
+            this.DisplaySkeleton2.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.DisplaySkeleton2.ForeColor = System.Drawing.SystemColors.AppWorkspace;
+            this.DisplaySkeleton2.Location = new System.Drawing.Point(32, 232);
+            this.DisplaySkeleton2.Name = "DisplaySkeleton2";
+            this.DisplaySkeleton2.Size = new System.Drawing.Size(126, 21);
+            this.DisplaySkeleton2.TabIndex = 19;
+            this.DisplaySkeleton2.Text = "DisplaySkeleton2";
+            this.DisplaySkeleton2.UseVisualStyleBackColor = true;
+            // 
+            // DisplaySkeleton
+            // 
+            this.DisplaySkeleton.AutoSize = true;
+            this.DisplaySkeleton.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.DisplaySkeleton.ForeColor = System.Drawing.SystemColors.AppWorkspace;
+            this.DisplaySkeleton.Location = new System.Drawing.Point(32, 216);
+            this.DisplaySkeleton.Name = "DisplaySkeleton";
+            this.DisplaySkeleton.Size = new System.Drawing.Size(119, 21);
+            this.DisplaySkeleton.TabIndex = 18;
+            this.DisplaySkeleton.Text = "DisplaySkeleton";
+            this.DisplaySkeleton.UseVisualStyleBackColor = true;
+            // 
+            // AnimateRateValue
+            // 
+            this.AnimateRateValue.Cursor = System.Windows.Forms.Cursors.Arrow;
+            this.AnimateRateValue.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.AnimateRateValue.Location = new System.Drawing.Point(132, 181);
+            this.AnimateRateValue.Name = "AnimateRateValue";
+            this.AnimateRateValue.ReadOnly = true;
+            this.AnimateRateValue.Size = new System.Drawing.Size(51, 23);
+            this.AnimateRateValue.TabIndex = 17;
+            // 
+            // AnimateRateSlider
+            // 
+            this.AnimateRateSlider.LargeChange = 10;
+            this.AnimateRateSlider.Location = new System.Drawing.Point(22, 181);
+            this.AnimateRateSlider.Minimum = 1;
+            this.AnimateRateSlider.Name = "AnimateRateSlider";
+            this.AnimateRateSlider.Size = new System.Drawing.Size(104, 45);
+            this.AnimateRateSlider.TabIndex = 16;
+            this.AnimateRateSlider.Value = 10;
+            // 
+            // SegLengthValue
+            // 
+            this.SegLengthValue.Cursor = System.Windows.Forms.Cursors.Arrow;
+            this.SegLengthValue.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.SegLengthValue.Location = new System.Drawing.Point(132, 115);
+            this.SegLengthValue.Name = "SegLengthValue";
+            this.SegLengthValue.ReadOnly = true;
+            this.SegLengthValue.Size = new System.Drawing.Size(51, 23);
+            this.SegLengthValue.TabIndex = 15;
+            // 
+            // SegLengthSlider
+            // 
+            this.SegLengthSlider.LargeChange = 10;
+            this.SegLengthSlider.Location = new System.Drawing.Point(22, 115);
+            this.SegLengthSlider.Minimum = 1;
+            this.SegLengthSlider.Name = "SegLengthSlider";
+            this.SegLengthSlider.Size = new System.Drawing.Size(104, 45);
+            this.SegLengthSlider.TabIndex = 14;
+            this.SegLengthSlider.Value = 10;
+            // 
+            // DisplayNormal
+            // 
+            this.DisplayNormal.AutoSize = true;
+            this.DisplayNormal.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.DisplayNormal.ForeColor = System.Drawing.SystemColors.AppWorkspace;
+            this.DisplayNormal.Location = new System.Drawing.Point(32, 61);
+            this.DisplayNormal.Name = "DisplayNormal";
+            this.DisplayNormal.Size = new System.Drawing.Size(113, 21);
+            this.DisplayNormal.TabIndex = 13;
+            this.DisplayNormal.Text = "DisplayNormal";
+            this.DisplayNormal.UseVisualStyleBackColor = true;
+            // 
+            // DisplayTangent
+            // 
+            this.DisplayTangent.AutoSize = true;
+            this.DisplayTangent.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.DisplayTangent.ForeColor = System.Drawing.SystemColors.AppWorkspace;
+            this.DisplayTangent.Location = new System.Drawing.Point(32, 88);
+            this.DisplayTangent.Name = "DisplayTangent";
+            this.DisplayTangent.Size = new System.Drawing.Size(116, 21);
+            this.DisplayTangent.TabIndex = 12;
+            this.DisplayTangent.Text = "DisplayTangent";
+            this.DisplayTangent.UseVisualStyleBackColor = true;
+            // 
+            // ViewPanelOk
+            // 
+            this.ViewPanelOk.Font = new System.Drawing.Font("微软雅黑", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.ViewPanelOk.Location = new System.Drawing.Point(84, 333);
+            this.ViewPanelOk.Name = "ViewPanelOk";
+            this.ViewPanelOk.Size = new System.Drawing.Size(61, 29);
+            this.ViewPanelOk.TabIndex = 11;
+            this.ViewPanelOk.Text = "确定";
+            this.ViewPanelOk.UseVisualStyleBackColor = true;
+            // 
             // textBox1
             // 
             this.textBox1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
@@ -461,8 +503,8 @@
             this.toolStripMenuItem1.BackColor = System.Drawing.SystemColors.WindowFrame;
             this.toolStripMenuItem1.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.loadFBXToolStripMenuItem1,
-            this.载入模型ToolStripMenuItem,
-            this.载入动画ToolStripMenuItem});
+            this.LoadModelToolStripMenuItem,
+            this.LoadAnimationToolStripMenuItem});
             this.toolStripMenuItem1.ForeColor = System.Drawing.SystemColors.ButtonFace;
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
             this.toolStripMenuItem1.Size = new System.Drawing.Size(27, 21);
@@ -476,10 +518,23 @@
             this.loadFBXToolStripMenuItem1.Size = new System.Drawing.Size(152, 22);
             this.loadFBXToolStripMenuItem1.Text = "载入FBX文件";
             // 
+            // LoadModelToolStripMenuItem
+            // 
+            this.LoadModelToolStripMenuItem.Name = "LoadModelToolStripMenuItem";
+            this.LoadModelToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.LoadModelToolStripMenuItem.Text = "载入模型";
+            // 
+            // LoadAnimationToolStripMenuItem
+            // 
+            this.LoadAnimationToolStripMenuItem.Name = "LoadAnimationToolStripMenuItem";
+            this.LoadAnimationToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.LoadAnimationToolStripMenuItem.Text = "载入动画";
+            // 
             // toolStripMenuItem2
             // 
             this.toolStripMenuItem2.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.ViewPanelToolStripMenuItem});
+            this.ViewPanelToolStripMenuItem,
+            this.ClearSceneToolStripMenuItem});
             this.toolStripMenuItem2.Name = "toolStripMenuItem2";
             this.toolStripMenuItem2.Size = new System.Drawing.Size(31, 21);
             this.toolStripMenuItem2.Text = "%";
@@ -487,7 +542,7 @@
             // ViewPanelToolStripMenuItem
             // 
             this.ViewPanelToolStripMenuItem.Name = "ViewPanelToolStripMenuItem";
-            this.ViewPanelToolStripMenuItem.Size = new System.Drawing.Size(124, 22);
+            this.ViewPanelToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.ViewPanelToolStripMenuItem.Text = "显示选项";
             // 
             // toolStripMenuItem3
@@ -511,58 +566,11 @@
             this.toolStripComboBox1.Name = "toolStripComboBox1";
             this.toolStripComboBox1.Size = new System.Drawing.Size(121, 25);
             // 
-            // 载入模型ToolStripMenuItem
+            // ClearSceneToolStripMenuItem
             // 
-            this.载入模型ToolStripMenuItem.Name = "载入模型ToolStripMenuItem";
-            this.载入模型ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.载入模型ToolStripMenuItem.Text = "载入模型";
-            // 
-            // 载入动画ToolStripMenuItem
-            // 
-            this.载入动画ToolStripMenuItem.Name = "载入动画ToolStripMenuItem";
-            this.载入动画ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.载入动画ToolStripMenuItem.Text = "载入动画";
-            // 
-            // textBox2
-            // 
-            this.textBox2.BackColor = System.Drawing.SystemColors.Desktop;
-            this.textBox2.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.textBox2.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.textBox2.ForeColor = System.Drawing.Color.Silver;
-            this.textBox2.Location = new System.Drawing.Point(11, 20);
-            this.textBox2.Name = "textBox2";
-            this.textBox2.ReadOnly = true;
-            this.textBox2.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
-            this.textBox2.Size = new System.Drawing.Size(98, 16);
-            this.textBox2.TabIndex = 12;
-            this.textBox2.Text = "primitive文件夹";
-            // 
-            // textBox3
-            // 
-            this.textBox3.BackColor = System.Drawing.SystemColors.Desktop;
-            this.textBox3.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.textBox3.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.textBox3.ForeColor = System.Drawing.Color.Silver;
-            this.textBox3.Location = new System.Drawing.Point(11, 51);
-            this.textBox3.Name = "textBox3";
-            this.textBox3.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
-            this.textBox3.Size = new System.Drawing.Size(98, 16);
-            this.textBox3.TabIndex = 13;
-            this.textBox3.Text = "animation文件夹";
-            // 
-            // AnimationOutputText
-            // 
-            this.AnimationOutputText.Location = new System.Drawing.Point(118, 48);
-            this.AnimationOutputText.Name = "AnimationOutputText";
-            this.AnimationOutputText.Size = new System.Drawing.Size(122, 21);
-            this.AnimationOutputText.TabIndex = 15;
-            // 
-            // PrimitiveOutputText
-            // 
-            this.PrimitiveOutputText.Location = new System.Drawing.Point(118, 17);
-            this.PrimitiveOutputText.Name = "PrimitiveOutputText";
-            this.PrimitiveOutputText.Size = new System.Drawing.Size(122, 21);
-            this.PrimitiveOutputText.TabIndex = 14;
+            this.ClearSceneToolStripMenuItem.Name = "ClearSceneToolStripMenuItem";
+            this.ClearSceneToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.ClearSceneToolStripMenuItem.Text = "清空场景";
             // 
             // Form1
             // 
@@ -579,12 +587,12 @@
             this.Closed += new System.EventHandler(this.Form1_Closed);
             this.Load += new System.EventHandler(this.Form1_Load);
             this.panel1.ResumeLayout(false);
+            this.ImportPanel.ResumeLayout(false);
+            this.ImportPanel.PerformLayout();
             this.ViewPanel.ResumeLayout(false);
             this.ViewPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.AnimateRateSlider)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.SegLengthSlider)).EndInit();
-            this.ImportPanel.ResumeLayout(false);
-            this.ImportPanel.PerformLayout();
             this.tabControl1.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);
             this.tabPage1.PerformLayout();
@@ -638,12 +646,13 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem4;
         private System.Windows.Forms.ToolStripComboBox toolStripComboBox1;
         private System.Windows.Forms.ListBox listBox1;
-        private System.Windows.Forms.ToolStripMenuItem 载入模型ToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem 载入动画ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem LoadModelToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem LoadAnimationToolStripMenuItem;
         private System.Windows.Forms.TextBox AnimationOutputText;
         private System.Windows.Forms.TextBox textBox3;
         private System.Windows.Forms.TextBox textBox2;
         private System.Windows.Forms.TextBox PrimitiveOutputText;
+        private System.Windows.Forms.ToolStripMenuItem ClearSceneToolStripMenuItem;
     }
 }
 

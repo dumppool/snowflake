@@ -35,10 +35,11 @@ namespace LostCore
 
 		virtual void AddModel(FBasicModel * sm);
 		virtual void RemoveModel(FBasicModel * sm);
+		virtual void ClearModels();
 
+	private:
 		void Fini();
 
-	protected:
 		std::vector<FBasicModel*> Models;
 	};
 }

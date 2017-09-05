@@ -47,60 +47,50 @@ bool LostCore::FStaticModel::Config(IRenderContext * rc, const FJson & config)
 	const char* head = "LostCore::FStaticModel::Config";
 
 	assert(Primitive == nullptr && Material == nullptr && "model should be clear before load anything");
-	assert(config.find("type") != config.end() && "model needs [type] section");
-	assert((config.find("material") != config.end() || config.find("material_prefix") != config.end()) && "model needs [material] section");
+	assert((config.find(K_MATERIAL) != config.end() || config.find(K_AUTO) != config.end()) && "model needs [material] section");
 
 	uint32 vertexFlags = 0;
-	auto itType = config.find("type");
-	if (itType.value() == (int)EPrimitiveType::PrimitiveFile)
+	assert(config.find("primitive") != config.end() && "model needs [primitive] section");
+
+	string primitivePath;
+	if (!FDirectoryHelper::Get()->GetPrimitiveAbsolutePath(config["primitive"], primitivePath))
 	{
-		assert(config.find("primitive") != config.end() && "model needs [primitive] section");
-
-		string primitivePath;
-		if (!FDirectoryHelper::Get()->GetPrimitiveAbsolutePath(config["primitive"], primitivePath))
-		{
-			string path = config.find("primitive").value();
-			LVERR(head, "failed to find primitive json: %s", path.c_str());
-			return false;
-		}
-
-		FBinaryIO stream;
-		stream.ReadFromFile(primitivePath.c_str());
-
-		stream >> MeshData;
-		vertexFlags = VertexFlags == 0 ? MeshData.VertexFlags : VertexFlags;
-
-		MeshData.BuildGPUData(vertexFlags);
-
-		if (D3D11::WrappedCreatePrimitiveGroup(&Primitive) == SSuccess)
-		{
-			if (MeshData.IndexCount > 0)
-			{
-				uint32 ibStride = MeshData.VertexCount < (1 << 16) ? 2 : 4;
-				assert(Primitive->ConstructIB(rc, &(MeshData.Indices[0]), MeshData.Indices.size(), ibStride, false));
-			}
-
-			uint32 vbStride = GetAlignedSize(GetVertexDetails(vertexFlags).Stride, 16);
-			assert(GetPaddingSize(vbStride, 16) == 0);
-			assert(Primitive->ConstructVB(rc, &(MeshData.Vertices[0]), MeshData.Vertices.size(), vbStride, false));
-		}
-	}
-	else
-	{
-		assert(0 && "Unknown primitive type");
+		string path = config.find("primitive").value();
+		LVERR(head, "failed to find primitive json: %s", path.c_str());
 		return false;
+	}
+
+	FBinaryIO stream;
+	stream.ReadFromFile(primitivePath.c_str());
+
+	stream >> MeshData;
+	vertexFlags = VertexFlags == 0 ? MeshData.VertexFlags : VertexFlags;
+
+	MeshData.BuildGPUData(vertexFlags);
+
+	if (D3D11::WrappedCreatePrimitiveGroup(&Primitive) == SSuccess)
+	{
+		if (MeshData.IndexCount > 0)
+		{
+			uint32 ibStride = MeshData.VertexCount < (1 << 16) ? 2 : 4;
+			assert(Primitive->ConstructIB(rc, &(MeshData.Indices[0]), MeshData.Indices.size(), ibStride, false));
+		}
+
+		uint32 vbStride = GetAlignedSize(GetVertexDetails(vertexFlags).Stride, 16);
+		assert(GetPaddingSize(vbStride, 16) == 0);
+		assert(Primitive->ConstructVB(rc, &(MeshData.Vertices[0]), MeshData.Vertices.size(), vbStride, false));
 	}
 
 	if (D3D11::WrappedCreateMaterial_SceneObject(&Material) == SSuccess)
 	{
-		if (config.find("material") != config.end())
+		if (config.find(K_MATERIAL) != config.end())
 		{
-			string materialPath = config.find("material").value();
+			string materialPath = config.find(K_MATERIAL).value();
 			return Material->Initialize(rc, materialPath.c_str());
 		}
 		else
 		{
-			string materialPath = config.find("material_prefix").value();
+			string materialPath = config.find(K_AUTO).value();
 			string vertexName = GetVertexDetails(vertexFlags).Name;
 			materialPath = materialPath + "_" + vertexName + ".json";
 			return Material->Initialize(rc, materialPath.c_str());
@@ -183,65 +173,55 @@ bool LostCore::FSkeletalModel::Config(IRenderContext * rc, const FJson & config)
 	const char* head = "LostCore::FSkeletalModel::Config";
 
 	assert(Primitive == nullptr && Material == nullptr && "model should be clear before load anything");
-	assert(config.find("type") != config.end() && "model needs [type] section");
-	assert((config.find("material") != config.end() || config.find("material_prefix") != config.end()) && "model needs [material] section");
+	assert((config.find(K_MATERIAL) != config.end() || config.find(K_AUTO) != config.end()) && "model needs [material] section");
 
 	uint32 vertexFlags = 0;
-	auto itType = config.find("type");
-	if (itType.value() == (int)EPrimitiveType::PrimitiveFile)
+	assert(config.find("primitive") != config.end() && "model needs [primitive] section");
+
+	string primitivePath;
+	if (!FDirectoryHelper::Get()->GetPrimitiveAbsolutePath(config.find("primitive").value(), primitivePath))
 	{
-		assert(config.find("primitive") != config.end() && "model needs [primitive] section");
-
-		string primitivePath;
-		if (!FDirectoryHelper::Get()->GetPrimitiveAbsolutePath(config.find("primitive").value(), primitivePath))
-		{
-			string path = config.find("primitive").value();
-			LVERR(head, "failed to find primitive json: %s", path.c_str());
-			return false;
-		}
-		
-		FBinaryIO stream;
-		stream.ReadFromFile(primitivePath.c_str());
-
-		stream >> MeshData;
-		vertexFlags = VertexFlags == 0 ? MeshData.VertexFlags : VertexFlags;
-
-		MeshData.BuildGPUData(vertexFlags);
-
-		FFloat4x4 world;
-		world.SetIdentity();
-		Root.LoadSkeleton(MeshData.Skeleton, world);
-
-		if (D3D11::WrappedCreatePrimitiveGroup(&Primitive) == SSuccess)
-		{
-			if (MeshData.IndexCount > 0)
-			{
-				uint32 ibStride = MeshData.VertexCount < (1 << 16) ? 2 : 4;
-				assert(Primitive->ConstructIB(rc, &(MeshData.Indices[0]), MeshData.Indices.size(), ibStride, false));
-			}
-
-			uint32 vbStride = GetAlignedSize(GetVertexDetails(vertexFlags).Stride, 16);
-			assert(GetPaddingSize(vbStride, 16) == 0);
-			assert(Primitive->ConstructVB(rc, &(MeshData.Vertices[0]), MeshData.Vertices.size(), vbStride, false));
-		}
-	}
-	else
-	{
-		assert(0 && "Unknown primitive type");
+		string path = config.find("primitive").value();
+		LVERR(head, "failed to find primitive json: %s", path.c_str());
 		return false;
+	}
+
+	FBinaryIO stream;
+	stream.ReadFromFile(primitivePath.c_str());
+
+	stream >> MeshData;
+	vertexFlags = VertexFlags == 0 ? MeshData.VertexFlags : VertexFlags;
+
+	MeshData.BuildGPUData(vertexFlags);
+
+	FFloat4x4 world;
+	world.SetIdentity();
+	Root.LoadSkeleton(MeshData.Skeleton, world);
+
+	if (D3D11::WrappedCreatePrimitiveGroup(&Primitive) == SSuccess)
+	{
+		if (MeshData.IndexCount > 0)
+		{
+			uint32 ibStride = MeshData.VertexCount < (1 << 16) ? 2 : 4;
+			assert(Primitive->ConstructIB(rc, &(MeshData.Indices[0]), MeshData.Indices.size(), ibStride, false));
+		}
+
+		uint32 vbStride = GetAlignedSize(GetVertexDetails(vertexFlags).Stride, 16);
+		assert(GetPaddingSize(vbStride, 16) == 0);
+		assert(Primitive->ConstructVB(rc, &(MeshData.Vertices[0]), MeshData.Vertices.size(), vbStride, false));
 	}
 
 	if (D3D11::WrappedCreateMaterial_SceneObjectSkinned(&Material) == SSuccess)
 	{
 		SkeletonRenderer.SetAllowCull(false);
-		if (config.find("material") != config.end())
+		if (config.find(K_MATERIAL) != config.end())
 		{
-			string materialPath = config.find("material").value();
+			string materialPath = config.find(K_MATERIAL).value();
 			return Material->Initialize(rc, materialPath.c_str());
 		}
 		else
 		{
-			string materialPath = config.find("material_prefix").value();
+			string materialPath = config.find(K_AUTO).value();
 			string vertexName = GetVertexDetails(vertexFlags).Name;
 			materialPath = materialPath + "_" + vertexName + ".json";
 			return Material->Initialize(rc, materialPath.c_str());

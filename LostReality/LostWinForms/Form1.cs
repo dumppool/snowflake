@@ -70,7 +70,20 @@ namespace LostWinForms
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public static extern void PlayAnimation(String anim);
 
-        private String[] LevelString = { "Info:                ", "Warning:             ", "Error:               " };
+        [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void LoadAsset(UInt32 flag, String url);
+
+        [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void ClearScene();
+
+        private const uint AssetModel = 0;
+        private const uint AssetAnimation = 1;
+
+        private String[] LevelString = {
+            "Info:                ",
+            "Warning:             ",
+            "Error:               " };
+
         private const String UserDataEncoding = "GB2312";
         private const String UserDataDirectory = "\\_LostReality\\";
         private const String UserDataFileName = "FBXEditor.usr";
@@ -78,13 +91,17 @@ namespace LostWinForms
         private const String UserDataOptionSeperator = ",\r\n";
         private bool bInitialized = false;
 
-        private const String LastOpenPathKey = "LastOpenPathKey";
-        private const String PrimitiveOutputKey = "PrimitiveOutput";
-        private const String AnimationOutputKey = "AnimationOutput";
+        private const String LastOpenFbxKey             = "LastFbx";
+        private const String LastOpenModelKey           = "LastModel";
+        private const String LastOpenAnimationKey       = "LastAnimation";
+        private const String PrimitiveOutputKey         = "PrimitiveOutput";
+        private const String AnimationOutputKey         = "AnimationOutput";
 
         private Dictionary<string, string> UserData = new Dictionary<string, string>
         {
-            { LastOpenPathKey, "C:\\" },
+            { LastOpenFbxKey, "C:\\" },
+            { LastOpenModelKey, "C:\\" },
+            { LastOpenAnimationKey, "C:\\" },
             { PrimitiveOutputKey, "" },
             { AnimationOutputKey, "" },
         };
@@ -97,7 +114,9 @@ namespace LostWinForms
 
         private bool bMouseDownPanel1 = false;
         private float MoveCameraStep = 0.10f;
-        private float RotateCameraStep = 0.1f; 
+        private float RotateCameraStep = 0.1f;
+
+        private String[] FileNamesToOpen;
 
         public Form1()
         {
@@ -113,6 +132,9 @@ namespace LostWinForms
             ImportOk.Click += ImportOk_Click;
             ImportCancel.Click += ImportCancel_Click;
 
+            LoadModelToolStripMenuItem.Click += LoadModelToolStripMenuItem_Click;
+            LoadAnimationToolStripMenuItem.Click += LoadAnimationToolStripMenuItem_Click;
+
             ViewPanelToolStripMenuItem.Click += ViewPanelToolStripMenuItem_Click;
             ViewPanelOk.Click += ViewPanelOk_Click;
             SegLengthSlider.Scroll += SegLengthSlider_Scroll;
@@ -121,11 +143,57 @@ namespace LostWinForms
             DelegateAnimUpdate = new PFN_AnimUpdate(OnAnimUpdate);
             SetAnimUpdater(DelegateAnimUpdate);
             listBox1.SelectedIndexChanged += ListBox1_SelectedIndexChanged;
+
+            ClearSceneToolStripMenuItem.Click += ClearSceneToolStripMenuItem_Click;
+        }
+
+        private void ClearSceneToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ClearScene();
+        }
+
+        private void LoadAnimationToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog dlg = new OpenFileDialog();
+            dlg.Title = "选择要打开的FBX文件";
+            dlg.Filter = "";
+            dlg.RestoreDirectory = true;
+            dlg.InitialDirectory = UserData[LastOpenAnimationKey];
+            dlg.Multiselect = true;
+            if (dlg.ShowDialog(panel1) == DialogResult.OK)
+            {
+                UserData[LastOpenAnimationKey] = dlg.FileName;
+                foreach (String fileName in dlg.FileNames)
+                {
+                    LoadAsset(AssetAnimation, dlg.FileName);
+                }
+            }
+
+            dlg.Dispose();
+        }
+
+        private void LoadModelToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog dlg = new OpenFileDialog();
+            dlg.Title = "选择要打开的模型文件";
+            dlg.Filter = "";
+            dlg.RestoreDirectory = true;
+            dlg.InitialDirectory = UserData[LastOpenModelKey];
+            dlg.Multiselect = true;
+            if (dlg.ShowDialog(panel1) == DialogResult.OK)
+            {
+                UserData[LastOpenModelKey] = dlg.FileName;
+                foreach (String fileName in dlg.FileNames)
+                {
+                    LoadAsset(AssetModel, dlg.FileName);
+                }
+            }
+
+            dlg.Dispose();
         }
 
         private void ListBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            //Console.WriteLine(listBox1.Items[listBox1.SelectedIndex].ToString());
             PlayAnimation(listBox1.Items[listBox1.SelectedIndex].ToString());
         }
 
@@ -311,12 +379,13 @@ namespace LostWinForms
             OpenFileDialog dlg = new OpenFileDialog();
             dlg.Title = "选择要打开的FBX文件";
             dlg.Filter = "FBX文件|*.fbx";
-            dlg.RestoreDirectory = false;
-            dlg.InitialDirectory = UserData[LastOpenPathKey];
+            dlg.RestoreDirectory = true;
+            dlg.InitialDirectory = UserData[LastOpenFbxKey];
             dlg.Multiselect = true;
             if (dlg.ShowDialog(panel1) == DialogResult.OK)
             {
-                UserData[LastOpenPathKey] = dlg.FileName;
+                UserData[LastOpenFbxKey] = dlg.FileName;
+                FileNamesToOpen = dlg.FileNames;
                 PrimitiveOutputText.Text = UserData[PrimitiveOutputKey];
                 AnimationOutputText.Text = UserData[AnimationOutputKey];
                 ImportPanel.Visible = true;
@@ -368,21 +437,27 @@ namespace LostWinForms
         private void ImportOk_Click(object sender, EventArgs e)
         {
             ImportPanel.Visible = false;
-            LoadFBX(
-                UserData[LastOpenPathKey],
-                PrimitiveOutputText.Text,
-                AnimationOutputText.Text,
-                true,
-                ImportTexCoord.Checked,
-                ImportAnimation.Checked,
-                ImportVertexColor.Checked,
-                MergeNormalTangentAll.Checked,
-                ImportNormal.Checked,
-                ForceRegenerateNormal.Checked,
-                GenerateNormalIfNotFound.Checked,
-                ImportTangent.Checked,
-                ForceRegenerateTangent.Checked,
-                GenerateTangentIfNotFound.Checked);
+
+            foreach (String fileName in FileNamesToOpen)
+            {
+                LoadFBX(
+                    fileName,
+                    PrimitiveOutputText.Text,
+                    AnimationOutputText.Text,
+                    true,
+                    ImportTexCoord.Checked,
+                    ImportAnimation.Checked,
+                    ImportVertexColor.Checked,
+                    MergeNormalTangentAll.Checked,
+                    ImportNormal.Checked,
+                    ForceRegenerateNormal.Checked,
+                    GenerateNormalIfNotFound.Checked,
+                    ImportTangent.Checked,
+                    ForceRegenerateTangent.Checked,
+                    GenerateTangentIfNotFound.Checked);
+            }
+
+            Array.Clear(FileNamesToOpen, 0, FileNamesToOpen.Length);
 
             UserData[PrimitiveOutputKey] = PrimitiveOutputText.Text;
             UserData[AnimationOutputKey] = AnimationOutputText.Text;

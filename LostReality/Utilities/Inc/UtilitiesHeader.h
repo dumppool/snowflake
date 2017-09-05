@@ -483,7 +483,7 @@ public:
 
 #define EXPORT_WRAP_0_DCL(name)\
 EXPORT_API void name();\
-static TExportFuncWrapper<void> Wrapped##name(#name, GET_MODULE);
+static TExportFuncWrapper<> Wrapped##name(#name, GET_MODULE);
 
 #define EXPORT_WRAP_0_DEF(name)\
 EXPORT_API void name()\

@@ -18,6 +18,7 @@ LostCore::FGlobalHandler::FGlobalHandler()
 	, LoggingFunc(nullptr)
 	, InitializeWindowCallback(nullptr)
 	, LoadFBXCallback(nullptr)
+	, ClearSceneCallback(nullptr)
 {
 }
 
@@ -100,15 +101,15 @@ void LostCore::FGlobalHandler::PlayAnimation(const char * anim)
 	}
 }
 
-void LostCore::FGlobalHandler::LoadAsset(uint32 flag, const char * name)
+void LostCore::FGlobalHandler::LoadAsset(uint32 flag, const char * url)
 {
 	if (flag == FLAG_ASSET_MODEL && LoadModelCallback != nullptr)
 	{
-		LoadModelCallback(name);
+		LoadModelCallback(url);
 	}
 	else if (flag == FLAG_ASSET_ANIMATION && LoadAnimationCallback != nullptr)
 	{
-		LoadAnimationCallback(name);
+		LoadAnimationCallback(url);
 	}
 }
 
@@ -125,7 +126,7 @@ void LostCore::FGlobalHandler::InitializeWindow(HWND wnd, bool windowed, int32 w
 	}
 }
 
-void LostCore::FGlobalHandler::LoadFBX(const char * file,
+void LostCore::FGlobalHandler::LoadFBX(const char * url,
 	const char * primitiveOutput,
 	const char * animationOutput,
 	bool clearScene, 
@@ -142,7 +143,7 @@ void LostCore::FGlobalHandler::LoadFBX(const char * file,
 {
 	if (LoadFBXCallback != nullptr)
 	{
-		LoadFBXCallback(file,
+		LoadFBXCallback(url,
 			primitiveOutput,
 			animationOutput,
 			clearScene,
@@ -156,6 +157,14 @@ void LostCore::FGlobalHandler::LoadFBX(const char * file,
 			importTangent,
 			forceRegenerateTangent,
 			generateTangentIfNotFound);
+	}
+}
+
+void LostCore::FGlobalHandler::ClearScene()
+{
+	if (ClearSceneCallback != nullptr)
+	{
+		ClearSceneCallback();
 	}
 }
 
@@ -197,11 +206,11 @@ void LostCore::FGlobalHandler::ClearAnimationList()
 	}
 }
 
-void LostCore::FGlobalHandler::AddAnimation(const char * anim)
+void LostCore::FGlobalHandler::AddAnimation(const string& anim)
 {
 	if (AnimUpdateFunc != nullptr)
 	{
-		AnimUpdateFunc(FLAG_ANIM_ADD, anim);
+		AnimUpdateFunc(FLAG_ANIM_ADD, anim.c_str());
 	}
 }
 
@@ -238,6 +247,11 @@ void LostCore::FGlobalHandler::SetCallbackLoadFBX(Callback_X loadFBX)
 	LoadFBXCallback = loadFBX;
 }
 
+void LostCore::FGlobalHandler::SetCallbackClearScene(Callback_V clearScene)
+{
+	ClearSceneCallback = clearScene;
+}
+
 EXPORT_WRAP_1_DEF(SetDisplayNormal, bool);
 EXPORT_WRAP_1_DEF(SetDisplayTangent, bool);
 EXPORT_WRAP_1_DEF(SetDisplayNormalLength, float);
@@ -251,3 +265,4 @@ EXPORT_WRAP_2_DEF(LoadAsset, uint32, const char*);
 EXPORT_WRAP_1_DEF(SetLogger, LostCore::PFN_Logger);
 EXPORT_WRAP_4_DEF(InitializeWindow, HWND, bool, int32, int32);
 EXPORT_WRAP_14_DEF(LoadFBX, const char*, const char*, const char*, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool);
+EXPORT_WRAP_0_DEF(ClearScene);
