@@ -31,7 +31,7 @@ namespace LostCore
 		virtual void DrawPreScene(float sec);
 		virtual void DrawPostScene(float sec);
 
-		virtual bool InitializeWindow(const char* name, HWND wnd, bool windowed, int32 width, int32 height);
+		virtual bool InitializeWindow(HWND wnd, bool windowed, int32 width, int32 height);
 		virtual IRenderContext* GetRenderContext();
 		virtual FBasicCamera* GetCamera();
 

@@ -12,12 +12,39 @@
 #define FLAG_SKEL_1 (1<<0)
 #define FLAG_SKEL_2 (1<<1)
 
+#define FLAG_LOG_INFO (1<<0)
+#define FLAG_LOG_WARN (1<<1)
+#define FLAG_LOG_ERROR (1<<2)
+
 #define FLAG_ANIM_CLEAR (1<<0)
 #define FLAG_ANIM_ADD (1<<1)
+
+#define FLAG_ASSET_MODEL (1<<0)
+#define FLAG_ASSET_ANIMATION (1<<1)
 
 namespace LostCore
 {
 	typedef void(WINAPI *PFN_AnimUpdate)(int32 flag, const char* anim);
+	typedef void(WINAPI *PFN_Logger)(int32 level, const char* msg);
+
+	typedef function<void(float, float, float)> Callback_FFF;
+	typedef function<void(const char*)> Callback_S;
+	typedef function<void(HWND wnd, bool windowed, int32 width, int32 height)> Callback_HBII;
+	typedef function<void(
+		const char* file,
+		const char* primitiveOutput,
+		const char* animationOutput,
+		bool clearScene,
+		bool importTexCoord,
+		bool importAnimation,
+		bool importVertexColor,
+		bool mergeNormalTangentAll,
+		bool importNormal,
+		bool forceRegenerateNormal,
+		bool generateNormalIfNotFound,
+		bool importTangent,
+		bool forceRegenerateTangent,
+		bool generateTangentIfNotFound)> Callback_X;
 
 	class FGlobalHandler
 	{
@@ -35,7 +62,6 @@ namespace LostCore
 
 		float DisplayNormalLength;
 
-		typedef function<void(float, float, float)> Callback_FFF;
 		Callback_FFF MoveCameraCallback;
 		Callback_FFF RotateCameraCallback;
 
@@ -43,10 +69,16 @@ namespace LostCore
 
 		uint32 FlagDisplaySkeleton;
 
-		typedef function<void(const char*)> Callback_S;
 		Callback_S PlayAnimationCallback;
 
 		PFN_AnimUpdate AnimUpdateFunc;
+
+		Callback_S LoadModelCallback;
+		Callback_S LoadAnimationCallback;
+
+		PFN_Logger LoggingFunc;
+		Callback_HBII InitializeWindowCallback;
+		Callback_X LoadFBXCallback;
 
 	public:
 		FGlobalHandler();
@@ -72,6 +104,26 @@ namespace LostCore
 		void SetAnimUpdater(PFN_AnimUpdate animUpdate);
 		void PlayAnimation(const char* anim);
 
+		void LoadAsset(uint32 flag, const char* name);
+
+		void SetLogger(PFN_Logger logger);
+		void InitializeWindow(HWND wnd, bool windowed, int32 width, int32 height);
+		void LoadFBX(
+			const char* file,
+			const char* primitiveOutput,
+			const char* animationOutput,
+			bool clearScene,
+			bool importTexCoord,
+			bool importAnimation,
+			bool importVertexColor,
+			bool mergeNormalTangentAll,
+			bool importNormal,
+			bool forceRegenerateNormal,
+			bool generateNormalIfNotFound,
+			bool importTangent,
+			bool forceRegenerateTangent,
+			bool generateTangentIfNotFound);
+
 	public:
 		bool IsDisplayNormal(uint32 flags) const;
 
@@ -87,33 +139,27 @@ namespace LostCore
 		void ClearAnimationList();
 		void AddAnimation(const char* anim);
 		void SetCallbackPlayAnimation(Callback_S playAnim);
+
+		void SetCallbackLoadModel(Callback_S loadModel);
+		void SetCallbackLoadAnimation(Callback_S loadAnimation);
+
+		void Logging(int32 level, const string& msg);
+		void SetCallbackInitializeWindow(Callback_HBII initWin);
+		void SetCallbackLoadFBX(Callback_X loadFBX);
 	};
 
-	LOSTCORE_API void SetDisplayNormal(bool enable);
-	static TExportFuncWrapper<bool> WrappedSetDisplayNormal("SetDisplayNormal", GetModule_LostCore);
-
-	LOSTCORE_API void SetDisplayTangent(bool enable);
-	static TExportFuncWrapper<bool> WrappedSetDisplayTangent("SetDisplayTangent", GetModule_LostCore);
-
-	LOSTCORE_API void SetDisplayNormalLength(float value);
-	static TExportFuncWrapper<float> WrappedSetDisplayNormalLength("SetDisplayNormalLength", GetModule_LostCore);
-
-	LOSTCORE_API void MoveCamera(float x, float y, float z);
-	static TExportFuncWrapper<float, float, float> WrappedMoveCamera("MoveCamera", GetModule_LostCore);
-
-	LOSTCORE_API void RotateCamera(float p, float y, float r);
-	static TExportFuncWrapper<float, float, float> WrappedRotateCamera("RotateCamera", GetModule_LostCore);
-
-	LOSTCORE_API void SetAnimateRate(float rate);
-	static TExportFuncWrapper<float> WrappedSetAnimateRate("SetAnimateRate", GetModule_LostCore);
-
-	LOSTCORE_API void SetDisplaySkeleton(bool enable);
-	static TExportFuncWrapper<bool> WrappedSetDisplaySkeleton("SetDisplaySkeleton", GetModule_LostCore);
-
-	LOSTCORE_API void SetAnimUpdater(PFN_AnimUpdate animUpdate);
-	static TExportFuncWrapper<PFN_AnimUpdate> WrappedSetAnimUpdater("SetAnimUpdater", GetModule_LostCore);
-
-	LOSTCORE_API void PlayAnimation(const char* anim);
-	static TExportFuncWrapper<const char*> WrappedPlayAnimation("PlayAnimation", GetModule_LostCore);
-
 }
+
+EXPORT_WRAP_1_DCL(SetDisplayNormal, bool);
+EXPORT_WRAP_1_DCL(SetDisplayTangent, bool);
+EXPORT_WRAP_1_DCL(SetDisplayNormalLength, float);
+EXPORT_WRAP_3_DCL(MoveCamera, float, float, float); // x, y, z
+EXPORT_WRAP_3_DCL(RotateCamera, float, float, float); // pitch, yaw, roll
+EXPORT_WRAP_1_DCL(SetAnimateRate, float);
+EXPORT_WRAP_1_DCL(SetDisplaySkeleton, bool);
+EXPORT_WRAP_1_DCL(SetAnimUpdater, LostCore::PFN_AnimUpdate);
+EXPORT_WRAP_1_DCL(PlayAnimation, const char*);
+EXPORT_WRAP_2_DCL(LoadAsset, uint32, const char*);
+EXPORT_WRAP_1_DCL(SetLogger, LostCore::PFN_Logger);
+EXPORT_WRAP_4_DCL(InitializeWindow, HWND, bool, int32, int32);
+EXPORT_WRAP_14_DCL(LoadFBX, const char*, const char*, const char*, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool);

@@ -24,10 +24,15 @@ using namespace std;
 // internal includes
 #include "Keywords.h"
 
+/******************************************************
+* Include UtilitiesHeader.h
+*/
 #define MODULE_MSG_PREFIX "converter-log"
 #define MODULE_WARN_PREFIX "converter-warn"
 #define MODULE_ERR_PREFIX "converter-error"
+
 #include "UtilitiesHeader.h"
+/*******************************************************/
 
 #include "VertexTypes.h"
 

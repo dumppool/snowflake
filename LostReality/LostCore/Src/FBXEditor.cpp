@@ -24,8 +24,6 @@ public:
 	~FFBXEditor();
 
 	void PushCommands(const CommandType& cmd);
-	void SetLogger(PFN_Logger logger);
-	void SetOutputDirectory(const char* output);
 	void LoadFBX(
 		const char * file,
 		const char* primitiveOutput,
@@ -46,7 +44,7 @@ public:
 	virtual bool Config(IRenderContext * rc, const FJson& config) override;
 	bool Load(IRenderContext * rc, const char* url) override;
 
-	virtual bool InitializeWindow(const char* name, HWND wnd, bool windowed, int32 width, int32 height) override;
+	virtual bool InitializeWindow(HWND wnd, bool windowed, int32 width, int32 height) override;
 	virtual IRenderContext* GetRenderContext() override;
 	virtual FBasicCamera* GetCamera() override;
 
@@ -66,7 +64,6 @@ private:
 	FBasicModel*			CurrSelectedModel;
 
 	string OutputDir;
-	PFN_Logger Logger;
 
 	FCommandQueue<CommandType> RenderCommands;
 	bool bKeepRendering;
@@ -92,7 +89,6 @@ static FFBXEditor SEditor;
 
 FFBXEditor::FFBXEditor()
 	: OutputDir("")
-	, Logger(nullptr)
 	, RC(nullptr)
 	, Camera(nullptr)
 	, TickCommands(true)
@@ -130,6 +126,54 @@ FFBXEditor::FFBXEditor()
 		{
 			reinterpret_cast<FSkeletalModel*>(CurrSelectedModel)->PlayAnimation(anim);
 		}
+	});
+
+	FGlobalHandler::Get()->SetCallbackLoadModel([&](const char* url) {
+		// load model
+	});
+
+	FGlobalHandler::Get()->SetCallbackInitializeWindow([&](HWND wnd, bool windowed, int32 width, int32 height) {
+		InitializeWindow(wnd, windowed, width, height);
+	});
+
+	FGlobalHandler::Get()->SetCallbackLoadAnimation([&](const char* url) {
+		// load animation
+	});
+
+	FGlobalHandler::Get()->SetCallbackLoadFBX([&](
+		const char * file,
+		const char* primitiveOutput,
+		const char* animationOutput,
+		bool clearScene,
+		bool importTexCoord,
+		bool importAnimation,
+		bool importVertexColor,
+		bool mergeNormalTangentAll,
+		bool importNormal,
+		bool forceRegenerateNormal,
+		bool generateNormalIfNotFound,
+		bool importTangent,
+		bool forceRegenerateTangent,
+		bool generateTangentIfNotFound) {
+		string filePath(file), primPath(primitiveOutput), animPath(animationOutput);
+		this->PushCommands([=]()
+		{
+			LoadFBX(
+				filePath.c_str(),
+				primPath.c_str(),
+				animPath.c_str(),
+				clearScene,
+				importTexCoord,
+				importAnimation,
+				importVertexColor,
+				mergeNormalTangentAll,
+				importNormal,
+				forceRegenerateNormal,
+				generateNormalIfNotFound,
+				importTangent,
+				forceRegenerateTangent,
+				forceRegenerateTangent);
+		});
 	});
 }
 
@@ -171,16 +215,6 @@ void FFBXEditor::InitializeScene()
 void FFBXEditor::PushCommands(const CommandType & cmd)
 {
 	TickCommands.Push(cmd);
-}
-
-void FFBXEditor::SetLogger(PFN_Logger logger)
-{
-	Logger = logger;
-}
-
-void FFBXEditor::SetOutputDirectory(const char * output)
-{
-	OutputDir = output;
 }
 
 void FFBXEditor::LoadFBX(
@@ -412,7 +446,7 @@ void FFBXEditor::Fini()
 	SAFE_DELETE(Scene);
 }
 
-bool FFBXEditor::InitializeWindow(const char * name, HWND wnd, bool windowed, int32 width, int32 height)
+bool FFBXEditor::InitializeWindow(HWND wnd, bool windowed, int32 width, int32 height)
 {
 	auto ret = WrappedCreateRenderContext(EContextID::D3D11_DXGI0, &RC);
 	if (RC != nullptr && RC->Init(wnd, windowed, width, height))
@@ -480,11 +514,6 @@ void FFBXEditor::StartTickLoop()
 
 void FFBXEditor::Log(int32 level, const char * fmt, ...)
 {
-	if (Logger == nullptr)
-	{
-		return;
-	}
-
 	char msg[1024];
 	msg[1023] = 0;
 
@@ -493,52 +522,5 @@ void FFBXEditor::Log(int32 level, const char * fmt, ...)
 	vsnprintf(msg, 1023, fmt, args);
 	va_end(args);
 
-	Logger(level, msg);
-}
-
-LOSTCORE_API void LostCore::SetLogger(PFN_Logger logger)
-{
-	SEditor.SetLogger(logger);
-}
-
-LOSTCORE_API void LostCore::InitializeWindow(HWND wnd, bool windowed, int32 width, int32 height)
-{
-	SEditor.InitializeWindow("", wnd, windowed, width, height);
-}
-
-LOSTCORE_API void LostCore::LoadFBX(
-	const char * file,
-	const char* primitiveOutput,
-	const char* animationOutput,
-	bool clearScene,
-	bool importTexCoord,
-	bool importAnimation,
-	bool importVertexColor,
-	bool mergeNormalTangentAll,
-	bool importNormal,
-	bool forceRegenerateNormal,
-	bool generateNormalIfNotFound,
-	bool importTangent,
-	bool forceRegenerateTangent,
-	bool generateTangentIfNotFound)
-{
-	string filePath(file), primPath(primitiveOutput), animPath(animationOutput);
-	SEditor.PushCommands([=]()
-	{
-		SEditor.LoadFBX(
-			filePath.c_str(),
-			primPath.c_str(),
-			animPath.c_str(),
-			clearScene,
-			importTexCoord,
-			importAnimation,
-			importVertexColor,
-			mergeNormalTangentAll,
-			importNormal,
-			forceRegenerateNormal,
-			generateNormalIfNotFound,
-			importTangent,
-			forceRegenerateTangent,
-			forceRegenerateTangent);
-	});
+	FGlobalHandler::Get()->Logging(level, msg);
 }

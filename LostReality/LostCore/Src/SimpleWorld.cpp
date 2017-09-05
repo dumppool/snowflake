@@ -24,7 +24,7 @@ namespace LostCore
 		bool Load(IRenderContext * rc, const char* url) override;
 		void Fini();
 
-		virtual bool InitializeWindow(const char* name, HWND wnd, bool bWindowed, int32 width, int32 height) override;
+		virtual bool InitializeWindow(HWND wnd, bool bWindowed, int32 width, int32 height) override;
 		virtual IRenderContext* GetRenderContext() override;
 		virtual FBasicCamera* GetCamera() override;
 
@@ -77,7 +77,7 @@ namespace LostCore
 
 	}
 
-	bool FSimpleWorld::InitializeWindow(const char* name, HWND wnd, bool bWindowed, int32 width, int32 height)
+	bool FSimpleWorld::InitializeWindow(HWND wnd, bool bWindowed, int32 width, int32 height)
 	{
 		auto ret = WrappedCreateRenderContext(EContextID::D3D11_DXGI0, &RC);
 		assert(SSuccess == ret);

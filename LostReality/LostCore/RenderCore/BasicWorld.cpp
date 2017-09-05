@@ -117,7 +117,7 @@ void FBasicWorld::RemoveScene(FBasicScene * scene)
 	}
 }
 
-bool LostCore::FBasicWorld::InitializeWindow(const char* name, HWND wnd, bool bWindowed, int32 width, int32 height)
+bool LostCore::FBasicWorld::InitializeWindow(HWND wnd, bool bWindowed, int32 width, int32 height)
 {
 	return false;
 }

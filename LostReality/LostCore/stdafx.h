@@ -11,10 +11,30 @@
 // Windows Í·ÎÄ¼þ: 
 #include <windows.h>
 
+/******************************************************
+* Include UtilitiesHeader.h 
+*/
 #define MODULE_MSG_PREFIX "lostcore-log"
 #define MODULE_WARN_PREFIX "lostcore-warn"
 #define MODULE_ERR_PREFIX "lostcore-error"
+
+#ifdef GET_MODULE
+#undef GET_MODULE
+#endif
+#define GET_MODULE LostCore::GetModule_LostCore
+
+#ifdef EXPORT_API
+#undef EXPORT_API
+#endif
+#define EXPORT_API LOSTCORE_API
+
+#ifdef GLOBAL_HANDLER_PTR
+#undef GLOBAL_HANDLER_PTR
+#endif
+#define GLOBAL_HANDLER_PTR (LostCore::FGlobalHandler::Get())
+
 #include "UtilitiesHeader.h"
+/*******************************************************/
 
 #include "LostCore.h"
 

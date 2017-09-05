@@ -144,20 +144,14 @@ log_cap_cnt(Prefix, Cap, __VA_ARGS__);}
 
 #ifdef MODULE_MSG_PREFIX
 #define LVMSG(head, ...) LVMSG_PREFIX(MODULE_MSG_PREFIX, head, __VA_ARGS__)
-#else
-#error "MODULE_MSG_PREFIX not defined"
 #endif
 
 #ifdef MODULE_ERR_PREFIX
 #define LVERR(head, ...) LVMSG_PREFIX(MODULE_ERR_PREFIX, head, __VA_ARGS__)
-#else
-#error "MODULE_ERR_PREFIX not defined"
 #endif
 
 #ifdef MODULE_WARN_PREFIX
 #define LVWARN(head, ...) LVMSG_PREFIX(MODULE_WARN_PREFIX, head, __VA_ARGS__)
-#else
-#error "MODULE_WARN_PREFIX not defined"
 #endif
 
 #define LVASSERT_PREFIX(Prefix, Condition, Cap, ...) {\
@@ -483,6 +477,131 @@ public:
 		}
 	}
 };
+
+// 导出辅助宏，方便导入工程使用，但是c#工程不能include，用不了这种方式
+#if defined(GET_MODULE) && defined(EXPORT_API) && defined(GLOBAL_HANDLER_PTR)
+
+#define EXPORT_WRAP_0_DCL(name)\
+EXPORT_API void name();\
+static TExportFuncWrapper<void> Wrapped##name(#name, GET_MODULE);
+
+#define EXPORT_WRAP_0_DEF(name)\
+EXPORT_API void name()\
+{\
+GLOBAL_HANDLER_PTR->##name##();\
+}
+
+#define EXPORT_WRAP_1_DCL(name, T0)\
+EXPORT_API void name(T0);\
+static TExportFuncWrapper<T0> Wrapped##name(#name, GET_MODULE);
+
+#define EXPORT_WRAP_1_DEF(name, T0)\
+EXPORT_API void name(T0 _0)\
+{\
+GLOBAL_HANDLER_PTR->##name##(_0);\
+}
+
+#define EXPORT_WRAP_2_DCL(name, T0, T1)\
+EXPORT_API void name(T0, T1);\
+static TExportFuncWrapper<T0, T1> Wrapped##name(#name, GET_MODULE);
+
+#define EXPORT_WRAP_2_DEF(name, T0, T1)\
+EXPORT_API void name(T0 _0, T1 _1)\
+{\
+GLOBAL_HANDLER_PTR->##name##(_0, _1);\
+}
+
+#define EXPORT_WRAP_3_DCL(name, T0, T1, T2)\
+EXPORT_API void name(T0, T1, T2);\
+static TExportFuncWrapper<T0, T1, T2> Wrapped##name(#name, GET_MODULE);
+
+#define EXPORT_WRAP_3_DEF(name, T0, T1, T2)\
+EXPORT_API void name(T0 _0, T1 _1, T2 _2)\
+{\
+GLOBAL_HANDLER_PTR->##name##(_0, _1, _2);\
+}
+
+#define EXPORT_WRAP_4_DCL(name, T0, T1, T2, T3)\
+EXPORT_API void name(T0, T1, T2, T3);\
+static TExportFuncWrapper<T0, T1, T2, T3> Wrapped##name(#name, GET_MODULE);
+
+#define EXPORT_WRAP_4_DEF(name, T0, T1, T2, T3)\
+EXPORT_API void name(T0 _0, T1 _1, T2 _2, T3 _3)\
+{\
+GLOBAL_HANDLER_PTR->##name##(_0, _1, _2, _3);\
+}
+
+#define EXPORT_WRAP_5_DCL(name, T0, T1, T2, T3, T4)\
+EXPORT_API void name(T0, T1, T2, T3, T4);\
+static TExportFuncWrapper<T0, T1, T2, T3, T4> Wrapped##name(#name, GET_MODULE);
+
+#define EXPORT_WRAP_5_DEF(name, T0, T1, T2, T3, T4)\
+EXPORT_API void name(T0 _0, T1 _1, T2 _2, T3 _3, T4 _4)\
+{\
+GLOBAL_HANDLER_PTR->##name##(_0, _1, _2, _3, _4);\
+}
+
+#define EXPORT_WRAP_6_DCL(name, T0, T1, T2, T3, T4, T5)\
+EXPORT_API void name(T0, T1, T2, T3, T4, T5);\
+static TExportFuncWrapper<T0, T1, T2, T3, T4, T5> Wrapped##name(#name, GET_MODULE);
+
+#define EXPORT_WRAP_6_DEF(name, T0, T1, T2, T3, T4, T5)\
+EXPORT_API void name(T0 _0, T1 _1, T2 _2, T3 _3, T4 _4, T5, _5)\
+{\
+GLOBAL_HANDLER_PTR->##name##(_0, _1, _2, _3, _4, _5);\
+}
+
+#define EXPORT_WRAP_7_DCL(name, T0, T1, T2, T3, T4, T5, T6)\
+EXPORT_API void name(T0, T1, T2, T3, T4, T5, T6);\
+static TExportFuncWrapper<T0, T1, T2, T3, T4, T5, T6> Wrapped##name(#name, GET_MODULE);
+
+#define EXPORT_WRAP_7_DEF(name, T0, T1, T2, T3, T4, T5, T6)\
+EXPORT_API void name(T0 _0, T1 _1, T2 _2, T3 _3, T4 _4, T5, _5, T6 _6)\
+{\
+GLOBAL_HANDLER_PTR->##name##(_0, _1, _2, _3, _4, _5, _6);\
+}
+
+#define EXPORT_WRAP_8_DCL(name, T0, T1, T2, T3, T4, T5, T6, T7)\
+EXPORT_API void name(T0, T1, T2, T3, T4, T5, T6, T7);\
+static TExportFuncWrapper<T0, T1, T2, T3, T4, T5, T6, T7> Wrapped##name(#name, GET_MODULE);
+
+#define EXPORT_WRAP_8_DEF(name, T0, T1, T2, T3, T4, T5, T6, T7)\
+EXPORT_API void name(T0 _0, T1 _1, T2 _2, T3 _3, T4 _4, T5, _5, T6 _6, T7 _7)\
+{\
+GLOBAL_HANDLER_PTR->##name##(_0, _1, _2, _3, _4, _5, _6, _7);\
+}
+
+#define EXPORT_WRAP_9_DCL(name, T0, T1, T2, T3, T4, T5, T6, T7, T8)\
+EXPORT_API void name(T0, T1, T2, T3, T4, T5, T6, T7, T8);\
+static TExportFuncWrapper<T0, T1, T2, T3, T4, T5, T6, T7, T8> Wrapped##name(#name, GET_MODULE);
+
+#define EXPORT_WRAP_9_DEF(name, T0, T1, T2, T3, T4, T5, T6, T7, T8)\
+EXPORT_API void name(T0 _0, T1 _1, T2 _2, T3 _3, T4 _4, T5, _5, T6 _6, T7 _7, T8 _8)\
+{\
+GLOBAL_HANDLER_PTR->##name##(_0, _1, _2, _3, _4, _5, _6, _7, _8);\
+}
+
+#define EXPORT_WRAP_10_DCL(name, T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)\
+EXPORT_API void name(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9);\
+static TExportFuncWrapper<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9> Wrapped##name(#name, GET_MODULE);
+
+#define EXPORT_WRAP_10_DEF(name, T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)\
+EXPORT_API void name(T0 _0, T1 _1, T2 _2, T3 _3, T4 _4, T5, _5, T6 _6, T7 _7, T8 _8, T9 _9)\
+{\
+GLOBAL_HANDLER_PTR->##name##(_0, _1, _2, _3, _4, _5, _6, _7, _8, _9);\
+}
+
+// For LoadFBX...
+#define EXPORT_WRAP_14_DCL(name, T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13)\
+EXPORT_API void name(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13);\
+static TExportFuncWrapper<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> Wrapped##name(#name, GET_MODULE);
+
+#define EXPORT_WRAP_14_DEF(name, T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13)\
+EXPORT_API void name(T0 _0, T1 _1, T2 _2, T3 _3, T4 _4, T5 _5, T6 _6, T7 _7, T8 _8, T9 _9, T10 _10, T11 _11, T12 _12, T13 _13)\
+{\
+GLOBAL_HANDLER_PTR->##name##(_0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13);\
+}
+#endif //#if defined(GET_MODULE) && defined(EXPORT_API) && defined(GLOBAL_HANDLER_PTR)
 
 template <typename T>
 std::function<T> GetFunction(const char* name)
