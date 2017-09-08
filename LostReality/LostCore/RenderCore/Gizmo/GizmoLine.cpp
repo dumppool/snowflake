@@ -17,7 +17,7 @@ using namespace std;
 using namespace LostCore;
 
 LostCore::FSegmentTool::FSegmentTool()
-	: bConstructed(false), Material(nullptr), Primitive(nullptr), bAllowCull(true)
+	: bConstructed(false), Material(nullptr), Primitive(nullptr), bDepthTest(true)
 {
 	ResetData();
 }
@@ -33,11 +33,17 @@ void LostCore::FSegmentTool::ResetData()
 	Data.clear();
 }
 
-bool LostCore::FSegmentTool::ConstructPrimitive(LostCore::IRenderContext* rc, const void* buf, uint32 bytes)
+bool LostCore::FSegmentTool::ConstructPrimitive(const void* buf, uint32 bytes)
 {
 	if (bConstructed)
 	{
 		return bConstructed;
+	}
+
+	auto rc = FGlobalHandler::Get()->GetRenderContext();
+	if (rc == nullptr)
+	{
+		return false;
 	}
 
 	assert(Material == nullptr && Primitive == nullptr);
@@ -48,7 +54,7 @@ bool LostCore::FSegmentTool::ConstructPrimitive(LostCore::IRenderContext* rc, co
 	assert(bConstructed);
 
 	// TODO: ÅäÖÃ
-	Material->SetDepthStencilState(bAllowCull ? K_DEPTH_STENCIL_Z_WRITE : K_DEPTH_STENCIL_ALWAYS);
+	Material->SetDepthStencilState(bDepthTest ? K_DEPTH_STENCIL_Z_WRITE : K_DEPTH_STENCIL_ALWAYS);
 	Primitive->SetTopology(LostCore::EPrimitiveTopology::LineList);
 
 	bConstructed &= Material->Initialize(rc, "default_xyzrgb.json");
@@ -75,16 +81,18 @@ void LostCore::FSegmentTool::DestroyPrimitive()
 	bConstructed = false;
 }
 
-void LostCore::FSegmentTool::Draw(LostCore::IRenderContext * rc, float sec)
+void LostCore::FSegmentTool::Draw()
 {
 	if (Data.size() == 0)
 	{
 		return;
 	}
 
+	auto rc = FGlobalHandler::Get()->GetRenderContext();
+	auto sec = FGlobalHandler::Get()->GetFrameTime();
+
 	vector<uint8> buf(Data.size() * sizeof(FSegmentVertex));
 	memcpy(&buf[0], &Data[0], buf.size());
-	Data.clear();
 
 	if (bConstructed)
 	{
@@ -92,7 +100,7 @@ void LostCore::FSegmentTool::Draw(LostCore::IRenderContext * rc, float sec)
 	}
 	else
 	{
-		ConstructPrimitive(rc, &buf[0], buf.size());
+		ConstructPrimitive(&buf[0], buf.size());
 	}
 
 	Material->UpdateConstantBuffer(rc, &World, sizeof(World));
@@ -111,11 +119,11 @@ void LostCore::FSegmentTool::SetWorldMatrix(const FFloat4x4 & mat)
 	World = mat;
 }
 
-void LostCore::FSegmentTool::SetAllowCull(bool enable)
+void LostCore::FSegmentTool::EnableDepthTest(bool enable)
 {
-	bAllowCull = enable;
+	bDepthTest = enable;
 	if (Material != nullptr)
 	{
-		Material->SetDepthStencilState(bAllowCull ? K_DEPTH_STENCIL_Z_WRITE : K_DEPTH_STENCIL_ALWAYS);
+		Material->SetDepthStencilState(bDepthTest ? K_DEPTH_STENCIL_Z_WRITE : K_DEPTH_STENCIL_ALWAYS);
 	}
 }

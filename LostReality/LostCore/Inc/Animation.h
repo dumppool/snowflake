@@ -30,7 +30,7 @@ namespace LostCore
 
 		void LoadSkeleton(const FPoseTree& skelRoot, const FFloat4x4& parentInvBindPose);
 
-		void UpdateWorldMatrix(const FFloat4x4& parentWorld, float sec);
+		void UpdateWorldMatrix(const FFloat4x4& parentWorld);
 		void GetWorldPose(FPoseMap& pose);
 
 		void SetAnimation(const string& animName);

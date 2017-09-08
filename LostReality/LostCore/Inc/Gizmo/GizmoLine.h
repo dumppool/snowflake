@@ -46,21 +46,21 @@ namespace LostCore
 		uint32 CurrentPrimitiveBytes;
 		IPrimitiveGroup* Primitive;
 		IMaterial* Material;
-		bool bAllowCull;
+		bool bDepthTest;
 
-		void ResetData();
-		bool ConstructPrimitive(LostCore::IRenderContext* rc, const void* buf, uint32 bytes);
+		bool ConstructPrimitive(const void* buf, uint32 bytes);
 		void DestroyPrimitive();
 
 	public:
 		FSegmentTool();
 		~FSegmentTool();
 
-		void Draw(LostCore::IRenderContext* rc, float sec = 0.f);
+		void ResetData();
+		void Draw();
 		void AddSegment(const FSegmentData& seg);
 
 		void SetWorldMatrix(const FFloat4x4& mat);
-		void SetAllowCull(bool enable);
+		void EnableDepthTest(bool enable);
 
 		static FSegmentTool* Get()
 		{

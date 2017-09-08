@@ -23,10 +23,43 @@ namespace LostCore
 	class FBasicModel : public IBasicInterface
 	{
 	public:
-		virtual bool Load(IRenderContext * rc, const char* url) override;
+		FBasicModel();
+		virtual ~FBasicModel() override;
+
+		virtual bool Load(const char* url) override;
+		virtual bool Config(const FJson& config) override;
+		virtual void Tick() override;
+		virtual void Draw() override;
 
 		virtual void SetWorldMatrix(const FFloat4x4& world) = 0;
-		virtual void SetPrimitiveVertexFlags(uint32 flags) = 0;
+		virtual FFloat4x4 GetWorldMatrix() = 0;
+
+	protected:
+		virtual void UpdateConstant() = 0;
+		virtual void DrawModel();
+		//virtual void RayTest() = 0;
+
+		virtual bool ConfigPrimitive(const string& url, IPrimitiveGroup*& pg, FMeshData& pgdata);
+		virtual bool ConfigMaterial(const string& url, IMaterial*& mat);
+
+		virtual void UpdateGizmosBoundingBox();
+		virtual void DrawGizmos();
+
+		IPrimitiveGroup* GetPrimitive();
+		IMaterial* GetMaterial();
+		FMeshData* GetPrimitiveData();
+		FSegmentTool* GetSegmentRenderer();
+		FAABoundingBox* GetBoundingBox();
+
+	private:
+		void ValidateBoundingBox();
+		void Fini();
+
+		IPrimitiveGroup* Primitive;
+		IMaterial* Material;
+		FMeshData PrimitiveData;
+		FSegmentTool SegmentRenderer;
+		FAABoundingBox BoundingBox;
 	};
 
 	class FStaticModel : public FBasicModel
@@ -35,24 +68,23 @@ namespace LostCore
 		FStaticModel();
 		virtual ~FStaticModel() override;
 
-		virtual bool Config(IRenderContext * rc, const FJson& config) override;
-		virtual void Tick(float sec) override;
-		virtual void Draw(IRenderContext * rc, float sec) override;
-
+		virtual void Tick() override;
 		virtual void SetWorldMatrix(const FFloat4x4& world) override;
-		virtual void SetPrimitiveVertexFlags(uint32 flags) override;
-
-	public:
-		void Fini();
+		virtual FFloat4x4 GetWorldMatrix() override;
 
 	protected:
+		virtual void UpdateConstant() override;
+		virtual void DrawGizmos() override;
+		//virtual void RayTest() = 0;
+
+		void UpdateGizmosNormalTangent();
+
+	private:
+		void Fini();
+
+	private:
 		FFloat4x4 World;
-		IPrimitiveGroup* Primitive;
-		IMaterial* Material;
-		FMeshData MeshData;
-		uint32 VertexFlags;
 		FAxisTool AxisRenderer;
-		FSegmentTool SegmentRenderer;
 	};
 
 	class FSkeletalModel : public FBasicModel
@@ -61,18 +93,28 @@ namespace LostCore
 		FSkeletalModel();
 		virtual ~FSkeletalModel() override;
 
-		virtual bool Config(IRenderContext * rc, const FJson& config) override;
-		virtual void Tick(float sec) override;
-		virtual void Draw(IRenderContext * rc, float sec) override;
-
+		virtual void Tick() override;
 		virtual void SetWorldMatrix(const FFloat4x4& world) override;
-		virtual void SetPrimitiveVertexFlags(uint32 flags) override;
+		virtual FFloat4x4 GetWorldMatrix() override;
 
-	public:
-		void Fini();
 		void PlayAnimation(const string& animName);
 
 	protected:
+		virtual void UpdateConstant() override;
+		//virtual void RayTest() = 0;
+
+		virtual bool ConfigPrimitive(const string& url, IPrimitiveGroup*& pg, FMeshData& pgdata) override;
+		virtual bool ConfigMaterial(const string& url, IMaterial*& mat) override;
+
+		virtual void DrawGizmos();
+
+		void UpdateGizmosNormalTangent();
+		void UpdateGizmosSkeleton();
+
+	private:
+		void Fini();
+
+	private:
 
 		struct
 		{
@@ -80,16 +122,9 @@ namespace LostCore
 			array<FFloat4x4, MAX_BONES_PER_BATCH> Bones;
 		} Matrices;
 
-		IPrimitiveGroup* Primitive;
-		IMaterial* Material;
-		FSkeletonTree Root;
-		FMeshData MeshData;
-		FAABoundingBox BoundingBox;
-		uint32 VertexFlags;
-		FAxisTool AxisRenderer;
-		FSegmentTool SegmentRenderer;
-		FSegmentTool SkeletonRenderer;
 
-		FSkeletonTree Root2;
+		FSkeletonTree Root;
+		FAxisTool AxisRenderer;
+		FSegmentTool SkeletonRenderer;
 	};
 }

@@ -49,7 +49,7 @@
             this.ForceRegenerateNormal = new System.Windows.Forms.CheckBox();
             this.ImportNormal = new System.Windows.Forms.CheckBox();
             this.ViewPanel = new System.Windows.Forms.Panel();
-            this.DisplaySkeleton2 = new System.Windows.Forms.CheckBox();
+            this.DisplayBoundingBox = new System.Windows.Forms.CheckBox();
             this.DisplaySkeleton = new System.Windows.Forms.CheckBox();
             this.AnimateRateValue = new System.Windows.Forms.TextBox();
             this.AnimateRateSlider = new System.Windows.Forms.TrackBar();
@@ -318,7 +318,7 @@
             // 
             // ViewPanel
             // 
-            this.ViewPanel.Controls.Add(this.DisplaySkeleton2);
+            this.ViewPanel.Controls.Add(this.DisplayBoundingBox);
             this.ViewPanel.Controls.Add(this.DisplaySkeleton);
             this.ViewPanel.Controls.Add(this.AnimateRateValue);
             this.ViewPanel.Controls.Add(this.AnimateRateSlider);
@@ -333,17 +333,17 @@
             this.ViewPanel.TabIndex = 6;
             this.ViewPanel.Visible = false;
             // 
-            // DisplaySkeleton2
+            // DisplayBoundingBox
             // 
-            this.DisplaySkeleton2.AutoSize = true;
-            this.DisplaySkeleton2.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.DisplaySkeleton2.ForeColor = System.Drawing.SystemColors.AppWorkspace;
-            this.DisplaySkeleton2.Location = new System.Drawing.Point(32, 232);
-            this.DisplaySkeleton2.Name = "DisplaySkeleton2";
-            this.DisplaySkeleton2.Size = new System.Drawing.Size(126, 21);
-            this.DisplaySkeleton2.TabIndex = 19;
-            this.DisplaySkeleton2.Text = "DisplaySkeleton2";
-            this.DisplaySkeleton2.UseVisualStyleBackColor = true;
+            this.DisplayBoundingBox.AutoSize = true;
+            this.DisplayBoundingBox.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.DisplayBoundingBox.ForeColor = System.Drawing.SystemColors.AppWorkspace;
+            this.DisplayBoundingBox.Location = new System.Drawing.Point(32, 232);
+            this.DisplayBoundingBox.Name = "DisplayBoundingBox";
+            this.DisplayBoundingBox.Size = new System.Drawing.Size(147, 21);
+            this.DisplayBoundingBox.TabIndex = 19;
+            this.DisplayBoundingBox.Text = "DisplayBoundingBox";
+            this.DisplayBoundingBox.UseVisualStyleBackColor = true;
             // 
             // DisplaySkeleton
             // 
@@ -641,7 +641,7 @@
         private System.Windows.Forms.TextBox AnimateRateValue;
         private System.Windows.Forms.TrackBar AnimateRateSlider;
         private System.Windows.Forms.CheckBox DisplaySkeleton;
-        private System.Windows.Forms.CheckBox DisplaySkeleton2;
+        private System.Windows.Forms.CheckBox DisplayBoundingBox;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem3;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem4;
         private System.Windows.Forms.ToolStripComboBox toolStripComboBox1;

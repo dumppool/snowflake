@@ -81,17 +81,17 @@ namespace LostCore
 		// FullName:  lostvr::FRect::Draw
 		// Access:    public 
 		// Parameter: IRenderContext * rc
-		// Parameter: float sec 
-		void Draw(IRenderContext * rc, float sec);
+		// Parameter:  
+		void Draw();
 
 		void SetColorTexture(ITexture* tex);
 
-		virtual void ReconstructPrimitive(IRenderContext * rc);
+		virtual void ReconstructPrimitive();
 
 	private:
 		bool HitTestPrivate(const FFloat2& ppos, FRect** result) const;
 		void GetLocalPosition(const FFloat2& ppos, FFloat2& cpos) const;
-		void DrawPrivate(IRenderContext* rc, float sec);
+		void DrawPrivate();
 
 		FParam Param;
 
@@ -115,10 +115,10 @@ namespace LostCore
 		FBasicGUI();
 		virtual ~FBasicGUI() override;
 
-		virtual void Tick(float sec) override;
-		virtual void Draw(IRenderContext * rc, float sec) override;
-		virtual bool Config(IRenderContext * rc, const FJson& config) override;
-		virtual bool Load(IRenderContext * rc, const char* url) override;
+		virtual void Tick() override;
+		virtual void Draw() override;
+		virtual bool Config(const FJson& config) override;
+		virtual bool Load(const char* url) override;
 
 		void Fini();
 

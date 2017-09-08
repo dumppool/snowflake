@@ -155,28 +155,35 @@ void LostCore::FRect::Clear()
 	Children.clear();
 }
 
-void LostCore::FRect::Draw(IRenderContext * rc, float sec)
+void LostCore::FRect::Draw()
 {
-	DrawPrivate(rc, sec);
+	DrawPrivate();
 	for (auto it = Children.rbegin(); it != Children.rend(); ++it)
 	{
 		if (*it != nullptr)
 		{
-			(*it)->Draw(rc, sec);
+			(*it)->Draw();
 		}
 	}
 }
 
 void LostCore::FRect::SetColorTexture(ITexture * tex)
 {
+	auto rc = FGlobalHandler::Get()->GetRenderContext();
 	if (RectMaterial != nullptr)
 	{
 		RectMaterial->UpdateTexture(nullptr, tex, 0);
 	}
 }
 
-void LostCore::FRect::ReconstructPrimitive(IRenderContext * rc)
+void LostCore::FRect::ReconstructPrimitive()
 {
+	auto rc = FGlobalHandler::Get()->GetRenderContext();
+	if (rc == nullptr)
+	{
+		return;
+	}
+
 	if (RectPrimitiveSize.IsZero())
 	{
 		RectPrimitiveSize.X = 1.f;
@@ -237,9 +244,16 @@ void LostCore::FRect::GetLocalPosition(const FFloat2 & ppos, FFloat2 & cpos) con
 	cpos *= Param.Scale;
 }
 
-void LostCore::FRect::DrawPrivate(IRenderContext * rc, float sec)
+void LostCore::FRect::DrawPrivate()
 {
-	ReconstructPrimitive(rc);
+	auto rc = FGlobalHandler::Get()->GetRenderContext();
+	auto sec = FGlobalHandler::Get()->GetFrameTime();
+	if (rc == nullptr)
+	{
+		return;
+	}
+
+	ReconstructPrimitive();
 
 	if (RectPrimitive != nullptr && RectMaterial != nullptr)
 	{
@@ -259,23 +273,25 @@ LostCore::FBasicGUI::~FBasicGUI()
 	Fini();
 }
 
-void LostCore::FBasicGUI::Tick(float sec)
+void LostCore::FBasicGUI::Tick()
 {
 }
 
-void LostCore::FBasicGUI::Draw(IRenderContext * rc, float sec)
+void LostCore::FBasicGUI::Draw()
 {
-	//Root.Draw(rc, sec);
+	//Root.Draw(sec);
 }
 
-bool LostCore::FBasicGUI::Config(IRenderContext * rc, const FJson & config)
+bool LostCore::FBasicGUI::Config(const FJson & config)
 {
 	return false;
 }
 
-bool LostCore::FBasicGUI::Load(IRenderContext * rc, const char* url)
+bool LostCore::FBasicGUI::Load(const char* url)
 {
-	FFontProvider::Get()->Init(rc);
+	auto rc = FGlobalHandler::Get()->GetRenderContext();
+
+	FFontProvider::Get()->Init();
 
 	// ÁÙÊ±´úÂë
 	Root.SetOrigin(FFloat2(0.f, 0.f));

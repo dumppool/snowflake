@@ -26,7 +26,7 @@ namespace LostCore
 		FFontProvider() : GdiFont(nullptr) {}
 		~FFontProvider();
 
-		void Init(IRenderContext * rc);
+		void Init();
 		void Fini();
 
 		IFontInterface* GetGdiFont();

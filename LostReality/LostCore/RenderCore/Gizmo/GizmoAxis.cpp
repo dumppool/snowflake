@@ -17,11 +17,19 @@ using namespace std;
 using namespace LostCore;
 
 LostCore::FAxisTool::FAxisTool()
+	: ColorAxisX((uint32)0xff0000)
+	, ColorAxisY((uint32)0x0000ff)
+	, ColorAxisZ((uint32)0x00ff00)
+{
+	ResetData();
+}
+
+void LostCore::FAxisTool::ResetData()
 {
 	Data.clear();
 }
 
-void LostCore::FAxisTool::Draw(IRenderContext * rc, float sec)
+void LostCore::FAxisTool::Draw()
 {
 	if (Data.size() == 0)
 	{
@@ -30,7 +38,6 @@ void LostCore::FAxisTool::Draw(IRenderContext * rc, float sec)
 
 	vector<FAxisData> axises(Data.size());
 	memcpy(&axises[0], &Data[0], axises.size() * sizeof(FAxisData));
-	Data.clear();
 
 	for (uint32 i = 0; i < axises.size(); ++i)
 	{
@@ -39,24 +46,24 @@ void LostCore::FAxisTool::Draw(IRenderContext * rc, float sec)
 		// axis x
 		seg.StartPt = axises[i].Origin;
 		seg.StopPt = seg.StartPt + axises[i].DirX * axises[i].Length;
-		seg.StartPtColor = FColor96((uint32)0xff0000);
+		seg.StartPtColor = ColorAxisX;
 		SegmentTool.AddSegment(seg);
 
 		// axis y
 		seg.StartPt = axises[i].Origin;
 		seg.StopPt = seg.StartPt + axises[i].DirY * axises[i].Length;
-		seg.StartPtColor = FColor96((uint32)0x0000ff);
+		seg.StartPtColor = ColorAxisY;
 		SegmentTool.AddSegment(seg);
 
 		// axis z
 		seg.StartPt = axises[i].Origin;
 		seg.StopPt = seg.StartPt + axises[i].DirZ * axises[i].Length;
-		seg.StartPtColor = FColor96((uint32)0x00ff00);
+		seg.StartPtColor = ColorAxisZ;
 		SegmentTool.AddSegment(seg);
 	}
 
 	SegmentTool.SetWorldMatrix(World);
-	SegmentTool.Draw(rc, sec);
+	SegmentTool.Draw();
 }
 
 void LostCore::FAxisTool::AddAxis(const FAxisData & axis)
@@ -67,4 +74,11 @@ void LostCore::FAxisTool::AddAxis(const FAxisData & axis)
 void LostCore::FAxisTool::SetWorldMatrix(const FFloat4x4 & mat)
 {
 	World = mat;
+}
+
+void LostCore::FAxisTool::SetColor(const FColor96 & colX, const FColor96 & colY, const FColor96 & colZ)
+{
+	ColorAxisX = colX;
+	ColorAxisY = colY;
+	ColorAxisZ = colZ;
 }

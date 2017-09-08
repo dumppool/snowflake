@@ -46,8 +46,8 @@ public:
 	void ClearEditorScene();
 
 	// FBasicWorld overridew 
-	virtual bool Config(IRenderContext * rc, const FJson& config) override;
-	bool Load(IRenderContext * rc, const char* url) override;
+	virtual bool Config(const FJson& config) override;
+	bool Load(const char* url) override;
 
 	virtual bool InitializeWindow(HWND wnd, bool windowed, int32 width, int32 height) override;
 	virtual IRenderContext* GetRenderContext() override;
@@ -110,6 +110,8 @@ FFBXEditor::FFBXEditor()
 
 	OutputDir = string(temp).append("\\_LostReality\\");
 	free(temp);
+
+	FGlobalHandler::Get()->SetRenderContextPP(&RC);
 
 	//FDirectoryHelper::Get()->GetPrimitiveAbsolutePath(SConverterOutput, OutputDir);
 	FGlobalHandler::Get()->SetMoveCameraCallback([&](float x, float y, float z) {
@@ -206,15 +208,15 @@ void FFBXEditor::InitializeScene()
 {
 	assert(Camera == nullptr && Scene == nullptr);
 
-	FBasicWorld::Load(RC, "");
+	FBasicWorld::Load("");
 	Camera = new FBasicCamera;
-	if (!Camera->Load(RC, ""))
+	if (!Camera->Load(""))
 	{
 		return;
 	}
 
 	Scene = new FBasicScene;
-	if (Scene->Config(RC, FJson()))
+	if (Scene->Config(FJson()))
 	{
 		AddScene(Scene);
 		Log(SInfo, "InitializeScene finished.");
@@ -417,7 +419,7 @@ void FFBXEditor::LoadModel(const string & url)
 
 void FFBXEditor::LoadModel(const FJson & config)
 {
-	auto model = FModelFactory::NewModel(RC, config);
+	auto model = FModelFactory::NewModel(config);
 	CurrSelectedModel = model;
 	if (model != nullptr)
 	{
@@ -428,8 +430,14 @@ void FFBXEditor::LoadModel(const FJson & config)
 void FFBXEditor::LoadAnimation(const string & url)
 {
 	string anim;
-	FAnimationLibrary::Get()->Load(url, anim);
-	FGlobalHandler::Get()->AddAnimation(anim);
+	if (FAnimationLibrary::Get()->Load(url, anim))
+	{
+		FGlobalHandler::Get()->AddAnimation(anim);
+	}
+	else
+	{
+		LVERR("", "%s", url);
+	}
 }
 
 void FFBXEditor::ClearEditorScene()
@@ -439,12 +447,12 @@ void FFBXEditor::ClearEditorScene()
 	});
 }
 
-bool FFBXEditor::Config(IRenderContext * rc, const FJson & config)
+bool FFBXEditor::Config(const FJson & config)
 {
 	return false;
 }
 
-bool FFBXEditor::Load(IRenderContext * rc, const char * url)
+bool FFBXEditor::Load(const char * url)
 {
 	return false;
 }
@@ -471,6 +479,8 @@ void FFBXEditor::Fini()
 	SAFE_DELETE(RC);
 	SAFE_DELETE(Camera);
 	SAFE_DELETE(Scene);
+
+	FGlobalHandler::Get()->SetRenderContextPP(nullptr);
 }
 
 bool FFBXEditor::InitializeWindow(HWND wnd, bool windowed, int32 width, int32 height)
@@ -509,6 +519,8 @@ void FFBXEditor::StartRenderLoop()
 		auto sec = chrono::duration<float>(now - SLastStamp);
 		SLastStamp = now;
 
+		FGlobalHandler::Get()->SetFrameTime(sec.count());
+
 		RenderCommands.Swap(TickCommands);
 		CommandType cmd;
 		while (RenderCommands.Pop(cmd))
@@ -517,8 +529,8 @@ void FFBXEditor::StartRenderLoop()
 		}
 
 		
-		Tick(sec.count());
-		Draw(RC, sec.count());
+		Tick();
+		Draw();
 
 		this_thread::sleep_for(chrono::milliseconds(1));
 	}
@@ -535,7 +547,7 @@ void FFBXEditor::StartTickLoop()
 			cmd();
 		}
 
-		Tick(0.f);
+		Tick();
 	}
 }
 

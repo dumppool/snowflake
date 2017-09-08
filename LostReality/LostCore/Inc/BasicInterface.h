@@ -18,9 +18,9 @@ namespace LostCore
 	public:
 		virtual ~IBasicInterface() {}
 
-		virtual bool Config(IRenderContext * rc, const FJson& config) = 0;
-		virtual bool Load(IRenderContext * rc, const char* url) = 0;
-		virtual void Tick(float sec) = 0;
-		virtual void Draw(IRenderContext * rc, float sec) = 0;
+		virtual bool Config(const FJson& config) = 0;
+		virtual bool Load(const char* url) = 0;
+		virtual void Tick() = 0;
+		virtual void Draw() = 0;
 	};
 }

@@ -99,7 +99,6 @@
     <ClInclude Include="Inc\Math\Transform2.h">
       <Filter>Inc\Math</Filter>
     </ClInclude>
-    <ClInclude Include="Inc\Math\AABB.h" />
     <ClInclude Include="Inc\Math\Color.h">
       <Filter>Inc\Math</Filter>
     </ClInclude>
@@ -123,6 +122,9 @@
     </ClInclude>
     <ClInclude Include="Inc\ModelFactory.h">
       <Filter>Inc</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\Math\AABB.h">
+      <Filter>Inc\Math</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

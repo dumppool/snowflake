@@ -28,10 +28,10 @@ namespace LostCore
 		FBasicScene();
 		virtual ~FBasicScene() override;
 
-		virtual void Tick(float sec) override;
-		virtual void Draw(IRenderContext * rc, float sec) override;
-		virtual bool Config(IRenderContext * rc, const FJson& config) override;
-		virtual bool Load(IRenderContext * rc, const char* url) override;
+		virtual void Tick() override;
+		virtual void Draw() override;
+		virtual bool Config(const FJson& config) override;
+		virtual bool Load(const char* url) override;
 
 		virtual void AddModel(FBasicModel * sm);
 		virtual void RemoveModel(FBasicModel * sm);

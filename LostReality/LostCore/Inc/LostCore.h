@@ -87,8 +87,6 @@ using FJson = nlohmann::json;
 
 #include "Serialize/Serialization.h"
 
-#include "GlobalHandler.h"
-
 #include "Math/Vector2.h"
 #include "Math/Vector3.h"
 #include "Math/Vector4.h"
@@ -101,6 +99,14 @@ using FJson = nlohmann::json;
 
 #include "File/DirectoryHelper.h"
 
+#include "Interface/Drawable.h"
+#include "Interface/FontInterface.h"
+#include "Interface/MaterialInterface.h"
+#include "Interface/PrimitiveGroupInterface.h"
+#include "Interface/TextureInterface.h"
+#include "Interface/RenderContextInterface.h"
+
+#include "GlobalHandler.h"
 
 #include "Serialize/StructSerialize.h"
 

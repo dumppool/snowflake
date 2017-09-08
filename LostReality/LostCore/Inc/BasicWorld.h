@@ -23,13 +23,13 @@ namespace LostCore
 		FBasicWorld();
 		virtual ~FBasicWorld() override;
 
-		virtual bool Config(IRenderContext * rc, const FJson& config) override;
-		virtual bool Load(IRenderContext * rc, const char* url) override;
-		virtual void Tick(float sec) override;
-		virtual void Draw(IRenderContext * rc, float sec) override;
+		virtual bool Config(const FJson& config) override;
+		virtual bool Load(const char* url) override;
+		virtual void Tick() override;
+		virtual void Draw() override;
 
-		virtual void DrawPreScene(float sec);
-		virtual void DrawPostScene(float sec);
+		virtual void DrawPreScene();
+		virtual void DrawPostScene();
 
 		virtual bool InitializeWindow(HWND wnd, bool windowed, int32 width, int32 height);
 		virtual IRenderContext* GetRenderContext();

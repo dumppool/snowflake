@@ -42,11 +42,6 @@ namespace LostWinForms
             bool forceRegenerateTangent,
             bool generateTangentIfNotFound);
 
-        [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern void SetDisplayNormal(bool enable);
-
-        [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern void SetDisplayTangent(bool enable);
 
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public static extern void SetDisplayNormalLength(float len);
@@ -61,7 +56,7 @@ namespace LostWinForms
         public static extern void SetAnimateRate(float rate);
 
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern void SetDisplaySkeleton(uint flag);
+        public static extern void SetDisplayFlags(uint flags);
 
         public delegate void PFN_AnimUpdate(uint flag, StringBuilder anim);
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
@@ -78,6 +73,13 @@ namespace LostWinForms
 
         private const uint AssetModel = 0;
         private const uint AssetAnimation = 1;
+
+        private const uint FlagDisplayNormal = (1 << 0);
+        private const uint FlagDisplayTangent = (1 << 1);
+        private const uint FlagDisplaySkel = (1 << 2);
+        private const uint FlagDisplayBB = (1 << 3);
+
+        private uint DisplayFlags = 0;
 
         private String[] LevelString = {
             "Info:                ",
@@ -152,20 +154,26 @@ namespace LostWinForms
             ClearScene();
         }
 
+        private String GetDirectory(String path)
+        {
+            String outPath = Path.GetDirectoryName(path);
+            return path;
+        }
+
         private void LoadAnimationToolStripMenuItem_Click(object sender, EventArgs e)
         {
             OpenFileDialog dlg = new OpenFileDialog();
             dlg.Title = "选择要打开的FBX文件";
             dlg.Filter = "";
-            dlg.RestoreDirectory = true;
-            dlg.InitialDirectory = UserData[LastOpenAnimationKey];
+            dlg.RestoreDirectory = false;
+            dlg.InitialDirectory = Path.GetDirectoryName(UserData[LastOpenAnimationKey]);
             dlg.Multiselect = true;
             if (dlg.ShowDialog(panel1) == DialogResult.OK)
             {
                 UserData[LastOpenAnimationKey] = dlg.FileName;
                 foreach (String fileName in dlg.FileNames)
                 {
-                    LoadAsset(AssetAnimation, dlg.FileName);
+                    LoadAsset(AssetAnimation, fileName);
                 }
             }
 
@@ -177,8 +185,8 @@ namespace LostWinForms
             OpenFileDialog dlg = new OpenFileDialog();
             dlg.Title = "选择要打开的模型文件";
             dlg.Filter = "";
-            dlg.RestoreDirectory = true;
-            dlg.InitialDirectory = UserData[LastOpenModelKey];
+            dlg.RestoreDirectory = false;
+            dlg.InitialDirectory = Path.GetDirectoryName(UserData[LastOpenModelKey]);
             dlg.Multiselect = true;
             if (dlg.ShowDialog(panel1) == DialogResult.OK)
             {
@@ -299,22 +307,28 @@ namespace LostWinForms
 
         private void ViewPanelOk_Click(object sender, EventArgs e)
         {
-            uint flag;
-            SetDisplayNormal(DisplayNormal.Checked);
-            SetDisplayTangent(DisplayTangent.Checked);
-
-            flag = 0;
+            uint flag = 0;
             if (DisplaySkeleton.Checked)
             {
-                flag |= (1 << 0);
+                flag |= FlagDisplaySkel;
             }
 
-            if (DisplaySkeleton2.Checked)
+            if (DisplayBoundingBox.Checked)
             {
-                flag |= (1 << 1);
+                flag |= FlagDisplayBB;
             }
-                
-            SetDisplaySkeleton(flag);
+
+            if (DisplayNormal.Checked)
+            {
+                flag |= FlagDisplayNormal;
+            }
+
+            if (DisplayTangent.Checked)
+            {
+                flag |= FlagDisplayTangent;
+            }
+
+            SetDisplayFlags(flag);
             ViewPanel.Visible = false;
         }
 
@@ -379,8 +393,8 @@ namespace LostWinForms
             OpenFileDialog dlg = new OpenFileDialog();
             dlg.Title = "选择要打开的FBX文件";
             dlg.Filter = "FBX文件|*.fbx";
-            dlg.RestoreDirectory = true;
-            dlg.InitialDirectory = UserData[LastOpenFbxKey];
+            dlg.RestoreDirectory = false;
+            dlg.InitialDirectory = Path.GetDirectoryName(UserData[LastOpenFbxKey]);
             dlg.Multiselect = true;
             if (dlg.ShowDialog(panel1) == DialogResult.OK)
             {

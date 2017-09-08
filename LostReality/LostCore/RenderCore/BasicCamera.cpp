@@ -26,23 +26,24 @@ LostCore::FBasicCamera::~FBasicCamera()
 {
 }
 
-bool LostCore::FBasicCamera::Config(IRenderContext * rc, const FJson & config)
+bool LostCore::FBasicCamera::Config(const FJson & config)
 {
 	return true;
 }
 
-bool LostCore::FBasicCamera::Load(IRenderContext * rc, const char* url)
+bool LostCore::FBasicCamera::Load(const char* url)
 {
 	return true;
 }
 
-void LostCore::FBasicCamera::Tick(float sec)
+void LostCore::FBasicCamera::Tick()
 {
 
 }
 
-void LostCore::FBasicCamera::Draw(IRenderContext * rc, float sec)
+void LostCore::FBasicCamera::Draw()
 {
+	auto rc = FGlobalHandler::Get()->GetRenderContext();
 	if (rc != nullptr)
 	{
 		rc->SetViewProjectMatrix(GetViewProjectMatrix());

@@ -23,8 +23,10 @@ LostCore::FFontProvider::~FFontProvider()
 	assert(GdiFont == nullptr);
 }
 
-void LostCore::FFontProvider::Init(IRenderContext * rc)
+void LostCore::FFontProvider::Init()
 {
+	auto rc = FGlobalHandler::Get()->GetRenderContext();
+
 	WrappedCreateGdiFont(&GdiFont);
 
 	// push & initialize ascii chars
@@ -47,7 +49,7 @@ void LostCore::FFontProvider::Init(IRenderContext * rc)
 	GdiFont->Initialize(rc, config, chars, sz);
 
 	//std::wstring ws2 = L"的空空大口大口的看到v次";
-	//GdiFont->Initialize(rc, config, const_cast<wchar_t*>(ws2.c_str()), ws2.size());
+	//GdiFont->Initialize(config, const_cast<wchar_t*>(ws2.c_str()), ws2.size());
 }
 
 void LostCore::FFontProvider::Fini()

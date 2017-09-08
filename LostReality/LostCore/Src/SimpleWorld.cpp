@@ -21,7 +21,7 @@ namespace LostCore
 		FSimpleWorld();
 		virtual ~FSimpleWorld() override;
 
-		bool Load(IRenderContext * rc, const char* url) override;
+		bool Load(const char* url) override;
 		void Fini();
 
 		virtual bool InitializeWindow(HWND wnd, bool bWindowed, int32 width, int32 height) override;
@@ -43,18 +43,18 @@ namespace LostCore
 		Fini();
 	}
 
-	bool FSimpleWorld::Load(IRenderContext * rc, const char* url)
+	bool FSimpleWorld::Load(const char* url)
 	{
-		FBasicWorld::Load(rc, "");
+		FBasicWorld::Load("");
 
 		Camera = new FBasicCamera;
-		if (!Camera->Load(rc, ""))
+		if (!Camera->Load(""))
 		{
 			return false;
 		}
 
 		auto scene = new FBasicScene;
-		if (scene->Load(rc, "default_empty.json"))
+		if (scene->Load("default_empty.json"))
 		{
 			AddScene(scene);
 			return true;
@@ -81,7 +81,7 @@ namespace LostCore
 	{
 		auto ret = WrappedCreateRenderContext(EContextID::D3D11_DXGI0, &RC);
 		assert(SSuccess == ret);
-		if (RC != nullptr && RC->Init(wnd, bWindowed, width, height) && Load(RC, ""))
+		if (RC != nullptr && RC->Init(wnd, bWindowed, width, height) && Load(""))
 		{
 			return true;
 		}

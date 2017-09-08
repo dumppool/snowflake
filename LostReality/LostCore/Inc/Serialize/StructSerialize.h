@@ -446,22 +446,19 @@ FORCEINLINE void LostCore::FMeshData::Load(const string & inputFile)
 }
 
 // 暂时索引没有意义，只构造顶点数据流
-FORCEINLINE void LostCore::FMeshData::BuildGPUData(uint32 flags)
+FORCEINLINE void LostCore::FMeshData::BuildGPUData(uint32 flags = 0)
 {
 	uint32 buildFlags = flags;
-	if ((flags & ~VertexFlags) != 0)
+	if (flags == 0)
 	{
-		LVERR("FMeshData::BuildGPUData", "Invalid override flags[%s], original flags[%s]",
+		flags = VertexFlags;
+	}
+	else if ((flags & ~VertexFlags) != 0)
+	{
+		LVWARN("FMeshData::BuildGPUData", "Invalid override flags[%s], original flags[%s]",
 			GetVertexDetails(flags).Name.c_str(), GetVertexDetails(VertexFlags).Name.c_str());
 
-		if ((VertexFlags & ~flags) == 0)
-		{
-			buildFlags = VertexFlags;
-		}
-		else
-		{
-			assert(0);
-		}
+		flags = VertexFlags;
 	}
 
 	// 如果下面split都为空，可以考虑构造索引缓存

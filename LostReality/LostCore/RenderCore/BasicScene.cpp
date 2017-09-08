@@ -25,29 +25,29 @@ FBasicScene::~FBasicScene()
 	assert(Models.size() == 0);
 }
 
-void FBasicScene::Tick(float sec)
+void FBasicScene::Tick()
 {
 	for (auto sm : Models)
 	{
 		if (sm != nullptr)
 		{
-			sm->Tick(sec);
+			sm->Tick();
 		}
 	}
 }
 
-void FBasicScene::Draw(IRenderContext * rc, float sec)
+void FBasicScene::Draw()
 {
 	for (auto sm : Models)
 	{
 		if (sm != nullptr)
 		{
-			sm->Draw(rc, sec);
+			sm->Draw();
 		}
 	}
 }
 
-bool LostCore::FBasicScene::Config(IRenderContext * rc, const FJson & config)
+bool LostCore::FBasicScene::Config(const FJson & config)
 {
 	//assert(config.find("nodes") != config.end() && "a scene needs [nodes] section");
 	if (config.find("nodes") != config.end())
@@ -72,7 +72,7 @@ bool LostCore::FBasicScene::Config(IRenderContext * rc, const FJson & config)
 				}
 
 				std::string p = node.find("path").value();
-				m->Load(rc, p.c_str());
+				m->Load(p.c_str());
 				AddModel(m);
 				FFloat4x4 mat;
 				//memcpy(&mat, &(node.find("transform").value()[0]), sizeof(mat));
@@ -94,7 +94,7 @@ bool LostCore::FBasicScene::Config(IRenderContext * rc, const FJson & config)
 	return true;
 }
 
-bool FBasicScene::Load(IRenderContext * rc, const char* url)
+bool FBasicScene::Load(const char* url)
 {
 	FJson config;
 	if (!FDirectoryHelper::Get()->GetSceneJson("default_empty.json", config))
@@ -103,7 +103,7 @@ bool FBasicScene::Load(IRenderContext * rc, const char* url)
 	}
 	else
 	{
-		return Config(rc, config);
+		return Config(config);
 	}
 }
 

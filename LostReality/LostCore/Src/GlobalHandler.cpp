@@ -7,8 +7,7 @@
 using namespace LostCore;
 
 LostCore::FGlobalHandler::FGlobalHandler()
-	: bDisplayNormal(false)
-	, bDisplayTangent(false)
+	: RenderContextPP(nullptr)
 	, DisplayNormalLength(5.0f)
 	, MoveCameraCallback(nullptr)
 	, RotateCameraCallback(nullptr)
@@ -20,26 +19,6 @@ LostCore::FGlobalHandler::FGlobalHandler()
 	, LoadFBXCallback(nullptr)
 	, ClearSceneCallback(nullptr)
 {
-}
-
-void LostCore::FGlobalHandler::SetDisplayNormal(bool enable)
-{
-	bDisplayNormal = enable;
-}
-
-bool LostCore::FGlobalHandler::GetDisplayNormal() const
-{
-	return bDisplayNormal;
-}
-
-void LostCore::FGlobalHandler::SetDisplayTangent(bool enable)
-{
-	bDisplayTangent = enable;
-}
-
-bool LostCore::FGlobalHandler::GetDisplayTangent() const
-{
-	return bDisplayTangent;
 }
 
 void LostCore::FGlobalHandler::SetDisplayNormalLength(float value)
@@ -78,14 +57,14 @@ float LostCore::FGlobalHandler::GetAnimateRate() const
 	return AnimateRate;
 }
 
-void LostCore::FGlobalHandler::SetDisplaySkeleton(uint32 flag)
+void LostCore::FGlobalHandler::SetDisplayFlags(uint32 flags)
 {
-	FlagDisplaySkeleton = flag;
+	DisplayFlags = flags;
 }
 
-uint32 LostCore::FGlobalHandler::GetDisplaySkeleton() const
+uint32 LostCore::FGlobalHandler::GetDisplayFlags() const
 {
-	return FlagDisplaySkeleton;
+	return DisplayFlags;
 }
 
 void LostCore::FGlobalHandler::SetAnimUpdater(PFN_AnimUpdate animUpdate)
@@ -168,19 +147,31 @@ void LostCore::FGlobalHandler::ClearScene()
 	}
 }
 
-bool LostCore::FGlobalHandler::IsDisplayNormal(uint32 flags) const
+void LostCore::FGlobalHandler::SetRenderContextPP(IRenderContext ** rc)
 {
-	bool displayTangent = (flags & EVertexElement::Tangent) == EVertexElement::Tangent
-		&& FGlobalHandler::Get()->GetDisplayTangent();
-
-	return (flags & EVertexElement::Normal) == EVertexElement::Normal
-		&& !displayTangent && FGlobalHandler::Get()->GetDisplayNormal();
+	RenderContextPP = rc;
 }
 
-bool LostCore::FGlobalHandler::IsDisplayTangent(uint32 flags) const
+IRenderContext * LostCore::FGlobalHandler::GetRenderContext() const
 {
-	return (flags & EVertexElement::Tangent) == EVertexElement::Tangent
-		&& FGlobalHandler::Get()->GetDisplayTangent();
+	if (RenderContextPP != nullptr)
+	{
+		return *RenderContextPP;
+	}
+	else
+	{
+		return nullptr;
+	}
+}
+
+void LostCore::FGlobalHandler::SetFrameTime(float sec)
+{
+	FrameTime = sec;
+}
+
+float LostCore::FGlobalHandler::GetFrameTime() const
+{
+	return FrameTime;
 }
 
 void LostCore::FGlobalHandler::SetMoveCameraCallback(Callback_FFF callback)
@@ -193,9 +184,9 @@ void LostCore::FGlobalHandler::SetRotateCameraCallback(Callback_FFF callback)
 	RotateCameraCallback = callback;
 }
 
-bool LostCore::FGlobalHandler::IsDisplaySkeleton(uint32 flag) const
+bool LostCore::FGlobalHandler::IsDisplay(uint32 flag) const
 {
-	return (FlagDisplaySkeleton & flag) == flag;
+	return (DisplayFlags & flag) == flag;
 }
 
 void LostCore::FGlobalHandler::ClearAnimationList()
@@ -252,13 +243,11 @@ void LostCore::FGlobalHandler::SetCallbackClearScene(Callback_V clearScene)
 	ClearSceneCallback = clearScene;
 }
 
-EXPORT_WRAP_1_DEF(SetDisplayNormal, bool);
-EXPORT_WRAP_1_DEF(SetDisplayTangent, bool);
 EXPORT_WRAP_1_DEF(SetDisplayNormalLength, float);
 EXPORT_WRAP_3_DEF(MoveCamera, float, float, float); // x, y, z
 EXPORT_WRAP_3_DEF(RotateCamera, float, float, float); // pitch, yaw, roll
 EXPORT_WRAP_1_DEF(SetAnimateRate, float);
-EXPORT_WRAP_1_DEF(SetDisplaySkeleton, bool);
+EXPORT_WRAP_1_DEF(SetDisplayFlags, uint32);
 EXPORT_WRAP_1_DEF(SetAnimUpdater, LostCore::PFN_AnimUpdate);
 EXPORT_WRAP_1_DEF(PlayAnimation, const char*);
 EXPORT_WRAP_2_DEF(LoadAsset, uint32, const char*);

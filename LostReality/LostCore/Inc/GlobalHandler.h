@@ -9,8 +9,10 @@
 
 #pragma once
 
-#define FLAG_SKEL_1 (1<<0)
-#define FLAG_SKEL_2 (1<<1)
+#define FLAG_DISPLAY_NORMAL		(1<<0)
+#define FLAG_DISPLAY_TANGENT	(1<<1)
+#define FLAG_DISPLAY_SKEL		(1<<2)
+#define FLAG_DISPLAY_BB			(1<<3)
 
 #define FLAG_LOG_INFO (0)
 #define FLAG_LOG_WARN (1)
@@ -58,15 +60,16 @@ namespace LostCore
 		}
 
 	private:
-		bool bDisplayNormal;
-		bool bDisplayTangent;
+		IRenderContext** RenderContextPP;
+		float FrameTime;
+
 		float DisplayNormalLength;
 
 		Callback_FFF MoveCameraCallback;
 		Callback_FFF RotateCameraCallback;
 
 		float AnimateRate;
-		uint32 FlagDisplaySkeleton;
+		uint32 DisplayFlags;
 		Callback_S PlayAnimationCallback;
 		PFN_AnimUpdate AnimUpdateFunc;
 		Callback_S LoadModelCallback;
@@ -76,15 +79,9 @@ namespace LostCore
 		Callback_X LoadFBXCallback;
 		Callback_V ClearSceneCallback;
 
-	public:
+	public: // 导出函数调用.
 		FGlobalHandler();
 		
-		void SetDisplayNormal(bool enable);
-		bool GetDisplayNormal() const;
-
-		void SetDisplayTangent(bool enable);
-		bool GetDisplayTangent() const;
-
 		void SetDisplayNormalLength(float value);
 		float GetDisplayNormalLength() const;
 
@@ -94,8 +91,8 @@ namespace LostCore
 		void SetAnimateRate(float rate);
 		float GetAnimateRate() const;
 		
-		void SetDisplaySkeleton(uint32 flag);
-		uint32 GetDisplaySkeleton() const;
+		void SetDisplayFlags(uint32 flags);
+		uint32 GetDisplayFlags() const;
 
 		void SetAnimUpdater(PFN_AnimUpdate animUpdate);
 		void PlayAnimation(const char* anim);
@@ -122,17 +119,17 @@ namespace LostCore
 
 		void ClearScene();
 
-	public:
-		bool IsDisplayNormal(uint32 flags) const;
+	public: // 模块内部方法.
+		void SetRenderContextPP(IRenderContext** rc);
+		IRenderContext* GetRenderContext() const;
 
-		// 显示切空间坐标
-		// 显示切空间坐标同时不单独显示法线.
-		bool IsDisplayTangent(uint32 flags) const;
+		void SetFrameTime(float sec);
+		float GetFrameTime() const;
 
 		void SetMoveCameraCallback(Callback_FFF callback);
 		void SetRotateCameraCallback(Callback_FFF callback);
 
-		bool IsDisplaySkeleton(uint32 flag) const;
+		bool IsDisplay(uint32 flag) const;
 
 		void ClearAnimationList();
 		void AddAnimation(const string& anim);
@@ -150,13 +147,11 @@ namespace LostCore
 
 }
 
-EXPORT_WRAP_1_DCL(SetDisplayNormal, bool);
-EXPORT_WRAP_1_DCL(SetDisplayTangent, bool);
 EXPORT_WRAP_1_DCL(SetDisplayNormalLength, float);
 EXPORT_WRAP_3_DCL(MoveCamera, float, float, float); // x, y, z
 EXPORT_WRAP_3_DCL(RotateCamera, float, float, float); // pitch, yaw, roll
 EXPORT_WRAP_1_DCL(SetAnimateRate, float);
-EXPORT_WRAP_1_DCL(SetDisplaySkeleton, bool);
+EXPORT_WRAP_1_DCL(SetDisplayFlags, uint32);
 EXPORT_WRAP_1_DCL(SetAnimUpdater, LostCore::PFN_AnimUpdate);
 EXPORT_WRAP_1_DCL(PlayAnimation, const char*);
 EXPORT_WRAP_2_DCL(LoadAsset, uint32, const char*);

@@ -39,8 +39,9 @@ void LostCore::FSkeletonTree::LoadSkeleton(const FPoseTree & skelRoot, const FFl
 	}
 }
 
-void LostCore::FSkeletonTree::UpdateWorldMatrix(const FFloat4x4 & parentWorld, float sec)
+void LostCore::FSkeletonTree::UpdateWorldMatrix(const FFloat4x4 & parentWorld)
 {
+	auto sec = FGlobalHandler::Get()->GetFrameTime();
 	if (!CurrAnimName.empty())
 	{
 		CurrKeyTime += sec * FGlobalHandler::Get()->GetAnimateRate();
@@ -59,7 +60,7 @@ void LostCore::FSkeletonTree::UpdateWorldMatrix(const FFloat4x4 & parentWorld, f
 	World = InvBindPose * BoneWorld;
 	for (auto& child : Children)
 	{
-		child.UpdateWorldMatrix(BoneWorld, sec);
+		child.UpdateWorldMatrix(BoneWorld);
 	}
 }
 

@@ -27,18 +27,18 @@ FBasicWorld::~FBasicWorld()
 	assert(SceneArray.size() == 0);
 }
 
-bool LostCore::FBasicWorld::Config(IRenderContext * rc, const FJson & config)
+bool LostCore::FBasicWorld::Config(const FJson & config)
 {
 	return false;
 }
 
-bool FBasicWorld::Load(IRenderContext * rc, const char* url)
+bool FBasicWorld::Load(const char* url)
 {
 	assert(GUIRoot == nullptr);
 	assert(SceneArray.size() == 0);
 
 	GUIRoot = new FBasicGUI;
-	return GUIRoot->Load(rc, url);
+	return GUIRoot->Load(url);
 }
 
 void FBasicWorld::Fini()
@@ -53,46 +53,46 @@ void FBasicWorld::Fini()
 	SceneArray.clear();
 }
 
-void FBasicWorld::Tick(float sec)
+void FBasicWorld::Tick()
 {
 	auto cam = GetCamera();
 	if (cam != nullptr)
 	{
-		cam->Tick(sec);
+		cam->Tick();
 	}
 
 	for (auto scene : SceneArray)
 	{
 		if (scene != nullptr)
 		{
-			scene->Tick(sec);
+			scene->Tick();
 		}
 	}
 
 	if (GUIRoot != nullptr)
 	{
-		GUIRoot->Tick(sec);
+		GUIRoot->Tick();
 	}
 }
 
-void FBasicWorld::Draw(IRenderContext * rc, float sec)
+void FBasicWorld::Draw()
 {
 	if (GetRenderContext() == nullptr)
 	{
 		return;
 	}
 
-	DrawPreScene(sec);
+	DrawPreScene();
 
 	for (auto scene : SceneArray)
 	{
 		if (scene != nullptr)
 		{
-			scene->Draw(GetRenderContext(), sec);
+			scene->Draw();
 		}
 	}
 
-	DrawPostScene(sec);
+	DrawPostScene();
 }
 
 void FBasicWorld::AddScene(FBasicScene * scene)
@@ -132,9 +132,10 @@ FBasicCamera * LostCore::FBasicWorld::GetCamera()
 	return nullptr;
 }
 
-void FBasicWorld::DrawPreScene(float sec)
+void FBasicWorld::DrawPreScene()
 {
 	auto rc = GetRenderContext();
+	auto sec = FGlobalHandler::Get()->GetFrameTime();
 
 	if (rc == nullptr)
 	{
@@ -145,13 +146,14 @@ void FBasicWorld::DrawPreScene(float sec)
 
 	if (GetCamera() != nullptr)
 	{
-		GetCamera()->Draw(rc, sec);
+		GetCamera()->Draw();
 	}
 }
 
-void FBasicWorld::DrawPostScene(float sec)
+void FBasicWorld::DrawPostScene()
 {
 	auto rc = GetRenderContext();
+	auto sec = FGlobalHandler::Get()->GetFrameTime();
 
 	if (rc == nullptr)
 	{
@@ -160,7 +162,7 @@ void FBasicWorld::DrawPostScene(float sec)
 
 	if (GUIRoot != nullptr)
 	{
-		GUIRoot->Draw(rc, sec);
+		GUIRoot->Draw();
 	}
 
 	rc->EndFrame(sec);
