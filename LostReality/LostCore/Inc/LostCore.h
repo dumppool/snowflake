@@ -96,6 +96,9 @@ using FJson = nlohmann::json;
 #include "Math/AABB.h"
 #include "Math/Color.h"
 #include "Math/Curves.h"
+#include "Math/Line.h"
+#include "Math/Plane.h"
+#include "Math/Intersect.h"
 
 #include "File/DirectoryHelper.h"
 

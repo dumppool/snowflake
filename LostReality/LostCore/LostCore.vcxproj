@@ -168,8 +168,11 @@
     <ClInclude Include="Inc\Math\AABB.h" />
     <ClInclude Include="Inc\Math\Color.h" />
     <ClInclude Include="Inc\Math\Curves.h" />
+    <ClInclude Include="Inc\Math\Intersect.h" />
+    <ClInclude Include="Inc\Math\Line.h" />
     <ClInclude Include="Inc\Math\MathBase.h" />
     <ClInclude Include="Inc\Math\Matrix.h" />
+    <ClInclude Include="Inc\Math\Plane.h" />
     <ClInclude Include="Inc\Math\Quat.h" />
     <ClInclude Include="Inc\Math\Transform2.h" />
     <ClInclude Include="Inc\Math\Vector2.h" />
