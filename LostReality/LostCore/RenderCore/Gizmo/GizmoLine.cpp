@@ -48,7 +48,7 @@ bool LostCore::FSegmentTool::ConstructPrimitive(const void* buf, uint32 bytes)
 
 	assert(Material == nullptr && Primitive == nullptr);
 
-	bConstructed = SSuccess == D3D11::WrappedCreateMaterial_SceneObject(&Material);
+	bConstructed = SSuccess == D3D11::WrappedCreateMaterial(&Material);
 	bConstructed &= SSuccess == D3D11::WrappedCreatePrimitiveGroup(&Primitive);
 
 	assert(bConstructed);

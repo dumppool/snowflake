@@ -21,6 +21,7 @@ namespace LostCore
 	{
 
 	public:
+		typedef T FT;
 		//TVec4NonVectorized<T> M[4];
 		T M[4][4];
 
@@ -84,7 +85,12 @@ namespace LostCore
 			return SetTranslate(translate.X, translate.Y, translate.Z);
 		}
 
-		FORCEINLINE void SetRotateAndOrigin(const FQuat& q, const TVec3NonVectorized<T>& origin, const TVec3NonVectorized<T>& scale = TVec3NonVectorized<T>(1.0, 1.0, 1.0))
+		FORCEINLINE TMatrixNonVectorized<T>&  AddTranslate(const TVec3NonVectorized<T>& delta)
+		{
+			return SetTranslate(M[3][0] + delta.X, M[3][1] + delta.Y, M[3][2] + delta.Z);
+		}
+
+		FORCEINLINE TMatrixNonVectorized<T>& SetRotateAndOrigin(const FQuat& q, const TVec3NonVectorized<T>& origin, const TVec3NonVectorized<T>& scale = TVec3NonVectorized<T>(1.0, 1.0, 1.0))
 		{
 			SetRotate(q);
 
@@ -94,9 +100,10 @@ namespace LostCore
 			M[3][1] = origin.Y;
 			M[3][2] = origin.Z;
 			M[3][3] = 1.0;
+			return *this;
 		}
 
-		FORCEINLINE void SetRotate(const FQuat& q)
+		FORCEINLINE TMatrixNonVectorized<T>& SetRotate(const FQuat& q)
 		{
 			T xx = q.X * q.X * 2.0;
 			T xy = q.X * q.Y * 2.0;
@@ -125,10 +132,12 @@ namespace LostCore
 
 			M[0][3] = M[1][3] = M[2][3] = M[3][0] = M[3][1] = M[3][2] = 0.0;
 			M[3][3] = 1.0;
+			return *this;
 		}
 
-		FORCEINLINE void SetRotate(const TVec3NonVectorized<T>& euler)
+		FORCEINLINE TMatrixNonVectorized<T>& SetRotate(const TVec3NonVectorized<T>& euler)
 		{
+			return SetRotate(FQuat().FromEuler(euler));
 		}
 
 		FORCEINLINE void SetRotateInverse(const TVec3NonVectorized<T>& euler)
@@ -254,6 +263,12 @@ namespace LostCore
 			}
 
 			return *this;
+		}
+
+		FORCEINLINE TMatrixNonVectorized<T>  GetInvert() const
+		{
+			TMatrixNonVectorized<T> result(*this);
+			return result.Invert();
 		}
 
 		FORCEINLINE T GetDeterminant() const
@@ -637,6 +652,21 @@ namespace LostCore
 			}
 
 			return *this;
+		}
+
+		FORCEINLINE TVec3NonVectorized<T> GetRightVector() const
+		{
+			return TVec3NonVectorized<T>(M[0][0], M[0][1], M[0][2]);
+		}
+
+		FORCEINLINE TVec3NonVectorized<T> GetUpVector() const
+		{
+			return TVec3NonVectorized<T>(M[1][0], M[1][1], M[1][2]);
+		}
+
+		FORCEINLINE TVec3NonVectorized<T> GetForwardVector() const
+		{
+			return TVec3NonVectorized<T>(M[2][0], M[2][1], M[2][2]);
 		}
 	};
 

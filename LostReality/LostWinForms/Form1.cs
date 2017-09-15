@@ -71,15 +71,22 @@ namespace LostWinForms
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public static extern void ClearScene();
 
+        [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void Picking(Int32 x, Int32 y, bool clicked);
+
+        [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void Shutdown();
+
         private const uint AssetModel = 0;
         private const uint AssetAnimation = 1;
+
+        private const uint UpdateAnimClear = 0;
+        private const uint UpdateAnimAdd = 1;
 
         private const uint FlagDisplayNormal = (1 << 0);
         private const uint FlagDisplayTangent = (1 << 1);
         private const uint FlagDisplaySkel = (1 << 2);
         private const uint FlagDisplayBB = (1 << 3);
-
-        private uint DisplayFlags = 0;
 
         private String[] LevelString = {
             "Info:                ",
@@ -128,6 +135,7 @@ namespace LostWinForms
             panel1.MouseUp += Panel1_MouseUp;
             panel1.MouseMove += Panel1_MouseMove;
             panel1.MouseWheel += Panel1_MouseWheel;
+            panel1.MouseCaptureChanged += Panel1_MouseCaptureChanged;
             panel1.KeyDown += Panel1_KeyDown;
 
             loadFBXToolStripMenuItem1.Click += OnLoadFBX;
@@ -212,12 +220,12 @@ namespace LostWinForms
 
         private void AnimUpdate(uint flag, StringBuilder anim)
         {
-            if ((flag & (1<<0)) == (1<<0))
+            if (flag == UpdateAnimClear)
             {
                 // clear
                 listBox1.Items.Clear();
             }
-            else if ((flag & (1<<1)) == (1<<1))
+            else if (flag == UpdateAnimAdd)
             {
                 // add
                 listBox1.Items.Add(anim);
@@ -285,18 +293,31 @@ namespace LostWinForms
                 LastMouseLocation = e.Location;
                 RotateCamera(dy * RotateCameraStep, -dx * RotateCameraStep, 0.0f);
             }
+            else
+            {
+                Picking(e.Location.X, e.Location.Y, false);
+            }
         }
 
         private void Panel1_MouseUp(object sender, MouseEventArgs e)
         {
             bMouseDownPanel1 = false;
             LastMouseLocation = e.Location;
+            if (e.Button == MouseButtons.Left)
+            {
+                Picking(e.Location.X, e.Location.Y, true);
+            }
         }
 
         private void Panel1_MouseDown(object sender, MouseEventArgs e)
         {
             bMouseDownPanel1 = true;
             LastMouseLocation = e.Location;
+        }
+
+        private void Panel1_MouseCaptureChanged(object sender, EventArgs e)
+        {
+            //throw new NotImplementedException();
         }
 
         private void SegLengthSlider_Scroll(object sender, EventArgs e)
@@ -510,6 +531,11 @@ namespace LostWinForms
         private void ViewPanelToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ViewPanel.Visible = true;
+        }
+
+        private void Form1_Closed(object sender, FormClosedEventArgs e)
+        {
+            Shutdown();
         }
     }
 }

@@ -8,13 +8,10 @@
 */
 
 #include "stdafx.h"
-#include "LostCore-D3D11.h"
 
 using namespace D3D11;
 
-#include "RenderContext.h"
-
-EReturnCode D3D11::CreateRenderContext(LostCore::EContextID id, LostCore::IRenderContext** context)
+EReturnCode CreateRenderContext(LostCore::EContextID id, LostCore::IRenderContext** context)
 {
 	if (context == nullptr)
 	{
@@ -44,7 +41,7 @@ EReturnCode D3D11::CreateRenderContext(LostCore::EContextID id, LostCore::IRende
 	}
 }
 
-EReturnCode D3D11::DestroyRenderContext(LostCore::IRenderContext * context)
+EReturnCode DestroyRenderContext(LostCore::IRenderContext * context)
 {
 	if (context != nullptr)
 	{
@@ -56,7 +53,7 @@ EReturnCode D3D11::DestroyRenderContext(LostCore::IRenderContext * context)
 
 #include "PrimitiveGroup.h"
 
-EReturnCode D3D11::CreatePrimitiveGroup(LostCore::IPrimitiveGroup ** pg)
+EReturnCode CreatePrimitiveGroup(LostCore::IPrimitiveGroup ** pg)
 {
 	if (pg == nullptr)
 	{
@@ -73,7 +70,7 @@ EReturnCode D3D11::CreatePrimitiveGroup(LostCore::IPrimitiveGroup ** pg)
 	return SSuccess;
 }
 
-LOSTCORED3D11_API EReturnCode D3D11::DestroyPrimitiveGroup(LostCore::IPrimitiveGroup * pg)
+EReturnCode DestroyPrimitiveGroup(LostCore::IPrimitiveGroup * pg)
 {
 	if (pg != nullptr)
 	{
@@ -83,16 +80,45 @@ LOSTCORED3D11_API EReturnCode D3D11::DestroyPrimitiveGroup(LostCore::IPrimitiveG
 	return SSuccess;
 }
 
+#include "ConstantBuffer.h"
+
+EReturnCode CreateConstantBuffer(LostCore::IConstantBuffer** cb)
+{
+	if (cb == nullptr)
+	{
+		return SErrorInvalidParameters;
+	}
+
+	auto obj = new FConstantBuffer;
+	if (obj == nullptr)
+	{
+		return SErrorOutOfMemory;
+	}
+
+	*cb = obj;
+	return SSuccess;
+}
+
+EReturnCode DestroyConstantBuffer(LostCore::IConstantBuffer * cb)
+{
+	if (cb != nullptr)
+	{
+		delete cb;
+	}
+
+	return SSuccess;
+}
+
 #include "Material.h"
 
-LOSTCORED3D11_API EReturnCode D3D11::CreateMaterial_Segment(LostCore::IMaterial ** material)
+EReturnCode CreateMaterial(LostCore::IMaterial** material)
 {
 	if (material == nullptr)
 	{
 		return SErrorInvalidParameters;
 	}
 
-	auto obj = new FMaterial<FConstantBufferDummy>;
+	auto obj = new FMaterial;
 	if (obj == nullptr)
 	{
 		return SErrorOutOfMemory;
@@ -102,88 +128,7 @@ LOSTCORED3D11_API EReturnCode D3D11::CreateMaterial_Segment(LostCore::IMaterial 
 	return SSuccess;
 }
 
-LOSTCORED3D11_API EReturnCode D3D11::DestroyMaterial_Segment(LostCore::IMaterial * material)
-{
-	if (material != nullptr)
-	{
-		delete material;
-	}
-
-	return SSuccess;
-}
-
-LOSTCORED3D11_API EReturnCode D3D11::CreateMaterial_SceneObject(LostCore::IMaterial ** material)
-{
-	if (material == nullptr)
-	{
-		return SErrorInvalidParameters;
-	}
-
-	auto obj = new FMaterial<FConstantBufferMatrix>;
-	if (obj == nullptr)
-	{
-		return SErrorOutOfMemory;
-	}
-
-	*material = obj;
-	return SSuccess;
-}
-
-LOSTCORED3D11_API EReturnCode D3D11::DestroyMaterial_SceneObject(LostCore::IMaterial * material)
-{
-	if (material != nullptr)
-	{
-		delete material;
-	}
-
-	return SSuccess;
-}
-
-LOSTCORED3D11_API int32 D3D11::CreateMaterial_SceneObjectSkinned(LostCore::IMaterial ** material)
-{
-	if (material == nullptr)
-	{
-		return SErrorInvalidParameters;
-	}
-
-	auto obj = new FMaterial<FConstantBufferSkinned>;
-	if (obj == nullptr)
-	{
-		return SErrorOutOfMemory;
-	}
-
-	*material = obj;
-	return SSuccess;
-}
-
-LOSTCORED3D11_API int32 D3D11::DestroyMaterial_SceneObjectSkinned(LostCore::IMaterial * material)
-{
-	if (material != nullptr)
-	{
-		delete material;
-	}
-
-	return SSuccess;
-}
-
-LOSTCORED3D11_API EReturnCode D3D11::CreateMaterial_UIObject(LostCore::IMaterial ** material)
-{
-	if (material == nullptr)
-	{
-		return SErrorInvalidParameters;
-	}
-
-	auto obj = new FMaterial<FConstantBufferUIRect>;
-	if (obj == nullptr)
-	{
-		return SErrorOutOfMemory;
-	}
-
-	*material = obj;
-	return SSuccess;
-}
-
-LOSTCORED3D11_API EReturnCode D3D11::DestroyMaterial_UIObject(LostCore::IMaterial * material)
+EReturnCode DestroyMaterial(LostCore::IMaterial * material)
 {
 	if (material != nullptr)
 	{
@@ -195,7 +140,7 @@ LOSTCORED3D11_API EReturnCode D3D11::DestroyMaterial_UIObject(LostCore::IMateria
 
 #include "GdiFont.h"
 
-LOSTCORED3D11_API EReturnCode D3D11::CreateGdiFont(LostCore::IFontInterface ** font)
+EReturnCode CreateGdiFont(LostCore::IFontInterface ** font)
 {
 	if (font == nullptr)
 	{
@@ -212,7 +157,7 @@ LOSTCORED3D11_API EReturnCode D3D11::CreateGdiFont(LostCore::IFontInterface ** f
 	return SSuccess;
 }
 
-LOSTCORED3D11_API EReturnCode D3D11::DestroyGdiFont(LostCore::IFontInterface * font)
+EReturnCode DestroyGdiFont(LostCore::IFontInterface * font)
 {
 	if (font != nullptr)
 	{

@@ -25,17 +25,13 @@ D3D11::FRenderContext::FRenderContext(LostCore::EContextID id)
 	, bWireframe(false)
 	, RenderTarget(nullptr)
 	, DepthStencil(nullptr)
-	, CB0()
+	, GlobalConstantBuffer(new FConstantBuffer(sizeof(Param), false, 0))
 {
 }
 
 D3D11::FRenderContext::~FRenderContext()
 {
 	Fini();
-
-	//SwapChain = nullptr;
-	//Context = nullptr;
-	//Device = nullptr;
 }
 
 bool D3D11::FRenderContext::Init(HWND wnd, bool bWindowed, int32 width, int32 height)
@@ -85,7 +81,7 @@ bool D3D11::FRenderContext::Init(HWND wnd, bool bWindowed, int32 width, int32 he
 	
 	//Font.Initialize(this, LostCore::FFontConfig(), chars, sz);
 
-	return Device.IsValid() && Context.IsValid() && SwapChain.IsValid() && CB0.Initialize(Device);
+	return Device.IsValid() && Context.IsValid() && SwapChain.IsValid() && GlobalConstantBuffer->Initialize(this);
 }
 
 void D3D11::FRenderContext::Fini()
@@ -102,6 +98,7 @@ void D3D11::FRenderContext::Fini()
 
 	SAFE_DELETE(RenderTarget);
 	SAFE_DELETE(DepthStencil);
+	SAFE_DELETE(GlobalConstantBuffer);
 
 	SwapChain = nullptr;
 	Context = nullptr;
@@ -160,8 +157,22 @@ void D3D11::FRenderContext::BeginFrame(float sec)
 
 		Context->OMSetDepthStencilState(FDepthStencilStateMap::Get()->GetState("Z_ENABLE_WRITE"), 0);
 
-		CB0.UpdateBuffer(Context, &Param, sizeof(Param));
-		CB0.Bind(Context);
+		GlobalConstantBuffer->UpdateBuffer(this, &Param, sizeof(Param));
+		GlobalConstantBuffer->Bind(this);
+
+		//if (GlobalCB != nullptr && GlobalCB->GetByteWidth() != GlobalParam.capacity())
+		//{
+		//	SAFE_DELETE(GlobalCB);
+		//}
+
+		//if (GlobalCB == nullptr)
+		//{
+		//	GlobalCB = new FConstantBufferGlobal(GlobalParam.capacity(), false, 2);
+		//	assert(GlobalCB->Initialize(Device));
+		//}
+
+		//GlobalCB->UpdateBuffer(Context, GlobalParam.data(), GlobalParam.capacity());
+		//GlobalCB->Bind(Context);
 	}
 }
 
@@ -188,7 +199,7 @@ void D3D11::FRenderContext::ReportLiveObjects()
 #ifdef _DEBUG
 	{
 		TRefCountPtr<ID3D11Debug> debugger;
-		if (SUCCEEDED(Device->QueryInterface(__uuidof(ID3D11Debug), (void**)debugger.GetInitReference())))
+		if (Device.GetReference() != nullptr && SUCCEEDED(Device->QueryInterface(__uuidof(ID3D11Debug), (void**)debugger.GetInitReference())))
 		{
 			debugger->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
 		}

@@ -15,24 +15,29 @@ namespace D3D11
 	Constant buffer
 	*/
 
-	struct FConstantBuffer
+	struct FConstantBuffer : public LostCore::IConstantBuffer
 	{
+		FConstantBuffer()
+		{
+		}
+		
 		FConstantBuffer(int32 byteWidth, bool dynamic, int32 slot)
 			: ByteWidth(byteWidth)
 			, bDynamic(dynamic)
 			, Slot(slot)
-			, Buffer(nullptr)
 		{
 		}
 
-		~FConstantBuffer()
+		virtual ~FConstantBuffer() override
 		{
 			Buffer = nullptr;
 		}
 
-		bool Initialize(const TRefCountPtr<ID3D11Device>& device);
-		void UpdateBuffer(const TRefCountPtr<ID3D11DeviceContext>& cxt, const void* buf, int32 sz);
-		void Bind(const TRefCountPtr<ID3D11DeviceContext>& cxt);
+		virtual bool Initialize(LostCore::IRenderContext * rc) override;
+		virtual bool Initialize(LostCore::IRenderContext * rc, int32 byteWidth, bool dynamic, int32 slot) override;
+		virtual void UpdateBuffer(LostCore::IRenderContext * rc, const void* buf, int32 sz) override;
+		virtual void Bind(LostCore::IRenderContext* rc);
+
 		int32 GetByteWidth() const
 		{
 			return ByteWidth;
@@ -48,83 +53,5 @@ namespace D3D11
 		bool		bDynamic;
 		int32		Slot;
 		TRefCountPtr<ID3D11Buffer> Buffer;
-	};
-	
-	struct FConstantBufferDummy : public FConstantBuffer
-	{
-		struct FParam
-		{
-			uint32 Reserve;
-		};
-
-		FConstantBufferDummy() : FConstantBuffer(sizeof(FParam), false, 0)
-		{
-		}
-
-		void UpdateBuffer(const TRefCountPtr<ID3D11DeviceContext>& cxt, const void* buf, int32 sz)
-		{
-		}
-	};
-
-	struct FConstantBufferRegister0 : public FConstantBuffer
-	{
-		struct FParam
-		{
-			float ScreenWidth;
-			float ScreenHeight;
-			float ScreenWidthRcp;
-			float ScreenHeightRcp;
-			LostCore::FFloat4x4 ViewProject;
-		};
-
-		FConstantBufferRegister0() : FConstantBuffer(sizeof(FParam), false, 0)
-		{
-		}
-
-		void UpdateBuffer(const TRefCountPtr<ID3D11DeviceContext>& cxt, const void* buf, int32 sz);
-	};
-
-	struct FConstantBufferMatrix : public FConstantBuffer
-	{
-		struct FParam
-		{
-			LostCore::FFloat4x4 Mat;
-		};
-
-		FConstantBufferMatrix() : FConstantBuffer(sizeof(FParam), false, 1)
-		{
-		}
-
-		FConstantBufferMatrix(bool dynamic, int32 slot) : FConstantBuffer(sizeof(FParam), dynamic, slot)
-		{
-		}
-
-		void UpdateBuffer(const TRefCountPtr<ID3D11DeviceContext>& cxt, const void* buf, int32 sz);
-	};
-
-	struct FConstantBufferUIRect : public FConstantBuffer
-	{
-		FConstantBufferUIRect() : FConstantBuffer(sizeof(float) * 8, false, 1)
-		{
-		}
-
-		FConstantBufferUIRect(bool dynamic, int32 slot) : FConstantBuffer(sizeof(float) * 8, dynamic, slot)
-		{
-		}
-	};
-
-	struct FConstantBufferSkinned : public FConstantBuffer
-	{
-		struct FParam
-		{
-			LostCore::FFloat4x4 World;
-			array<LostCore::FFloat4x4, MAX_BONES_PER_BATCH> Bones;
-		};
-
-		FConstantBufferSkinned() : FConstantBuffer(sizeof(FParam), false, 1)
-		{
-		}
-
-		void UpdateBuffer(const TRefCountPtr<ID3D11DeviceContext>& cxt, const void* buf, int32 sz);
 	};
 }

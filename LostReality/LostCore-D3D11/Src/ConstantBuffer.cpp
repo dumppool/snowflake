@@ -10,9 +10,10 @@
 #include "stdafx.h"
 #include "ConstantBuffer.h"
 
-bool D3D11::FConstantBuffer::Initialize(const TRefCountPtr<ID3D11Device>& device)
+bool D3D11::FConstantBuffer::Initialize(LostCore::IRenderContext * rc)
 {
 	const char* head = "D3D11::FConstantBuffer::Initialize";
+	auto device = FRenderContext::GetDevice(rc, head);
 	if (!device.IsValid())
 	{
 		return false;
@@ -36,52 +37,68 @@ bool D3D11::FConstantBuffer::Initialize(const TRefCountPtr<ID3D11Device>& device
 	return true;
 }
 
-void D3D11::FConstantBuffer::UpdateBuffer(const TRefCountPtr<ID3D11DeviceContext>& cxt, const void * buf, int32 sz)
+bool D3D11::FConstantBuffer::Initialize(LostCore::IRenderContext * rc, int32 byteWidth, bool dynamic, int32 slot)
 {
+	ByteWidth = byteWidth;
+	bDynamic = dynamic;
+	Slot = slot;
+	return Initialize(rc);
+}
+
+void D3D11::FConstantBuffer::UpdateBuffer(LostCore::IRenderContext * rc, const void * buf, int32 sz)
+{
+	const char* head = "D3D11::FConstantBuffer::UpdateBuffer";
+	auto cxt = FRenderContext::GetDeviceContext(rc, head);
+	if (!cxt.IsValid())
+	{
+		return;
+	}
+
 	assert(sz == ByteWidth);
 	assert(Buffer.IsValid());
 
 	cxt->UpdateSubresource(Buffer.GetReference(), 0, nullptr, buf, 0, 0);
 }
 
-void D3D11::FConstantBuffer::Bind(const TRefCountPtr<ID3D11DeviceContext>& cxt)
+void D3D11::FConstantBuffer::Bind(LostCore::IRenderContext * rc)
 {
+	const char* head = "D3D11::FConstantBuffer::Bind";
+	auto cxt = FRenderContext::GetDeviceContext(rc, head);
+	if (!cxt.IsValid())
+	{
+		return;
+	}
+
 	assert(Slot >= 0);
 
 	auto ref = Buffer.GetReference();
-	cxt->VSSetConstantBuffers(Slot, 1, &ref);
-}
+	if ((Slot&SHADER_SLOT_VS) == SHADER_SLOT_VS)
+	{
+		cxt->VSSetConstantBuffers(Slot, 1, &ref);
+	}
 
-void D3D11::FConstantBufferRegister0::UpdateBuffer(const TRefCountPtr<ID3D11DeviceContext>& cxt, const void * buf, int32 sz)
-{
-	assert(sz == GetByteWidth());
-	assert(GetBufferRHI().IsValid());
-
-	FParam p;
-	memcpy(&p, buf, GetByteWidth());
-	p.ViewProject.Transpose();
-	cxt->UpdateSubresource(GetBufferRHI().GetReference(), 0, nullptr, &p, 0, 0);
-}
-
-void D3D11::FConstantBufferMatrix::UpdateBuffer(const TRefCountPtr<ID3D11DeviceContext>& cxt, const void * buf, int32 sz)
-{
-	assert(sz == GetByteWidth());
-	assert(GetBufferRHI().IsValid());
-
-	FParam p;
-	memcpy(&p, buf, GetByteWidth());
-	p.Mat.Transpose();
-	cxt->UpdateSubresource(GetBufferRHI().GetReference(), 0, nullptr, &p, 0, 0);
-}
-
-void D3D11::FConstantBufferSkinned::UpdateBuffer(const TRefCountPtr<ID3D11DeviceContext>& cxt, const void * buf, int32 sz)
-{
-	assert(sz == GetByteWidth());
-	assert(GetBufferRHI().IsValid());
-
-	FParam p;
-	memcpy(&p, buf, sz);
-	p.World.Transpose();
-	for_each(p.Bones.begin(), p.Bones.end(), [](LostCore::FFloat4x4& mat) {mat.Transpose(); });
-	cxt->UpdateSubresource(GetBufferRHI().GetReference(), 0, nullptr, &p, 0, 0);
+	if ((Slot&SHADER_SLOT_PS) == SHADER_SLOT_PS)
+	{
+		cxt->PSSetConstantBuffers(Slot, 1, &ref);
+	}
+	
+	if ((Slot&SHADER_SLOT_GS) == SHADER_SLOT_GS)
+	{
+		cxt->GSSetConstantBuffers(Slot, 1, &ref);
+	}
+	
+	if ((Slot&SHADER_SLOT_HS) == SHADER_SLOT_HS)
+	{
+		cxt->HSSetConstantBuffers(Slot, 1, &ref);
+	}
+	
+	if ((Slot&SHADER_SLOT_DS) == SHADER_SLOT_DS)
+	{
+		cxt->DSSetConstantBuffers(Slot, 1, &ref);
+	}
+	
+	if ((Slot&SHADER_SLOT_CS) == SHADER_SLOT_CS)
+	{
+		cxt->CSSetConstantBuffers(Slot, 1, &ref);
+	}
 }

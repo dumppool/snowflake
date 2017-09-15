@@ -153,11 +153,11 @@ bool LostCore::FBasicModel::ConfigMaterial(const string& url, IMaterial*& mat)
 void LostCore::FBasicModel::UpdateGizmosBoundingBox()
 {
 	SegmentRenderer.ResetData();
-	if (FGlobalHandler::Get()->IsDisplay(FLAG_DISPLAY_BB))
+	if (FGlobalHandler::Get()->IsDisplay(FLAG_DISPLAY_BB) || BoundingBox.bVisible)
 	{
 		auto world = GetWorldMatrix();
-		auto ptMin = world.ApplyPoint(BoundingBox.GetMin());
-		auto ptMax = world.ApplyPoint(BoundingBox.GetMax());
+		auto ptMin = world.ApplyPoint(BoundingBox.Min);
+		auto ptMax = world.ApplyPoint(BoundingBox.Max);
 
 		const FColor96 col((uint32)0xffff00);
 		FSegmentData seg;
@@ -241,6 +241,18 @@ FSegmentTool * LostCore::FBasicModel::GetSegmentRenderer()
 	return &SegmentRenderer;
 }
 
+void LostCore::FBasicModel::Clone(FBasicModel & model)
+{
+}
+
+void LostCore::FBasicModel::EnableDepthTest(bool depthTest)
+{
+	if (Material != nullptr)
+	{
+		Material->SetDepthStencilState(depthTest ? K_DEPTH_STENCIL_Z_WRITE : K_DEPTH_STENCIL_ALWAYS);
+	}
+}
+
 FAABoundingBox * LostCore::FBasicModel::GetBoundingBox()
 {
 	return &BoundingBox;
@@ -292,6 +304,11 @@ void LostCore::FStaticModel::SetWorldMatrix(const FFloat4x4 & world)
 FFloat4x4 LostCore::FStaticModel::GetWorldMatrix()
 {
 	return World;
+}
+
+void LostCore::FStaticModel::Clone(FBasicModel & model)
+{
+	FBasicModel::Clone(model);
 }
 
 void LostCore::FStaticModel::UpdateConstant()
@@ -428,6 +445,11 @@ void LostCore::FSkeletalModel::SetWorldMatrix(const FFloat4x4 & world)
 FFloat4x4 LostCore::FSkeletalModel::GetWorldMatrix()
 {
 	return Matrices.World;
+}
+
+void LostCore::FSkeletalModel::Clone(FBasicModel & model)
+{
+	FBasicModel::Clone(model);
 }
 
 void LostCore::FSkeletalModel::UpdateConstant()

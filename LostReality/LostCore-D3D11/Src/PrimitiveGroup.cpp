@@ -24,7 +24,6 @@ D3D11::FPrimitiveGroup::FPrimitiveGroup()
 	, IndexBufferOffset(0)
 	, IndexCount(0)
 	, Topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST)
-	, Material(nullptr)
 {
 }
 
@@ -32,8 +31,6 @@ D3D11::FPrimitiveGroup::~FPrimitiveGroup()
 {
 	VertexBuffer = nullptr;
 	IndexBuffer = nullptr;
-
-	assert(Material == nullptr);
 }
 
 void D3D11::FPrimitiveGroup::Draw(LostCore::IRenderContext * rc, float sec)
@@ -49,11 +46,6 @@ void D3D11::FPrimitiveGroup::Draw(LostCore::IRenderContext * rc, float sec)
 	cxt->IASetVertexBuffers(VertexBufferSlot, VertexBufferNum, &buf, &VertexStride, &VertexBufferOffset);
 	cxt->IASetIndexBuffer(IndexBuffer.GetReference(), IndexFormat, IndexBufferOffset);
 	cxt->IASetPrimitiveTopology(Topology);
-
-	if (Material != nullptr)
-	{
-		Material->Draw(rc, sec);
-	}
 
 	if (IndexBuffer.IsValid())
 	{
@@ -126,16 +118,6 @@ void D3D11::FPrimitiveGroup::SetTopology(EPrimitiveTopology topo)
 	default:
 		break;
 	}
-}
-
-void D3D11::FPrimitiveGroup::SetMaterial(IMaterial * mat)
-{
-	Material = mat;
-}
-
-const IMaterial * D3D11::FPrimitiveGroup::GetMaterial() const
-{
-	return Material;
 }
 
 void D3D11::FPrimitiveGroup::UpdateVB(LostCore::IRenderContext * rc, const void * buf, uint32 bytes)

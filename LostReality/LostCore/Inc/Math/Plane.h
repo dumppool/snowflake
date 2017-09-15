@@ -32,6 +32,8 @@ namespace LostCore
 		void ConstructPlane(const vector<FFloat3>& pts);
 
 		FT DistanceFrom(const FFloat3& pt);
+		FPlane& Transform(const FFloat4x4& mat);
+		FPlane GetTransformed(const FFloat4x4& mat) const;
 
 	};
 
@@ -54,7 +56,7 @@ namespace LostCore
 
 	inline FPlane::FPlane(const FFloat3& n, FPlane::FT d)
 		: Normal(n.GetNormal())
-		, Distance(d/n.Size())
+		, Distance(d)
 	{
 	}
 
@@ -87,5 +89,36 @@ namespace LostCore
 	inline FPlane::FT FPlane::DistanceFrom(const FFloat3 & pt)
 	{
 		return (Normal.Dot(pt) - Distance);
+	}
+
+	inline FPlane & FPlane::Transform(const FFloat4x4 & mat)
+	{
+		FFloat3 pt;
+		if (!IsZero(Normal.X))
+		{
+			pt.X = Distance / Normal.X;
+			pt.Y = pt.Z = (FFloat4x4::FT)0.0;
+		}
+		else if (!IsZero(Normal.Y))
+		{
+			pt.Y = Distance / Normal.Y;
+			pt.X = pt.Z = (FFloat4x4::FT)0.0;
+		}
+		else if (!IsZero(Normal.Z))
+		{
+			pt.Z = Distance / Normal.Z;
+			pt.X = pt.Y = (FFloat4x4::FT)0.0;
+		}
+
+		Normal = mat.ApplyVector(Normal).GetNormal();
+		pt = mat.ApplyPoint(pt);
+		Distance = Normal.Dot(pt);
+		return *this;
+	}
+
+	inline FPlane FPlane::GetTransformed(const FFloat4x4 & mat) const
+	{
+		FPlane result(*this);
+		return result.Transform(mat);
 	}
 }

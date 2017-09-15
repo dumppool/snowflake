@@ -28,17 +28,17 @@ namespace LostCore
 	*/
 
 	// 假定所有文件名都包含扩展名，没有扩展名的视为文件夹名
-	static bool IsDirectory(const string& path)
+	static bool IsDirectory(const string& url)
 	{
-		auto lastSlash = path.rfind('\\');
-		auto lastDot = path.rfind('.');
-		return (lastDot == string::npos) || (lastSlash != string::npos && lastDot < lastSlash) || (path.back() == ':');
+		auto lastSlash = url.rfind('\\');
+		auto lastDot = url.rfind('.');
+		return (lastDot == string::npos) || (lastSlash != string::npos && lastDot < lastSlash) || (url.back() == ':');
 	}
 
 	// 输出路径以'\\'结束
-	static void GetDirectory(string& outPath, const string& path)
+	static void GetDirectory(string& outPath, const string& url)
 	{
-		outPath = path;
+		outPath = url;
 		auto lastSlash = outPath.rfind('\\');
 		if (IsDirectory(outPath))
 		{
@@ -59,11 +59,11 @@ namespace LostCore
 
 	// 获取不包含路径的文件名及扩展名
 	// 如果输入文件名实际上是路径名，输出的扩展名为空
-	static void GetFileName(string& outFileName, string& outExtName, const string& path)
+	static void GetFileName(string& outFileName, string& outExtName, const string& url)
 	{
-		assert(path.size() > 1);
+		assert(url.size() > 1);
 
-		string tmp(path.begin(), path.end() - (path.back() == '\\' ? 1 : 0));
+		string tmp(url.begin(), url.end() - (url.back() == '\\' ? 1 : 0));
 		if (tmp.back() == ':')
 		{
 			outFileName = tmp;
@@ -134,20 +134,37 @@ namespace LostCore
 
 	/***************************************************************************/
 
-	static void SaveJson(const FJson& json, const string& path)
+	static void SaveJson(const FJson& json, const string& url)
 	{
 		ofstream file;
-		file.open(path);
+		file.open(url);
 		if (file.fail())
 		{
 			char errstr[128];
 			strerror_s(errstr, errno);
-			LVERR("FBinaryIO::WriteToFile", "failed to write[%s]: %s", path.c_str(), errstr);
+			LVERR("FBinaryIO::WriteToFile", "failed to write[%s]: %s", url.c_str(), errstr);
 			return;
 		}
 
 		file << json;
 		file.close();
+	}
+
+	static FJson LoadJson(const string& url)
+	{
+		FJson output;
+		std::ifstream file;
+		file.open(url);
+		if (file.fail())
+		{
+		}
+		else
+		{
+			file >> output;
+			file.close();
+		}
+		
+		return output;
 	}
 
 	class FDirectoryHelper
@@ -168,7 +185,7 @@ namespace LostCore
 			RootDirectory = buf;
 			RootDirectory.resize(RootDirectory.rfind('\\') + 1);
 
-			// hard coded path file name
+			// hard coded url file name
 			string pathFilePath = RootDirectory + "paths.json";
 
 			//RootDirectory.append("paths.json");
@@ -179,7 +196,7 @@ namespace LostCore
 			{
 				char errstr[128];
 				strerror_s(errstr, errno);
-				LVERR(head, "open path file(%s) failed: %s", pathFilePath.c_str(), errstr);
+				LVERR(head, "open url file(%s) failed: %s", pathFilePath.c_str(), errstr);
 			}
 
 			FJson j;
@@ -195,7 +212,7 @@ namespace LostCore
 				}
 
 				DirectoryMap[it.key()].push_back(it.value());
-				LVMSG(head, "found path, %s: %s", it.key().c_str(), DirectoryMap[it.key()].back().c_str());
+				LVMSG(head, "found url, %s: %s", it.key().c_str(), DirectoryMap[it.key()].back().c_str());
 			}
 		}
 
@@ -203,15 +220,15 @@ namespace LostCore
 		// 如果输入绝对路径的文件夹名，返回true。
 		// 如果输入相对路径的文件名，找到这个文件输出文件绝对路径名并返回true，没找到返回false。
 		// 如果输入绝对路径的文件名，找到这个文件返回true，否则false。
-		bool GetSpecifiedAbsolutePath(const string& specified, const string& path, string& output)
+		bool GetSpecifiedAbsolutePath(const string& category, const string& url, string& output)
 		{
-			bool isAbsUrl = path.length() > 1 && path[1] == ':';
+			bool isAbsUrl = url.length() > 1 && url[1] == ':';
 			if (!isAbsUrl)
 			{
-				auto& dirs = DirectoryMap[specified];
+				auto& dirs = DirectoryMap[category];
 				for (auto& dir : dirs)
 				{
-					output = (RootDirectory + dir + path);
+					output = (RootDirectory + dir + url);
 
 					ReplaceChar(output, "/", "\\");
 
@@ -230,7 +247,7 @@ namespace LostCore
 			}
 			else
 			{
-				output = path;
+				output = url;
 				ReplaceChar(output, "/", "\\");
 				if (IsDirectory(output))
 				{
@@ -245,12 +262,12 @@ namespace LostCore
 			return false;
 		}
 
-		bool GetSpecifiedRelativePath(const string& specified, const string& path, string& output)
+		bool GetSpecifiedRelativePath(const string& category, const string& url, string& output)
 		{
-			bool isAbsUrl = path.length() > 1 && path[1] == ':';
+			bool isAbsUrl = url.length() > 1 && url[1] == ':';
 			if (!isAbsUrl)
 			{
-				output = path;
+				output = url;
 				ReplaceChar(output, "/", "\\");
 				if (IsDirectory(output))
 				{
@@ -258,7 +275,7 @@ namespace LostCore
 				}
 				else
 				{
-					auto& dirs = DirectoryMap[specified];
+					auto& dirs = DirectoryMap[category];
 					for (auto& dir : dirs)
 					{
 						string pathAbs = (RootDirectory + dir + output);
@@ -272,20 +289,20 @@ namespace LostCore
 			}
 			else
 			{
-				bool isDir = IsDirectory(path);
-				if (!isDir && FALSE == PathFileExistsA(path.c_str()))
+				bool isDir = IsDirectory(url);
+				if (!isDir && FALSE == PathFileExistsA(url.c_str()))
 				{
 					return false;
 				}
 
-				auto& dirs = DirectoryMap[specified];
+				auto& dirs = DirectoryMap[category];
 				for (auto& dir : dirs)
 				{
 					string specifiedRoot = (RootDirectory + dir);
 					ReplaceChar(specifiedRoot, "/", "\\");
-					if (path.find(specifiedRoot) == 0)
+					if (url.find(specifiedRoot) == 0)
 					{
-						output = string(path.begin() + specifiedRoot.size(), path.end());
+						output = string(url.begin() + specifiedRoot.size(), url.end());
 						return true;
 					}
 				}
@@ -294,91 +311,73 @@ namespace LostCore
 			return false;
 		}
 
-		bool GetShaderAbsolutePath(const string& path, string& output)
+		bool GetShaderAbsolutePath(const string& url, string& output)
 		{
-			return GetSpecifiedAbsolutePath(K_SHADER, path, output);
+			return GetSpecifiedAbsolutePath(K_SHADER, url, output);
 		}
 
-		bool GetPrimitiveAbsolutePath(const string& path, string& output)
+		bool GetPrimitiveAbsolutePath(const string& url, string& output)
 		{
-			return GetSpecifiedAbsolutePath(K_PRIMITIVE, path, output);
+			return GetSpecifiedAbsolutePath(K_PRIMITIVE, url, output);
 		}
 
-		bool GetPrimitiveRelativePath(const string& path, string& output)
+		bool GetPrimitiveRelativePath(const string& url, string& output)
 		{
-			return GetSpecifiedRelativePath(K_PRIMITIVE, path, output);
+			return GetSpecifiedRelativePath(K_PRIMITIVE, url, output);
 		}
 
-		bool GetAnimationAbsolutePath(const string& path, string& output)
+		bool GetAnimationAbsolutePath(const string& url, string& output)
 		{
-			return GetSpecifiedAbsolutePath(K_ANIMATION, path, output);
+			return GetSpecifiedAbsolutePath(K_ANIMATION, url, output);
 		}
 
-		bool GetAnimationRelativePath(const string& path, string& output)
+		bool GetAnimationRelativePath(const string& url, string& output)
 		{
-			return GetSpecifiedRelativePath(K_ANIMATION, path, output);
+			return GetSpecifiedRelativePath(K_ANIMATION, url, output);
 		}
 
-		bool GetModelAbsolutePath(const string& path, string& output)
+		bool GetModelAbsolutePath(const string& url, string& output)
 		{
-			return GetSpecifiedAbsolutePath(K_MODEL, path, output);
+			return GetSpecifiedAbsolutePath(K_MODEL, url, output);
 		}
 
-		bool GetSpecifiedJson(const string& specified, const string& path, FJson& output)
+		bool GetSpecifiedJson(const string& category, const string& url, FJson& output)
 		{
-			bool isAbsUrl = path.length() > 1 && path[1] == ':';
-			if (!isAbsUrl)
+			string urlAbs;
+			if (GetSpecifiedAbsolutePath(category, url, urlAbs))
 			{
-				for (auto& dir : DirectoryMap[specified.c_str()])
-				{
-					string absPath(RootDirectory + dir + path);
-					ReplaceChar(absPath, "/", "\\");
-
-					std::ifstream file;
-					file.open(absPath);
-					if (file.fail())
-					{
-						continue;
-					}
-
-					file >> output;
-					file.close();
-					return true;
-				}
+				output = LoadJson(urlAbs);
+				return true;
 			}
 			else
 			{
-				std::ifstream file;
-				file.open(path);
-				if (!file.fail())
-				{
-					file >> output;
-					file.close();
-					return true;
-				}
+				return false;
 			}
-
-			return false;
 		}
 
-		bool GetMaterialJson(const string& path, FJson& output)
+		bool GetMaterialJson(const string& url, FJson& output)
 		{
-			return GetSpecifiedJson(K_MATERIAL, path, output);
+			return GetSpecifiedJson(K_MATERIAL, url, output);
 		}
 
-		bool GetSceneJson(const string& path, FJson& output)
+		bool GetSceneJson(const string& url, FJson& output)
 		{
-			return GetSpecifiedJson(K_SCENE, path, output);
+			return GetSpecifiedJson(K_SCENE, url, output);
 		}
 
-		//bool GetPrimitiveJson(const string& path, FJson& output)
+		//bool GetPrimitiveJson(const string& url, FJson& output)
 		//{
-		//	return GetSpecifiedJson("primitive", path, output);
+		//	return GetSpecifiedJson("primitive", url, output);
 		//}
 
-		bool GetModelJson(const string& path, FJson& output)
+		bool GetGizmoJson(const string& url, FJson& output)
 		{
-			return GetSpecifiedJson(K_MODEL, path, output);
+			return GetSpecifiedJson(K_GIZMO, url, output);
+		}
+
+		bool GetModelJson(const string& url, FJson& output)
+		{
+			return GetSpecifiedJson(K_MODEL, url, output);
 		}
 		
 	private:

@@ -137,7 +137,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	static bool bMouseDown = false;
 
-	static const float s_invalidPos = INFINITE;
+	static const float s_invalidPos = INFINITY;
 	static const float s_factor = 0.1f;
 	static const float s_step = 1.1f;
 

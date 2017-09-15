@@ -37,7 +37,7 @@ namespace LostCore
 	};
 
 	// 坐标轴绘制工具
-	class FAxisTool
+	class FAxisRenderer
 	{
 	private:
 		FSegmentTool SegmentTool;
@@ -50,7 +50,7 @@ namespace LostCore
 		FColor96 ColorAxisZ;
 
 	public:
-		FAxisTool();
+		FAxisRenderer();
 
 		void ResetData();
 		void Draw();
@@ -58,9 +58,9 @@ namespace LostCore
 		void SetWorldMatrix(const FFloat4x4& mat);
 		void SetColor(const FColor96& colX, const FColor96& colY, const FColor96& colZ);
 
-		static FAxisTool* Get()
+		static FAxisRenderer* Get()
 		{
-			static FAxisTool SInstance;
+			static FAxisRenderer SInstance;
 			return &SInstance;
 		}
 	};

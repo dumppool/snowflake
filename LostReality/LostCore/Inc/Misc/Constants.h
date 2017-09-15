@@ -151,6 +151,7 @@
 #define K_MESSAGE5						"Message5"
 #define K_MESSAGE6						"Message6"
 
+#define K_GIZMO							"Gizmo"
 #define K_SCENE							"Scene"
 #define K_MODEL							"Model"
 #define K_PRIMITIVE						"Primitive"
@@ -171,6 +172,9 @@
 #define K_FORCE_GEN_TANGENT				"ForceGenerateTangent"
 #define K_GEN_TANGENT_IF_NOT_FOUND		"GenrateTangentIfNotFound"
 
+#define K_PLACER						"Placer"
+#define K_ROTATOR						"Rotator"
+
 #define K_PRIMITIVE_EXT					"iv"
 #define K_ANIM_EXT_CURVE				"animc"
 #define K_ANIM_EXT_KEYFRAME				"animk"
@@ -180,74 +184,10 @@
 
 #define FLAG_UNKNOWN					0x0badfffa
 
-//enum class EThumbnailFormat
-//{
-//	RGB,
-//	RGBA
-//};
-//
-//enum class EMarkerType
-//{
-//	Standard,
-//	Optical,
-//	IK_Effector,
-//	FK_Effector,
-//};
-//
-//enum class EMarkerLook
-//{
-//	Cube,
-//	Sphere,
-//	HardCross,
-//	LightCross,
-//};
-//
-//enum class EMappingMode
-//{
-//	None,
-//	ByControlPoint,
-//	ByPolygonVertex,
-//	ByPolygon,
-//	ByEdge,
-//	AllSame,
-//};
-//
-//enum class EReferenceMode
-//{
-//	Direct,
-//	Index,
-//	IndexToDirect
-//};
-//
-//enum class EInterpolation
-//{
-//	Constant,
-//	Linear,
-//	Cubic,
-//};
-//
-//enum class EConstantMode
-//{
-//	Standard,
-//	Next,
-//};
-//
-//enum class ECubicMode
-//{
-//	Auto,
-//	AutoBreak,
-//	Tcb,
-//	User,
-//	Break,
-//	UserBreak,
-//};
-//
-//enum ETangentWVMode
-//{
-//	None,
-//	Right,
-//	NextLeft,
-//};
+#define FLAG_DISPLAY_NORMAL		(1<<0)
+#define FLAG_DISPLAY_TANGENT	(1<<1)
+#define FLAG_DISPLAY_SKEL		(1<<2)
+#define FLAG_DISPLAY_BB			(1<<3)
 
 enum EVertexElement
 {
@@ -265,33 +205,12 @@ enum EVertexElement
 
 #define MAGIC_VERTEX 0xaabbabab
 
-/**
-    enum EType
-    {   
-        eUnknown,
-        eNull,
-        eMarker,
-        eSkeleton, 
-        eMesh, 
-        eNurbs, 
-        ePatch,
-        eCamera, 
-        eCameraStereo,
-        eCameraSwitcher,
-        eLight,
-        eOpticalReference,
-        eOpticalMarker,
-        eNurbsCurve,
-        eTrimNurbsSurface,
-        eBoundary,
-        eNurbsSurface,
-        eShape,
-        eLODGroup,
-        eSubDiv,
-        eCachedEffect,
-        eLine
-		};
-		*/
+#define SHADER_SLOT_VS	(1<<4)
+#define SHADER_SLOT_PS	(1<<5)
+#define SHADER_SLOT_GS	(1<<6)
+#define SHADER_SLOT_HS	(1<<7)
+#define SHADER_SLOT_DS	(1<<8)
+#define SHADER_SLOT_CS	(1<<9)
 
 static const char* SAttributeTypeString[] = {
 	"Unknown",

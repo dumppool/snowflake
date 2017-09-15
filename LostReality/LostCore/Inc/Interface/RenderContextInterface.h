@@ -10,6 +10,7 @@
 #pragma once
 
 #include "Math/Matrix.h"
+#include "Math/Color.h"
 
 namespace LostCore
 {
@@ -40,6 +41,11 @@ namespace LostCore
 			return "[unknown]";
 		}
 	}
+
+	struct FExtendParam
+	{
+		FColor128 Color;
+	};
 
 	class IRenderContext
 	{

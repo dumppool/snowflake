@@ -16,7 +16,7 @@ using namespace D3D11;
 using namespace std;
 using namespace LostCore;
 
-LostCore::FAxisTool::FAxisTool()
+LostCore::FAxisRenderer::FAxisRenderer()
 	: ColorAxisX((uint32)0xff0000)
 	, ColorAxisY((uint32)0x0000ff)
 	, ColorAxisZ((uint32)0x00ff00)
@@ -24,12 +24,12 @@ LostCore::FAxisTool::FAxisTool()
 	ResetData();
 }
 
-void LostCore::FAxisTool::ResetData()
+void LostCore::FAxisRenderer::ResetData()
 {
 	Data.clear();
 }
 
-void LostCore::FAxisTool::Draw()
+void LostCore::FAxisRenderer::Draw()
 {
 	if (Data.size() == 0)
 	{
@@ -66,17 +66,17 @@ void LostCore::FAxisTool::Draw()
 	SegmentTool.Draw();
 }
 
-void LostCore::FAxisTool::AddAxis(const FAxisData & axis)
+void LostCore::FAxisRenderer::AddAxis(const FAxisData & axis)
 {
 	Data.push_back(axis);
 }
 
-void LostCore::FAxisTool::SetWorldMatrix(const FFloat4x4 & mat)
+void LostCore::FAxisRenderer::SetWorldMatrix(const FFloat4x4 & mat)
 {
 	World = mat;
 }
 
-void LostCore::FAxisTool::SetColor(const FColor96 & colX, const FColor96 & colY, const FColor96 & colZ)
+void LostCore::FAxisRenderer::SetColor(const FColor96 & colX, const FColor96 & colY, const FColor96 & colZ)
 {
 	ColorAxisX = colX;
 	ColorAxisY = colY;

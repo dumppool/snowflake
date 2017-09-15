@@ -22,8 +22,6 @@ namespace D3D11
 		virtual bool ConstructVB(LostCore::IRenderContext* rc, const void * buf, uint32 bytes, uint32 stride, bool bDynamic) override;
 		virtual bool ConstructIB(LostCore::IRenderContext* rc, const void * buf, uint32 bytes, uint32 stride, bool bDynamic) override;
 		virtual void SetTopology(LostCore::EPrimitiveTopology topo) override;
-		virtual void SetMaterial(LostCore::IMaterial * mat) override;
-		virtual const LostCore::IMaterial * GetMaterial() const override;
 		virtual void UpdateVB(LostCore::IRenderContext* rc, const void* buf, uint32 bytes) override;
 
 	private:
@@ -42,7 +40,5 @@ namespace D3D11
 		bool bIsIBDynamic;
 
 		D3D11_PRIMITIVE_TOPOLOGY Topology;
-
-		LostCore::IMaterial* Material;
 	};
 }

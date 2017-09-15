@@ -11,8 +11,8 @@
 #include "Material.h"
 #include "VertexDef.h"
 
+using namespace D3D11;
 using namespace LostCore;
-using namespace std;
 
 bool D3D11::FMaterialShader::LoadShader(LostCore::IRenderContext * rc, const string& path,
 	uint32 idMask, const string& entry, const string& target, const string& vertexName)
@@ -151,4 +151,102 @@ void D3D11::FMaterialShader::Reset()
 	VS = nullptr;
 	PS = nullptr;
 	IL = nullptr;
+}
+
+D3D11::FMaterial::FMaterial()
+	: MaterialShader(nullptr)
+	, DepthStencilName(K_DEPTH_STENCIL_Z_WRITE)
+{}
+
+D3D11::FMaterial::~FMaterial()
+{
+	if (MaterialShader != nullptr)
+	{
+		delete MaterialShader;
+		MaterialShader = nullptr;
+	}
+}
+
+void D3D11::FMaterial::Bind(LostCore::IRenderContext * rc)
+{
+	const char* head = "D3D11::FMaterial::Draw";
+	auto cxt = FRenderContext::GetDeviceContext(rc, head);
+	if (!cxt.IsValid())
+	{
+		return;
+	}
+
+	auto shader = GetMaterialShader();
+	if (shader == nullptr)
+	{
+		return;
+	}
+
+	TRefCountPtr<ID3D11VertexShader> vs = shader->GetVertexShader();
+	TRefCountPtr<ID3D11PixelShader> ps = shader->GetPixelShader();
+	TRefCountPtr<ID3D11InputLayout> il = shader->GetInputLayout();
+	if (vs.IsValid() && ps.IsValid() && il.IsValid())
+	{
+		cxt->VSSetShader(vs.GetReference(), nullptr, 0);
+		cxt->IASetInputLayout(il.GetReference());
+		cxt->PSSetShader(ps.GetReference(), nullptr, 0);
+
+		cxt->HSSetShader(nullptr, nullptr, 0);
+		cxt->DSSetShader(nullptr, nullptr, 0);
+		cxt->GSSetShader(nullptr, nullptr, 0);
+		cxt->CSSetShader(nullptr, nullptr, 0);
+
+		for (auto it = Textures.begin(); it != Textures.end(); ++it)
+		{
+			if (it->second != nullptr)
+			{
+				auto srv = it->second->GetShaderResourceRHI().GetReference();
+				auto smp = it->second->GetSamplerRHI().GetReference();
+				cxt->PSSetShaderResources(it->first, 1, &srv);
+				cxt->PSSetSamplers(it->first, 1, &smp);
+			}
+		}
+	}
+
+	cxt->OMSetDepthStencilState(FDepthStencilStateMap::Get()->GetState(DepthStencilName), 0);
+}
+
+bool D3D11::FMaterial::InitializeShader(LostCore::IRenderContext * rc, const char * path)
+{
+	const char* head = "D3D11::FMaterial::InitializeMaterial";
+
+	FJson config;
+	if (!LostCore::FDirectoryHelper::Get()->GetMaterialJson(path, config))
+	{
+		return false;
+	}
+
+	if (MaterialShader != nullptr)
+	{
+		delete MaterialShader;
+		MaterialShader = nullptr;
+	}
+
+	MaterialShader = new FMaterialShader;
+	return MaterialShader->Initialize(rc, config);
+}
+
+bool D3D11::FMaterial::Initialize(LostCore::IRenderContext * rc, const char * path)
+{
+	return InitializeShader(rc, path);
+}
+
+void D3D11::FMaterial::UpdateTexture(LostCore::IRenderContext * rc, LostCore::ITexture * tex, int32 slot)
+{
+	Textures[slot] = (FTexture2D*)tex;
+}
+
+void D3D11::FMaterial::SetDepthStencilState(const char * name)
+{
+	DepthStencilName = name;
+}
+
+FMaterialShader * D3D11::FMaterial::GetMaterialShader()
+{
+	return MaterialShader;
 }

@@ -20,38 +20,42 @@
 
 #include <gdiplus.h>
 #pragma comment(lib, "gdiplus.lib")
+//// file system includes
+//#include "File/json.hpp"
+//using FJson = nlohmann::json;
+//
+//
+//// interface includes
+//#include "RenderContextInterface.h"
+//#include "TextureInterface.h"
+//#include "MaterialInterface.h"
+//#include "PrimitiveGroupInterface.h"
+//#include "FontInterface.h"
+//
+//#include "Inc/LostCore-D3D11.h"
+//
+//#include "Keywords.h"
+//
+//// math includes
+//#include "Math/Vector2.h"
+//#include "Math/Vector3.h"
+//#include "Math/Vector4.h"
+//#include "Math/Matrix.h"
+//#include "Math/Color.h"
+//
+//#include "File/DirectoryHelper.h"
+//
+//// vertex detail includes
+//#include "VertexTypes.h"
 
-// utility includes
+// local includes
+
 #define MODULE_MSG_PREFIX "lostcore-d3d11-log"
 #define MODULE_WARN_PREFIX "lostcore-d3d11-warn"
 #define MODULE_ERR_PREFIX "lostcore-d3d11-error"
-#include "UtilitiesHeader.h"
+#include "LostCore.h"
 
-#include "Keywords.h"
+#include "Inc/LostCore-D3D11.h"
 
-// file system includes
-#include "File/json.hpp"
-using FJson = nlohmann::json;
-
-// math includes
-#include "Math/Vector2.h"
-#include "Math/Vector3.h"
-#include "Math/Vector4.h"
-#include "Math/Matrix.h"
-#include "Math/Color.h"
-
-#include "File/DirectoryHelper.h"
-
-// vertex detail includes
-#include "VertexTypes.h"
-
-// interface includes
-#include "RenderContextInterface.h"
-#include "TextureInterface.h"
-#include "MaterialInterface.h"
-#include "PrimitiveGroupInterface.h"
-#include "FontInterface.h"
-
-// local includes
 #include "Src/RenderContextBase.h"
 #include "Src/RenderContext.h"

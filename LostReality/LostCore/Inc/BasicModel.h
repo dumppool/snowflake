@@ -33,6 +33,13 @@ namespace LostCore
 
 		virtual void SetWorldMatrix(const FFloat4x4& world) = 0;
 		virtual FFloat4x4 GetWorldMatrix() = 0;
+		virtual void Clone(FBasicModel& model);
+		virtual void EnableDepthTest(bool depthTest);
+		
+		FAABoundingBox* GetBoundingBox();
+		IPrimitiveGroup* GetPrimitive();
+		IMaterial* GetMaterial();
+		FMeshData* GetPrimitiveData();
 
 	protected:
 		virtual void UpdateConstant() = 0;
@@ -44,12 +51,7 @@ namespace LostCore
 
 		virtual void UpdateGizmosBoundingBox();
 		virtual void DrawGizmos();
-
-		IPrimitiveGroup* GetPrimitive();
-		IMaterial* GetMaterial();
-		FMeshData* GetPrimitiveData();
 		FSegmentTool* GetSegmentRenderer();
-		FAABoundingBox* GetBoundingBox();
 
 	private:
 		void ValidateBoundingBox();
@@ -71,6 +73,7 @@ namespace LostCore
 		virtual void Tick() override;
 		virtual void SetWorldMatrix(const FFloat4x4& world) override;
 		virtual FFloat4x4 GetWorldMatrix() override;
+		virtual void Clone(FBasicModel& model) override;
 
 	protected:
 		virtual void UpdateConstant() override;
@@ -84,7 +87,7 @@ namespace LostCore
 
 	private:
 		FFloat4x4 World;
-		FAxisTool AxisRenderer;
+		FAxisRenderer AxisRenderer;
 	};
 
 	class FSkeletalModel : public FBasicModel
@@ -96,6 +99,7 @@ namespace LostCore
 		virtual void Tick() override;
 		virtual void SetWorldMatrix(const FFloat4x4& world) override;
 		virtual FFloat4x4 GetWorldMatrix() override;
+		virtual void Clone(FBasicModel& model) override;
 
 		void PlayAnimation(const string& animName);
 
@@ -124,7 +128,7 @@ namespace LostCore
 
 
 		FSkeletonTree Root;
-		FAxisTool AxisRenderer;
+		FAxisRenderer AxisRenderer;
 		FSegmentTool SkeletonRenderer;
 	};
 }

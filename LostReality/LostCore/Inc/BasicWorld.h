@@ -10,8 +10,8 @@
 #pragma once
 
 #include "BasicInterface.h"
-#include "BasicScene.h"
 #include "BasicGUI.h"
+#include "BasicScene.h"
 
 namespace LostCore
 {
@@ -31,17 +31,8 @@ namespace LostCore
 		virtual void DrawPreScene();
 		virtual void DrawPostScene();
 
-		virtual bool InitializeWindow(HWND wnd, bool windowed, int32 width, int32 height);
-		virtual IRenderContext* GetRenderContext();
-		virtual FBasicCamera* GetCamera();
-
-		virtual void AddScene(FBasicScene * scene);
-		virtual void RemoveScene(FBasicScene * scene);
-
-		void Fini();
-
-	private:
-		std::vector<FBasicScene*> SceneArray;
-		FBasicGUI* GUIRoot;
+		virtual bool InitializeWindow(HWND wnd, bool windowed, int32 width, int32 height) = 0;
+		virtual FBasicCamera* GetCamera() = 0;
+		virtual FBasicScene* GetScene() = 0;
 	};
 }

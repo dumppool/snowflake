@@ -18,10 +18,10 @@
 #include <tchar.h>
 
 
-// TODO:  在此处引用程序需要的其他头文件
-#define MODULE_MSG_PREFIX "realitywindow-log"
-#define MODULE_WARN_PREFIX "realitywindow-warn"
-#define MODULE_ERR_PREFIX "realitywindow-error"
-#include "UtilitiesHeader.h"
+//// TODO:  在此处引用程序需要的其他头文件
+//#define MODULE_MSG_PREFIX "realitywindow-log"
+//#define MODULE_WARN_PREFIX "realitywindow-warn"
+//#define MODULE_ERR_PREFIX "realitywindow-error"
+//#include "UtilitiesHeader.h"
 
 #include "LostCore.h"

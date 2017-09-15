@@ -15,18 +15,21 @@ namespace LostCore
 {
 	class FAABoundingBox
 	{
+	public:
 		FFloat3 Min;
 		FFloat3 Max;
+		bool bVisible;
 
-	public:
 		FAABoundingBox()
 			: Min(FLT_MAX, FLT_MAX, FLT_MAX)
 			, Max(-FLT_MAX, -FLT_MAX, -FLT_MAX)
+			, bVisible(false)
 		{}
 
 		FAABoundingBox(const FFloat3& min, const FFloat3& max)
 			: Min(min)
 			, Max(max)
+			, bVisible(false)
 		{}
 
 		void Set(const FFloat3& min, const FFloat3& max)
@@ -39,6 +42,7 @@ namespace LostCore
 		{
 			Min = rhs.Min;
 			Max = rhs.Max;
+			bVisible = rhs.bVisible;
 			return *this;
 		}
 
@@ -56,16 +60,6 @@ namespace LostCore
 		{
 			static FAABoundingBox SInvalid;
 			return *this != SInvalid;
-		}
-
-		const FFloat3& GetMin() const
-		{
-			return Min;
-		}
-
-		const FFloat3& GetMax() const
-		{
-			return Max;
 		}
 
 		FFloat3 GetSize() const

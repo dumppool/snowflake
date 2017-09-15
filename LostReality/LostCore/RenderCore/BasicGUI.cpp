@@ -216,8 +216,8 @@ void LostCore::FRect::ReconstructPrimitive()
 			return;
 		}
 
-		if (SSuccess != WrappedCreateMaterial_UIObject(&RectMaterial) ||
-			!RectMaterial->Initialize(rc, "gui.json"))
+		if (SSuccess != WrappedCreateMaterial(&RectMaterial) ||
+			!RectMaterial->Initialize(rc, "gui.json", sizeof(Param), false, 1))
 		{
 			return;
 		}

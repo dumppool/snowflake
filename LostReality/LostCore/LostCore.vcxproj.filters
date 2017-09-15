@@ -4,29 +4,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="targetver.h" />
-    <ClInclude Include="Interface\MaterialInterface.h">
-      <Filter>Interface</Filter>
-    </ClInclude>
-    <ClInclude Include="Interface\RenderContextInterface.h">
-      <Filter>Interface</Filter>
-    </ClInclude>
-    <ClInclude Include="Interface\TextureInterface.h">
-      <Filter>Interface</Filter>
-    </ClInclude>
-    <ClInclude Include="Interface\PrimitiveGroupInterface.h">
-      <Filter>Interface</Filter>
-    </ClInclude>
-    <ClInclude Include="Interface\Drawable.h">
-      <Filter>Interface</Filter>
-    </ClInclude>
     <ClInclude Include="Inc\LostCore.h">
-      <Filter>Inc</Filter>
-    </ClInclude>
-    <ClInclude Include="Inc\ExportTest.h">
-      <Filter>Inc</Filter>
-    </ClInclude>
-    <ClInclude Include="Inc\SimpleWorld.h">
       <Filter>Inc</Filter>
     </ClInclude>
     <ClInclude Include="Inc\BasicScene.h">
@@ -69,9 +47,6 @@
     <ClInclude Include="Inc\BasicGUI.h">
       <Filter>Inc</Filter>
     </ClInclude>
-    <ClInclude Include="Interface\FontInterface.h">
-      <Filter>Interface</Filter>
-    </ClInclude>
     <ClInclude Include="RenderCore\FontProvider.h">
       <Filter>RenderCore</Filter>
     </ClInclude>
@@ -85,9 +60,6 @@
       <Filter>Inc</Filter>
     </ClInclude>
     <ClInclude Include="Inc\VertexTypes.h">
-      <Filter>Inc</Filter>
-    </ClInclude>
-    <ClInclude Include="Inc\Keywords.h">
       <Filter>Inc</Filter>
     </ClInclude>
     <ClInclude Include="Inc\Serialize\Serialization.h">
@@ -135,6 +107,57 @@
     <ClInclude Include="Inc\Math\Plane.h">
       <Filter>Inc\Math</Filter>
     </ClInclude>
+    <ClInclude Include="Inc\Gizmo\GizmoOperator.h">
+      <Filter>Inc\Gizmo</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\Misc\Includs.h">
+      <Filter>Inc\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\Misc\Macros.h">
+      <Filter>Inc\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\Misc\StringUtils.h">
+      <Filter>Inc\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\Misc\TypeDefs.h">
+      <Filter>Inc\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\Misc\Log.h">
+      <Filter>Inc\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\Misc\Export.h">
+      <Filter>Inc\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\Misc\Pointers.h">
+      <Filter>Inc\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\Misc\Counters.h">
+      <Filter>Inc\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\Interface\Drawable.h">
+      <Filter>Inc\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\Interface\FontInterface.h">
+      <Filter>Inc\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\Interface\MaterialInterface.h">
+      <Filter>Inc\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\Interface\PrimitiveGroupInterface.h">
+      <Filter>Inc\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\Interface\RenderContextInterface.h">
+      <Filter>Inc\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\Interface\TextureInterface.h">
+      <Filter>Inc\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\Misc\Constants.h">
+      <Filter>Inc\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\LostCoreIncludes.h">
+      <Filter>Inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
@@ -143,9 +166,6 @@
       <Filter>RenderCore</Filter>
     </ClCompile>
     <ClCompile Include="Src\LostCore.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
-    <ClCompile Include="Src\SimpleWorld.cpp">
       <Filter>Src</Filter>
     </ClCompile>
     <ClCompile Include="RenderCore\BasicScene.cpp">
@@ -184,11 +204,11 @@
     <ClCompile Include="RenderCore\ModelFactory.cpp">
       <Filter>RenderCore</Filter>
     </ClCompile>
+    <ClCompile Include="RenderCore\Gizmo\GizmoOperator.cpp">
+      <Filter>RenderCore\Gizmo</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="Interface">
-      <UniqueIdentifier>{050b25b3-ab71-446c-b69f-8092291a77b6}</UniqueIdentifier>
-    </Filter>
     <Filter Include="RenderCore">
       <UniqueIdentifier>{66bd4fa5-68ac-496e-85e3-9dfa88dc4575}</UniqueIdentifier>
     </Filter>
@@ -221,6 +241,12 @@
     </Filter>
     <Filter Include="Inc\Threading">
       <UniqueIdentifier>{4889cfec-c649-4981-b14d-aa099a0769ec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Inc\Misc">
+      <UniqueIdentifier>{f2cce9f6-5dc0-4e25-9292-388aaabee156}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Inc\Interface">
+      <UniqueIdentifier>{f333c99e-de8e-4923-9198-64d07ee84dd7}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

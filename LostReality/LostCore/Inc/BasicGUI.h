@@ -21,21 +21,6 @@ namespace LostCore
 
 	class FRect
 	{
-		struct FParam
-		{
-			// 大小尺寸，像素
-			FFloat2 Size;
-
-			// 相对父面板的位置，单位，像素
-			FFloat2 Origin;
-
-			// 相对父面板的缩放，(0.f, 1.f]
-			float Scale;
-
-			FFloat3 Unused;
-
-			FParam() : Size(0.f, 0.f), Origin(0.f, 0.f), Scale(1.f) { assert(sizeof(FParam) == 8 * sizeof(float)); }
-		};
 
 	public:
 		FRect();
@@ -93,7 +78,7 @@ namespace LostCore
 		void GetLocalPosition(const FFloat2& ppos, FFloat2& cpos) const;
 		void DrawPrivate();
 
-		FParam Param;
+		FRectParameter Param;
 
 		// 深度，越小越靠前
 		float Depth;

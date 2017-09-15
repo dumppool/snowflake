@@ -71,11 +71,11 @@
             this.LoadAnimationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
             this.ViewPanelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.ClearSceneToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripComboBox1 = new System.Windows.Forms.ToolStripComboBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.ClearSceneToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panel1.SuspendLayout();
             this.ImportPanel.SuspendLayout();
             this.ViewPanel.SuspendLayout();
@@ -515,19 +515,19 @@
             this.loadFBXToolStripMenuItem1.BackColor = System.Drawing.SystemColors.WindowFrame;
             this.loadFBXToolStripMenuItem1.ForeColor = System.Drawing.SystemColors.ControlLight;
             this.loadFBXToolStripMenuItem1.Name = "loadFBXToolStripMenuItem1";
-            this.loadFBXToolStripMenuItem1.Size = new System.Drawing.Size(152, 22);
+            this.loadFBXToolStripMenuItem1.Size = new System.Drawing.Size(146, 22);
             this.loadFBXToolStripMenuItem1.Text = "载入FBX文件";
             // 
             // LoadModelToolStripMenuItem
             // 
             this.LoadModelToolStripMenuItem.Name = "LoadModelToolStripMenuItem";
-            this.LoadModelToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.LoadModelToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.LoadModelToolStripMenuItem.Text = "载入模型";
             // 
             // LoadAnimationToolStripMenuItem
             // 
             this.LoadAnimationToolStripMenuItem.Name = "LoadAnimationToolStripMenuItem";
-            this.LoadAnimationToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.LoadAnimationToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.LoadAnimationToolStripMenuItem.Text = "载入动画";
             // 
             // toolStripMenuItem2
@@ -542,8 +542,14 @@
             // ViewPanelToolStripMenuItem
             // 
             this.ViewPanelToolStripMenuItem.Name = "ViewPanelToolStripMenuItem";
-            this.ViewPanelToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.ViewPanelToolStripMenuItem.Size = new System.Drawing.Size(124, 22);
             this.ViewPanelToolStripMenuItem.Text = "显示选项";
+            // 
+            // ClearSceneToolStripMenuItem
+            // 
+            this.ClearSceneToolStripMenuItem.Name = "ClearSceneToolStripMenuItem";
+            this.ClearSceneToolStripMenuItem.Size = new System.Drawing.Size(124, 22);
+            this.ClearSceneToolStripMenuItem.Text = "清空场景";
             // 
             // toolStripMenuItem3
             // 
@@ -566,12 +572,6 @@
             this.toolStripComboBox1.Name = "toolStripComboBox1";
             this.toolStripComboBox1.Size = new System.Drawing.Size(121, 25);
             // 
-            // ClearSceneToolStripMenuItem
-            // 
-            this.ClearSceneToolStripMenuItem.Name = "ClearSceneToolStripMenuItem";
-            this.ClearSceneToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.ClearSceneToolStripMenuItem.Text = "清空场景";
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -585,6 +585,7 @@
             this.Name = "Form1";
             this.Text = "Form1";
             this.Closed += new System.EventHandler(this.Form1_Closed);
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Form1_Closed);
             this.Load += new System.EventHandler(this.Form1_Load);
             this.panel1.ResumeLayout(false);
             this.ImportPanel.ResumeLayout(false);

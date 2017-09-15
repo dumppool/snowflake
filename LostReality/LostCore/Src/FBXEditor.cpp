@@ -23,6 +23,16 @@ public:
 	FFBXEditor();
 	~FFBXEditor();
 
+	// FBasicWorld overridew 
+	virtual bool Config(const FJson& config) override;
+	virtual bool Load(const char* url) override;
+	virtual void Tick() override;
+	virtual void DrawPostScene() override;
+
+	virtual bool InitializeWindow(HWND wnd, bool windowed, int32 width, int32 height) override;
+	virtual FBasicCamera* GetCamera() override;
+	virtual FBasicScene* GetScene() override;
+
 	void PushCommand(const CommandType& cmd);
 	void LoadFBX(
 		const char * file,
@@ -44,15 +54,11 @@ public:
 	void LoadModel(const FJson& config);
 	void LoadAnimation(const string& url);
 	void ClearEditorScene();
-
-	// FBasicWorld overridew 
-	virtual bool Config(const FJson& config) override;
-	bool Load(const char* url) override;
-
-	virtual bool InitializeWindow(HWND wnd, bool windowed, int32 width, int32 height) override;
-	virtual IRenderContext* GetRenderContext() override;
-	virtual FBasicCamera* GetCamera() override;
-
+	void Picking(int32 x, int32 y, bool clicked);
+	void Pick(FBasicModel* model);
+	void UnPick();
+	void Hover(FBasicModel* model);
+	void UnHover();
 
 private:
 	void Fini();
@@ -60,15 +66,21 @@ private:
 	void StartRenderLoop();
 	void StartTickLoop();
 
-	void Log(int32 level, const char* fmt, ...);
+	void Log(ELogFlag level, const char* fmt, ...);
 
 	IRenderContext*			RC;
 	FBasicCamera*			Camera;
 	FBasicScene*			Scene;
 
 	FBasicModel*			CurrSelectedModel;
+	FBasicModel*			CurrHoveredModel;
 
 	string OutputDir;
+
+	int32 ScreenWidth;
+	int32 ScreenHeight;
+	float RcpScreenWidth;
+	float RcpScreenHeight;
 
 	FCommandQueue<CommandType> RenderCommands;
 	bool bKeepRendering;
@@ -79,9 +91,11 @@ private:
 	bool bKeepTicking;
 	thread TickThread;
 
-	static const int32 SInfo = 0;
-	static const int32 SWarning = 1;
-	static const int32 SError = 2;
+	// TODO: 需要更有效率的场景树
+	vector<FBasicModel*> Ms;
+
+	// Editor tools
+	FGizmoOperator* GizmoOp;
 
 	static const char * const SConverterExe;
 	static const char * const SConverterOutput;
@@ -99,6 +113,8 @@ FFBXEditor::FFBXEditor()
 	, TickCommands(true)
 	, RenderCommands(true)
 	, CurrSelectedModel(nullptr)
+	, CurrHoveredModel(nullptr)
+	, GizmoOp(nullptr)
 {
 	char* temp = nullptr;
 	size_t sz = 0;
@@ -114,47 +130,63 @@ FFBXEditor::FFBXEditor()
 	FGlobalHandler::Get()->SetRenderContextPP(&RC);
 
 	//FDirectoryHelper::Get()->GetPrimitiveAbsolutePath(SConverterOutput, OutputDir);
-	FGlobalHandler::Get()->SetMoveCameraCallback([&](float x, float y, float z) {
+	FGlobalHandler::Get()->SetMoveCameraCallback([&]
+	(float x, float y, float z)
+	{
 		if (Camera != nullptr)
 		{
 			Camera->AddPositionLocal(FFloat3(x, y, z));
 		}
 	});
 
-	FGlobalHandler::Get()->SetRotateCameraCallback([&](float p, float y, float r) {
+	FGlobalHandler::Get()->SetRotateCameraCallback([&]
+	(float p, float y, float r)
+	{
 		if (Camera != nullptr)
 		{
 			Camera->AddEulerWorld(FFloat3(p, y, r));
 		}
 	});
 
-	FGlobalHandler::Get()->SetCallbackPlayAnimation([&](const string& anim) {
+	FGlobalHandler::Get()->SetCallbackPlayAnimation([&]
+	(const string& anim)
+	{
 		if (reinterpret_cast<FSkeletalModel*>(CurrSelectedModel) != nullptr)
 		{
 			reinterpret_cast<FSkeletalModel*>(CurrSelectedModel)->PlayAnimation(anim);
 		}
 	});
 
-	FGlobalHandler::Get()->SetCallbackLoadModel([&](const char* url) {
+	FGlobalHandler::Get()->SetCallbackLoadModel([&]
+	(const char* url) 
+	{
 		string localUrl(url);
-		PushCommand([=]() {
+		PushCommand([=]
+		()
+		{
 			LoadModel(localUrl);
 		});
 	});
 
-	FGlobalHandler::Get()->SetCallbackInitializeWindow([&](HWND wnd, bool windowed, int32 width, int32 height) {
+	FGlobalHandler::Get()->SetCallbackInitializeWindow([&]
+	(HWND wnd, bool windowed, int32 width, int32 height)
+	{
 		InitializeWindow(wnd, windowed, width, height);
 	});
 
-	FGlobalHandler::Get()->SetCallbackLoadAnimation([&](const char* url) {
+	FGlobalHandler::Get()->SetCallbackLoadAnimation([&]
+	(const char* url)
+	{
 		string localUrl(url);
-		PushCommand([=]() {
+		PushCommand([=]
+		()
+		{
 			LoadAnimation(localUrl);
 		});
 	});
 
-	FGlobalHandler::Get()->SetCallbackLoadFBX([&](
-		const char * file,
+	FGlobalHandler::Get()->SetCallbackLoadFBX([&]
+	(	const char * file,
 		const char* primitiveOutput,
 		const char* animationOutput,
 		bool clearScene,
@@ -167,7 +199,8 @@ FFBXEditor::FFBXEditor()
 		bool generateNormalIfNotFound,
 		bool importTangent,
 		bool forceRegenerateTangent,
-		bool generateTangentIfNotFound) {
+		bool generateTangentIfNotFound)
+	{
 		string filePath(file), primPath(primitiveOutput), animPath(animationOutput);
 		this->PushCommand([=]()
 		{
@@ -189,8 +222,25 @@ FFBXEditor::FFBXEditor()
 		});
 	});
 
-	FGlobalHandler::Get()->SetCallbackClearScene([&]() {
+	FGlobalHandler::Get()->SetCallbackClearScene([&]
+	()
+	{
 		ClearEditorScene();
+	});
+
+	FGlobalHandler::Get()->SetCallbackPicking([&]
+	(int32 x, int32 y, bool clicked)
+	{
+		this->PushCommand([=]() 
+		{
+			this->Picking(x, y, clicked);
+		});
+	});
+
+	FGlobalHandler::Get()->SetCallbackShutdown([&]
+	()
+	{
+		this->Fini();
 	});
 }
 
@@ -201,12 +251,17 @@ FFBXEditor::~FFBXEditor()
 	assert(RC == nullptr);
 	assert(Camera == nullptr);
 	assert(Scene == nullptr);
-	assert(CurrSelectedModel == nullptr);
 }
 
 void FFBXEditor::InitializeScene()
 {
 	assert(Camera == nullptr && Scene == nullptr);
+
+	GizmoOp = new FGizmoOperator;
+	if (!GizmoOp->Load("axis.json"))
+	{
+		Log(ELogFlag::LogError, "failed to load gizmo config: %s", "axis.json");
+	}
 
 	FBasicWorld::Load("");
 	Camera = new FBasicCamera;
@@ -218,13 +273,12 @@ void FFBXEditor::InitializeScene()
 	Scene = new FBasicScene;
 	if (Scene->Config(FJson()))
 	{
-		AddScene(Scene);
-		Log(SInfo, "InitializeScene finished.");
+		Log(ELogFlag::LogInfo, "InitializeScene finished.");
 		return;
 	}
 	else
 	{
-		Log(SError, "InitializeScene failed.");
+		Log(ELogFlag::LogError, "InitializeScene failed.");
 		return;
 	}
 }
@@ -252,7 +306,7 @@ void FFBXEditor::LoadFBX(
 {
 	if (file == nullptr)
 	{
-		Log(SError, "Invalid input fbx file path[%s].", file);
+		Log(ELogFlag::LogError, "Invalid input fbx file path[%s].", file);
 		return;
 	}
 
@@ -332,7 +386,7 @@ void FFBXEditor::LoadFBX(
 	if (!CreateProcessA(NULL, const_cast<char*>(cmd.c_str()), 
 		&psec, &tsec, false, 0, NULL, GetCurrentWorkingPath().c_str(), &si, &pi))
 	{
-		Log(SError, "Process could not be loaded: cmd[%s].", cmd.c_str());
+		Log(ELogFlag::LogError, "Process could not be loaded: cmd[%s].", cmd.c_str());
 		CloseHandle(pi.hProcess);
 		CloseHandle(pi.hThread);
 		memset(&pi, 0, sizeof(pi));
@@ -340,7 +394,7 @@ void FFBXEditor::LoadFBX(
 	}
 	else
 	{
-		Log(SInfo, "Converting fbx[%s].", file);
+		Log(ELogFlag::LogInfo, "Converting fbx[%s].", file);
 
 		WaitForSingleObject(pi.hProcess, INFINITE);
 
@@ -348,13 +402,13 @@ void FFBXEditor::LoadFBX(
 		FDirectoryHelper::Get()->GetPrimitiveAbsolutePath(primitiveOutput, primitiveOutputAbs);
 		FDirectoryHelper::Get()->GetAnimationAbsolutePath(animationOutput, animationOutputAbs);
 
-		Log(SInfo, "Convert fbx[%s] finished, output file should be saved[%s].",
+		Log(ELogFlag::LogInfo, "Convert fbx[%s] finished, output file should be saved[%s].",
 			file, outputFile.c_str());
 
 		ifstream stream(outputFile, ios::in);
 		if (stream.fail())
 		{
-			Log(SError, "Output file notfound: %s", outputFile.c_str());
+			Log(ELogFlag::LogError, "Output file notfound: %s", outputFile.c_str());
 			return;
 		}
 
@@ -368,7 +422,7 @@ void FFBXEditor::LoadFBX(
 			ReplaceChar(path, "/", "\\");
 			string fileAbs(CopyFileTo(animationOutputAbs, path)), fileRel;
 			assert(FDirectoryHelper::Get()->GetAnimationRelativePath(fileAbs, fileRel));
-			Log(SInfo, "Output anim: %s, [%s]", fileRel.c_str(), fileAbs.c_str());
+			Log(ELogFlag::LogInfo, "Output anim: %s, [%s]", fileRel.c_str(), fileAbs.c_str());
 
 			LoadAnimation(fileRel);
 		}
@@ -388,7 +442,7 @@ void FFBXEditor::LoadFBX(
 				ReplaceChar(path, "/", "\\");
 				string fileAbs(CopyFileTo(primitiveOutputAbs, path)), fileRel;
 				assert(FDirectoryHelper::Get()->GetPrimitiveRelativePath(fileAbs, fileRel));
-				Log(SInfo, "Output primitive: %s, [%s]", fileRel.c_str(), fileAbs.c_str());
+				Log(ELogFlag::LogInfo, "Output primitive: %s, [%s]", fileRel.c_str(), fileAbs.c_str());
 
 				FJson config;
 				config[K_VERTEX_ELEMENT] = (uint32)elem[K_VERTEX_ELEMENT];
@@ -420,10 +474,10 @@ void FFBXEditor::LoadModel(const string & url)
 void FFBXEditor::LoadModel(const FJson & config)
 {
 	auto model = FModelFactory::NewModel(config);
-	CurrSelectedModel = model;
 	if (model != nullptr)
 	{
 		Scene->AddModel(model);
+		Ms.push_back(model);
 	}
 }
 
@@ -443,8 +497,92 @@ void FFBXEditor::LoadAnimation(const string & url)
 void FFBXEditor::ClearEditorScene()
 {
 	PushCommand([=]() {
+		Ms.clear();
 		Scene->ClearModels();
 	});
+}
+
+void FFBXEditor::Picking(int32 x, int32 y, bool clicked)
+{
+	UnHover();
+	if (clicked)
+	{
+		UnPick();
+	}
+
+	if (Camera == nullptr)
+	{
+		return;
+	}
+
+	// Clip space
+	auto proj = Camera->GetProjectMatrix();
+	FFloat3 rayDir((2 * x * RcpScreenWidth - 1.0f) / proj.M[0][0],
+		(1.0f - 2 * y * RcpScreenHeight) / proj.M[1][1], 1.0f);
+
+	// World space
+	auto invView = Camera->GetViewMatrix().Invert();
+	rayDir = invView.ApplyVector(rayDir);
+	auto rayP0 = invView.GetOrigin();
+
+	float minDist = 10000.0f;
+	FRay worldRay(rayP0, rayDir, minDist);
+	FBasicModel* nearest = nullptr;
+	for (auto m : Ms)
+	{
+		if (m == nullptr || m->GetBoundingBox() == nullptr)
+		{
+			continue;
+		}
+
+		if (RayBoxIntersect(worldRay, *m->GetBoundingBox(), m->GetWorldMatrix().Invert(), minDist))
+		{
+			nearest = m;
+			worldRay.Distance = minDist;
+		}
+	}
+
+	if (nearest)
+	{
+		Hover(nearest);
+		if (clicked)
+		{
+			Pick(nearest);
+		}
+	}
+}
+
+void FFBXEditor::Pick(FBasicModel * model)
+{
+	if (model != nullptr)
+	{
+		CurrSelectedModel = model;
+		GizmoOp->SetTarget(CurrSelectedModel);
+	}
+}
+
+void FFBXEditor::UnPick()
+{
+	if (CurrSelectedModel != nullptr)
+	{
+		GizmoOp->SetTarget(nullptr);
+		CurrSelectedModel = nullptr;
+	}
+}
+
+void FFBXEditor::Hover(FBasicModel * model)
+{
+	CurrHoveredModel = model;
+	CurrHoveredModel->GetBoundingBox()->bVisible = true;
+}
+
+void FFBXEditor::UnHover()
+{
+	if (CurrHoveredModel != nullptr)
+	{
+		CurrHoveredModel->GetBoundingBox()->bVisible = false;
+		CurrHoveredModel = nullptr;
+	}
 }
 
 bool FFBXEditor::Config(const FJson & config)
@@ -455,6 +593,25 @@ bool FFBXEditor::Config(const FJson & config)
 bool FFBXEditor::Load(const char * url)
 {
 	return false;
+}
+
+void FFBXEditor::Tick()
+{
+	FBasicWorld::Tick();
+	if (GizmoOp != nullptr)
+	{
+		GizmoOp->Tick();
+	}
+}
+
+void FFBXEditor::DrawPostScene()
+{
+	if (GizmoOp != nullptr)
+	{
+		GizmoOp->Draw();
+	}
+
+	FBasicWorld::DrawPostScene();
 }
 
 void FFBXEditor::Fini()
@@ -474,11 +631,14 @@ void FFBXEditor::Fini()
 		TickThread.join();
 	}
 
+	SAFE_DELETE(GizmoOp);
+
 	CurrSelectedModel = nullptr;
+	CurrHoveredModel = nullptr;
 
 	SAFE_DELETE(RC);
-	SAFE_DELETE(Camera);
 	SAFE_DELETE(Scene);
+	SAFE_DELETE(Camera);
 
 	FGlobalHandler::Get()->SetRenderContextPP(nullptr);
 }
@@ -488,6 +648,10 @@ bool FFBXEditor::InitializeWindow(HWND wnd, bool windowed, int32 width, int32 he
 	auto ret = WrappedCreateRenderContext(EContextID::D3D11_DXGI0, &RC);
 	if (RC != nullptr && RC->Init(wnd, windowed, width, height))
 	{
+		ScreenWidth = width;
+		ScreenHeight = height;
+		RcpScreenWidth = 1.f / width;
+		RcpScreenHeight = 1.f / height;
 		InitializeScene();
 		RenderThread = thread([=]() {this->StartRenderLoop(); });
 		//TickThread = thread([=]() {this->StartTickLoop(); });
@@ -499,14 +663,14 @@ bool FFBXEditor::InitializeWindow(HWND wnd, bool windowed, int32 width, int32 he
 	}
 }
 
-IRenderContext * FFBXEditor::GetRenderContext()
-{
-	return RC;
-}
-
 FBasicCamera * FFBXEditor::GetCamera()
 {
 	return Camera;
+}
+
+FBasicScene * FFBXEditor::GetScene()
+{
+	return Scene;
 }
 
 void FFBXEditor::StartRenderLoop()
@@ -551,7 +715,7 @@ void FFBXEditor::StartTickLoop()
 	}
 }
 
-void FFBXEditor::Log(int32 level, const char * fmt, ...)
+void FFBXEditor::Log(ELogFlag level, const char * fmt, ...)
 {
 	char msg[1024];
 	msg[1023] = 0;
@@ -561,5 +725,5 @@ void FFBXEditor::Log(int32 level, const char * fmt, ...)
 	vsnprintf(msg, 1023, fmt, args);
 	va_end(args);
 
-	FGlobalHandler::Get()->Logging(level, msg);
+	FGlobalHandler::Get()->Logging((int32)level, msg);
 }

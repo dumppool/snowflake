@@ -123,8 +123,8 @@ namespace D3D11
 		FTexture2D*								RenderTarget;
 		FTexture2D*								DepthStencil;
 		D3D11_VIEWPORT							Viewport;
-		FConstantBufferRegister0::FParam		Param;
-		FConstantBufferRegister0				CB0;
+		LostCore::FGlobalParameter				Param;
+		FConstantBuffer*						GlobalConstantBuffer;
 
 		//FGdiFont* Font;
 	};

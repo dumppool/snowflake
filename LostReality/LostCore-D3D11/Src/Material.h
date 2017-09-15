@@ -10,6 +10,7 @@
 #pragma once
 
 #include "DepthStencilStateDef.h"
+#include "ConstantBuffer.h"
 
 namespace D3D11
 {
@@ -57,133 +58,26 @@ namespace D3D11
 		std::string								ShaderPath;
 	};
 
-	template<typename T>
 	class FMaterial : public LostCore::IMaterial
 	{
 	public:
-		FMaterial()
-			: MaterialShader(nullptr)
-			, Param()
-			, DepthStencilName(K_DEPTH_STENCIL_Z_WRITE)
-		{}
+		FMaterial();
 
-		virtual ~FMaterial() override
-		{
-			if (MaterialShader != nullptr)
-			{
-				delete MaterialShader;
-				MaterialShader = nullptr;
-			}
-		}
+		virtual ~FMaterial() override;
 
 		// Í¨¹ý IMaterial ¼Ì³Ð
-		virtual void Draw(LostCore::IRenderContext * rc, float sec) override
-		{
-			const char* head = "D3D11::FMaterial::Draw";
-			auto cxt = FRenderContext::GetDeviceContext(rc, head);
-			if (!cxt.IsValid())
-			{
-				return;
-			}
+		virtual void Bind(LostCore::IRenderContext * rc) override;
+		virtual bool Initialize(LostCore::IRenderContext * rc, const char* path) override;
+		virtual void UpdateTexture(LostCore::IRenderContext* rc, LostCore::ITexture* tex, int32 slot);
+		virtual void SetDepthStencilState(const char* name) override;
 
-			auto shader = GetMaterialShader();
-			if (shader == nullptr)
-			{
-				return;
-			}
-
-			TRefCountPtr<ID3D11VertexShader> vs = shader->GetVertexShader();
-			TRefCountPtr<ID3D11PixelShader> ps = shader->GetPixelShader();
-			TRefCountPtr<ID3D11InputLayout> il = shader->GetInputLayout();
-			if (vs.IsValid() && ps.IsValid() && il.IsValid())
-			{
-				cxt->VSSetShader(vs.GetReference(), nullptr, 0);
-				cxt->IASetInputLayout(il.GetReference());
-				cxt->PSSetShader(ps.GetReference(), nullptr, 0);
-
-				cxt->HSSetShader(nullptr, nullptr, 0);
-				cxt->DSSetShader(nullptr, nullptr, 0);
-				cxt->GSSetShader(nullptr, nullptr, 0);
-				cxt->CSSetShader(nullptr, nullptr, 0);
-
-				Param.Bind(cxt);
-
-				for (auto it = Textures.begin(); it != Textures.end(); ++it)
-				{
-					if (it->second != nullptr)
-					{
-						auto srv = it->second->GetShaderResourceRHI().GetReference();
-						auto smp = it->second->GetSamplerRHI().GetReference();
-						cxt->PSSetShaderResources(it->first, 1, &srv);
-						cxt->PSSetSamplers(it->first, 1, &smp);
-					}
-				}
-			}
-
-			cxt->OMSetDepthStencilState(FDepthStencilStateMap::Get()->GetState(DepthStencilName), 0);
-		}
-
-		virtual bool Initialize(LostCore::IRenderContext * rc, const char* path) override
-		{
-			const char* head = "D3D11::FMaterial::Initialize";
-			auto device = FRenderContext::GetDevice(rc, head);
-			if (!device.IsValid())
-			{
-				return false;
-			}
-
-			if (!Param.Initialize(device))
-			{
-				return false;
-			}
-
-			FJson config;
-			if (!LostCore::FDirectoryHelper::Get()->GetMaterialJson(path, config))
-			{
-				return false;
-			}
-
-			if (MaterialShader != nullptr)
-			{
-				delete MaterialShader;
-				MaterialShader = nullptr;
-			}
-
-			MaterialShader = new FMaterialShader;
-			return MaterialShader->Initialize(rc, config);
-		}
-
-		virtual void UpdateConstantBuffer(LostCore::IRenderContext* rc, const void* buf, int32 sz) override
-		{
-			const char* head = "D3D11::FMaterial<T>::UpdateConstantBuffer";
-			auto cxt = FRenderContext::GetDeviceContext(rc, head);
-			if (!cxt.IsValid())
-			{
-				return;
-			}
-
-			Param.UpdateBuffer(cxt, buf, sz);
-		}
-
-		virtual void SetDepthStencilState(const char* name) override
-		{
-			DepthStencilName = name;
-		}
-
-		virtual void UpdateTexture(LostCore::IRenderContext* rc, LostCore::ITexture* tex, int32 slot)
-		{
-			Textures[slot] = (FTexture2D*)tex;
-		}
+		bool InitializeShader(LostCore::IRenderContext * rc, const char* path);
 
 	protected:
-		FMaterialShader* GetMaterialShader()
-		{
-			return MaterialShader;
-		}
+		FMaterialShader* GetMaterialShader();
 
 	private:
 		FMaterialShader* MaterialShader;
-		T Param;
 		std::map<int32, FTexture2D*> Textures;
 		string DepthStencilName;
 	};
