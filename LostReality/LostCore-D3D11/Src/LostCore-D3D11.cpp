@@ -11,7 +11,7 @@
 
 using namespace D3D11;
 
-EReturnCode CreateRenderContext(LostCore::EContextID id, LostCore::IRenderContext** context)
+EReturnCode D3D11::CreateRenderContext(LostCore::EContextID id, LostCore::IRenderContext** context)
 {
 	if (context == nullptr)
 	{
@@ -41,7 +41,7 @@ EReturnCode CreateRenderContext(LostCore::EContextID id, LostCore::IRenderContex
 	}
 }
 
-EReturnCode DestroyRenderContext(LostCore::IRenderContext * context)
+EReturnCode D3D11::DestroyRenderContext(LostCore::IRenderContext * context)
 {
 	if (context != nullptr)
 	{
@@ -53,7 +53,7 @@ EReturnCode DestroyRenderContext(LostCore::IRenderContext * context)
 
 #include "PrimitiveGroup.h"
 
-EReturnCode CreatePrimitiveGroup(LostCore::IPrimitiveGroup ** pg)
+EReturnCode D3D11::CreatePrimitiveGroup(LostCore::IPrimitiveGroup ** pg)
 {
 	if (pg == nullptr)
 	{
@@ -70,7 +70,7 @@ EReturnCode CreatePrimitiveGroup(LostCore::IPrimitiveGroup ** pg)
 	return SSuccess;
 }
 
-EReturnCode DestroyPrimitiveGroup(LostCore::IPrimitiveGroup * pg)
+EReturnCode D3D11::DestroyPrimitiveGroup(LostCore::IPrimitiveGroup * pg)
 {
 	if (pg != nullptr)
 	{
@@ -82,7 +82,7 @@ EReturnCode DestroyPrimitiveGroup(LostCore::IPrimitiveGroup * pg)
 
 #include "ConstantBuffer.h"
 
-EReturnCode CreateConstantBuffer(LostCore::IConstantBuffer** cb)
+EReturnCode D3D11::CreateConstantBuffer(LostCore::IConstantBuffer** cb)
 {
 	if (cb == nullptr)
 	{
@@ -99,7 +99,7 @@ EReturnCode CreateConstantBuffer(LostCore::IConstantBuffer** cb)
 	return SSuccess;
 }
 
-EReturnCode DestroyConstantBuffer(LostCore::IConstantBuffer * cb)
+EReturnCode D3D11::DestroyConstantBuffer(LostCore::IConstantBuffer * cb)
 {
 	if (cb != nullptr)
 	{
@@ -111,7 +111,7 @@ EReturnCode DestroyConstantBuffer(LostCore::IConstantBuffer * cb)
 
 #include "Material.h"
 
-EReturnCode CreateMaterial(LostCore::IMaterial** material)
+EReturnCode D3D11::CreateMaterial(LostCore::IMaterial** material)
 {
 	if (material == nullptr)
 	{
@@ -128,7 +128,7 @@ EReturnCode CreateMaterial(LostCore::IMaterial** material)
 	return SSuccess;
 }
 
-EReturnCode DestroyMaterial(LostCore::IMaterial * material)
+EReturnCode D3D11::DestroyMaterial(LostCore::IMaterial * material)
 {
 	if (material != nullptr)
 	{
@@ -140,7 +140,7 @@ EReturnCode DestroyMaterial(LostCore::IMaterial * material)
 
 #include "GdiFont.h"
 
-EReturnCode CreateGdiFont(LostCore::IFontInterface ** font)
+EReturnCode D3D11::CreateGdiFont(LostCore::IFontInterface ** font)
 {
 	if (font == nullptr)
 	{
@@ -157,7 +157,7 @@ EReturnCode CreateGdiFont(LostCore::IFontInterface ** font)
 	return SSuccess;
 }
 
-EReturnCode DestroyGdiFont(LostCore::IFontInterface * font)
+EReturnCode D3D11::DestroyGdiFont(LostCore::IFontInterface * font)
 {
 	if (font != nullptr)
 	{

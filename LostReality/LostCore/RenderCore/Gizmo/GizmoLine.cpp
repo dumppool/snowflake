@@ -49,6 +49,7 @@ bool LostCore::FSegmentTool::ConstructPrimitive(const void* buf, uint32 bytes)
 	assert(Material == nullptr && Primitive == nullptr);
 
 	bConstructed = SSuccess == D3D11::WrappedCreateMaterial(&Material);
+	bConstructed &= SSuccess == D3D11::WrappedCreateConstantBuffer(&ConstantBuffer);
 	bConstructed &= SSuccess == D3D11::WrappedCreatePrimitiveGroup(&Primitive);
 
 	assert(bConstructed);
@@ -57,6 +58,7 @@ bool LostCore::FSegmentTool::ConstructPrimitive(const void* buf, uint32 bytes)
 	Material->SetDepthStencilState(bDepthTest ? K_DEPTH_STENCIL_Z_WRITE : K_DEPTH_STENCIL_ALWAYS);
 	Primitive->SetTopology(LostCore::EPrimitiveTopology::LineList);
 
+	bConstructed &= ConstantBuffer->Initialize(rc, sizeof(World), false);
 	bConstructed &= Material->Initialize(rc, "default_xyzrgb.json");
 	bConstructed &= Primitive->ConstructVB(rc, buf, bytes, GetAlignedSize(sizeof(FSegmentVertex), 16), false);
 
@@ -74,10 +76,24 @@ void LostCore::FSegmentTool::DestroyPrimitive()
 
 	assert(Material != nullptr && Primitive != nullptr);
 
-	D3D11::WrappedDestroyMaterial_SceneObject(forward<IMaterial*>(Material));
-	D3D11::WrappedDestroyPrimitiveGroup(forward<IPrimitiveGroup*>(Primitive));
-	Material = nullptr;
-	Primitive = nullptr;
+	if (ConstantBuffer != nullptr)
+	{
+		D3D11::WrappedDestroyConstantBuffer(forward<IConstantBuffer*>(ConstantBuffer));
+		ConstantBuffer = nullptr;
+	}
+	
+	if (Material != nullptr)
+	{
+		D3D11::WrappedDestroyMaterial(forward<IMaterial*>(Material));
+		Material = nullptr;
+	}
+	
+	if (Primitive != nullptr)
+	{
+		D3D11::WrappedDestroyPrimitiveGroup(forward<IPrimitiveGroup*>(Primitive));
+		Primitive = nullptr;
+	}
+
 	bConstructed = false;
 }
 
@@ -103,9 +119,21 @@ void LostCore::FSegmentTool::Draw()
 		ConstructPrimitive(&buf[0], buf.size());
 	}
 
-	Material->UpdateConstantBuffer(rc, &World, sizeof(World));
-	Material->Draw(rc, sec);
-	Primitive->Draw(rc, sec);
+	if (ConstantBuffer != nullptr)
+	{
+		ConstantBuffer->UpdateBuffer(rc, &World.GetBuffer(), sizeof(World));
+		ConstantBuffer->Bind(rc, 1 | SHADER_SLOT_VS);
+	}
+
+	if (Material != nullptr)
+	{
+		Material->Bind(rc);
+	}
+
+	if (Primitive != nullptr)
+	{
+		Primitive->Draw(rc, sec);
+	}
 }
 
 void LostCore::FSegmentTool::AddSegment(const FSegmentData & seg)
@@ -116,7 +144,7 @@ void LostCore::FSegmentTool::AddSegment(const FSegmentData & seg)
 
 void LostCore::FSegmentTool::SetWorldMatrix(const FFloat4x4 & mat)
 {
-	World = mat;
+	World.Matrix = mat;
 }
 
 void LostCore::FSegmentTool::EnableDepthTest(bool enable)

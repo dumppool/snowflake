@@ -92,6 +92,7 @@ namespace LostCore
 		IPrimitiveGroup* RectPrimitive;
 		FFloat2 RectPrimitiveSize;
 		IMaterial* RectMaterial;
+		IConstantBuffer* RectBuffer;
 	};
 
 	class FBasicGUI : public IBasicInterface

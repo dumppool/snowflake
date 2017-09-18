@@ -21,7 +21,9 @@ namespace LostCore
 
 		FGlobalParameter GetBuffer() const
 		{
-			return *this;
+			FGlobalParameter result(*this);
+			result.ViewProject.Transpose();
+			return result;
 		}
 	};
 
@@ -72,6 +74,20 @@ namespace LostCore
 		}
 
 		FRectParameter GetBuffer() const
+		{
+			return *this;
+		}
+	};
+
+	struct FCustomParameter
+	{
+		FColor128 Color;
+
+		FCustomParameter()
+			: Color((uint32)0x0)
+		{}
+
+		FCustomParameter GetBuffer() const
 		{
 			return *this;
 		}

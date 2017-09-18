@@ -39,18 +39,23 @@ namespace LostCore
 		FAABoundingBox* GetBoundingBox();
 		IPrimitiveGroup* GetPrimitive();
 		IMaterial* GetMaterial();
+		IConstantBuffer* GetMatricesBuffer();
+		IConstantBuffer* GetCustomBuffer();
 		FMeshData* GetPrimitiveData();
+		void SetColor(const FColor128& color);
 
 	protected:
-		virtual void UpdateConstant() = 0;
-		virtual void DrawModel();
 		//virtual void RayTest() = 0;
 
 		virtual bool ConfigPrimitive(const string& url, IPrimitiveGroup*& pg, FMeshData& pgdata);
-		virtual bool ConfigMaterial(const string& url, IMaterial*& mat);
+		virtual bool ConfigMaterial(const string& url);
 
+		virtual void UpdateConstant();
 		virtual void UpdateGizmosBoundingBox();
+
 		virtual void DrawGizmos();
+		virtual void DrawModel();
+
 		FSegmentTool* GetSegmentRenderer();
 
 	private:
@@ -59,9 +64,12 @@ namespace LostCore
 
 		IPrimitiveGroup* Primitive;
 		IMaterial* Material;
+		IConstantBuffer* MatricesBuffer;
 		FMeshData PrimitiveData;
 		FSegmentTool SegmentRenderer;
 		FAABoundingBox BoundingBox;
+		FCustomParameter Custom;
+		IConstantBuffer* CustomBuffer;
 	};
 
 	class FStaticModel : public FBasicModel
@@ -76,6 +84,7 @@ namespace LostCore
 		virtual void Clone(FBasicModel& model) override;
 
 	protected:
+		virtual bool ConfigMaterial(const string& url) override;
 		virtual void UpdateConstant() override;
 		virtual void DrawGizmos() override;
 		//virtual void RayTest() = 0;
@@ -86,7 +95,7 @@ namespace LostCore
 		void Fini();
 
 	private:
-		FFloat4x4 World;
+		FSingleMatrixParameter World;
 		FAxisRenderer AxisRenderer;
 	};
 
@@ -108,7 +117,7 @@ namespace LostCore
 		//virtual void RayTest() = 0;
 
 		virtual bool ConfigPrimitive(const string& url, IPrimitiveGroup*& pg, FMeshData& pgdata) override;
-		virtual bool ConfigMaterial(const string& url, IMaterial*& mat) override;
+		virtual bool ConfigMaterial(const string& url) override;
 
 		virtual void DrawGizmos();
 
@@ -120,13 +129,7 @@ namespace LostCore
 
 	private:
 
-		struct
-		{
-			FFloat4x4 World;
-			array<FFloat4x4, MAX_BONES_PER_BATCH> Bones;
-		} Matrices;
-
-
+		FSkinnedParameter Matrices;
 		FSkeletonTree Root;
 		FAxisRenderer AxisRenderer;
 		FSegmentTool SkeletonRenderer;

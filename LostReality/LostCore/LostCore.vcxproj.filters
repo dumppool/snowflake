@@ -158,6 +158,12 @@
     <ClInclude Include="Inc\LostCoreIncludes.h">
       <Filter>Inc</Filter>
     </ClInclude>
+    <ClInclude Include="Inc\ConstantBuffers.h">
+      <Filter>Inc</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\Interface\ConstantBufferInterface.h">
+      <Filter>Inc\Interface</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />

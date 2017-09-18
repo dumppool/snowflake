@@ -20,23 +20,15 @@ namespace D3D11
 		FConstantBuffer()
 		{
 		}
-		
-		FConstantBuffer(int32 byteWidth, bool dynamic, int32 slot)
-			: ByteWidth(byteWidth)
-			, bDynamic(dynamic)
-			, Slot(slot)
-		{
-		}
 
 		virtual ~FConstantBuffer() override
 		{
 			Buffer = nullptr;
 		}
 
-		virtual bool Initialize(LostCore::IRenderContext * rc) override;
-		virtual bool Initialize(LostCore::IRenderContext * rc, int32 byteWidth, bool dynamic, int32 slot) override;
+		virtual bool Initialize(LostCore::IRenderContext * rc, int32 byteWidth, bool dynamic) override;
 		virtual void UpdateBuffer(LostCore::IRenderContext * rc, const void* buf, int32 sz) override;
-		virtual void Bind(LostCore::IRenderContext* rc);
+		virtual void Bind(LostCore::IRenderContext* rc, int32 slot);
 
 		int32 GetByteWidth() const
 		{
@@ -51,7 +43,6 @@ namespace D3D11
 	private:
 		int32		ByteWidth;
 		bool		bDynamic;
-		int32		Slot;
 		TRefCountPtr<ID3D11Buffer> Buffer;
 	};
 }

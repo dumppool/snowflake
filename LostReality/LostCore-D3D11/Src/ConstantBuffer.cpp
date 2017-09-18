@@ -10,8 +10,11 @@
 #include "stdafx.h"
 #include "ConstantBuffer.h"
 
-bool D3D11::FConstantBuffer::Initialize(LostCore::IRenderContext * rc)
+bool D3D11::FConstantBuffer::Initialize(LostCore::IRenderContext * rc, int32 byteWidth, bool dynamic)
 {
+	ByteWidth = byteWidth;
+	bDynamic = dynamic;
+
 	const char* head = "D3D11::FConstantBuffer::Initialize";
 	auto device = FRenderContext::GetDevice(rc, head);
 	if (!device.IsValid())
@@ -37,14 +40,6 @@ bool D3D11::FConstantBuffer::Initialize(LostCore::IRenderContext * rc)
 	return true;
 }
 
-bool D3D11::FConstantBuffer::Initialize(LostCore::IRenderContext * rc, int32 byteWidth, bool dynamic, int32 slot)
-{
-	ByteWidth = byteWidth;
-	bDynamic = dynamic;
-	Slot = slot;
-	return Initialize(rc);
-}
-
 void D3D11::FConstantBuffer::UpdateBuffer(LostCore::IRenderContext * rc, const void * buf, int32 sz)
 {
 	const char* head = "D3D11::FConstantBuffer::UpdateBuffer";
@@ -60,7 +55,7 @@ void D3D11::FConstantBuffer::UpdateBuffer(LostCore::IRenderContext * rc, const v
 	cxt->UpdateSubresource(Buffer.GetReference(), 0, nullptr, buf, 0, 0);
 }
 
-void D3D11::FConstantBuffer::Bind(LostCore::IRenderContext * rc)
+void D3D11::FConstantBuffer::Bind(LostCore::IRenderContext * rc, int32 slot)
 {
 	const char* head = "D3D11::FConstantBuffer::Bind";
 	auto cxt = FRenderContext::GetDeviceContext(rc, head);
@@ -69,36 +64,36 @@ void D3D11::FConstantBuffer::Bind(LostCore::IRenderContext * rc)
 		return;
 	}
 
-	assert(Slot >= 0);
+	assert(slot >= 0);
 
 	auto ref = Buffer.GetReference();
-	if ((Slot&SHADER_SLOT_VS) == SHADER_SLOT_VS)
+	if ((slot&SHADER_SLOT_VS) == SHADER_SLOT_VS)
 	{
-		cxt->VSSetConstantBuffers(Slot, 1, &ref);
+		cxt->VSSetConstantBuffers(slot&SHADER_SLOT_MASK, 1, &ref);
 	}
 
-	if ((Slot&SHADER_SLOT_PS) == SHADER_SLOT_PS)
+	if ((slot&SHADER_SLOT_PS) == SHADER_SLOT_PS)
 	{
-		cxt->PSSetConstantBuffers(Slot, 1, &ref);
+		cxt->PSSetConstantBuffers(slot&SHADER_SLOT_MASK, 1, &ref);
 	}
 	
-	if ((Slot&SHADER_SLOT_GS) == SHADER_SLOT_GS)
+	if ((slot&SHADER_SLOT_GS) == SHADER_SLOT_GS)
 	{
-		cxt->GSSetConstantBuffers(Slot, 1, &ref);
+		cxt->GSSetConstantBuffers(slot&SHADER_SLOT_MASK, 1, &ref);
 	}
 	
-	if ((Slot&SHADER_SLOT_HS) == SHADER_SLOT_HS)
+	if ((slot&SHADER_SLOT_HS) == SHADER_SLOT_HS)
 	{
-		cxt->HSSetConstantBuffers(Slot, 1, &ref);
+		cxt->HSSetConstantBuffers(slot&SHADER_SLOT_MASK, 1, &ref);
 	}
 	
-	if ((Slot&SHADER_SLOT_DS) == SHADER_SLOT_DS)
+	if ((slot&SHADER_SLOT_DS) == SHADER_SLOT_DS)
 	{
-		cxt->DSSetConstantBuffers(Slot, 1, &ref);
+		cxt->DSSetConstantBuffers(slot&SHADER_SLOT_MASK, 1, &ref);
 	}
 	
-	if ((Slot&SHADER_SLOT_CS) == SHADER_SLOT_CS)
+	if ((slot&SHADER_SLOT_CS) == SHADER_SLOT_CS)
 	{
-		cxt->CSSetConstantBuffers(Slot, 1, &ref);
+		cxt->CSSetConstantBuffers(slot&SHADER_SLOT_MASK, 1, &ref);
 	}
 }

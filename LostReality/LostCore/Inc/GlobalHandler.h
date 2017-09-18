@@ -197,18 +197,21 @@ namespace LostCore
 		void SetCallbackShutdown(Callback_V shutdown);
 	};
 
-	EXPORT_WRAP_1_DCL(SetDisplayNormalLength, float);
-	EXPORT_WRAP_3_DCL(MoveCamera, float, float, float); // x, y, z
-	EXPORT_WRAP_3_DCL(RotateCamera, float, float, float); // pitch, yaw, roll
-	EXPORT_WRAP_1_DCL(SetAnimateRate, float);
-	EXPORT_WRAP_1_DCL(SetDisplayFlags, uint32);
-	EXPORT_WRAP_1_DCL(SetAnimUpdater, LostCore::PFN_AnimUpdate);
-	EXPORT_WRAP_1_DCL(PlayAnimation, const char*);
-	EXPORT_WRAP_2_DCL(LoadAsset, uint32, const char*);
-	EXPORT_WRAP_1_DCL(SetLogger, LostCore::PFN_Logger);
-	EXPORT_WRAP_4_DCL(InitializeWindow, HWND, bool, int32, int32);
-	EXPORT_WRAP_14_DCL(LoadFBX, const char*, const char*, const char*, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool);
-	EXPORT_WRAP_0_DCL(ClearScene);
-	EXPORT_WRAP_3_DCL(Picking, int32, int32, bool);
-	EXPORT_WRAP_0_DCL(Shutdown);
 }
+
+EXPORT_WRAP_1_DCL(SetDisplayNormalLength, float);
+EXPORT_WRAP_3_DCL(MoveCamera, float, float, float); // x, y, z
+EXPORT_WRAP_3_DCL(RotateCamera, float, float, float); // pitch, yaw, roll
+EXPORT_WRAP_1_DCL(SetAnimateRate, float);
+EXPORT_WRAP_1_DCL(SetDisplayFlags, uint32);
+EXPORT_WRAP_1_DCL(SetAnimUpdater, LostCore::PFN_AnimUpdate);
+//EXPORT_API EReturnCode SetAnimUpdater(LostCore::PFN_AnimUpdate);
+//static TExportFuncWrapper<LostCore::PFN_AnimUpdate> WrappedSetAnimUpdater("SetAnimUpdater", GET_MODULE);
+EXPORT_WRAP_1_DCL(PlayAnimation, const char*);
+EXPORT_WRAP_2_DCL(LoadAsset, uint32, const char*);
+EXPORT_WRAP_1_DCL(SetLogger, LostCore::PFN_Logger);
+EXPORT_WRAP_4_DCL(InitializeWindow, HWND, bool, int32, int32);
+EXPORT_WRAP_14_DCL(LoadFBX, const char*, const char*, const char*, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool);
+EXPORT_WRAP_0_DCL(ClearScene);
+EXPORT_WRAP_3_DCL(Picking, int32, int32, bool);
+EXPORT_WRAP_0_DCL(Shutdown);

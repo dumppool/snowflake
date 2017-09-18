@@ -39,13 +39,14 @@ namespace LostCore
 	class FSegmentTool
 	{
 	private:
-		FFloat4x4 World;
+		FSingleMatrixParameter World;
 		vector<FSegmentVertex> Data;
 
 		bool bConstructed;
 		uint32 CurrentPrimitiveBytes;
 		IPrimitiveGroup* Primitive;
 		IMaterial* Material;
+		IConstantBuffer* ConstantBuffer;
 		bool bDepthTest;
 
 		bool ConstructPrimitive(const void* buf, uint32 bytes);

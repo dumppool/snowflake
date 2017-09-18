@@ -25,7 +25,7 @@ D3D11::FRenderContext::FRenderContext(LostCore::EContextID id)
 	, bWireframe(false)
 	, RenderTarget(nullptr)
 	, DepthStencil(nullptr)
-	, GlobalConstantBuffer(new FConstantBuffer(sizeof(Param), false, 0))
+	, GlobalConstantBuffer(new FConstantBuffer)
 {
 }
 
@@ -81,7 +81,7 @@ bool D3D11::FRenderContext::Init(HWND wnd, bool bWindowed, int32 width, int32 he
 	
 	//Font.Initialize(this, LostCore::FFontConfig(), chars, sz);
 
-	return Device.IsValid() && Context.IsValid() && SwapChain.IsValid() && GlobalConstantBuffer->Initialize(this);
+	return Device.IsValid() && Context.IsValid() && SwapChain.IsValid() && GlobalConstantBuffer->Initialize(this, sizeof(Param), false);
 }
 
 void D3D11::FRenderContext::Fini()
@@ -157,8 +157,8 @@ void D3D11::FRenderContext::BeginFrame(float sec)
 
 		Context->OMSetDepthStencilState(FDepthStencilStateMap::Get()->GetState("Z_ENABLE_WRITE"), 0);
 
-		GlobalConstantBuffer->UpdateBuffer(this, &Param, sizeof(Param));
-		GlobalConstantBuffer->Bind(this);
+		GlobalConstantBuffer->UpdateBuffer(this, &Param.GetBuffer(), sizeof(Param));
+		GlobalConstantBuffer->Bind(this, 0 | SHADER_SLOT_VS | SHADER_SLOT_PS);
 
 		//if (GlobalCB != nullptr && GlobalCB->GetByteWidth() != GlobalParam.capacity())
 		//{

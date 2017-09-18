@@ -47,3 +47,5 @@
   } while((void)0, 0)
 #endif //SAFE_RELEASE
 
+#define MACRO_TEXT(m) (#m)
+

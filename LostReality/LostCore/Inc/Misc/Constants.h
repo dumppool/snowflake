@@ -205,12 +205,13 @@ enum EVertexElement
 
 #define MAGIC_VERTEX 0xaabbabab
 
-#define SHADER_SLOT_VS	(1<<4)
-#define SHADER_SLOT_PS	(1<<5)
-#define SHADER_SLOT_GS	(1<<6)
-#define SHADER_SLOT_HS	(1<<7)
-#define SHADER_SLOT_DS	(1<<8)
-#define SHADER_SLOT_CS	(1<<9)
+#define SHADER_SLOT_MASK	(0xf)
+#define SHADER_SLOT_VS		(1<<4)
+#define SHADER_SLOT_PS		(1<<5)
+#define SHADER_SLOT_GS		(1<<6)
+#define SHADER_SLOT_HS		(1<<7)
+#define SHADER_SLOT_DS		(1<<8)
+#define SHADER_SLOT_CS		(1<<9)
 
 static const char* SAttributeTypeString[] = {
 	"Unknown",

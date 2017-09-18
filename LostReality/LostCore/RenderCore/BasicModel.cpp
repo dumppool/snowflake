@@ -18,6 +18,8 @@ using namespace LostCore;
 LostCore::FBasicModel::FBasicModel()
 	: Primitive(nullptr)
 	, Material(nullptr)
+	, MatricesBuffer(nullptr)
+	, CustomBuffer(nullptr)
 {
 }
 
@@ -72,7 +74,7 @@ bool LostCore::FBasicModel::Config(const FJson & config)
 		return false;
 	}
 
-	if (!ConfigMaterial(materialConfig, Material))
+	if (!ConfigMaterial(materialConfig))
 	{
 		return false;
 	}
@@ -97,9 +99,19 @@ void LostCore::FBasicModel::DrawModel()
 	auto rc = FGlobalHandler::Get()->GetRenderContext();
 	auto sec = FGlobalHandler::Get()->GetFrameTime();
 
+	if (MatricesBuffer != nullptr)
+	{
+		MatricesBuffer->Bind(rc, 1 | SHADER_SLOT_VS);
+	}
+
+	if (CustomBuffer != nullptr)
+	{
+		CustomBuffer->Bind(rc, 2 | SHADER_SLOT_VS | SHADER_SLOT_PS);
+	}
+
 	if (Material != nullptr)
 	{
-		Material->Draw(rc, sec);
+		Material->Bind(rc);
 	}
 
 	if (Primitive != nullptr)
@@ -144,10 +156,22 @@ bool LostCore::FBasicModel::ConfigPrimitive(const string& url, IPrimitiveGroup*&
 	return pg != nullptr;
 }
 
-bool LostCore::FBasicModel::ConfigMaterial(const string& url, IMaterial*& mat)
+bool LostCore::FBasicModel::ConfigMaterial(const string& url)
 {
+	bool success = true;
 	auto rc = FGlobalHandler::Get()->GetRenderContext();
-	return D3D11::WrappedCreateMaterial_SceneObject(&mat) == SSuccess && mat->Initialize(rc, url.c_str());
+	success &= D3D11::WrappedCreateConstantBuffer(&MatricesBuffer) == SSuccess;
+	success &= D3D11::WrappedCreateConstantBuffer(&CustomBuffer) == SSuccess && CustomBuffer->Initialize(rc, sizeof(Custom), false);
+	success &= D3D11::WrappedCreateMaterial(&Material) == SSuccess && Material->Initialize(rc, url.c_str());
+	return success;
+}
+
+void LostCore::FBasicModel::UpdateConstant()
+{
+	if (CustomBuffer != nullptr)
+	{
+		CustomBuffer->UpdateBuffer(FGlobalHandler::Get()->GetRenderContext(), &Custom.GetBuffer(), sizeof(Custom));
+	}
 }
 
 void LostCore::FBasicModel::UpdateGizmosBoundingBox()
@@ -231,9 +255,24 @@ IMaterial * LostCore::FBasicModel::GetMaterial()
 	return Material;
 }
 
+IConstantBuffer * LostCore::FBasicModel::GetMatricesBuffer()
+{
+	return MatricesBuffer;
+}
+
+IConstantBuffer * LostCore::FBasicModel::GetCustomBuffer()
+{
+	return CustomBuffer;
+}
+
 FMeshData * LostCore::FBasicModel::GetPrimitiveData()
 {
 	return &PrimitiveData;
+}
+
+void LostCore::FBasicModel::SetColor(const FColor128 & color)
+{
+	Custom.Color = color;
 }
 
 FSegmentTool * LostCore::FBasicModel::GetSegmentRenderer()
@@ -273,12 +312,29 @@ void LostCore::FBasicModel::ValidateBoundingBox()
 
 void LostCore::FBasicModel::Fini()
 {
-	// TODO: 更合适销毁这些对象.
-	D3D11::WrappedDestroyPrimitiveGroup(forward<IPrimitiveGroup*>(Primitive));
-	Primitive = nullptr;
+	if (Primitive != nullptr)
+	{
+		D3D11::WrappedDestroyPrimitiveGroup(forward<IPrimitiveGroup*>(Primitive));
+		Primitive = nullptr;
+	}
 
-	D3D11::WrappedDestroyMaterial_SceneObject(forward<IMaterial*>(Material));
-	Material = nullptr;
+	if (Material != nullptr)
+	{
+		D3D11::WrappedDestroyMaterial(forward<IMaterial*>(Material));
+		Material = nullptr;
+	}
+
+	if (MatricesBuffer != nullptr)
+	{
+		D3D11::WrappedDestroyConstantBuffer(forward<IConstantBuffer*>(MatricesBuffer));
+		MatricesBuffer = nullptr;
+	}
+
+	if (CustomBuffer != nullptr)
+	{
+		D3D11::WrappedDestroyConstantBuffer(forward<IConstantBuffer*>(CustomBuffer));
+		CustomBuffer = nullptr;
+	}
 }
 
 LostCore::FStaticModel::FStaticModel() : FBasicModel()
@@ -298,12 +354,12 @@ void LostCore::FStaticModel::Tick()
 
 void LostCore::FStaticModel::SetWorldMatrix(const FFloat4x4 & world)
 {
-	World = world;
+	World.Matrix = world;
 }
 
 FFloat4x4 LostCore::FStaticModel::GetWorldMatrix()
 {
-	return World;
+	return World.Matrix;
 }
 
 void LostCore::FStaticModel::Clone(FBasicModel & model)
@@ -311,12 +367,25 @@ void LostCore::FStaticModel::Clone(FBasicModel & model)
 	FBasicModel::Clone(model);
 }
 
+bool LostCore::FStaticModel::ConfigMaterial(const string & url)
+{
+	bool success = FBasicModel::ConfigMaterial(url);
+	auto cb = GetMatricesBuffer();
+	if (cb != nullptr)
+	{
+		success &= cb->Initialize(FGlobalHandler::Get()->GetRenderContext(), sizeof(World), false);
+	}
+
+	return success;
+}
+
 void LostCore::FStaticModel::UpdateConstant()
 {
-	auto mat = GetMaterial();
-	if (mat != nullptr)
+	FBasicModel::UpdateConstant();
+	auto cb = GetMatricesBuffer();
+	if (cb != nullptr)
 	{
-		mat->UpdateConstantBuffer(FGlobalHandler::Get()->GetRenderContext(), (const void*)&World, sizeof(World));
+		cb->UpdateBuffer(FGlobalHandler::Get()->GetRenderContext(), (const void*)&World.GetBuffer(), sizeof(World));
 	}
 }
 
@@ -347,18 +416,19 @@ void LostCore::FStaticModel::UpdateGizmosNormalTangent()
 	const FColor96 normalColor((uint32)0x0000ff);
 	const FColor96 endColor((uint32)0xffffff);
 	const float segLen = FGlobalHandler::Get()->GetDisplayNormalLength();
+	auto& world = World.Matrix;
 	for (uint32 i = 0; i < prim.Coordinates.size(); ++i)
 	{
 		if (displayNormal)
 		{
 			FSegmentData seg;
-			seg.StartPt = World.ApplyPoint(prim.Coordinates[i]);
+			seg.StartPt = world.ApplyPoint(prim.Coordinates[i]);
 			seg.StartPtColor = normalColor;
 			seg.StopPtColor = endColor;
 
 			if (prim.Normals.size() > 0)
 			{
-				FFloat3 normal = World.ApplyVector(prim.Normals[i]);
+				FFloat3 normal = world.ApplyVector(prim.Normals[i]);
 				seg.StopPt = seg.StartPt + normal * segLen;
 				renderer.AddSegment(seg);
 			}
@@ -366,7 +436,7 @@ void LostCore::FStaticModel::UpdateGizmosNormalTangent()
 			{
 				for (const auto& elem : prim.VertexPolygonMap[i])
 				{
-					FFloat3 normal = World.ApplyVector(prim.Triangles[elem.first].Vertices[elem.second].Normal);
+					FFloat3 normal = world.ApplyVector(prim.Triangles[elem.first].Vertices[elem.second].Normal);
 					seg.StopPt = seg.StartPt + normal * segLen;
 					renderer.AddSegment(seg);
 				}
@@ -376,13 +446,13 @@ void LostCore::FStaticModel::UpdateGizmosNormalTangent()
 		if (displayTangent)
 		{
 			FAxisData axis;
-			axis.Origin = World.ApplyPoint(prim.Coordinates[i]);
+			axis.Origin = world.ApplyPoint(prim.Coordinates[i]);
 
 			if (prim.Normals.size() > 0)
 			{
-				FFloat3 normal = World.ApplyVector(prim.Normals[i]);
-				FFloat3 tangent = World.ApplyVector(prim.Tangents[i]);
-				FFloat3 binormal = World.ApplyVector(prim.Binormals[i]);
+				FFloat3 normal = world.ApplyVector(prim.Normals[i]);
+				FFloat3 tangent = world.ApplyVector(prim.Tangents[i]);
+				FFloat3 binormal = world.ApplyVector(prim.Binormals[i]);
 				axis.DirX = binormal;
 				axis.DirY = normal;
 				axis.DirZ = tangent;
@@ -393,9 +463,9 @@ void LostCore::FStaticModel::UpdateGizmosNormalTangent()
 			{
 				for (auto& elem : prim.VertexPolygonMap[i])
 				{
-					FFloat3 normal = World.ApplyVector(prim.Triangles[elem.first].Vertices[elem.second].Normal);
-					FFloat3 tangent = World.ApplyVector(prim.Triangles[elem.first].Vertices[elem.second].Tangent);
-					FFloat3 binormal = World.ApplyVector(prim.Triangles[elem.first].Vertices[elem.second].Binormal);
+					FFloat3 normal = world.ApplyVector(prim.Triangles[elem.first].Vertices[elem.second].Normal);
+					FFloat3 tangent = world.ApplyVector(prim.Triangles[elem.first].Vertices[elem.second].Tangent);
+					FFloat3 binormal = world.ApplyVector(prim.Triangles[elem.first].Vertices[elem.second].Binormal);
 					axis.DirX = binormal;
 					axis.DirY = normal;
 					axis.DirZ = tangent;
@@ -454,6 +524,7 @@ void LostCore::FSkeletalModel::Clone(FBasicModel & model)
 
 void LostCore::FSkeletalModel::UpdateConstant()
 {
+	FBasicModel::UpdateConstant();
 	auto& prim = *GetPrimitiveData();
 	Root.UpdateWorldMatrix(Matrices.World);
 
@@ -467,10 +538,10 @@ void LostCore::FSkeletalModel::UpdateConstant()
 		}
 	}
 
-	auto mat = GetMaterial();
-	if (mat != nullptr)
+	auto cb = GetMatricesBuffer();
+	if (cb != nullptr)
 	{
-		mat->UpdateConstantBuffer(FGlobalHandler::Get()->GetRenderContext(), (const void*)&Matrices, sizeof(Matrices));
+		cb->UpdateBuffer(FGlobalHandler::Get()->GetRenderContext(), (const void*)&Matrices.GetBuffer(), sizeof(Matrices));
 	}
 }
 
@@ -487,13 +558,17 @@ bool LostCore::FSkeletalModel::ConfigPrimitive(const string& url, IPrimitiveGrou
 	return false;
 }
 
-bool LostCore::FSkeletalModel::ConfigMaterial(const string& url, IMaterial*& mat)
+bool LostCore::FSkeletalModel::ConfigMaterial(const string & url)
 {
-	// ConfigGizmos?
+	bool success = FBasicModel::ConfigMaterial(url);
 	SkeletonRenderer.EnableDepthTest(false);
+	auto cb = GetMatricesBuffer();
+	if (cb != nullptr)
+	{
+		success &= cb->Initialize(FGlobalHandler::Get()->GetRenderContext(), sizeof(Matrices), false);
+	}
 
-	auto rc = FGlobalHandler::Get()->GetRenderContext();
-	return D3D11::WrappedCreateMaterial_SceneObjectSkinned(&mat) == SSuccess && mat->Initialize(rc, url.c_str());
+	return success;
 }
 
 void LostCore::FSkeletalModel::DrawGizmos()

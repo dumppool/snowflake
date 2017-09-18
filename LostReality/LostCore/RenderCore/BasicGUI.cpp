@@ -24,6 +24,7 @@ LostCore::FRect::FRect()
 	, RectPrimitive(nullptr)
 	, RectPrimitiveSize(0.f, 0.f)
 	, RectMaterial(nullptr)
+	, RectBuffer(nullptr)
 {
 }
 
@@ -143,8 +144,14 @@ void LostCore::FRect::Clear()
 
 	if (RectMaterial != nullptr)
 	{
-		WrappedDestroyMaterial_UIObject(forward<IMaterial*>(RectMaterial));
+		WrappedDestroyMaterial(forward<IMaterial*>(RectMaterial));
 		RectMaterial = nullptr;
+	}
+
+	if (RectBuffer != nullptr)
+	{
+		WrappedDestroyConstantBuffer(forward<IConstantBuffer*>(RectBuffer));
+		RectBuffer = nullptr;
 	}
 
 	for (auto& c : Children)
@@ -217,12 +224,16 @@ void LostCore::FRect::ReconstructPrimitive()
 		}
 
 		if (SSuccess != WrappedCreateMaterial(&RectMaterial) ||
-			!RectMaterial->Initialize(rc, "gui.json", sizeof(Param), false, 1))
+			!RectMaterial->Initialize(rc, "gui.json"))
 		{
 			return;
 		}
 
-		//RectPrimitive->SetMaterial(RectMaterial);
+		if (SSuccess != WrappedCreateConstantBuffer(&RectBuffer) ||
+			!RectBuffer->Initialize(rc, sizeof(Param), false))
+		{
+			return;
+		}
 
 		// 临时代码，查看字体贴图
 		RectMaterial->UpdateTexture(rc, FFontProvider::Get()->GetGdiFont()->GetFontTextures()[0], 0);
@@ -255,10 +266,19 @@ void LostCore::FRect::DrawPrivate()
 
 	ReconstructPrimitive();
 
+	if (RectBuffer != nullptr)
+	{
+		RectBuffer->UpdateBuffer(rc, (const void*)&Param.GetBuffer(), sizeof(Param));
+		RectBuffer->Bind(rc, 1 | SHADER_SLOT_VS);
+	}
+
+	if (RectMaterial != nullptr)
+	{
+		RectMaterial->Bind(rc);
+	}
+
 	if (RectPrimitive != nullptr && RectMaterial != nullptr)
 	{
-		RectMaterial->UpdateConstantBuffer(rc, (const void*)&Param, sizeof(Param));
-		RectMaterial->Draw(rc, sec);
 		RectPrimitive->Draw(rc, sec);
 	}
 
