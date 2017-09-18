@@ -4,5 +4,6 @@
 	"Primitive": "res/primitive/",
 	"Model": "res/model/",
 	"Scene": "res/scene/",
+	"Gizmo": "res/gizmo/",
 	"Animation": "res/animation/"
 }
