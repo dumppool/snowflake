@@ -159,6 +159,9 @@
     <ClInclude Include="HookInstaller.h" />
     <ClInclude Include="string_utils.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\HookCore\HookCore.vcxproj" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

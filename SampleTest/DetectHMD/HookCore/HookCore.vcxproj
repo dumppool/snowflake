@@ -29,7 +29,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -42,7 +42,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
@@ -186,7 +186,6 @@
     <ClInclude Include="libovr-lib\Src\OVR_CAPI_Prototypes.h" />
     <ClInclude Include="mhook-lib\mhook.h" />
     <ClInclude Include="openvr\OpenVR.h" />
-    <ClInclude Include="osvr\OSVR.h" />
     <ClInclude Include="renderers\ConcreteProjectors.h" />
     <ClInclude Include="renderers\Direct3D11Renderer.h" />
     <ClInclude Include="renderers\Direct3D11Window.h" />
@@ -224,7 +223,6 @@
     <ClCompile Include="libovr-lib\Src\OVR_StereoProjection.cpp" />
     <ClCompile Include="mhook-lib\mhook.cpp" />
     <ClCompile Include="openvr\OpenVR.cpp" />
-    <ClCompile Include="osvr\OSVR.cpp" />
     <ClCompile Include="renderers\ConcreteProjectors.cpp" />
     <ClCompile Include="renderers\Direct3D11Renderer.cpp" />
     <ClCompile Include="renderers\Direct3D11Window.cpp" />

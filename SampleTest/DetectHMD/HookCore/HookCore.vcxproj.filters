@@ -83,9 +83,6 @@
     <ClInclude Include="renderers\Direct3D11Window.h">
       <Filter>renderers</Filter>
     </ClInclude>
-    <ClInclude Include="osvr\OSVR.h">
-      <Filter>osvr</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="disasm-lib\cpu.c">
@@ -147,9 +144,6 @@
     </ClCompile>
     <ClCompile Include="renderers\Direct3D11Window.cpp">
       <Filter>renderers</Filter>
-    </ClCompile>
-    <ClCompile Include="osvr\OSVR.cpp">
-      <Filter>osvr</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

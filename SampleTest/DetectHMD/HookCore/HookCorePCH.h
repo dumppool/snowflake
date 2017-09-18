@@ -32,6 +32,14 @@ using FJson = nlohmann::json;
 #pragma comment(lib, "../DirectXTK/Bin/Desktop_2015/Win32/Debug/DirectXTK.lib")
 #endif
 
+#define ENABLE_LOG_DETAIL 1
+
+#ifdef _DEBUG
+#define LOG_DETAIL ENABLE_LOG_DETAIL
+#else
+#define LOG_DETAIL 0
+#endif
+
 #ifndef SAFE_RELEASE
 #define SAFE_RELEASE(p) \
   do                    \
@@ -75,6 +83,8 @@ using FJson = nlohmann::json;
 #endif
 
 static const CHAR* SLogFilePrefixDefault = "Default";
+static const CHAR* SLogError = "ErrorReport";
+static const CHAR* SLogDetail = "FrameDetail";
 
 #define LVMSG(Cap, ...) {\
 log_cap_cnt(SLogFilePrefixDefault, Cap, __VA_ARGS__);}
@@ -82,9 +92,8 @@ log_cap_cnt(SLogFilePrefixDefault, Cap, __VA_ARGS__);}
 #define LVMSG2(Prefix, Cap, ...) {\
 log_cap_cnt(Prefix, Cap, __VA_ARGS__);}
 
-static const CHAR* SLogError = "ErrorReport";
-
 #define LVERROR(Head, ...) LVMSG2(SLogError, Head, __VA_ARGS__)
+#define LVDETAIL(Head, ...) LVMSG2(SLogDetail, Head, __VA_ARGS__)
 
 #include <time.h>
 #include <fstream>

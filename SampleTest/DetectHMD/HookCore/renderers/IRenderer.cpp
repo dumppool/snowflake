@@ -79,6 +79,7 @@ IVRDevice* LostVR::GetDevice(const std::string& InKey) const
 
 void LostVR::OnPresent_Direct3D11(IDXGISwapChain* swapChain)
 {
+	const char* head = "LostVR::OnPresent_Direct3D11";
 	ScopedHighFrequencyCounter Count("LostVR::OnPresent_Direct3D11");
 
 	auto dev = GetDevice();
@@ -88,7 +89,11 @@ void LostVR::OnPresent_Direct3D11(IDXGISwapChain* swapChain)
 		return;
 	}
 
-	dev->OnPresent_Direct3D11(swapChain);
+	bool presentSuccess = dev->OnPresent_Direct3D11(swapChain);
+
+#if LOG_DETAIL
+	LVDETAIL(head, "%s", presentSuccess ? "succeeded" : "failed");
+#endif
 
 	SetupInput();
 	PollInputDevice(nullptr);
@@ -96,6 +101,7 @@ void LostVR::OnPresent_Direct3D11(IDXGISwapChain* swapChain)
 
 void LostVR::OnPresent_Direct3D9(IDirect3DDevice9* device)
 {
+	const char* head = "LostVR::OnPresent_Direct3D9";
 	ScopedHighFrequencyCounter Count("LostVR::OnPresent_Direct3D9");
 
 	auto dev = GetDevice();
@@ -105,7 +111,11 @@ void LostVR::OnPresent_Direct3D9(IDirect3DDevice9* device)
 		return;
 	}
 
-	dev->OnPresent_Direct3D9(device);
+	bool presentSuccess = dev->OnPresent_Direct3D9(device);
+
+#if LOG_DETAIL
+	LVDETAIL(head, "%s", presentSuccess ? "succeeded" : "failed");
+#endif
 
 	SetupInput();
 	PollInputDevice(nullptr);
@@ -113,6 +123,7 @@ void LostVR::OnPresent_Direct3D9(IDirect3DDevice9* device)
 
 void LostVR::OnPresent_Direct3D9Ex(IDirect3DDevice9Ex* device)
 {
+	const char* head = "LostVR::OnPresent_Direct3D9Ex";
 	ScopedHighFrequencyCounter Count("LostVR::OnPresent_Direct3D9Ex");
 
 	auto dev = GetDevice();

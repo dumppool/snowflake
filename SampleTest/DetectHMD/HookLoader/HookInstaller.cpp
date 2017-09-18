@@ -42,7 +42,21 @@ void InjectDLL(HANDLE hProcess, wstring libName)
 	}
 	else
 	{
-		LVLogErr("Couldn't allocate remote memory for DLL '%ls'", libName.c_str());
+		char* errMsg;
+		DWORD dw = GetLastError();
+
+		FormatMessageA(
+			FORMAT_MESSAGE_ALLOCATE_BUFFER |
+			FORMAT_MESSAGE_FROM_SYSTEM |
+			FORMAT_MESSAGE_IGNORE_INSERTS,
+			NULL,
+			dw,
+			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+			(LPSTR)&errMsg,
+			0, NULL);
+
+		LVLogErr("VirtualAllocEx failed for DLL: %s", errMsg);
+		LocalFree(errMsg);
 	}
 }
 
@@ -243,6 +257,31 @@ uint32_t InjectIntoProcess(uint32_t pid, const char *logfile, bool waitForExit)
 {
 	wstring wlogfile = logfile == NULL ? L"" : UTF8ToWide(logfile);
 
+	/**************************************************/
+	HANDLE hToken;
+	LUID sedebugnameValue;
+	TOKEN_PRIVILEGES tkp;       
+	if (!OpenProcessToken(GetCurrentProcess(), /*TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY*/TOKEN_ALL_ACCESS, &hToken))
+	{
+		return -1;
+	}       
+	
+	if (!LookupPrivilegeValue(NULL, SE_DEBUG_NAME, &sedebugnameValue))
+	{
+		CloseHandle(hToken);
+		return -1;
+	}      
+	
+	tkp.PrivilegeCount = 1;
+	tkp.Privileges[0].Luid = sedebugnameValue;
+	tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;       if (!AdjustTokenPrivileges(hToken, FALSE, &tkp, sizeof(tkp), NULL, NULL))
+	{
+		CloseHandle(hToken);
+		return -1;
+	}
+
+	/**************************************************/
+
 	HANDLE hProcess = 
 		OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 		//OpenProcess(PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION |
@@ -258,8 +297,9 @@ uint32_t InjectIntoProcess(uint32_t pid, const char *logfile, bool waitForExit)
 	{
 		DWORD err = GetLastError();
 		LVLogErr("Couldn't determine bitness of process: %d, err: %08x", pid, err);
+		CloseHandle(hToken);
 		CloseHandle(hProcess);
-		return 0;
+		return -1;
 	}
 
 #if 1
@@ -275,14 +315,15 @@ uint32_t InjectIntoProcess(uint32_t pid, const char *logfile, bool waitForExit)
 	{
 		DWORD err = GetLastError();
 		LVLogErr("Couldn't determine bitness of self, err: %08x", err);
-		return 0;
+		return -1;
 	}
 
 	if (selfWow64 && !isWow64)
 	{
 		LVLogErr("Can't capture x64 process with x86 version");
+		CloseHandle(hToken);
 		CloseHandle(hProcess);
-		return 0;
+		return -1;
 	}
 #else
 	// farm off to x86 version
@@ -341,15 +382,18 @@ uint32_t InjectIntoProcess(uint32_t pid, const char *logfile, bool waitForExit)
 
 		ResumeThread(pi.hThread);
 		WaitForSingleObject(pi.hThread, INFINITE);
+		CloseHandle(hToken);
 		CloseHandle(pi.hThread);
 
 		DWORD exitCode = 0;
 		GetExitCodeProcess(pi.hProcess, &exitCode);
+		CloseHandle(hToken);
 		CloseHandle(pi.hProcess);
 
 		if (waitForExit)
 			WaitForSingleObject(hProcess, INFINITE);
 
+		CloseHandle(hToken);
 		CloseHandle(hProcess);
 
 		return (uint32_t)exitCode;
@@ -376,6 +420,7 @@ uint32_t InjectIntoProcess(uint32_t pid, const char *logfile, bool waitForExit)
 	if (waitForExit)
 		WaitForSingleObject(hProcess, INFINITE);
 
+	CloseHandle(hToken);
 	CloseHandle(hProcess);
 
 	return Result;
