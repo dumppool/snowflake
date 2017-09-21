@@ -13,6 +13,17 @@ namespace D3D11
 {
 	class IPipeline
 	{
+	public:
+		virtual ~IPipeline() {}
 
+		virtual void AddRenderObject() = 0;
+
+		virtual void BeginFrame() = 0;
+		virtual void EndFrame() = 0;
+
+		virtual void RenderOpcity() = 0;
+		virtual void RenderMasked() = 0;
+		virtual void RenderTranslucent() = 0;
+		virtual void RenderPostProcess() = 0;
 	};
 }

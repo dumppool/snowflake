@@ -45,7 +45,7 @@ bool D3D11::FMaterialShader::LoadShader(LostCore::IRenderContext * rc, const str
 	}
 
 	auto absPathW = UTF8ToWide(absPath);
-	HRESULT hr = D3DCompileFromFile(absPathW.c_str(), nullptr, nullptr, entry.c_str(), target.c_str(),
+	HRESULT hr = D3DCompileFromFile(absPathW.c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, entry.c_str(), target.c_str(),
 		flag1, flag2, shaderBlob.GetInitReference(), errorBlob.GetInitReference());
 
 	if (FAILED(hr) || !shaderBlob.IsValid())
