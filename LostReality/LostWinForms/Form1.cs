@@ -44,44 +44,60 @@ namespace LostWinForms
 
 
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern void SetDisplayNormalLength(float len);
+        public static extern Int32 SetDisplayNormalLength(float len);
 
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern void MoveCamera(float x, float y, float z);
+        public static extern Int32 MoveCamera(float x, float y, float z);
 
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern void RotateCamera(float p, float y, float r);
+        public static extern Int32 RotateCamera(float p, float y, float r);
 
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern void SetAnimateRate(float rate);
+        public static extern Int32 SetAnimateRate(float rate);
 
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern void SetDisplayFlags(uint flags);
+        public static extern Int32 SetDisplayFlags(uint flags);
 
-        public delegate void PFN_AnimUpdate(uint flag, StringBuilder anim);
+        public delegate void PFN_UpdateFlagAndString(uint flag, StringBuilder str);
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern void SetAnimUpdater(PFN_AnimUpdate animUpdate);
-
-        [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern void PlayAnimation(String anim);
+        public static extern Int32 SetUpdateFlagAndString(PFN_UpdateFlagAndString pfn);
 
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern void LoadAsset(UInt32 flag, String url);
+        public static extern Int32 PlayAnimation(String anim);
 
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern void ClearScene();
+        public static extern Int32 ClearScene();
 
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern void Picking(Int32 x, Int32 y, bool clicked);
+        public static extern Int32 Shutdown();
+
+        public delegate void PFN_UpdatePosAndRot(float x, float y, float z, float pitch, float yaw, float roll);
+        [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public static extern Int32 SetUpdatePosAndRot(PFN_UpdatePosAndRot pfn);
 
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern void Shutdown();
+        public static extern Int32 OnHover(Int32 x, Int32 y);
 
-        private const uint AssetModel = 0;
-        private const uint AssetAnimation = 1;
+        [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public static extern Int32 OnClick(Int32 x, Int32 y);
+
+        [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public static extern Int32 OnDragging(Int32 x, Int32 y);
+
+        [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public static extern Int32 OnEndDrag();
+
+        [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public static extern Int32 AssetOperate(UInt32 flag, String url);
+
+        private const uint AssetOperateLoadModel = 0;
+        private const uint AssetOperateLoadAnimation = 1;
+        private const uint AssetOperateLoadScene = 2;
+        private const uint AssetOperateSaveScene = 3;
 
         private const uint UpdateAnimClear = 0;
         private const uint UpdateAnimAdd = 1;
+        private const uint UpdateMonitorTargetName = 2;
 
         private const uint FlagDisplayNormal = (1 << 0);
         private const uint FlagDisplayTangent = (1 << 1);
@@ -103,6 +119,8 @@ namespace LostWinForms
         private const String LastOpenFbxKey             = "LastFbx";
         private const String LastOpenModelKey           = "LastModel";
         private const String LastOpenAnimationKey       = "LastAnimation";
+        private const String LastOpenSceneKey           = "LastScene";
+        private const String LastSaveSceneKey           = "LastSaveScene";
         private const String PrimitiveOutputKey         = "PrimitiveOutput";
         private const String AnimationOutputKey         = "AnimationOutput";
 
@@ -111,19 +129,23 @@ namespace LostWinForms
             { LastOpenFbxKey, "C:\\" },
             { LastOpenModelKey, "C:\\" },
             { LastOpenAnimationKey, "C:\\" },
+            { LastOpenSceneKey, "C:\\" },
+            { LastSaveSceneKey, "C:\\" },
             { PrimitiveOutputKey, "" },
             { AnimationOutputKey, "" },
         };
 
-        private bool bMovingImportPanel = false;
-        private Point LastMouseLocation;
-
         private PFN_Logger DelegateLogger;
-        private PFN_AnimUpdate DelegateAnimUpdate;
+        private PFN_UpdateFlagAndString DelegateUpdate;
+        private PFN_UpdatePosAndRot DelegateUpdatePosAndRot;
 
-        private bool bMouseDownPanel1 = false;
+        private bool bMouseDownLeft = false;
+        private bool bMouseDownRight = false;
+        private Point LastMouseLocationLeft;
+        private Point LastMouseLocationRight;
         private float MoveCameraStep = 0.10f;
         private float RotateCameraStep = 0.1f;
+        private float ClickThreshold = 4.0f;
 
         private String[] FileNamesToOpen;
 
@@ -144,17 +166,74 @@ namespace LostWinForms
 
             LoadModelToolStripMenuItem.Click += LoadModelToolStripMenuItem_Click;
             LoadAnimationToolStripMenuItem.Click += LoadAnimationToolStripMenuItem_Click;
+            LoadSceneToolStripMenuItem.Click += LoadSceneToolStripMenuItem_Click;
+            SaveSceneToolStripMenuItem.Click += SaveSceneToolStripMenuItem_Click;
 
             ViewPanelToolStripMenuItem.Click += ViewPanelToolStripMenuItem_Click;
             ViewPanelOk.Click += ViewPanelOk_Click;
             SegLengthSlider.Scroll += SegLengthSlider_Scroll;
             AnimateRateSlider.Scroll += AnimateRateSlider_Scroll;
 
-            DelegateAnimUpdate = new PFN_AnimUpdate(OnAnimUpdate);
-            SetAnimUpdater(DelegateAnimUpdate);
+            DelegateUpdate = new PFN_UpdateFlagAndString(OnUpdateFlagAndString);
+            SetUpdateFlagAndString(DelegateUpdate);
             listBox1.SelectedIndexChanged += ListBox1_SelectedIndexChanged;
 
+            DelegateUpdatePosAndRot = new PFN_UpdatePosAndRot(OnUpdatePosAndRot);
+            SetUpdatePosAndRot(DelegateUpdatePosAndRot);
+
             ClearSceneToolStripMenuItem.Click += ClearSceneToolStripMenuItem_Click;
+        }
+
+        private void SaveSceneToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SaveFileDialog dlg = new SaveFileDialog();
+            dlg.Title = "选择保存路径及文件名";
+            dlg.InitialDirectory = Path.GetDirectoryName(UserData[LastSaveSceneKey]);
+            dlg.OverwritePrompt = true;
+            dlg.AddExtension = true;
+            dlg.DefaultExt = "json";
+            if (dlg.ShowDialog(panel1) == DialogResult.OK)
+            {
+                UserData[LastSaveSceneKey] = dlg.FileName;
+                AssetOperate(AssetOperateSaveScene, dlg.FileName);
+            }
+
+            dlg.Dispose();
+        }
+
+        private void LoadSceneToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog dlg = new OpenFileDialog();
+            dlg.Title = "选择场景文件";
+            dlg.Filter = "";
+            dlg.RestoreDirectory = false;
+            dlg.InitialDirectory = Path.GetDirectoryName(UserData[LastOpenSceneKey]);
+            dlg.Multiselect = false;
+            if (dlg.ShowDialog(panel1) == DialogResult.OK)
+            {
+                UserData[LastOpenSceneKey] = dlg.FileName;
+                foreach (String fileName in dlg.FileNames)
+                {
+                    AssetOperate(AssetOperateLoadScene, fileName);
+                }
+            }
+
+            dlg.Dispose();
+        }
+
+        private void OnUpdatePosAndRot(float x, float y, float z, float pitch, float yaw, float roll)
+        {
+            MonitorPanel.BeginInvoke(new PFN_UpdatePosAndRot(InvokeUpdatePosAndRot), x, y, z, pitch, yaw, roll);
+        }
+
+        private void InvokeUpdatePosAndRot(float x, float y, float z, float pitch, float yaw, float roll)
+        {
+            ValuePosX.Text = x.ToString();
+            ValuePosY.Text = y.ToString();
+            ValuePosZ.Text = z.ToString();
+            ValuePitch.Text = pitch.ToString();
+            ValueYaw.Text = yaw.ToString();
+            ValueRoll.Text = roll.ToString();
         }
 
         private void ClearSceneToolStripMenuItem_Click(object sender, EventArgs e)
@@ -162,16 +241,10 @@ namespace LostWinForms
             ClearScene();
         }
 
-        private String GetDirectory(String path)
-        {
-            String outPath = Path.GetDirectoryName(path);
-            return path;
-        }
-
         private void LoadAnimationToolStripMenuItem_Click(object sender, EventArgs e)
         {
             OpenFileDialog dlg = new OpenFileDialog();
-            dlg.Title = "选择要打开的FBX文件";
+            dlg.Title = "选择动画文件";
             dlg.Filter = "";
             dlg.RestoreDirectory = false;
             dlg.InitialDirectory = Path.GetDirectoryName(UserData[LastOpenAnimationKey]);
@@ -181,7 +254,7 @@ namespace LostWinForms
                 UserData[LastOpenAnimationKey] = dlg.FileName;
                 foreach (String fileName in dlg.FileNames)
                 {
-                    LoadAsset(AssetAnimation, fileName);
+                    AssetOperate(AssetOperateLoadAnimation, fileName);
                 }
             }
 
@@ -201,7 +274,7 @@ namespace LostWinForms
                 UserData[LastOpenModelKey] = dlg.FileName;
                 foreach (String fileName in dlg.FileNames)
                 {
-                    LoadAsset(AssetModel, dlg.FileName);
+                    AssetOperate(AssetOperateLoadModel, dlg.FileName);
                 }
             }
 
@@ -213,12 +286,23 @@ namespace LostWinForms
             PlayAnimation(listBox1.Items[listBox1.SelectedIndex].ToString());
         }
 
-        private void OnAnimUpdate(uint flag, StringBuilder anim)
+        private void OnUpdateFlagAndString(uint flag, StringBuilder str)
         {
-            listBox1.Invoke(new PFN_AnimUpdate(AnimUpdate), flag, anim);
+            if ((flag == UpdateAnimClear || flag == UpdateAnimAdd))
+            {
+                listBox1.BeginInvoke(new PFN_UpdateFlagAndString(UpdateAnimList), flag, str);
+            }
+            else if (flag == UpdateMonitorTargetName)
+            {
+                MonitorPanel.BeginInvoke(new PFN_UpdateFlagAndString(UpdateMonitorTarget), flag, str);
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
         }
 
-        private void AnimUpdate(uint flag, StringBuilder anim)
+        private void UpdateAnimList(uint flag, StringBuilder anim)
         {
             if (flag == UpdateAnimClear)
             {
@@ -230,6 +314,11 @@ namespace LostWinForms
                 // add
                 listBox1.Items.Add(anim);
             }
+        }
+
+        private void UpdateMonitorTarget(uint flag, StringBuilder str)
+        {
+            ValueTargetName.Text = str.ToString();
         }
 
         private void AnimateRateSlider_Scroll(object sender, EventArgs e)
@@ -286,33 +375,60 @@ namespace LostWinForms
 
         private void Panel1_MouseMove(object sender, MouseEventArgs e)
         {
-            if (bMouseDownPanel1)
+            if (bMouseDownRight)
             {
-                float dx = e.Location.X - LastMouseLocation.X;
-                float dy = e.Location.Y - LastMouseLocation.Y;
-                LastMouseLocation = e.Location;
+                float dx = e.Location.X - LastMouseLocationRight.X;
+                float dy = e.Location.Y - LastMouseLocationRight.Y;
+                LastMouseLocationRight = e.Location;
                 RotateCamera(dy * RotateCameraStep, -dx * RotateCameraStep, 0.0f);
+            }
+            else if (bMouseDownLeft)
+            {
+                OnDragging(e.Location.X, e.Location.Y);
             }
             else
             {
-                Picking(e.Location.X, e.Location.Y, false);
+                OnHover(e.Location.X, e.Location.Y);
             }
         }
 
         private void Panel1_MouseUp(object sender, MouseEventArgs e)
         {
-            bMouseDownPanel1 = false;
-            LastMouseLocation = e.Location;
             if (e.Button == MouseButtons.Left)
             {
-                Picking(e.Location.X, e.Location.Y, true);
+                bMouseDownLeft = false;
+                float dx = e.Location.X - LastMouseLocationLeft.X;
+                float dy = e.Location.Y - LastMouseLocationLeft.Y;
+                LastMouseLocationLeft = e.Location;
+                float deltaSquared = dx * dx + dy * dy;
+                bool clicked = deltaSquared < ClickThreshold;
+                if (clicked)
+                {
+                    OnClick(e.Location.X, e.Location.Y);
+                }
+                else
+                {
+                    OnEndDrag();
+                }
+            }
+            else if (e.Button == MouseButtons.Right)
+            {
+                bMouseDownRight = false;
             }
         }
 
         private void Panel1_MouseDown(object sender, MouseEventArgs e)
         {
-            bMouseDownPanel1 = true;
-            LastMouseLocation = e.Location;
+            if (e.Button == MouseButtons.Left)
+            {
+                bMouseDownLeft = true;
+                LastMouseLocationLeft = e.Location;
+            }
+            else if (e.Button == MouseButtons.Right)
+            {
+                bMouseDownRight = true;
+                LastMouseLocationRight = e.Location;
+            }
         }
 
         private void Panel1_MouseCaptureChanged(object sender, EventArgs e)
@@ -441,7 +557,7 @@ namespace LostWinForms
         // 输出日志回调
         private void OnLogging(Int32 level, StringBuilder msg)
         {
-            textBox1.Invoke(new PFN_Logger(LoggingActually), level, msg);
+            textBox1.BeginInvoke(new PFN_Logger(LoggingActually), level, msg);
         }
 
         // Form1加载事件
@@ -466,7 +582,12 @@ namespace LostWinForms
         // Form1关闭事件
         private void Form1_Closed(object sender, EventArgs e)
         {
+            SetUpdateFlagAndString(null);
+            SetUpdatePosAndRot(null);
+            DelegateUpdate = null;
+            DelegateUpdatePosAndRot = null;
             SaveLocalUserData();
+            Shutdown();
         }
 
         private void ImportOk_Click(object sender, EventArgs e)
@@ -503,39 +624,9 @@ namespace LostWinForms
             ImportPanel.Visible = false;
         }
 
-        private void ImportPanel_MouseDown(object sender, MouseEventArgs e)
-        {
-            bMovingImportPanel = true;
-            LastMouseLocation = e.Location;
-        }
-
-        private void ImportPanel_MouseMove(object sender, MouseEventArgs e)
-        {
-            // TODO: 需要在同一个坐标系下计算
-            if (bMovingImportPanel)
-            {
-                Point final = ImportPanel.Location;
-                final.X += e.Location.X - LastMouseLocation.X;
-                final.Y += e.Location.Y - LastMouseLocation.Y;
-                LastMouseLocation = e.Location;
-                ImportPanel.Location = final;
-            }
-        }
-
-        private void ImportPanel_MouseUp(object sender, MouseEventArgs e)
-        {
-            bMovingImportPanel = false;
-            LastMouseLocation = e.Location;
-        }
-
         private void ViewPanelToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ViewPanel.Visible = true;
-        }
-
-        private void Form1_Closed(object sender, FormClosedEventArgs e)
-        {
-            Shutdown();
         }
     }
 }

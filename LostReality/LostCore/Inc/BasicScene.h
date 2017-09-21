@@ -18,20 +18,20 @@ namespace LostCore
 	enum class ESceneNodeType : uint8
 	{
 		Undefined = 0,
-		StaticModel,
-		SkeletalModel,
+		Model,
 	};
 
-	class FBasicScene : public IBasicInterface
+	class FBasicScene
 	{
 	public:
 		FBasicScene();
-		virtual ~FBasicScene() override;
+		virtual ~FBasicScene();
 
-		virtual void Tick() override;
-		virtual void Draw() override;
-		virtual bool Config(const FJson& config) override;
-		virtual bool Load(const char* url) override;
+		virtual void Tick();
+		virtual void Draw();
+		virtual bool Config(const FJson& config);
+		virtual bool Load(const string& url);
+		virtual void Save(const string& url);
 
 		virtual void AddModel(FBasicModel * sm);
 		virtual void RemoveModel(FBasicModel * sm);

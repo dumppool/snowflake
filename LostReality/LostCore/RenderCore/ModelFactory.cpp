@@ -12,10 +12,10 @@
 
 using namespace LostCore;
 
-FBasicModel * LostCore::FModelFactory::NewModel(const FJson & config)
+FBasicModel * LostCore::FModelFactory::NewModel(const string & url)
 {
-	auto rc = FGlobalHandler::Get()->GetRenderContext();
-	if (rc == nullptr)
+	FJson config;
+	if (!FDirectoryHelper::Get()->GetModelJson(url, config))
 	{
 		return nullptr;
 	}
@@ -32,10 +32,7 @@ FBasicModel * LostCore::FModelFactory::NewModel(const FJson & config)
 		model = new FStaticModel;
 	}
 
-	if (model != nullptr)
-	{
-		model->Config(config);
-	}
-
+	model->SetUrl(url);
+	model->Config(config);
 	return model;
 }

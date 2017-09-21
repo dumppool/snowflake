@@ -14,7 +14,7 @@ namespace LostCore
 	class FModelFactory
 	{
 	public:
-		static FBasicModel* NewModel(const FJson& config);
+		static FBasicModel* NewModel(const string& url);
 	};
 }
 

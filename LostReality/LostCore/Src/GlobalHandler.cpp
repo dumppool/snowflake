@@ -12,14 +12,15 @@ LostCore::FGlobalHandler::FGlobalHandler()
 	, MoveCameraCallback(nullptr)
 	, RotateCameraCallback(nullptr)
 	, AnimateRate(1.0f)
-	, LoadModelCallback(nullptr)
-	, LoadAnimationCallback(nullptr)
 	, LoggingFunc(nullptr)
 	, InitializeWindowCallback(nullptr)
 	, LoadFBXCallback(nullptr)
 	, ClearSceneCallback(nullptr)
 	, PickingCallback(nullptr)
 	, ShutdownCallback(nullptr)
+	, UpdateFlagAndNameFunc(nullptr)
+	, UpdatePosAndRotFunc(nullptr)
+	, AssetOperateCallback(nullptr)
 {
 }
 
@@ -39,9 +40,12 @@ EReturnCode LostCore::FGlobalHandler::MoveCamera(float x, float y, float z)
 	if (MoveCameraCallback != nullptr)
 	{
 		MoveCameraCallback(x, y, z);
+		return SSuccess;
 	}
-
-	return SSuccess;
+	else
+	{
+		return SErrorNotImplemented;
+	}
 }
 
 EReturnCode LostCore::FGlobalHandler::RotateCamera(float p, float y, float r)
@@ -49,9 +53,12 @@ EReturnCode LostCore::FGlobalHandler::RotateCamera(float p, float y, float r)
 	if (RotateCameraCallback != nullptr)
 	{
 		RotateCameraCallback(p, y, r);
+		return SSuccess;
 	}
-
-	return SSuccess;
+	else
+	{
+		return SErrorNotImplemented;
+	}
 }
 
 EReturnCode LostCore::FGlobalHandler::SetAnimateRate(float rate)
@@ -78,9 +85,9 @@ uint32 LostCore::FGlobalHandler::GetDisplayFlags() const
 	return DisplayFlags;
 }
 
-EReturnCode LostCore::FGlobalHandler::SetAnimUpdater(PFN_AnimUpdate animUpdate)
+EReturnCode LostCore::FGlobalHandler::SetUpdateFlagAndString(PFN_UpdateFlagAndString animUpdate)
 {
-	AnimUpdateFunc = animUpdate;
+	UpdateFlagAndNameFunc = animUpdate;
 
 	return SSuccess;
 }
@@ -90,23 +97,12 @@ EReturnCode LostCore::FGlobalHandler::PlayAnimation(const char * anim)
 	if (PlayAnimationCallback != nullptr)
 	{
 		PlayAnimationCallback(anim);
+		return SSuccess;
 	}
-
-	return SSuccess;
-}
-
-EReturnCode LostCore::FGlobalHandler::LoadAsset(uint32 flag, const char * url)
-{
-	if ((EAssetFlag)flag == EAssetFlag::AssetModel && LoadModelCallback != nullptr)
+	else
 	{
-		LoadModelCallback(url);
+		return SErrorNotImplemented;
 	}
-	else if ((EAssetFlag)flag == EAssetFlag::AssetAnimation && LoadAnimationCallback != nullptr)
-	{
-		LoadAnimationCallback(url);
-	}
-
-	return SSuccess;
 }
 
 EReturnCode LostCore::FGlobalHandler::SetLogger(PFN_Logger logger)
@@ -121,9 +117,12 @@ EReturnCode LostCore::FGlobalHandler::InitializeWindow(HWND wnd, bool windowed, 
 	if (InitializeWindowCallback != nullptr)
 	{
 		InitializeWindowCallback(wnd, windowed, width, height);
+		return SSuccess;
 	}
-
-	return SSuccess;
+	else
+	{
+		return SErrorNotImplemented;
+	}
 }
 
 EReturnCode LostCore::FGlobalHandler::LoadFBX(const char * url,
@@ -157,9 +156,12 @@ EReturnCode LostCore::FGlobalHandler::LoadFBX(const char * url,
 			importTangent,
 			forceRegenerateTangent,
 			generateTangentIfNotFound);
+		return SSuccess;
 	}
-
-	return SSuccess;
+	else
+	{
+		return SErrorNotImplemented;
+	}
 }
 
 EReturnCode LostCore::FGlobalHandler::ClearScene()
@@ -167,19 +169,12 @@ EReturnCode LostCore::FGlobalHandler::ClearScene()
 	if (ClearSceneCallback != nullptr)
 	{
 		ClearSceneCallback();
+		return SSuccess;
 	}
-
-	return SSuccess;
-}
-
-EReturnCode LostCore::FGlobalHandler::Picking(int32 x, int32 y, bool clicked)
-{
-	if (PickingCallback != nullptr)
+	else
 	{
-		PickingCallback(x, y, clicked);
+		return SErrorNotImplemented;
 	}
-
-	return SSuccess;
 }
 
 EReturnCode LostCore::FGlobalHandler::Shutdown()
@@ -187,9 +182,83 @@ EReturnCode LostCore::FGlobalHandler::Shutdown()
 	if (ShutdownCallback != nullptr)
 	{
 		ShutdownCallback();
+		return SSuccess;
 	}
+	else
+	{
+		return SErrorNotImplemented;
+	}
+}
 
+EReturnCode LostCore::FGlobalHandler::SetUpdatePosAndRot(PFN_UpdatePosAndRot pfn)
+{
+	UpdatePosAndRotFunc = pfn;
 	return SSuccess;
+}
+
+EReturnCode LostCore::FGlobalHandler::OnHover(int32 x, int32 y)
+{
+	if (HoverCallback != nullptr)
+	{
+		HoverCallback(x, y);
+		return SSuccess;
+	}
+	else
+	{
+		return SErrorNotImplemented;
+	}
+}
+
+EReturnCode LostCore::FGlobalHandler::OnClick(int32 x, int32 y)
+{
+	if (ClickCallback != nullptr)
+	{
+		ClickCallback(x, y);
+		return SSuccess;
+	}
+	else
+	{
+		return SErrorNotImplemented;
+	}
+}
+
+EReturnCode LostCore::FGlobalHandler::OnDragging(int32 x, int32 y)
+{
+	if (DraggingCallback != nullptr)
+	{
+		DraggingCallback(x, y);
+		return SSuccess;
+	}
+	else
+	{
+		return SErrorNotImplemented;
+	}
+}
+
+EReturnCode LostCore::FGlobalHandler::OnEndDrag()
+{
+	if (EndDragCallback != nullptr)
+	{
+		EndDragCallback();
+		return SSuccess;
+	}
+	else
+	{
+		return SErrorNotImplemented;
+	}
+}
+
+EReturnCode LostCore::FGlobalHandler::AssetOperate(int32 op, const char * url)
+{
+	if (AssetOperateCallback != nullptr)
+	{
+		AssetOperateCallback(op, url);
+		return SSuccess;
+	}
+	else
+	{
+		return SErrorNotImplemented;
+	}
 }
 
 void LostCore::FGlobalHandler::SetRenderContextPP(IRenderContext ** rc)
@@ -234,35 +303,9 @@ bool LostCore::FGlobalHandler::IsDisplay(uint32 flag) const
 	return (DisplayFlags & flag) == flag;
 }
 
-void LostCore::FGlobalHandler::ClearAnimationList()
+void LostCore::FGlobalHandler::SetPlayAnimationCallback(Callback_S callback)
 {
-	if (AnimUpdateFunc != nullptr)
-	{
-		AnimUpdateFunc((int32)EUpdateFlag::UpdateAnimClear, nullptr);
-	}
-}
-
-void LostCore::FGlobalHandler::AddAnimation(const string& anim)
-{
-	if (AnimUpdateFunc != nullptr)
-	{
-		AnimUpdateFunc((int32)EUpdateFlag::UpdateAnimAdd, anim.c_str());
-	}
-}
-
-void LostCore::FGlobalHandler::SetCallbackPlayAnimation(Callback_S playAnim)
-{
-	PlayAnimationCallback = playAnim;
-}
-
-void LostCore::FGlobalHandler::SetCallbackLoadModel(Callback_S loadModel)
-{
-	LoadModelCallback = loadModel;
-}
-
-void LostCore::FGlobalHandler::SetCallbackLoadAnimation(Callback_S loadAnimation)
-{
-	LoadAnimationCallback = loadAnimation;
+	PlayAnimationCallback = callback;
 }
 
 void LostCore::FGlobalHandler::Logging(int32 level, const string & msg)
@@ -273,29 +316,65 @@ void LostCore::FGlobalHandler::Logging(int32 level, const string & msg)
 	}
 }
 
-void LostCore::FGlobalHandler::SetCallbackInitializeWindow(Callback_HBII initWin)
+void LostCore::FGlobalHandler::SetInitializeWindowCallback(Callback_HBII callback)
 {
-	InitializeWindowCallback = initWin;
+	InitializeWindowCallback = callback;
 }
 
-void LostCore::FGlobalHandler::SetCallbackLoadFBX(Callback_X loadFBX)
+void LostCore::FGlobalHandler::SetLoadFBXCallback(Callback_X callback)
 {
-	LoadFBXCallback = loadFBX;
+	LoadFBXCallback = callback;
 }
 
-void LostCore::FGlobalHandler::SetCallbackClearScene(Callback_V clearScene)
+void LostCore::FGlobalHandler::SetClearSceneCallback(Callback_V callback)
 {
-	ClearSceneCallback = clearScene;
+	ClearSceneCallback = callback;
 }
 
-void LostCore::FGlobalHandler::SetCallbackPicking(Callback_IIB picking)
+void LostCore::FGlobalHandler::SetShutdownCallback(Callback_V callback)
 {
-	PickingCallback = picking;
+	ShutdownCallback = callback;
 }
 
-void LostCore::FGlobalHandler::SetCallbackShutdown(Callback_V shutdown)
+void LostCore::FGlobalHandler::SetHoverCallback(Callback_II callback)
 {
-	ShutdownCallback = shutdown;
+	HoverCallback = callback;
+}
+
+void LostCore::FGlobalHandler::SetClickCallback(Callback_II callback)
+{
+	ClickCallback = callback;
+}
+
+void LostCore::FGlobalHandler::SetDraggingCallback(Callback_II callback)
+{
+	DraggingCallback = callback;
+}
+
+void LostCore::FGlobalHandler::SetEndDragCallback(Callback_V callback)
+{
+	EndDragCallback = callback;
+}
+
+void LostCore::FGlobalHandler::SetAssetOperateCallback(Callback_IS callback)
+{
+	AssetOperateCallback = callback;
+}
+
+void LostCore::FGlobalHandler::UpdateFlagAndName(EUpdateFlag flag, const string & name)
+{
+	if (UpdateFlagAndNameFunc != nullptr)
+	{
+		UpdateFlagAndNameFunc((uint32)flag, name.c_str());
+	}
+}
+
+void LostCore::FGlobalHandler::UpdatePosAndRot(const FFloat3 & pos, const FFloat3 & rot)
+{
+	if (UpdatePosAndRotFunc != nullptr)
+	{
+		UpdatePosAndRotFunc(pos.X, pos.Y, pos.Z, rot.Pitch, rot.Yaw, rot.Roll);
+	}
 }
 
 #define EXPORTER_PTR (LostCore::FGlobalHandler::Get())
@@ -305,14 +384,18 @@ EXPORT_WRAP_3_DEF(MoveCamera, float, float, float); // x, y, z
 EXPORT_WRAP_3_DEF(RotateCamera, float, float, float); // pitch, yaw, roll
 EXPORT_WRAP_1_DEF(SetAnimateRate, float);
 EXPORT_WRAP_1_DEF(SetDisplayFlags, uint32);
-EXPORT_WRAP_1_DEF(SetAnimUpdater, LostCore::PFN_AnimUpdate);
+EXPORT_WRAP_1_DEF(SetUpdateFlagAndString, LostCore::PFN_UpdateFlagAndString);
 EXPORT_WRAP_1_DEF(PlayAnimation, const char*);
-EXPORT_WRAP_2_DEF(LoadAsset, uint32, const char*);
 EXPORT_WRAP_1_DEF(SetLogger, LostCore::PFN_Logger);
 EXPORT_WRAP_4_DEF(InitializeWindow, HWND, bool, int32, int32);
 EXPORT_WRAP_14_DEF(LoadFBX, const char*, const char*, const char*, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool);
 EXPORT_WRAP_0_DEF(ClearScene);
-EXPORT_WRAP_3_DEF(Picking, int32, int32, bool);
 EXPORT_WRAP_0_DEF(Shutdown);
+EXPORT_WRAP_1_DEF(SetUpdatePosAndRot, LostCore::PFN_UpdatePosAndRot);
+EXPORT_WRAP_2_DEF(OnHover, int32, int32);
+EXPORT_WRAP_2_DEF(OnClick, int32, int32);
+EXPORT_WRAP_2_DEF(OnDragging, int32, int32);
+EXPORT_WRAP_0_DEF(OnEndDrag);
+EXPORT_WRAP_2_DEF(AssetOperate, int32, const char*);
 
 #undef EXPORTER_PTR

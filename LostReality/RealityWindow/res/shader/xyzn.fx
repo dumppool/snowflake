@@ -1,4 +1,9 @@
 
+cbuffer Custom : register(b2)
+{
+	float4 CustomColor;
+};
+
 cbuffer Constant0 : register(b0)
 {
 	float ScreenWidth;
@@ -51,8 +56,8 @@ float4 ps_main(VertexOut Input) : SV_TARGET
 	const float3 s_lightDir = normalize(float3(0.3f, -0.8f, 0.5f));
 	const float3 s_lightCol = float3(1.8f, 0.7f, 0.18f);
 
-	float3 col = s_ambientCol;
-	col = dot(-s_lightDir, Input.Normal) * s_lightCol + s_ambientCol;
+	float3 col = lerp(float3(1.0f,1.0f,1.0f), CustomColor.xyz, CustomColor.w);
+	col = col.xyz * (dot(-s_lightDir, Input.Normal) * s_lightCol + s_ambientCol);
 	float4 final = float4(col, 1.0f);
 	return final;
 }

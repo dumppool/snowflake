@@ -61,10 +61,10 @@ namespace LostCore
 	inline FRay& FRay::Transform(const FFloat4x4 & mat)
 	{
 		auto p1 = GetPoint(Distance);
-		auto p1b = mat.ApplyPoint(p1);
+		p1 = mat.ApplyPoint(p1);
 		P0 = mat.ApplyPoint(P0);
-		Distance = (p1b - P0).Size();
-		Normal = (p1b - P0).GetNormal();
+		Distance = (p1 - P0).Size();
+		Normal = (p1 - P0).GetNormal();
 		RcpNormal = FFloat3(1.0, 1.0, 1.0) / Normal;
 		return *this;
 	}

@@ -16,7 +16,6 @@ LostCore::FBasicCamera::FBasicCamera()
 	: NearPlane(0.1f)
 	, FarPlane(1000000.f)
 	, Fov(90.f)
-	, AspectRatio(1280.f/720.f)
 	, ViewEuler()
 	, ViewPosition(0.f, 100.f, -160.f)
 {
@@ -26,14 +25,13 @@ LostCore::FBasicCamera::~FBasicCamera()
 {
 }
 
-bool LostCore::FBasicCamera::Config(const FJson & config)
+void LostCore::FBasicCamera::Init(int32 width, int32 height)
 {
-	return true;
-}
-
-bool LostCore::FBasicCamera::Load(const char* url)
-{
-	return true;
+	ScreenWidth = width;
+	ScreenHeight = height;
+	RcpScreenWidth = 1.0f / ScreenWidth;
+	RcpScreenHeight = 1.0f / ScreenHeight;
+	AspectRatio = (float)ScreenWidth / (float)ScreenHeight;
 }
 
 void LostCore::FBasicCamera::Tick()
@@ -150,4 +148,30 @@ FFloat4x4 LostCore::FBasicCamera::GetProjectMatrix() const
 FFloat4x4 LostCore::FBasicCamera::GetViewProjectMatrix() const
 {
 	return GetViewMatrix() * GetProjectMatrix();
+}
+
+FRay LostCore::FBasicCamera::ScreenCastRay(int32 x, int32 y, float depth)
+{
+	auto proj = GetProjectMatrix();
+	auto invView = GetViewMatrix().Invert();
+	FFloat3 result(
+		(2 * x * RcpScreenWidth - 1.0f) / proj.M[0][0],
+		(1.0f - 2 * y * RcpScreenHeight) / proj.M[1][1],
+		depth);
+
+	result = invView.ApplyVector(result);
+	auto rayP0 = invView.GetOrigin();
+	return FRay(rayP0, result);
+}
+
+FFloat3 LostCore::FBasicCamera::ScreenToWorld(int32 x, int32 y, float depth)
+{
+	auto proj = GetProjectMatrix();
+	FFloat3 result(
+		(2 * x * RcpScreenWidth - 1.0f) / proj.M[0][0],
+		(1.0f - 2 * y * RcpScreenHeight) / proj.M[1][1], 
+		depth);
+
+	result = GetViewMatrix().Invert().ApplyPoint(result);
+	return result;
 }

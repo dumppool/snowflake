@@ -62,13 +62,27 @@
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.tabPage2 = new System.Windows.Forms.TabPage();
-            this.richTextBox1 = new System.Windows.Forms.RichTextBox();
+            this.MonitorPanel = new System.Windows.Forms.Panel();
+            this.ValueRoll = new System.Windows.Forms.TextBox();
+            this.ValueYaw = new System.Windows.Forms.TextBox();
+            this.ValuePitch = new System.Windows.Forms.TextBox();
+            this.TextRoll = new System.Windows.Forms.TextBox();
+            this.TextYaw = new System.Windows.Forms.TextBox();
+            this.TextPitch = new System.Windows.Forms.TextBox();
+            this.ValuePosZ = new System.Windows.Forms.TextBox();
+            this.ValuePosY = new System.Windows.Forms.TextBox();
+            this.ValuePosX = new System.Windows.Forms.TextBox();
+            this.TextPosZ = new System.Windows.Forms.TextBox();
+            this.TextPosY = new System.Windows.Forms.TextBox();
+            this.TextPosX = new System.Windows.Forms.TextBox();
+            this.ValueTargetName = new System.Windows.Forms.TextBox();
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.loadFBXToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.LoadModelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.LoadAnimationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.LoadSceneToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
             this.ViewPanelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ClearSceneToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -76,6 +90,7 @@
             this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripComboBox1 = new System.Windows.Forms.ToolStripComboBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.SaveSceneToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panel1.SuspendLayout();
             this.ImportPanel.SuspendLayout();
             this.ViewPanel.SuspendLayout();
@@ -84,6 +99,7 @@
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
+            this.MonitorPanel.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -448,10 +464,10 @@
             // 
             this.tabControl1.Controls.Add(this.tabPage1);
             this.tabControl1.Controls.Add(this.tabPage2);
-            this.tabControl1.Location = new System.Drawing.Point(-1, 462);
+            this.tabControl1.Location = new System.Drawing.Point(-1, 467);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(984, 150);
+            this.tabControl1.Size = new System.Drawing.Size(984, 145);
             this.tabControl1.TabIndex = 4;
             // 
             // tabPage1
@@ -460,31 +476,191 @@
             this.tabPage1.Location = new System.Drawing.Point(4, 22);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(976, 124);
+            this.tabPage1.Size = new System.Drawing.Size(976, 119);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "日志";
             this.tabPage1.UseVisualStyleBackColor = true;
             // 
             // tabPage2
             // 
-            this.tabPage2.Controls.Add(this.richTextBox1);
+            this.tabPage2.Controls.Add(this.MonitorPanel);
             this.tabPage2.Location = new System.Drawing.Point(4, 22);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(976, 124);
+            this.tabPage2.Size = new System.Drawing.Size(976, 119);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "监控";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
-            // richTextBox1
+            // MonitorPanel
             // 
-            this.richTextBox1.BackColor = System.Drawing.SystemColors.WindowFrame;
-            this.richTextBox1.ForeColor = System.Drawing.SystemColors.Window;
-            this.richTextBox1.Location = new System.Drawing.Point(74, 6);
-            this.richTextBox1.Name = "richTextBox1";
-            this.richTextBox1.Size = new System.Drawing.Size(782, 119);
-            this.richTextBox1.TabIndex = 0;
-            this.richTextBox1.Text = "";
+            this.MonitorPanel.BackColor = System.Drawing.SystemColors.Desktop;
+            this.MonitorPanel.Controls.Add(this.ValueRoll);
+            this.MonitorPanel.Controls.Add(this.ValueYaw);
+            this.MonitorPanel.Controls.Add(this.ValuePitch);
+            this.MonitorPanel.Controls.Add(this.TextRoll);
+            this.MonitorPanel.Controls.Add(this.TextYaw);
+            this.MonitorPanel.Controls.Add(this.TextPitch);
+            this.MonitorPanel.Controls.Add(this.ValuePosZ);
+            this.MonitorPanel.Controls.Add(this.ValuePosY);
+            this.MonitorPanel.Controls.Add(this.ValuePosX);
+            this.MonitorPanel.Controls.Add(this.TextPosZ);
+            this.MonitorPanel.Controls.Add(this.TextPosY);
+            this.MonitorPanel.Controls.Add(this.TextPosX);
+            this.MonitorPanel.Controls.Add(this.ValueTargetName);
+            this.MonitorPanel.Location = new System.Drawing.Point(0, 0);
+            this.MonitorPanel.Name = "MonitorPanel";
+            this.MonitorPanel.Size = new System.Drawing.Size(973, 121);
+            this.MonitorPanel.TabIndex = 0;
+            // 
+            // ValueRoll
+            // 
+            this.ValueRoll.BackColor = System.Drawing.SystemColors.Desktop;
+            this.ValueRoll.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.ValueRoll.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.ValueRoll.ForeColor = System.Drawing.SystemColors.ScrollBar;
+            this.ValueRoll.Location = new System.Drawing.Point(241, 92);
+            this.ValueRoll.Name = "ValueRoll";
+            this.ValueRoll.Size = new System.Drawing.Size(100, 16);
+            this.ValueRoll.TabIndex = 12;
+            // 
+            // ValueYaw
+            // 
+            this.ValueYaw.BackColor = System.Drawing.SystemColors.Desktop;
+            this.ValueYaw.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.ValueYaw.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.ValueYaw.ForeColor = System.Drawing.SystemColors.ScrollBar;
+            this.ValueYaw.Location = new System.Drawing.Point(241, 65);
+            this.ValueYaw.Name = "ValueYaw";
+            this.ValueYaw.Size = new System.Drawing.Size(100, 16);
+            this.ValueYaw.TabIndex = 11;
+            // 
+            // ValuePitch
+            // 
+            this.ValuePitch.BackColor = System.Drawing.SystemColors.Desktop;
+            this.ValuePitch.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.ValuePitch.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.ValuePitch.ForeColor = System.Drawing.SystemColors.ScrollBar;
+            this.ValuePitch.Location = new System.Drawing.Point(241, 38);
+            this.ValuePitch.Name = "ValuePitch";
+            this.ValuePitch.Size = new System.Drawing.Size(100, 16);
+            this.ValuePitch.TabIndex = 10;
+            // 
+            // TextRoll
+            // 
+            this.TextRoll.BackColor = System.Drawing.SystemColors.Desktop;
+            this.TextRoll.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.TextRoll.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.TextRoll.ForeColor = System.Drawing.SystemColors.ScrollBar;
+            this.TextRoll.Location = new System.Drawing.Point(180, 92);
+            this.TextRoll.Name = "TextRoll";
+            this.TextRoll.Size = new System.Drawing.Size(55, 16);
+            this.TextRoll.TabIndex = 9;
+            this.TextRoll.Text = "Roll";
+            // 
+            // TextYaw
+            // 
+            this.TextYaw.BackColor = System.Drawing.SystemColors.Desktop;
+            this.TextYaw.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.TextYaw.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.TextYaw.ForeColor = System.Drawing.SystemColors.ScrollBar;
+            this.TextYaw.Location = new System.Drawing.Point(180, 65);
+            this.TextYaw.Name = "TextYaw";
+            this.TextYaw.Size = new System.Drawing.Size(55, 16);
+            this.TextYaw.TabIndex = 8;
+            this.TextYaw.Text = "Yaw";
+            // 
+            // TextPitch
+            // 
+            this.TextPitch.BackColor = System.Drawing.SystemColors.Desktop;
+            this.TextPitch.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.TextPitch.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.TextPitch.ForeColor = System.Drawing.SystemColors.ScrollBar;
+            this.TextPitch.Location = new System.Drawing.Point(180, 38);
+            this.TextPitch.Name = "TextPitch";
+            this.TextPitch.Size = new System.Drawing.Size(55, 16);
+            this.TextPitch.TabIndex = 7;
+            this.TextPitch.Text = "Pitch";
+            // 
+            // ValuePosZ
+            // 
+            this.ValuePosZ.BackColor = System.Drawing.SystemColors.Desktop;
+            this.ValuePosZ.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.ValuePosZ.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.ValuePosZ.ForeColor = System.Drawing.SystemColors.ScrollBar;
+            this.ValuePosZ.Location = new System.Drawing.Point(74, 92);
+            this.ValuePosZ.Name = "ValuePosZ";
+            this.ValuePosZ.Size = new System.Drawing.Size(100, 16);
+            this.ValuePosZ.TabIndex = 6;
+            // 
+            // ValuePosY
+            // 
+            this.ValuePosY.BackColor = System.Drawing.SystemColors.Desktop;
+            this.ValuePosY.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.ValuePosY.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.ValuePosY.ForeColor = System.Drawing.SystemColors.ScrollBar;
+            this.ValuePosY.Location = new System.Drawing.Point(74, 65);
+            this.ValuePosY.Name = "ValuePosY";
+            this.ValuePosY.Size = new System.Drawing.Size(100, 16);
+            this.ValuePosY.TabIndex = 5;
+            // 
+            // ValuePosX
+            // 
+            this.ValuePosX.BackColor = System.Drawing.SystemColors.Desktop;
+            this.ValuePosX.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.ValuePosX.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.ValuePosX.ForeColor = System.Drawing.SystemColors.ScrollBar;
+            this.ValuePosX.Location = new System.Drawing.Point(74, 38);
+            this.ValuePosX.Name = "ValuePosX";
+            this.ValuePosX.Size = new System.Drawing.Size(100, 16);
+            this.ValuePosX.TabIndex = 4;
+            // 
+            // TextPosZ
+            // 
+            this.TextPosZ.BackColor = System.Drawing.SystemColors.Desktop;
+            this.TextPosZ.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.TextPosZ.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.TextPosZ.ForeColor = System.Drawing.SystemColors.ScrollBar;
+            this.TextPosZ.Location = new System.Drawing.Point(13, 92);
+            this.TextPosZ.Name = "TextPosZ";
+            this.TextPosZ.Size = new System.Drawing.Size(55, 16);
+            this.TextPosZ.TabIndex = 3;
+            this.TextPosZ.Text = "Pos Z";
+            // 
+            // TextPosY
+            // 
+            this.TextPosY.BackColor = System.Drawing.SystemColors.Desktop;
+            this.TextPosY.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.TextPosY.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.TextPosY.ForeColor = System.Drawing.SystemColors.ScrollBar;
+            this.TextPosY.Location = new System.Drawing.Point(13, 65);
+            this.TextPosY.Name = "TextPosY";
+            this.TextPosY.Size = new System.Drawing.Size(55, 16);
+            this.TextPosY.TabIndex = 2;
+            this.TextPosY.Text = "Pos Y";
+            // 
+            // TextPosX
+            // 
+            this.TextPosX.BackColor = System.Drawing.SystemColors.Desktop;
+            this.TextPosX.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.TextPosX.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.TextPosX.ForeColor = System.Drawing.SystemColors.ScrollBar;
+            this.TextPosX.Location = new System.Drawing.Point(13, 38);
+            this.TextPosX.Name = "TextPosX";
+            this.TextPosX.Size = new System.Drawing.Size(55, 16);
+            this.TextPosX.TabIndex = 1;
+            this.TextPosX.Text = "Pos X";
+            // 
+            // ValueTargetName
+            // 
+            this.ValueTargetName.BackColor = System.Drawing.SystemColors.Desktop;
+            this.ValueTargetName.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.ValueTargetName.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.ValueTargetName.ForeColor = System.Drawing.SystemColors.ScrollBar;
+            this.ValueTargetName.Location = new System.Drawing.Point(7, 11);
+            this.ValueTargetName.Name = "ValueTargetName";
+            this.ValueTargetName.Size = new System.Drawing.Size(167, 16);
+            this.ValueTargetName.TabIndex = 0;
             // 
             // menuStrip1
             // 
@@ -504,7 +680,9 @@
             this.toolStripMenuItem1.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.loadFBXToolStripMenuItem1,
             this.LoadModelToolStripMenuItem,
-            this.LoadAnimationToolStripMenuItem});
+            this.LoadAnimationToolStripMenuItem,
+            this.LoadSceneToolStripMenuItem,
+            this.SaveSceneToolStripMenuItem});
             this.toolStripMenuItem1.ForeColor = System.Drawing.SystemColors.ButtonFace;
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
             this.toolStripMenuItem1.Size = new System.Drawing.Size(27, 21);
@@ -515,20 +693,26 @@
             this.loadFBXToolStripMenuItem1.BackColor = System.Drawing.SystemColors.WindowFrame;
             this.loadFBXToolStripMenuItem1.ForeColor = System.Drawing.SystemColors.ControlLight;
             this.loadFBXToolStripMenuItem1.Name = "loadFBXToolStripMenuItem1";
-            this.loadFBXToolStripMenuItem1.Size = new System.Drawing.Size(146, 22);
+            this.loadFBXToolStripMenuItem1.Size = new System.Drawing.Size(152, 22);
             this.loadFBXToolStripMenuItem1.Text = "载入FBX文件";
             // 
             // LoadModelToolStripMenuItem
             // 
             this.LoadModelToolStripMenuItem.Name = "LoadModelToolStripMenuItem";
-            this.LoadModelToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
+            this.LoadModelToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.LoadModelToolStripMenuItem.Text = "载入模型";
             // 
             // LoadAnimationToolStripMenuItem
             // 
             this.LoadAnimationToolStripMenuItem.Name = "LoadAnimationToolStripMenuItem";
-            this.LoadAnimationToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
+            this.LoadAnimationToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.LoadAnimationToolStripMenuItem.Text = "载入动画";
+            // 
+            // LoadSceneToolStripMenuItem
+            // 
+            this.LoadSceneToolStripMenuItem.Name = "LoadSceneToolStripMenuItem";
+            this.LoadSceneToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.LoadSceneToolStripMenuItem.Text = "载入场景";
             // 
             // toolStripMenuItem2
             // 
@@ -572,6 +756,12 @@
             this.toolStripComboBox1.Name = "toolStripComboBox1";
             this.toolStripComboBox1.Size = new System.Drawing.Size(121, 25);
             // 
+            // SaveSceneToolStripMenuItem
+            // 
+            this.SaveSceneToolStripMenuItem.Name = "SaveSceneToolStripMenuItem";
+            this.SaveSceneToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.SaveSceneToolStripMenuItem.Text = "保存场景";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -598,6 +788,8 @@
             this.tabPage1.ResumeLayout(false);
             this.tabPage1.PerformLayout();
             this.tabPage2.ResumeLayout(false);
+            this.MonitorPanel.ResumeLayout(false);
+            this.MonitorPanel.PerformLayout();
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.ResumeLayout(false);
@@ -612,7 +804,6 @@
         private System.Windows.Forms.TabControl tabControl1;
         private System.Windows.Forms.TabPage tabPage1;
         private System.Windows.Forms.TabPage tabPage2;
-        private System.Windows.Forms.RichTextBox richTextBox1;
         private System.Windows.Forms.Panel ImportPanel;
         private System.Windows.Forms.CheckBox ImportNormal;
         private System.Windows.Forms.CheckBox ImportAnimation;
@@ -654,6 +845,22 @@
         private System.Windows.Forms.TextBox textBox2;
         private System.Windows.Forms.TextBox PrimitiveOutputText;
         private System.Windows.Forms.ToolStripMenuItem ClearSceneToolStripMenuItem;
+        private System.Windows.Forms.Panel MonitorPanel;
+        private System.Windows.Forms.TextBox ValueRoll;
+        private System.Windows.Forms.TextBox ValueYaw;
+        private System.Windows.Forms.TextBox ValuePitch;
+        private System.Windows.Forms.TextBox TextRoll;
+        private System.Windows.Forms.TextBox TextYaw;
+        private System.Windows.Forms.TextBox TextPitch;
+        private System.Windows.Forms.TextBox ValuePosZ;
+        private System.Windows.Forms.TextBox ValuePosY;
+        private System.Windows.Forms.TextBox ValuePosX;
+        private System.Windows.Forms.TextBox TextPosZ;
+        private System.Windows.Forms.TextBox TextPosY;
+        private System.Windows.Forms.TextBox TextPosX;
+        private System.Windows.Forms.TextBox ValueTargetName;
+        private System.Windows.Forms.ToolStripMenuItem LoadSceneToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem SaveSceneToolStripMenuItem;
     }
 }
 

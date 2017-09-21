@@ -20,22 +20,27 @@ namespace LostCore
 	class IMaterial;
 	class IResourceLoader;
 
-	class FBasicModel : public IBasicInterface
+	class FBasicModel
 	{
 	public:
 		FBasicModel();
-		virtual ~FBasicModel() override;
+		virtual ~FBasicModel();
 
-		virtual bool Load(const char* url) override;
-		virtual bool Config(const FJson& config) override;
-		virtual void Tick() override;
-		virtual void Draw() override;
+		virtual bool Config(const FJson& config);
+		virtual void Tick();
+		virtual void Draw();
 
 		virtual void SetWorldMatrix(const FFloat4x4& world) = 0;
 		virtual FFloat4x4 GetWorldMatrix() = 0;
 		virtual void Clone(FBasicModel& model);
 		virtual void EnableDepthTest(bool depthTest);
+		virtual void EnableFlags(uint32 flags);
+		virtual void DisableFlags(uint32 flags);
+		virtual bool HasFlags(uint32 flags) const;
 		
+		void SetUrl(const string& url);
+		const string& GetUrl() const;
+
 		FAABoundingBox* GetBoundingBox();
 		IPrimitiveGroup* GetPrimitive();
 		IMaterial* GetMaterial();
@@ -43,6 +48,8 @@ namespace LostCore
 		IConstantBuffer* GetCustomBuffer();
 		FMeshData* GetPrimitiveData();
 		void SetColor(const FColor128& color);
+
+		bool RayTest(const FRay& ray, FRay::FT& dist);
 
 	protected:
 		//virtual void RayTest() = 0;
@@ -62,6 +69,7 @@ namespace LostCore
 		void ValidateBoundingBox();
 		void Fini();
 
+		string Url;
 		IPrimitiveGroup* Primitive;
 		IMaterial* Material;
 		IConstantBuffer* MatricesBuffer;
@@ -70,6 +78,8 @@ namespace LostCore
 		FAABoundingBox BoundingBox;
 		FCustomParameter Custom;
 		IConstantBuffer* CustomBuffer;
+
+		uint32 ActorFlags;
 	};
 
 	class FStaticModel : public FBasicModel

@@ -341,6 +341,11 @@ namespace LostCore
 			return GetSpecifiedAbsolutePath(K_MODEL, url, output);
 		}
 
+		bool GetModelRelativePath(const string& url, string& output)
+		{
+			return GetSpecifiedRelativePath(K_MODEL, url, output);
+		}
+
 		bool GetSpecifiedJson(const string& category, const string& url, FJson& output)
 		{
 			string urlAbs;

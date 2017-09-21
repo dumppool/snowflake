@@ -15,39 +15,49 @@ namespace LostCore
 {
 	class IRenderContext;
 
-	class FBasicCamera : public IBasicInterface
+	class FBasicCamera
 	{
 	public:
 		FBasicCamera();
-		virtual ~FBasicCamera() override;
+		virtual ~FBasicCamera();
 
-		virtual bool Config(const FJson& config) override;
-		virtual bool Load(const char* url) override;
-		virtual void Tick() override;
-		virtual void Draw() override;
+		virtual void Init(int32 width, int32 height);
+		virtual void Tick();
+		virtual void Draw();
 
-		virtual void AddPositionWorld(const FFloat3& pos);
-		virtual void AddEulerWorld(const FFloat3& euler);
-		virtual void AddPositionLocal(const FFloat3& pos);
-		virtual void AddEulerLocal(const FFloat3& euler);
+		void AddPositionWorld(const FFloat3& pos);
+		void AddEulerWorld(const FFloat3& euler);
+		void AddPositionLocal(const FFloat3& pos);
+		void AddEulerLocal(const FFloat3& euler);
 
-		virtual void SetNearPlane(float value);
-		virtual float GetNearPlane() const;
+		void SetNearPlane(float value);
+		float GetNearPlane() const;
 
-		virtual void SetFarPlane(float value);
-		virtual float GetFarPlane() const;
+		void SetFarPlane(float value);
+		float GetFarPlane() const;
 
-		virtual void SetFov(float fov);
-		virtual float GetFov() const;
+		void SetFov(float fov);
+		float GetFov() const;
 
-		virtual void SetAspectRatio(float ratio);
-		virtual float GetAspectRatio() const;
+		void SetAspectRatio(float ratio);
+		float GetAspectRatio() const;
 		
-		virtual FFloat4x4 GetViewMatrix() const;
-		virtual FFloat4x4 GetProjectMatrix() const;
-		virtual FFloat4x4 GetViewProjectMatrix() const;
+		FFloat4x4 GetViewMatrix() const;
+		FFloat4x4 GetProjectMatrix() const;
+		FFloat4x4 GetViewProjectMatrix() const;
+
+		// Return a ray in world space.
+		// left: -Width/2, right: Width/2, bottom: -Height/2, top: Height/2
+		FRay ScreenCastRay(int32 x, int32 y, float depth);
+
+		FFloat3 ScreenToWorld(int32 x, int32 y, float depth);
 
 	private:
+		int32 ScreenWidth;
+		int32 ScreenHeight;
+		float RcpScreenWidth;
+		float RcpScreenHeight;
+
 		float			NearPlane;
 		float			FarPlane;
 		float			Fov;

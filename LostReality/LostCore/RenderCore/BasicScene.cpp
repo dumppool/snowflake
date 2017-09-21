@@ -49,44 +49,25 @@ void FBasicScene::Draw()
 
 bool LostCore::FBasicScene::Config(const FJson & config)
 {
-	//assert(config.find("nodes") != config.end() && "a scene needs [nodes] section");
-	if (config.find("nodes") != config.end())
+	if (config.find(K_NODES) != config.end())
 	{
-		for (auto node : config["nodes"])
+		for (auto node : config[K_NODES])
 		{
 			assert(node.find(K_TYPE) != node.end() && "a node needs [type] section");
-			assert(node.find("path") != node.end() && "a node needs [path] section");
-			assert(node.find("transform") != node.end() && "a node needs [transform] section");
+			assert(node.find(K_PATH) != node.end() && "a node needs [path] section");
+			assert(node.find(K_TRANSFORM) != node.end() && "a node needs [transform] section");
 			auto nodeType = (ESceneNodeType)(int32)node[K_TYPE];
-			if (nodeType == ESceneNodeType::StaticModel ||
-				nodeType == ESceneNodeType::SkeletalModel)
+			if (nodeType == ESceneNodeType::Model)
 			{
-				FBasicModel* m;
-				if (nodeType == ESceneNodeType::StaticModel)
+				FBasicModel* model = nullptr;
+				if ((model = FModelFactory::NewModel(node[K_PATH])) != nullptr)
 				{
-					m = new FStaticModel;
-				}
-				else
-				{
-					m = new FSkeletalModel;
-				}
-
-				std::string p = node.find("path").value();
-				m->Load(p.c_str());
-				AddModel(m);
-				FFloat4x4 mat;
-				//memcpy(&mat, &(node.find("transform").value()[0]), sizeof(mat));
-
-				for (int y = 0; y < 4; ++y)
-				{
-					for (int x = 0; x < 4; ++x)
+					model->SetWorldMatrix(node[K_TRANSFORM]);
+					if (model != nullptr)
 					{
-						int r = (int)&(node.find("transform").value()[y * 4 + x]);
-						mat.M[y][x] = node.find("transform").value()[y * 4 + x];
+						AddModel(model);
 					}
 				}
-
-				m->SetWorldMatrix(mat);
 			}
 		}
 	}
@@ -94,10 +75,10 @@ bool LostCore::FBasicScene::Config(const FJson & config)
 	return true;
 }
 
-bool FBasicScene::Load(const char* url)
+bool FBasicScene::Load(const string& url)
 {
 	FJson config;
-	if (!FDirectoryHelper::Get()->GetSceneJson("default_empty.json", config))
+	if (!FDirectoryHelper::Get()->GetSceneJson(url, config))
 	{
 		return false;
 	}
@@ -105,6 +86,21 @@ bool FBasicScene::Load(const char* url)
 	{
 		return Config(config);
 	}
+}
+
+void LostCore::FBasicScene::Save(const string & url)
+{
+	FJson config;
+	for (auto model : Models)
+	{
+		FJson modelConfig;
+		modelConfig[K_TYPE] = (int32)ESceneNodeType::Model;
+		modelConfig[K_PATH] = model->GetUrl();
+		modelConfig[K_TRANSFORM] = model->GetWorldMatrix();
+		config[K_NODES].push_back(modelConfig);
+	}
+
+	SaveJson(config, url);
 }
 
 void FBasicScene::AddModel(FBasicModel * sm)

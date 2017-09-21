@@ -123,6 +123,7 @@
 #define K_PITCH							"Pitch"
 #define K_LABEL							"Label"
 #define K_NODE							"Node"
+#define K_NODES							"Nodes"
 
 #define K_NORMALIZE						"Normalize"
 #define K_ADDITIVE						"Additive"
@@ -212,6 +213,8 @@ enum EVertexElement
 #define SHADER_SLOT_HS		(1<<7)
 #define SHADER_SLOT_DS		(1<<8)
 #define SHADER_SLOT_CS		(1<<9)
+
+#define ACTOR_VISIBLE		(1<<0)
 
 static const char* SAttributeTypeString[] = {
 	"Unknown",

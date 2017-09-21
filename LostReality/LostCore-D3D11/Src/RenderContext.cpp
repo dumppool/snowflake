@@ -159,20 +159,6 @@ void D3D11::FRenderContext::BeginFrame(float sec)
 
 		GlobalConstantBuffer->UpdateBuffer(this, &Param.GetBuffer(), sizeof(Param));
 		GlobalConstantBuffer->Bind(this, 0 | SHADER_SLOT_VS | SHADER_SLOT_PS);
-
-		//if (GlobalCB != nullptr && GlobalCB->GetByteWidth() != GlobalParam.capacity())
-		//{
-		//	SAFE_DELETE(GlobalCB);
-		//}
-
-		//if (GlobalCB == nullptr)
-		//{
-		//	GlobalCB = new FConstantBufferGlobal(GlobalParam.capacity(), false, 2);
-		//	assert(GlobalCB->Initialize(Device));
-		//}
-
-		//GlobalCB->UpdateBuffer(Context, GlobalParam.data(), GlobalParam.capacity());
-		//GlobalCB->Bind(Context);
 	}
 }
 

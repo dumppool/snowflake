@@ -16,6 +16,7 @@ static const EReturnCode SErrorFunctionNotFound = 0x0bad0002;
 static const EReturnCode SErrorInvalidParameters = 0x0bad0003;
 static const EReturnCode SErrorOutOfMemory = 0x0bad0004;
 static const EReturnCode SErrorInternalError = 0x0bad0005;
+static const EReturnCode SErrorNotImplemented = 0x0bad0006;
 
 template <typename... Args>
 class TExportFuncWrapper

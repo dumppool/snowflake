@@ -15,6 +15,7 @@ namespace LostCore
 	class IPrimitiveGroup;
 	class IMaterial;
 	class FBasicModel;
+	class FBasicCamera;
 
 	class FGizmoOperator
 	{
@@ -27,8 +28,8 @@ namespace LostCore
 
 		// 世界射线相交测试
 		bool RayTest(FRay & ray, bool active = false);
-		void MoveGizmo(const FRay& ray);
-		void StopMove();
+		void OnDragging(int32 x, int32 y, FBasicCamera* camera);
+		void EndDrag();
 
 		void Tick();
 		void Draw();
@@ -72,8 +73,8 @@ namespace LostCore
 		FFloat4x4 World;
 		vector<FComp> Components;
 		FBasicModel* Target;
-		float BaseOffset;
-		FComp ActivedComponent;
+		FFloat3 LastDragEnd;
+		FComp* ActivedComponent;
 	};
 }
 

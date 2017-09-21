@@ -16,29 +16,18 @@ using namespace LostCore;
 
 
 LostCore::FBasicModel::FBasicModel()
-	: Primitive(nullptr)
+	: Url("")
+	, Primitive(nullptr)
 	, Material(nullptr)
 	, MatricesBuffer(nullptr)
 	, CustomBuffer(nullptr)
+	, ActorFlags(0)
 {
 }
 
 LostCore::FBasicModel::~FBasicModel()
 {
 	Fini();
-}
-
-bool LostCore::FBasicModel::Load(const char* url)
-{
-	FJson config;
-	if (!FDirectoryHelper::Get()->GetModelJson(url, config))
-	{
-		return false;
-	}
-	else
-	{
-		return Config(config);
-	}
 }
 
 bool LostCore::FBasicModel::Config(const FJson & config)
@@ -275,6 +264,11 @@ void LostCore::FBasicModel::SetColor(const FColor128 & color)
 	Custom.Color = color;
 }
 
+bool LostCore::FBasicModel::RayTest(const FRay & ray, FRay::FT & dist)
+{
+	return RayBoxIntersect(ray, BoundingBox, GetWorldMatrix().GetInvert(), dist);
+}
+
 FSegmentTool * LostCore::FBasicModel::GetSegmentRenderer()
 {
 	return &SegmentRenderer;
@@ -290,6 +284,31 @@ void LostCore::FBasicModel::EnableDepthTest(bool depthTest)
 	{
 		Material->SetDepthStencilState(depthTest ? K_DEPTH_STENCIL_Z_WRITE : K_DEPTH_STENCIL_ALWAYS);
 	}
+}
+
+void LostCore::FBasicModel::EnableFlags(uint32 flags)
+{
+	ActorFlags |= flags;
+}
+
+void LostCore::FBasicModel::DisableFlags(uint32 flags)
+{
+	ActorFlags &= ~flags;
+}
+
+bool LostCore::FBasicModel::HasFlags(uint32 flags) const
+{
+	return HAS_FLAGS(flags, ActorFlags);
+}
+
+void LostCore::FBasicModel::SetUrl(const string & url)
+{
+	FDirectoryHelper::Get()->GetModelRelativePath(url, Url);
+}
+
+const string & LostCore::FBasicModel::GetUrl() const
+{
+	return Url;
 }
 
 FAABoundingBox * LostCore::FBasicModel::GetBoundingBox()

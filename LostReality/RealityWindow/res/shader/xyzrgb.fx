@@ -1,4 +1,9 @@
 
+cbuffer Custom : register(b2)
+{
+	float4 CustomColor;
+};
+
 cbuffer Constant0 : register(b0)
 {
 	float ScreenWidth;
@@ -40,5 +45,6 @@ VertexOut vs_main(VertexIn Input)
 
 float4 ps_main(VertexOut Input) : SV_TARGET
 {
-	return float4(Input.Color, 1.f);
+	float3 col = lerp(Input.Color.xyz, CustomColor.xyz, CustomColor.w);
+	return float4(col, 1.f);
 }

@@ -51,10 +51,18 @@ public:
 		bool generateTangentIfNotFound);
 
 	void LoadModel(const string& url);
-	void LoadModel(const FJson& config);
+	void ConfigModel(const FJson& config);
 	void LoadAnimation(const string& url);
-	void ClearEditorScene();
-	void Picking(int32 x, int32 y, bool clicked);
+	void ClearScene();
+	void CloseScene();
+	void LoadScene(const string& url);
+	void SaveScene(const string& url);
+
+	void OnPicking(int32 x, int32 y);
+	void OnClick(int32 x, int32 y);
+	void OnDragging(int32 x, int32 y);
+	void OnEndDrag();
+
 	void Pick(FBasicModel* model);
 	void UnPick();
 	void Hover(FBasicModel* model);
@@ -65,8 +73,12 @@ private:
 	void InitializeScene();
 	void StartRenderLoop();
 	void StartTickLoop();
+	void FlushNotifies();
 
 	void Log(ELogFlag level, const char* fmt, ...);
+
+	// TODO: 需要说明RayTest的目的,返回更精确的测试结果.
+	FBasicModel* ScreenRayTest(int32 x, int32 y);
 
 	IRenderContext*			RC;
 	FBasicCamera*			Camera;
@@ -76,11 +88,6 @@ private:
 	FBasicModel*			CurrHoveredModel;
 
 	string OutputDir;
-
-	int32 ScreenWidth;
-	int32 ScreenHeight;
-	float RcpScreenWidth;
-	float RcpScreenHeight;
 
 	FCommandQueue<CommandType> RenderCommands;
 	bool bKeepRendering;
@@ -148,7 +155,7 @@ FFBXEditor::FFBXEditor()
 		}
 	});
 
-	FGlobalHandler::Get()->SetCallbackPlayAnimation([&]
+	FGlobalHandler::Get()->SetPlayAnimationCallback([&]
 	(const string& anim)
 	{
 		if (reinterpret_cast<FSkeletalModel*>(CurrSelectedModel) != nullptr)
@@ -157,35 +164,49 @@ FFBXEditor::FFBXEditor()
 		}
 	});
 
-	FGlobalHandler::Get()->SetCallbackLoadModel([&]
-	(const char* url) 
-	{
-		string localUrl(url);
-		PushCommand([=]
-		()
-		{
-			LoadModel(localUrl);
-		});
-	});
-
-	FGlobalHandler::Get()->SetCallbackInitializeWindow([&]
+	FGlobalHandler::Get()->SetInitializeWindowCallback([&]
 	(HWND wnd, bool windowed, int32 width, int32 height)
 	{
 		InitializeWindow(wnd, windowed, width, height);
 	});
 
-	FGlobalHandler::Get()->SetCallbackLoadAnimation([&]
-	(const char* url)
+
+	FGlobalHandler::Get()->SetAssetOperateCallback([&]
+	(int32 op, const char* url)
 	{
 		string localUrl(url);
-		PushCommand([=]
-		()
+		if ((EAssetOperation)op == EAssetOperation::LoadModel)
 		{
-			LoadAnimation(localUrl);
-		});
+			PushCommand([=]()
+			{
+				LoadModel(localUrl);
+			});
+		}
+		else if ((EAssetOperation)op == EAssetOperation::LoadAnimation)
+		{
+			PushCommand([=]()
+			{
+				LoadAnimation(localUrl);
+			});
+		}
+		else if ((EAssetOperation)op == EAssetOperation::LoadScene)
+		{
+			PushCommand([=]()
+			{
+				CloseScene();
+				LoadScene(localUrl);
+			});
+		}
+		else if ((EAssetOperation)op == EAssetOperation::SaveScene)
+		{
+			PushCommand([=]()
+			{
+				SaveScene(localUrl);
+			});
+		}
 	});
 
-	FGlobalHandler::Get()->SetCallbackLoadFBX([&]
+	FGlobalHandler::Get()->SetLoadFBXCallback([&]
 	(	const char * file,
 		const char* primitiveOutput,
 		const char* animationOutput,
@@ -222,22 +243,51 @@ FFBXEditor::FFBXEditor()
 		});
 	});
 
-	FGlobalHandler::Get()->SetCallbackClearScene([&]
+	FGlobalHandler::Get()->SetClearSceneCallback([&]
 	()
 	{
-		ClearEditorScene();
-	});
-
-	FGlobalHandler::Get()->SetCallbackPicking([&]
-	(int32 x, int32 y, bool clicked)
-	{
-		this->PushCommand([=]() 
+		PushCommand([=]()
 		{
-			this->Picking(x, y, clicked);
+			ClearScene();
 		});
 	});
 
-	FGlobalHandler::Get()->SetCallbackShutdown([&]
+	FGlobalHandler::Get()->SetHoverCallback([&]
+	(int32 x, int32 y)
+	{
+		this->PushCommand([=]()
+		{
+			this->OnPicking(x, y);
+		});
+	});
+
+	FGlobalHandler::Get()->SetClickCallback([&]
+	(int32 x, int32 y)
+	{
+		this->PushCommand([=]()
+		{
+			this->OnClick(x, y);
+		});
+	});
+
+	FGlobalHandler::Get()->SetDraggingCallback([&]
+	(int32 x, int32 y)
+	{
+		this->PushCommand([=]()
+		{
+			this->OnDragging(x, y);
+		});
+	});
+
+	FGlobalHandler::Get()->SetEndDragCallback([&]()
+	{
+		this->PushCommand([=]()
+		{
+			this->OnEndDrag();
+		});
+	});
+
+	FGlobalHandler::Get()->SetShutdownCallback([&]
 	()
 	{
 		this->Fini();
@@ -255,32 +305,6 @@ FFBXEditor::~FFBXEditor()
 
 void FFBXEditor::InitializeScene()
 {
-	assert(Camera == nullptr && Scene == nullptr);
-
-	GizmoOp = new FGizmoOperator;
-	if (!GizmoOp->Load("axis.json"))
-	{
-		Log(ELogFlag::LogError, "failed to load gizmo config: %s", "axis.json");
-	}
-
-	FBasicWorld::Load("");
-	Camera = new FBasicCamera;
-	if (!Camera->Load(""))
-	{
-		return;
-	}
-
-	Scene = new FBasicScene;
-	if (Scene->Config(FJson()))
-	{
-		Log(ELogFlag::LogInfo, "InitializeScene finished.");
-		return;
-	}
-	else
-	{
-		Log(ELogFlag::LogError, "InitializeScene failed.");
-		return;
-	}
 }
 
 void FFBXEditor::PushCommand(const CommandType & cmd)
@@ -431,7 +455,7 @@ void FFBXEditor::LoadFBX(
 
 		if (clearScene)
 		{
-			ClearEditorScene();
+			ClearScene();
 		}
 
 		if (!importAnimation)
@@ -455,8 +479,6 @@ void FFBXEditor::LoadFBX(
 				modelFileAbs.append(modelFileName).append(".json");
 				FDirectoryHelper::Get()->GetModelAbsolutePath(modelFileAbs, modelFileAbs);
 				SaveJson(config, modelFileAbs);
-
-				LoadModel(config);
 			}
 		}
 	}
@@ -464,16 +486,12 @@ void FFBXEditor::LoadFBX(
 
 void FFBXEditor::LoadModel(const string & url)
 {
-	FJson config;
-	if (FDirectoryHelper::Get()->GetModelJson(url, config))
+	if (Scene == nullptr)
 	{
-		LoadModel(config);
+		return;
 	}
-}
 
-void FFBXEditor::LoadModel(const FJson & config)
-{
-	auto model = FModelFactory::NewModel(config);
+	auto model = FModelFactory::NewModel(url);
 	if (model != nullptr)
 	{
 		Scene->AddModel(model);
@@ -481,12 +499,16 @@ void FFBXEditor::LoadModel(const FJson & config)
 	}
 }
 
+void FFBXEditor::ConfigModel(const FJson & config)
+{
+}
+
 void FFBXEditor::LoadAnimation(const string & url)
 {
 	string anim;
 	if (FAnimationLibrary::Get()->Load(url, anim))
 	{
-		FGlobalHandler::Get()->AddAnimation(anim);
+		FGlobalHandler::Get()->UpdateFlagAndName(EUpdateFlag::UpdateAnimAdd, anim);
 	}
 	else
 	{
@@ -494,69 +516,75 @@ void FFBXEditor::LoadAnimation(const string & url)
 	}
 }
 
-void FFBXEditor::ClearEditorScene()
+void FFBXEditor::ClearScene()
 {
-	PushCommand([=]() {
-		Ms.clear();
+	Ms.clear();
+	UnPick();
+	UnHover();
+	if (Scene != nullptr)
+	{
 		Scene->ClearModels();
-	});
+	}
 }
 
-void FFBXEditor::Picking(int32 x, int32 y, bool clicked)
+void FFBXEditor::CloseScene()
+{
+	ClearScene();
+	SAFE_DELETE(Scene);
+}
+
+void FFBXEditor::LoadScene(const string & url)
+{
+	if (Scene != nullptr)
+	{
+		SAFE_DELETE(Scene);
+	}
+
+	Scene = new FBasicScene;
+	Scene->Load(url);
+}
+
+void FFBXEditor::SaveScene(const string & url)
+{
+	if (Scene != nullptr)
+	{
+		Scene->Save(url);
+	}
+}
+
+void FFBXEditor::OnPicking(int32 x, int32 y)
 {
 	UnHover();
-	if (clicked)
+	Hover(ScreenRayTest(x, y));
+}
+
+void FFBXEditor::OnClick(int32 x, int32 y)
+{
+	UnPick();
+	Pick(ScreenRayTest(x, y));
+}
+
+void FFBXEditor::OnDragging(int32 x, int32 y)
+{
+	if (Camera != nullptr && GizmoOp != nullptr)
 	{
-		UnPick();
+		GizmoOp->OnDragging(x, y, Camera);
 	}
+}
 
-	if (Camera == nullptr)
+void FFBXEditor::OnEndDrag()
+{
+	if (GizmoOp != nullptr)
 	{
-		return;
-	}
-
-	// Clip space
-	auto proj = Camera->GetProjectMatrix();
-	FFloat3 rayDir((2 * x * RcpScreenWidth - 1.0f) / proj.M[0][0],
-		(1.0f - 2 * y * RcpScreenHeight) / proj.M[1][1], 1.0f);
-
-	// World space
-	auto invView = Camera->GetViewMatrix().Invert();
-	rayDir = invView.ApplyVector(rayDir);
-	auto rayP0 = invView.GetOrigin();
-
-	float minDist = 10000.0f;
-	FRay worldRay(rayP0, rayDir, minDist);
-	FBasicModel* nearest = nullptr;
-	for (auto m : Ms)
-	{
-		if (m == nullptr || m->GetBoundingBox() == nullptr)
-		{
-			continue;
-		}
-
-		if (RayBoxIntersect(worldRay, *m->GetBoundingBox(), m->GetWorldMatrix().Invert(), minDist))
-		{
-			nearest = m;
-			worldRay.Distance = minDist;
-		}
-	}
-
-	if (nearest)
-	{
-		Hover(nearest);
-		if (clicked)
-		{
-			Pick(nearest);
-		}
+		GizmoOp->EndDrag();
 	}
 }
 
 void FFBXEditor::Pick(FBasicModel * model)
 {
-	if (model != nullptr)
+	CurrSelectedModel = model;
+	if (CurrSelectedModel != nullptr)
 	{
-		CurrSelectedModel = model;
 		GizmoOp->SetTarget(CurrSelectedModel);
 	}
 }
@@ -573,7 +601,10 @@ void FFBXEditor::UnPick()
 void FFBXEditor::Hover(FBasicModel * model)
 {
 	CurrHoveredModel = model;
-	CurrHoveredModel->GetBoundingBox()->bVisible = true;
+	if (CurrHoveredModel != nullptr)
+	{
+		CurrHoveredModel->GetBoundingBox()->bVisible = true;
+	}
 }
 
 void FFBXEditor::UnHover()
@@ -602,6 +633,8 @@ void FFBXEditor::Tick()
 	{
 		GizmoOp->Tick();
 	}
+
+	FlushNotifies();
 }
 
 void FFBXEditor::DrawPostScene()
@@ -648,11 +681,18 @@ bool FFBXEditor::InitializeWindow(HWND wnd, bool windowed, int32 width, int32 he
 	auto ret = WrappedCreateRenderContext(EContextID::D3D11_DXGI0, &RC);
 	if (RC != nullptr && RC->Init(wnd, windowed, width, height))
 	{
-		ScreenWidth = width;
-		ScreenHeight = height;
-		RcpScreenWidth = 1.f / width;
-		RcpScreenHeight = 1.f / height;
-		InitializeScene();
+		Camera = new FBasicCamera;
+		Camera->Init(width, height);
+		Camera->SetFov(90.0f);
+		Camera->SetFarPlane(10000.0f);
+		Camera->SetNearPlane(0.1f);
+
+		GizmoOp = new FGizmoOperator;
+		if (!GizmoOp->Load("axis.json"))
+		{
+			Log(ELogFlag::LogError, "failed to load gizmo config: %s", "axis.json");
+		}
+
 		RenderThread = thread([=]() {this->StartRenderLoop(); });
 		//TickThread = thread([=]() {this->StartTickLoop(); });
 		return true;
@@ -698,6 +738,8 @@ void FFBXEditor::StartRenderLoop()
 
 		this_thread::sleep_for(chrono::milliseconds(1));
 	}
+
+	LVMSG("FFBXEditor::StartRenderLoop", "Loop finished");
 }
 
 void FFBXEditor::StartTickLoop()
@@ -713,6 +755,29 @@ void FFBXEditor::StartTickLoop()
 
 		Tick();
 	}
+
+	LVMSG("FFBXEditor::StartTickLoop", "Loop finished");
+}
+
+void FFBXEditor::FlushNotifies()
+{
+	string name;
+	FFloat3 pos, rot;
+	if (CurrSelectedModel != nullptr)
+	{
+		name = CurrSelectedModel->GetPrimitiveData()->Name;
+		pos = CurrSelectedModel->GetWorldMatrix().GetOrigin();
+		rot = CurrSelectedModel->GetWorldMatrix().GetOrientation().Euler();
+	}
+	else if (Camera != nullptr)
+	{
+		name = "Camera";
+		pos = Camera->GetViewMatrix().Invert().GetOrigin();
+		rot = Camera->GetViewMatrix().Invert().GetOrientation().Euler();
+	}
+
+	FGlobalHandler::Get()->UpdateFlagAndName(EUpdateFlag::UpdateMonitorName, name);
+	FGlobalHandler::Get()->UpdatePosAndRot(pos, rot);
 }
 
 void FFBXEditor::Log(ELogFlag level, const char * fmt, ...)
@@ -726,4 +791,37 @@ void FFBXEditor::Log(ELogFlag level, const char * fmt, ...)
 	va_end(args);
 
 	FGlobalHandler::Get()->Logging((int32)level, msg);
+}
+
+FBasicModel * FFBXEditor::ScreenRayTest(int32 x, int32 y)
+{
+	if (Camera == nullptr || Scene == nullptr)
+	{
+		return nullptr;
+	}
+
+	// 初始化世界空间射线.
+	float minDist = 10000.0f;
+	FRay worldRay = Camera->ScreenCastRay(x, y, 1.0f);
+	worldRay.Distance = minDist;
+
+	// Gizmo优先测试.
+	if (GizmoOp != nullptr && GizmoOp->RayTest(worldRay, true))
+	{
+		return nullptr;
+	}
+
+	// 逐个遍历测试场景对象.
+	// TODO: Should be Actor with or without model.
+	FBasicModel* nearest = nullptr;
+	for (auto m : Ms)
+	{
+		if (m != nullptr && m->RayTest(worldRay, minDist))
+		{
+			nearest = m;
+			worldRay.Distance = minDist;
+		}
+	}
+
+	return nearest;
 }

@@ -91,8 +91,10 @@ namespace LostCore
 		return (Normal.Dot(pt) - Distance);
 	}
 
+	// 平面上任一点和法线确定一个平面,根据这个特点计算转换后的平面对象
 	inline FPlane & FPlane::Transform(const FFloat4x4 & mat)
 	{
+		// 选平面上任一点
 		FFloat3 pt;
 		if (!IsZero(Normal.X))
 		{
@@ -110,9 +112,15 @@ namespace LostCore
 			pt.X = pt.Y = (FFloat4x4::FT)0.0;
 		}
 
+		// 转换法线
 		Normal = mat.ApplyVector(Normal).GetNormal();
+
+		// 转换平面上的已知点
 		pt = mat.ApplyPoint(pt);
+
+		// 根据Normal * Pt = Distance计算Distance
 		Distance = Normal.Dot(pt);
+
 		return *this;
 	}
 

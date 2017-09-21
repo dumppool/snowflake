@@ -47,5 +47,5 @@
   } while((void)0, 0)
 #endif //SAFE_RELEASE
 
-#define MACRO_TEXT(m) (#m)
+#define HAS_FLAGS(flags, srcFlags) ((flags&srcFlags)==flags)
 

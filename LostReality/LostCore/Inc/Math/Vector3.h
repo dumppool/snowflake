@@ -56,6 +56,7 @@ namespace LostCore
 
 		FORCEINLINE bool operator==(const TVec3NonVectorized<T>& vec) const;
 		FORCEINLINE bool operator!=(const TVec3NonVectorized<T>& vec) const;
+		FORCEINLINE bool IsInfinity() const;
 
 		FORCEINLINE T operator[](int32 index) const;
 		FORCEINLINE T& operator[](int32 index);
@@ -71,10 +72,16 @@ namespace LostCore
 		FORCEINLINE bool IsZero() const;
 
 	public:
-		FORCEINLINE static TVec3NonVectorized<T>& GetZero()
+		FORCEINLINE static const TVec3NonVectorized<T>& GetZero()
 		{
 			static TVec3NonVectorized<T> SZeroVec(0.0, 0.0, 0.0);
 			return SZeroVec;
+		}
+
+		FORCEINLINE static const TVec3NonVectorized<T>& GetInfinity()
+		{
+			static TVec3NonVectorized<T> SInfinity(INFINITY, INFINITY, INFINITY);
+			return SInfinity;
 		}
 
 		FORCEINLINE static TVec3NonVectorized<T> GetReciprocal(const TVec3NonVectorized<T>& vec)
@@ -186,6 +193,12 @@ namespace LostCore
 	FORCEINLINE bool TVec3NonVectorized<T>::operator!=(const TVec3NonVectorized<T>& vec) const
 	{
 		return !(*this == vec);
+	}
+
+	template <typename T>
+	FORCEINLINE bool TVec3NonVectorized<T>::IsInfinity() const
+	{
+		return X == INFINITY && Y == INFINITY && Z == INFINITY;
 	}
 
 	template <typename T>
