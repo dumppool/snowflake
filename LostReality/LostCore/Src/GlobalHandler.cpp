@@ -19,6 +19,7 @@ LostCore::FGlobalHandler::FGlobalHandler()
 	, PickingCallback(nullptr)
 	, ShutdownCallback(nullptr)
 	, UpdateFlagAndNameFunc(nullptr)
+	, UpdateFlagAnd32BitFunc(nullptr)
 	, UpdatePosAndRotFunc(nullptr)
 	, AssetOperateCallback(nullptr)
 {
@@ -88,7 +89,12 @@ uint32 LostCore::FGlobalHandler::GetDisplayFlags() const
 EReturnCode LostCore::FGlobalHandler::SetUpdateFlagAndString(PFN_UpdateFlagAndString animUpdate)
 {
 	UpdateFlagAndNameFunc = animUpdate;
+	return SSuccess;
+}
 
+EReturnCode LostCore::FGlobalHandler::SetUpdateFlagAnd32Bit(PFN_UpdateFlagAnd32Bit pfn)
+{
+	UpdateFlagAnd32BitFunc = pfn;
 	return SSuccess;
 }
 
@@ -369,6 +375,14 @@ void LostCore::FGlobalHandler::UpdateFlagAndName(EUpdateFlag flag, const string 
 	}
 }
 
+void LostCore::FGlobalHandler::UpdateFlagAnd32Bit(EUpdateFlag flag, uint32 val)
+{
+	if (UpdateFlagAnd32BitFunc != nullptr)
+	{
+		UpdateFlagAnd32BitFunc((uint32)flag, val);
+	}
+}
+
 void LostCore::FGlobalHandler::UpdatePosAndRot(const FFloat3 & pos, const FFloat3 & rot)
 {
 	if (UpdatePosAndRotFunc != nullptr)
@@ -385,6 +399,7 @@ EXPORT_WRAP_3_DEF(RotateCamera, float, float, float); // pitch, yaw, roll
 EXPORT_WRAP_1_DEF(SetAnimateRate, float);
 EXPORT_WRAP_1_DEF(SetDisplayFlags, uint32);
 EXPORT_WRAP_1_DEF(SetUpdateFlagAndString, LostCore::PFN_UpdateFlagAndString);
+EXPORT_WRAP_1_DEF(SetUpdateFlagAnd32Bit, LostCore::PFN_UpdateFlagAnd32Bit);
 EXPORT_WRAP_1_DEF(PlayAnimation, const char*);
 EXPORT_WRAP_1_DEF(SetLogger, LostCore::PFN_Logger);
 EXPORT_WRAP_4_DEF(InitializeWindow, HWND, bool, int32, int32);

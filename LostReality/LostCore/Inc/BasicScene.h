@@ -19,6 +19,7 @@ namespace LostCore
 	{
 		Undefined = 0,
 		Model,
+		Camera,
 	};
 
 	class FBasicScene
@@ -31,15 +32,20 @@ namespace LostCore
 		virtual void Draw();
 		virtual bool Config(const FJson& config);
 		virtual bool Load(const string& url);
-		virtual void Save(const string& url);
+		virtual FJson Save(const string& url);
 
 		virtual void AddModel(FBasicModel * sm);
 		virtual void RemoveModel(FBasicModel * sm);
 		virtual void ClearModels();
 
+		// TODO: 好像需要一个导演
+		FBasicCamera* GetCamera();
+		FBasicModel* RayTest(const FRay& ray, FRay::FT& dist);
+
 	private:
 		void Fini();
 
-		std::vector<FBasicModel*> Models;
+		vector<FBasicModel*> Models;
+		vector<FBasicCamera*> Cameras;
 	};
 }

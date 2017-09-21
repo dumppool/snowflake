@@ -156,8 +156,8 @@
     <ClInclude Include="Inc\BasicModel.h" />
     <ClInclude Include="Inc\BasicScene.h" />
     <ClInclude Include="Inc\BasicWorld.h" />
+    <ClInclude Include="Inc\CameraFactory.h" />
     <ClInclude Include="Inc\ConstantBuffers.h" />
-    <ClInclude Include="Inc\FBXEditor.h" />
     <ClInclude Include="Inc\File\DirectoryHelper.h" />
     <ClInclude Include="Inc\File\json.hpp" />
     <ClInclude Include="Inc\Gizmo\GizmoAxis.h" />
@@ -224,6 +224,7 @@
     <ClCompile Include="RenderCore\BasicModel.cpp" />
     <ClCompile Include="RenderCore\BasicScene.cpp" />
     <ClCompile Include="RenderCore\BasicWorld.cpp" />
+    <ClCompile Include="RenderCore\CameraFactory.cpp" />
     <ClCompile Include="RenderCore\FontProvider.cpp" />
     <ClCompile Include="RenderCore\Gizmo\GizmoAxis.cpp" />
     <ClCompile Include="RenderCore\Gizmo\GizmoLine.cpp" />

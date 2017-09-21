@@ -136,6 +136,11 @@ namespace LostCore
 
 	static void SaveJson(const FJson& json, const string& url)
 	{
+		if (url.empty())
+		{
+			return;
+		}
+
 		ofstream file;
 		file.open(url);
 		if (file.fail())
@@ -152,6 +157,11 @@ namespace LostCore
 
 	static FJson LoadJson(const string& url)
 	{
+		if (url.empty())
+		{
+			return FJson();
+		}
+
 		FJson output;
 		std::ifstream file;
 		file.open(url);

@@ -15,6 +15,11 @@ namespace LostCore
 {
 	class IRenderContext;
 
+	enum class ECameraType : uint8
+	{
+		Default,
+	};
+
 	class FBasicCamera
 	{
 	public:
@@ -22,6 +27,8 @@ namespace LostCore
 		virtual ~FBasicCamera();
 
 		virtual void Init(int32 width, int32 height);
+		virtual bool Config(const FJson& config);
+		virtual FJson Save();
 		virtual void Tick();
 		virtual void Draw();
 
@@ -29,6 +36,9 @@ namespace LostCore
 		void AddEulerWorld(const FFloat3& euler);
 		void AddPositionLocal(const FFloat3& pos);
 		void AddEulerLocal(const FFloat3& euler);
+
+		FFloat3& GetViewPosition();
+		FFloat3& GetViewEuler();
 
 		void SetNearPlane(float value);
 		float GetNearPlane() const;

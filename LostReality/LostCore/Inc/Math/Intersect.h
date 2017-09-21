@@ -88,7 +88,7 @@ namespace LostCore
 		}
 
 		distance = tmin;
-		return ((tmin < ray.Distance) && (tmax > 0));
+		return ((FRay::FT)0 < tmin && tmax < ray.Distance);
 	}
 
 	// 不同空间的射线和AABB相交测试, 返回的distance已转换到射线空间.

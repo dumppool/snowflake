@@ -62,6 +62,10 @@ namespace LostWinForms
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public static extern Int32 SetUpdateFlagAndString(PFN_UpdateFlagAndString pfn);
 
+        public delegate void PFN_UpdateFlagAnd32Bit(uint flag, UInt32 val);
+        [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public static extern Int32 SetUpdateFlagAnd32Bit(PFN_UpdateFlagAnd32Bit pfn);
+
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public static extern Int32 PlayAnimation(String anim);
 
@@ -98,6 +102,7 @@ namespace LostWinForms
         private const uint UpdateAnimClear = 0;
         private const uint UpdateAnimAdd = 1;
         private const uint UpdateMonitorTargetName = 2;
+        private const uint UpdateRayTestDistance = 3;
 
         private const uint FlagDisplayNormal = (1 << 0);
         private const uint FlagDisplayTangent = (1 << 1);
@@ -136,7 +141,8 @@ namespace LostWinForms
         };
 
         private PFN_Logger DelegateLogger;
-        private PFN_UpdateFlagAndString DelegateUpdate;
+        private PFN_UpdateFlagAndString DelegateUpdateFlagAndString;
+        private PFN_UpdateFlagAnd32Bit DelegateUpdateFlagAnd32Bit;
         private PFN_UpdatePosAndRot DelegateUpdatePosAndRot;
 
         private bool bMouseDownLeft = false;
@@ -153,12 +159,13 @@ namespace LostWinForms
         {
             InitializeComponent();
 
-            panel1.MouseDown += Panel1_MouseDown;
-            panel1.MouseUp += Panel1_MouseUp;
-            panel1.MouseMove += Panel1_MouseMove;
-            panel1.MouseWheel += Panel1_MouseWheel;
-            panel1.MouseCaptureChanged += Panel1_MouseCaptureChanged;
-            panel1.KeyDown += Panel1_KeyDown;
+            RenderPanel.MouseDown += Panel1_MouseDown;
+            RenderPanel.MouseUp += Panel1_MouseUp;
+            RenderPanel.MouseMove += Panel1_MouseMove;
+            RenderPanel.MouseWheel += Panel1_MouseWheel;
+            RenderPanel.MouseCaptureChanged += Panel1_MouseCaptureChanged;
+            RenderPanel.KeyDown += Panel1_KeyDown;
+            //RenderPanel.Press
 
             loadFBXToolStripMenuItem1.Click += OnLoadFBX;
             ImportOk.Click += ImportOk_Click;
@@ -174,8 +181,10 @@ namespace LostWinForms
             SegLengthSlider.Scroll += SegLengthSlider_Scroll;
             AnimateRateSlider.Scroll += AnimateRateSlider_Scroll;
 
-            DelegateUpdate = new PFN_UpdateFlagAndString(OnUpdateFlagAndString);
-            SetUpdateFlagAndString(DelegateUpdate);
+            DelegateUpdateFlagAndString = new PFN_UpdateFlagAndString(OnUpdateFlagAndString);
+            SetUpdateFlagAndString(DelegateUpdateFlagAndString);
+            DelegateUpdateFlagAnd32Bit = new PFN_UpdateFlagAnd32Bit(OnUpdateFlagAnd32Bit);
+            SetUpdateFlagAnd32Bit(DelegateUpdateFlagAnd32Bit);
             listBox1.SelectedIndexChanged += ListBox1_SelectedIndexChanged;
 
             DelegateUpdatePosAndRot = new PFN_UpdatePosAndRot(OnUpdatePosAndRot);
@@ -192,7 +201,7 @@ namespace LostWinForms
             dlg.OverwritePrompt = true;
             dlg.AddExtension = true;
             dlg.DefaultExt = "json";
-            if (dlg.ShowDialog(panel1) == DialogResult.OK)
+            if (dlg.ShowDialog(RenderPanel) == DialogResult.OK)
             {
                 UserData[LastSaveSceneKey] = dlg.FileName;
                 AssetOperate(AssetOperateSaveScene, dlg.FileName);
@@ -209,7 +218,7 @@ namespace LostWinForms
             dlg.RestoreDirectory = false;
             dlg.InitialDirectory = Path.GetDirectoryName(UserData[LastOpenSceneKey]);
             dlg.Multiselect = false;
-            if (dlg.ShowDialog(panel1) == DialogResult.OK)
+            if (dlg.ShowDialog(RenderPanel) == DialogResult.OK)
             {
                 UserData[LastOpenSceneKey] = dlg.FileName;
                 foreach (String fileName in dlg.FileNames)
@@ -249,7 +258,7 @@ namespace LostWinForms
             dlg.RestoreDirectory = false;
             dlg.InitialDirectory = Path.GetDirectoryName(UserData[LastOpenAnimationKey]);
             dlg.Multiselect = true;
-            if (dlg.ShowDialog(panel1) == DialogResult.OK)
+            if (dlg.ShowDialog(RenderPanel) == DialogResult.OK)
             {
                 UserData[LastOpenAnimationKey] = dlg.FileName;
                 foreach (String fileName in dlg.FileNames)
@@ -269,7 +278,7 @@ namespace LostWinForms
             dlg.RestoreDirectory = false;
             dlg.InitialDirectory = Path.GetDirectoryName(UserData[LastOpenModelKey]);
             dlg.Multiselect = true;
-            if (dlg.ShowDialog(panel1) == DialogResult.OK)
+            if (dlg.ShowDialog(RenderPanel) == DialogResult.OK)
             {
                 UserData[LastOpenModelKey] = dlg.FileName;
                 foreach (String fileName in dlg.FileNames)
@@ -300,6 +309,19 @@ namespace LostWinForms
             {
                 throw new NotImplementedException();
             }
+        }
+
+        private void OnUpdateFlagAnd32Bit(uint flag, uint val)
+        {
+            if (flag == UpdateRayTestDistance)
+            {
+                RayTestResult.BeginInvoke(new PFN_UpdateFlagAnd32Bit(InvokeUpdateRayTestResult), flag, val);
+            }
+        }
+
+        private void InvokeUpdateRayTestResult(uint flag, uint result)
+        {
+            RayTestResult.Text = BitConverter.ToSingle(BitConverter.GetBytes(result), 0).ToString();
         }
 
         private void UpdateAnimList(uint flag, StringBuilder anim)
@@ -533,7 +555,7 @@ namespace LostWinForms
             dlg.RestoreDirectory = false;
             dlg.InitialDirectory = Path.GetDirectoryName(UserData[LastOpenFbxKey]);
             dlg.Multiselect = true;
-            if (dlg.ShowDialog(panel1) == DialogResult.OK)
+            if (dlg.ShowDialog(RenderPanel) == DialogResult.OK)
             {
                 UserData[LastOpenFbxKey] = dlg.FileName;
                 FileNamesToOpen = dlg.FileNames;
@@ -566,7 +588,7 @@ namespace LostWinForms
             if (!bInitialized)
             {
                 // 初始化绘制窗口
-                InitializeWindow(panel1.Handle, true, (uint)panel1.Width, (uint)panel1.Height);
+                InitializeWindow(RenderPanel.Handle, true, (uint)RenderPanel.Width, (uint)RenderPanel.Height);
 
                 // 设置日志回调
                 DelegateLogger = new PFN_Logger(OnLogging);
@@ -584,7 +606,7 @@ namespace LostWinForms
         {
             SetUpdateFlagAndString(null);
             SetUpdatePosAndRot(null);
-            DelegateUpdate = null;
+            DelegateUpdateFlagAndString = null;
             DelegateUpdatePosAndRot = null;
             SaveLocalUserData();
             Shutdown();

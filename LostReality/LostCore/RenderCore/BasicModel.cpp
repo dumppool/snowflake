@@ -71,6 +71,15 @@ bool LostCore::FBasicModel::Config(const FJson & config)
 	return true;
 }
 
+FJson LostCore::FBasicModel::Save()
+{
+	FJson config;
+	config[K_TYPE] = (int32)ESceneNodeType::Model;
+	config[K_PATH] = Url;
+	config[K_TRANSFORM] = GetWorldMatrix();
+	return config;
+}
+
 void LostCore::FBasicModel::Tick()
 {
 	UpdateConstant();

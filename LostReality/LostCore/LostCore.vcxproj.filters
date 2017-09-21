@@ -80,9 +80,6 @@
     <ClInclude Include="Inc\Gizmo\GizmoLine.h">
       <Filter>Inc\Gizmo</Filter>
     </ClInclude>
-    <ClInclude Include="Inc\FBXEditor.h">
-      <Filter>Inc</Filter>
-    </ClInclude>
     <ClInclude Include="Inc\Threading\CommandQueue.h">
       <Filter>Inc\Threading</Filter>
     </ClInclude>
@@ -164,6 +161,9 @@
     <ClInclude Include="Inc\Interface\ConstantBufferInterface.h">
       <Filter>Inc\Interface</Filter>
     </ClInclude>
+    <ClInclude Include="Inc\CameraFactory.h">
+      <Filter>Inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
@@ -212,6 +212,9 @@
     </ClCompile>
     <ClCompile Include="RenderCore\Gizmo\GizmoOperator.cpp">
       <Filter>RenderCore\Gizmo</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderCore\CameraFactory.cpp">
+      <Filter>RenderCore</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

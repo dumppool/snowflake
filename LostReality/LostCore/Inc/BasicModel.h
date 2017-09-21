@@ -27,6 +27,7 @@ namespace LostCore
 		virtual ~FBasicModel();
 
 		virtual bool Config(const FJson& config);
+		virtual FJson Save();
 		virtual void Tick();
 		virtual void Draw();
 
@@ -52,8 +53,6 @@ namespace LostCore
 		bool RayTest(const FRay& ray, FRay::FT& dist);
 
 	protected:
-		//virtual void RayTest() = 0;
-
 		virtual bool ConfigPrimitive(const string& url, IPrimitiveGroup*& pg, FMeshData& pgdata);
 		virtual bool ConfigMaterial(const string& url);
 

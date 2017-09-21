@@ -45,6 +45,7 @@
 #define K_NAME							"Name"
 #define K_TYPENAME						"TypeName"
 #define K_TYPE							"Type"
+#define K_SUBTYPE						"SubType"
 #define K_ATTRIBUTE_TYPE				"AttributeType"
 #define K_DEFORMER_TYPE					"DeformerType"
 #define K_DEFORMER_COUNT				"DeformerCount"
@@ -175,6 +176,12 @@
 
 #define K_PLACER						"Placer"
 #define K_ROTATOR						"Rotator"
+#define K_POSITION						"Position"
+#define K_EULER							"Euler"
+#define K_NEARPLANE						"NearPlane"
+#define K_FARPLANE						"FarPlane"
+#define K_FOV							"Fov"
+#define K_CAMERAS						"Cameras"
 
 #define K_PRIMITIVE_EXT					"iv"
 #define K_ANIM_EXT_CURVE				"animc"

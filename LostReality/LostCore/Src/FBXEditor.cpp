@@ -98,11 +98,11 @@ private:
 	bool bKeepTicking;
 	thread TickThread;
 
-	// TODO: 需要更有效率的场景树
-	vector<FBasicModel*> Ms;
-
 	// Editor tools
 	FGizmoOperator* GizmoOp;
+
+	int32 ScreenWidth;
+	int32 ScreenHeight;
 
 	static const char * const SConverterExe;
 	static const char * const SConverterOutput;
@@ -495,7 +495,6 @@ void FFBXEditor::LoadModel(const string & url)
 	if (model != nullptr)
 	{
 		Scene->AddModel(model);
-		Ms.push_back(model);
 	}
 }
 
@@ -518,7 +517,6 @@ void FFBXEditor::LoadAnimation(const string & url)
 
 void FFBXEditor::ClearScene()
 {
-	Ms.clear();
 	UnPick();
 	UnHover();
 	if (Scene != nullptr)
@@ -542,6 +540,9 @@ void FFBXEditor::LoadScene(const string & url)
 
 	Scene = new FBasicScene;
 	Scene->Load(url);
+
+	Camera = Scene->GetCamera();
+	Camera->Init(ScreenWidth, ScreenHeight);
 }
 
 void FFBXEditor::SaveScene(const string & url)
@@ -681,11 +682,8 @@ bool FFBXEditor::InitializeWindow(HWND wnd, bool windowed, int32 width, int32 he
 	auto ret = WrappedCreateRenderContext(EContextID::D3D11_DXGI0, &RC);
 	if (RC != nullptr && RC->Init(wnd, windowed, width, height))
 	{
-		Camera = new FBasicCamera;
-		Camera->Init(width, height);
-		Camera->SetFov(90.0f);
-		Camera->SetFarPlane(10000.0f);
-		Camera->SetNearPlane(0.1f);
+		ScreenWidth = width;
+		ScreenHeight = height;
 
 		GizmoOp = new FGizmoOperator;
 		if (!GizmoOp->Load("axis.json"))
@@ -811,17 +809,7 @@ FBasicModel * FFBXEditor::ScreenRayTest(int32 x, int32 y)
 		return nullptr;
 	}
 
-	// 逐个遍历测试场景对象.
-	// TODO: Should be Actor with or without model.
-	FBasicModel* nearest = nullptr;
-	for (auto m : Ms)
-	{
-		if (m != nullptr && m->RayTest(worldRay, minDist))
-		{
-			nearest = m;
-			worldRay.Distance = minDist;
-		}
-	}
-
-	return nearest;
+	auto result = Scene->RayTest(worldRay, minDist);
+	FGlobalHandler::Get()->UpdateFlagAnd32Bit(EUpdateFlag::UpdateRayTestDistance, *(uint32*)&minDist);
+	return result;
 }

@@ -65,6 +65,7 @@ namespace LostCore
 		UpdateAnimClear = 0,
 		UpdateAnimAdd,
 		UpdateMonitorName,
+		UpdateRayTestDistance,
 	};
 
 	enum class EAssetOperation : uint8
@@ -82,7 +83,8 @@ namespace LostCore
 		LogError,
 	};
 
-	typedef void(WINAPI *PFN_UpdateFlagAndString)(int32 flag, const char* anim);
+	typedef void(WINAPI *PFN_UpdateFlagAndString)(int32 flag, const char* str);
+	typedef void(WINAPI *PFN_UpdateFlagAnd32Bit)(int32 flag, uint32 val);
 	typedef void(WINAPI *PFN_Logger)(int32 level, const char* msg);
 	typedef void(WINAPI *PFN_UpdatePosAndRot)(float, float, float, float, float, float);
 
@@ -134,6 +136,7 @@ namespace LostCore
 		uint32 DisplayFlags;
 
 		PFN_UpdateFlagAndString UpdateFlagAndNameFunc;
+		PFN_UpdateFlagAnd32Bit UpdateFlagAnd32BitFunc;
 		PFN_Logger LoggingFunc;
 		PFN_UpdatePosAndRot UpdatePosAndRotFunc;
 
@@ -156,6 +159,7 @@ namespace LostCore
 		EReturnCode SetAnimateRate(float rate);
 		EReturnCode SetDisplayFlags(uint32 flags);
 		EReturnCode SetUpdateFlagAndString(PFN_UpdateFlagAndString pfn);
+		EReturnCode SetUpdateFlagAnd32Bit(PFN_UpdateFlagAnd32Bit pfn);
 		EReturnCode PlayAnimation(const char* anim);
 		EReturnCode SetLogger(PFN_Logger logger);
 		EReturnCode InitializeWindow(HWND wnd, bool windowed, int32 width, int32 height);
@@ -215,6 +219,7 @@ namespace LostCore
 		void SetAssetOperateCallback(Callback_IS callback);
 
 		void UpdateFlagAndName(EUpdateFlag flag, const string& name);
+		void UpdateFlagAnd32Bit(EUpdateFlag flag, uint32 val);
 		void UpdatePosAndRot(const FFloat3& pos, const FFloat3& rot);
 	};
 
@@ -226,6 +231,7 @@ EXPORT_WRAP_3_DCL(RotateCamera, float, float, float); // pitch, yaw, roll
 EXPORT_WRAP_1_DCL(SetAnimateRate, float);
 EXPORT_WRAP_1_DCL(SetDisplayFlags, uint32);
 EXPORT_WRAP_1_DCL(SetUpdateFlagAndString, LostCore::PFN_UpdateFlagAndString);
+EXPORT_WRAP_1_DCL(SetUpdateFlagAnd32Bit, LostCore::PFN_UpdateFlagAnd32Bit);
 EXPORT_WRAP_1_DCL(PlayAnimation, const char*);
 EXPORT_WRAP_1_DCL(SetLogger, LostCore::PFN_Logger);
 EXPORT_WRAP_4_DCL(InitializeWindow, HWND, bool, int32, int32);

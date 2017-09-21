@@ -62,5 +62,6 @@ using FJson = nlohmann::json;
 #include "BasicGUI.h"
 #include "BasicScene.h"
 #include "ModelFactory.h"
+#include "CameraFactory.h"
 
 #include "FBXEditor.h"

@@ -34,6 +34,29 @@ void LostCore::FBasicCamera::Init(int32 width, int32 height)
 	AspectRatio = (float)ScreenWidth / (float)ScreenHeight;
 }
 
+bool LostCore::FBasicCamera::Config(const FJson & config)
+{
+	GetViewPosition() = config[K_POSITION];
+	GetViewEuler() = config[K_EULER];
+	SetNearPlane(config[K_NEARPLANE]);
+	SetFarPlane(config[K_FARPLANE]);
+	SetFov(config[K_FOV]);
+	return true;
+}
+
+FJson LostCore::FBasicCamera::Save()
+{
+	FJson config;
+	config[K_TYPE] = (uint8)ESceneNodeType::Camera;
+	config[K_SUBTYPE] = (uint8)ECameraType::Default;
+	config[K_POSITION] = GetViewPosition();
+	config[K_EULER] = GetViewEuler();
+	config[K_NEARPLANE] = GetNearPlane();
+	config[K_FARPLANE] = GetFarPlane();
+	config[K_FOV] = GetFov();
+	return config;
+}
+
 void LostCore::FBasicCamera::Tick()
 {
 
@@ -70,6 +93,16 @@ void LostCore::FBasicCamera::AddPositionLocal(const FFloat3& pos)
 void LostCore::FBasicCamera::AddEulerLocal(const FFloat3& euler)
 {
 	ViewEuler += euler;
+}
+
+FFloat3& LostCore::FBasicCamera::GetViewPosition()
+{
+	return ViewPosition;
+}
+
+FFloat3& LostCore::FBasicCamera::GetViewEuler()
+{
+	return ViewEuler;
 }
 
 void LostCore::FBasicCamera::SetNearPlane(float value)

@@ -51,16 +51,13 @@ bool LostCore::FBasicScene::Config(const FJson & config)
 {
 	if (config.find(K_NODES) != config.end())
 	{
-		for (auto node : config[K_NODES])
+		for (auto& node : config[K_NODES])
 		{
-			assert(node.find(K_TYPE) != node.end() && "a node needs [type] section");
-			assert(node.find(K_PATH) != node.end() && "a node needs [path] section");
-			assert(node.find(K_TRANSFORM) != node.end() && "a node needs [transform] section");
 			auto nodeType = (ESceneNodeType)(int32)node[K_TYPE];
 			if (nodeType == ESceneNodeType::Model)
 			{
-				FBasicModel* model = nullptr;
-				if ((model = FModelFactory::NewModel(node[K_PATH])) != nullptr)
+				FBasicModel* model = FModelFactory::NewModel(node[K_PATH]);
+				if (model != nullptr)
 				{
 					model->SetWorldMatrix(node[K_TRANSFORM]);
 					if (model != nullptr)
@@ -69,6 +66,19 @@ bool LostCore::FBasicScene::Config(const FJson & config)
 					}
 				}
 			}
+			else if (nodeType == ESceneNodeType::Camera)
+			{
+				FBasicCamera* camera = FCameraFactory::NewCamera(node);
+				if (camera != nullptr)
+				{
+					Cameras.push_back(camera);
+				}
+			}
+		}
+
+		if (Cameras.empty())
+		{
+			Cameras.push_back(new FBasicCamera);
 		}
 	}
 
@@ -88,19 +98,21 @@ bool FBasicScene::Load(const string& url)
 	}
 }
 
-void LostCore::FBasicScene::Save(const string & url)
+FJson LostCore::FBasicScene::Save(const string & url)
 {
 	FJson config;
 	for (auto model : Models)
 	{
-		FJson modelConfig;
-		modelConfig[K_TYPE] = (int32)ESceneNodeType::Model;
-		modelConfig[K_PATH] = model->GetUrl();
-		modelConfig[K_TRANSFORM] = model->GetWorldMatrix();
-		config[K_NODES].push_back(modelConfig);
+		config[K_NODES].push_back(model->Save());
+	}
+
+	for (auto cam : Cameras)
+	{
+		config[K_NODES].push_back(cam->Save());
 	}
 
 	SaveJson(config, url);
+	return config;
 }
 
 void FBasicScene::AddModel(FBasicModel * sm)
@@ -133,6 +145,35 @@ void LostCore::FBasicScene::ClearModels()
 	}
 
 	Models.clear();
+}
+
+FBasicCamera* LostCore::FBasicScene::GetCamera()
+{
+	if (Cameras.size() > 0)
+	{
+		return Cameras[0];
+	}
+
+	return nullptr;
+}
+
+FBasicModel* LostCore::FBasicScene::RayTest(const FRay & ray, FRay::FT & dist)
+{
+	FBasicModel* nearest = nullptr;
+	FRay localRay(ray);
+
+	// 逐个遍历测试场景对象.
+	// TODO: Should be Actor with or without model.
+	for (auto model : Models)
+	{
+		if (model != nullptr && model->RayTest(localRay, dist))
+		{
+			nearest = model;
+			localRay.Distance = dist;
+		}
+	}
+
+	return nearest;
 }
 
 void LostCore::FBasicScene::Fini()

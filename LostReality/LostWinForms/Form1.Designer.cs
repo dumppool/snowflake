@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            this.panel1 = new System.Windows.Forms.Panel();
+            this.RenderPanel = new System.Windows.Forms.Panel();
             this.listBox1 = new System.Windows.Forms.ListBox();
             this.ImportPanel = new System.Windows.Forms.Panel();
             this.AnimationOutputText = new System.Windows.Forms.TextBox();
@@ -63,6 +63,7 @@
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.MonitorPanel = new System.Windows.Forms.Panel();
+            this.RayTestResult = new System.Windows.Forms.TextBox();
             this.ValueRoll = new System.Windows.Forms.TextBox();
             this.ValueYaw = new System.Windows.Forms.TextBox();
             this.ValuePitch = new System.Windows.Forms.TextBox();
@@ -83,6 +84,7 @@
             this.LoadModelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.LoadAnimationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.LoadSceneToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.SaveSceneToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
             this.ViewPanelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ClearSceneToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -90,8 +92,8 @@
             this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripComboBox1 = new System.Windows.Forms.ToolStripComboBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.SaveSceneToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.panel1.SuspendLayout();
+            this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
+            this.RenderPanel.SuspendLayout();
             this.ImportPanel.SuspendLayout();
             this.ViewPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.AnimateRateSlider)).BeginInit();
@@ -103,20 +105,20 @@
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
-            // panel1
+            // RenderPanel
             // 
-            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.RenderPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.panel1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
-            this.panel1.Controls.Add(this.listBox1);
-            this.panel1.Controls.Add(this.ImportPanel);
-            this.panel1.Controls.Add(this.ViewPanel);
-            this.panel1.Location = new System.Drawing.Point(-1, 59);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(984, 406);
-            this.panel1.TabIndex = 0;
-            this.panel1.PreviewKeyDown += new System.Windows.Forms.PreviewKeyDownEventHandler(this.Panel1_PreviewKeyDown);
+            this.RenderPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.RenderPanel.Controls.Add(this.listBox1);
+            this.RenderPanel.Controls.Add(this.ImportPanel);
+            this.RenderPanel.Controls.Add(this.ViewPanel);
+            this.RenderPanel.Location = new System.Drawing.Point(-1, 59);
+            this.RenderPanel.Name = "RenderPanel";
+            this.RenderPanel.Size = new System.Drawing.Size(984, 406);
+            this.RenderPanel.TabIndex = 0;
+            this.RenderPanel.PreviewKeyDown += new System.Windows.Forms.PreviewKeyDownEventHandler(this.Panel1_PreviewKeyDown);
             // 
             // listBox1
             // 
@@ -495,6 +497,7 @@
             // MonitorPanel
             // 
             this.MonitorPanel.BackColor = System.Drawing.SystemColors.Desktop;
+            this.MonitorPanel.Controls.Add(this.RayTestResult);
             this.MonitorPanel.Controls.Add(this.ValueRoll);
             this.MonitorPanel.Controls.Add(this.ValueYaw);
             this.MonitorPanel.Controls.Add(this.ValuePitch);
@@ -512,6 +515,17 @@
             this.MonitorPanel.Name = "MonitorPanel";
             this.MonitorPanel.Size = new System.Drawing.Size(973, 121);
             this.MonitorPanel.TabIndex = 0;
+            // 
+            // RayTestResult
+            // 
+            this.RayTestResult.BackColor = System.Drawing.SystemColors.Desktop;
+            this.RayTestResult.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.RayTestResult.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.RayTestResult.ForeColor = System.Drawing.SystemColors.ScrollBar;
+            this.RayTestResult.Location = new System.Drawing.Point(180, 11);
+            this.RayTestResult.Name = "RayTestResult";
+            this.RayTestResult.Size = new System.Drawing.Size(167, 16);
+            this.RayTestResult.TabIndex = 13;
             // 
             // ValueRoll
             // 
@@ -693,26 +707,32 @@
             this.loadFBXToolStripMenuItem1.BackColor = System.Drawing.SystemColors.WindowFrame;
             this.loadFBXToolStripMenuItem1.ForeColor = System.Drawing.SystemColors.ControlLight;
             this.loadFBXToolStripMenuItem1.Name = "loadFBXToolStripMenuItem1";
-            this.loadFBXToolStripMenuItem1.Size = new System.Drawing.Size(152, 22);
+            this.loadFBXToolStripMenuItem1.Size = new System.Drawing.Size(146, 22);
             this.loadFBXToolStripMenuItem1.Text = "载入FBX文件";
             // 
             // LoadModelToolStripMenuItem
             // 
             this.LoadModelToolStripMenuItem.Name = "LoadModelToolStripMenuItem";
-            this.LoadModelToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.LoadModelToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.LoadModelToolStripMenuItem.Text = "载入模型";
             // 
             // LoadAnimationToolStripMenuItem
             // 
             this.LoadAnimationToolStripMenuItem.Name = "LoadAnimationToolStripMenuItem";
-            this.LoadAnimationToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.LoadAnimationToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.LoadAnimationToolStripMenuItem.Text = "载入动画";
             // 
             // LoadSceneToolStripMenuItem
             // 
             this.LoadSceneToolStripMenuItem.Name = "LoadSceneToolStripMenuItem";
-            this.LoadSceneToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.LoadSceneToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.LoadSceneToolStripMenuItem.Text = "载入场景";
+            // 
+            // SaveSceneToolStripMenuItem
+            // 
+            this.SaveSceneToolStripMenuItem.Name = "SaveSceneToolStripMenuItem";
+            this.SaveSceneToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
+            this.SaveSceneToolStripMenuItem.Text = "保存场景";
             // 
             // toolStripMenuItem2
             // 
@@ -756,12 +776,6 @@
             this.toolStripComboBox1.Name = "toolStripComboBox1";
             this.toolStripComboBox1.Size = new System.Drawing.Size(121, 25);
             // 
-            // SaveSceneToolStripMenuItem
-            // 
-            this.SaveSceneToolStripMenuItem.Name = "SaveSceneToolStripMenuItem";
-            this.SaveSceneToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.SaveSceneToolStripMenuItem.Text = "保存场景";
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -770,14 +784,14 @@
             this.ClientSize = new System.Drawing.Size(981, 604);
             this.Controls.Add(this.menuStrip1);
             this.Controls.Add(this.tabControl1);
-            this.Controls.Add(this.panel1);
+            this.Controls.Add(this.RenderPanel);
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "Form1";
             this.Text = "Form1";
             this.Closed += new System.EventHandler(this.Form1_Closed);
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Form1_Closed);
             this.Load += new System.EventHandler(this.Form1_Load);
-            this.panel1.ResumeLayout(false);
+            this.RenderPanel.ResumeLayout(false);
             this.ImportPanel.ResumeLayout(false);
             this.ImportPanel.PerformLayout();
             this.ViewPanel.ResumeLayout(false);
@@ -799,7 +813,7 @@
 
         #endregion
 
-        private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.Panel RenderPanel;
         private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.TabControl tabControl1;
         private System.Windows.Forms.TabPage tabPage1;
@@ -861,6 +875,8 @@
         private System.Windows.Forms.TextBox ValueTargetName;
         private System.Windows.Forms.ToolStripMenuItem LoadSceneToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem SaveSceneToolStripMenuItem;
+        private System.Windows.Forms.TextBox RayTestResult;
+        private System.Windows.Forms.SaveFileDialog saveFileDialog1;
     }
 }
 
