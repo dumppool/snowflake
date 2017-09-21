@@ -8,6 +8,7 @@
 */
 #include "stdafx.h"
 #include "GdiFont.h"
+#include "Implements/Texture.h"
 
 using namespace D3D11;
 using namespace Gdiplus;

@@ -9,11 +9,9 @@
 
 #pragma once
 
-#include "Texture.h"
-
 namespace D3D11
 {
-
+	class FTexture2D;
 	static const int32 STexWidth = 1024;
 	//static const WCHAR SStartChar = '!';
 	//static const WCHAR SEndChar = 127;

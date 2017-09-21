@@ -9,8 +9,7 @@
 
 #include "stdafx.h"
 #include "Texture.h"
-#include "RenderContext.h"
-#include "SamplerStateDef.h"
+#include "States/SamplerStateDef.h"
 
 using namespace LostCore;
 

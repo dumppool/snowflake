@@ -8,6 +8,9 @@
 */
 
 #include "stdafx.h"
+#include "Buffers/ConstantBuffer.h"
+#include "Implements/PrimitiveGroup.h"
+#include "Implements/Material.h"
 
 using namespace D3D11;
 
@@ -51,7 +54,6 @@ EReturnCode D3D11::DestroyRenderContext(LostCore::IRenderContext * context)
 	return SSuccess;
 }
 
-#include "PrimitiveGroup.h"
 
 EReturnCode D3D11::CreatePrimitiveGroup(LostCore::IPrimitiveGroup ** pg)
 {
@@ -80,7 +82,6 @@ EReturnCode D3D11::DestroyPrimitiveGroup(LostCore::IPrimitiveGroup * pg)
 	return SSuccess;
 }
 
-#include "ConstantBuffer.h"
 
 EReturnCode D3D11::CreateConstantBuffer(LostCore::IConstantBuffer** cb)
 {
@@ -109,7 +110,6 @@ EReturnCode D3D11::DestroyConstantBuffer(LostCore::IConstantBuffer * cb)
 	return SSuccess;
 }
 
-#include "Material.h"
 
 EReturnCode D3D11::CreateMaterial(LostCore::IMaterial** material)
 {

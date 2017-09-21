@@ -9,12 +9,15 @@
 
 #pragma once
 
-#include "Texture.h"
-#include "ConstantBuffer.h"
+//#include "Texture.h"
+//#include "ConstantBuffer.h"
 #include "GdiFont.h"
 
 namespace D3D11
 {
+	class FTexture2D;
+	class FConstantBuffer;
+
 	class FRenderContext : public LostCore::IRenderContext
 	{
 	public:

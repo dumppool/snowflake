@@ -9,9 +9,6 @@
 
 #pragma once
 
-#include "DepthStencilStateDef.h"
-#include "ConstantBuffer.h"
-
 namespace D3D11
 {
 	static const uint32 SShaderID_Vertex = 0x1 << 0;

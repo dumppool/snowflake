@@ -9,7 +9,9 @@
 
 #include "stdafx.h"
 #include "Material.h"
-#include "VertexDef.h"
+#include "Implements/Texture.h"
+#include "Buffers/VertexDef.h"
+#include "States/DepthStencilStateDef.h"
 
 using namespace D3D11;
 using namespace LostCore;

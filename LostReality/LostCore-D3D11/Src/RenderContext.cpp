@@ -9,10 +9,12 @@
 
 #include "stdafx.h"
 #include "RenderContext.h"
-#include "BlendStateDef.h"
-#include "RasterizerStateDef.h"
-#include "DepthStencilStateDef.h"
-#include "SamplerStateDef.h"
+#include "States/BlendStateDef.h"
+#include "States/RasterizerStateDef.h"
+#include "States/DepthStencilStateDef.h"
+#include "States/SamplerStateDef.h"
+#include "Buffers/ConstantBuffer.h"
+#include "Implements/Texture.h"
 
 using namespace LostCore;
 

@@ -4,12 +4,47 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="targetver.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Inc\LostCore-D3D11.h">
       <Filter>Inc</Filter>
     </ClInclude>
-    <ClInclude Include="Src\PrimitiveGroup.h">
+    <ClInclude Include="Buffers\ConstantBuffer.h">
+      <Filter>Buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="Buffers\VertexDef.h">
+      <Filter>Buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="Implements\Material.h">
+      <Filter>Implements</Filter>
+    </ClInclude>
+    <ClInclude Include="Implements\PrimitiveGroup.h">
+      <Filter>Implements</Filter>
+    </ClInclude>
+    <ClInclude Include="Implements\Texture.h">
+      <Filter>Implements</Filter>
+    </ClInclude>
+    <ClInclude Include="States\BlendStateDef.h">
+      <Filter>States</Filter>
+    </ClInclude>
+    <ClInclude Include="States\DepthStencilStateDef.h">
+      <Filter>States</Filter>
+    </ClInclude>
+    <ClInclude Include="States\RasterizerStateDef.h">
+      <Filter>States</Filter>
+    </ClInclude>
+    <ClInclude Include="States\SamplerStateDef.h">
+      <Filter>States</Filter>
+    </ClInclude>
+    <ClInclude Include="Pipelines\DeferredPipeline.h">
+      <Filter>Pipelines</Filter>
+    </ClInclude>
+    <ClInclude Include="Pipelines\ForwardPipeline.h">
+      <Filter>Pipelines</Filter>
+    </ClInclude>
+    <ClInclude Include="Pipelines\PipelineInterface.h">
+      <Filter>Pipelines</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\GdiFont.h">
       <Filter>Src</Filter>
     </ClInclude>
     <ClInclude Include="Src\RenderContext.h">
@@ -18,74 +53,53 @@
     <ClInclude Include="Src\RenderContextBase.h">
       <Filter>Src</Filter>
     </ClInclude>
-    <ClInclude Include="Src\Material.h">
-      <Filter>Src</Filter>
-    </ClInclude>
-    <ClInclude Include="Src\Texture.h">
-      <Filter>Src</Filter>
-    </ClInclude>
-    <ClInclude Include="Src\BlendStateDef.h">
-      <Filter>Src</Filter>
-    </ClInclude>
-    <ClInclude Include="Src\RasterizerStateDef.h">
-      <Filter>Src</Filter>
-    </ClInclude>
-    <ClInclude Include="Src\DepthStencilStateDef.h">
-      <Filter>Src</Filter>
-    </ClInclude>
-    <ClInclude Include="GdiFont.h">
-      <Filter>Src</Filter>
-    </ClInclude>
-    <ClInclude Include="Src\SamplerStateDef.h">
-      <Filter>Src</Filter>
-    </ClInclude>
-    <ClInclude Include="Src\ConstantBuffer.h">
-      <Filter>Src</Filter>
-    </ClInclude>
-    <ClInclude Include="Src\VertexDef.h">
-      <Filter>Src</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="stdafx.cpp" />
-    <ClCompile Include="Src\LostCore-D3D11.cpp">
+    <ClCompile Include="Buffers\ConstantBuffer.cpp">
+      <Filter>Buffers</Filter>
+    </ClCompile>
+    <ClCompile Include="Buffers\VertexDef.cpp">
+      <Filter>Buffers</Filter>
+    </ClCompile>
+    <ClCompile Include="Implements\Material.cpp">
+      <Filter>Implements</Filter>
+    </ClCompile>
+    <ClCompile Include="Implements\PrimitiveGroup.cpp">
+      <Filter>Implements</Filter>
+    </ClCompile>
+    <ClCompile Include="Implements\Texture.cpp">
+      <Filter>Implements</Filter>
+    </ClCompile>
+    <ClCompile Include="States\BlendStateDef.cpp">
+      <Filter>States</Filter>
+    </ClCompile>
+    <ClCompile Include="States\DepthStencilStateDef.cpp">
+      <Filter>States</Filter>
+    </ClCompile>
+    <ClCompile Include="States\RasterizerStateDef.cpp">
+      <Filter>States</Filter>
+    </ClCompile>
+    <ClCompile Include="States\SamplerStateDef.cpp">
+      <Filter>States</Filter>
+    </ClCompile>
+    <ClCompile Include="Pipelines\DeferredPipeline.cpp">
+      <Filter>Pipelines</Filter>
+    </ClCompile>
+    <ClCompile Include="Pipelines\ForwardPipeline.cpp">
+      <Filter>Pipelines</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\GdiFont.cpp">
       <Filter>Src</Filter>
     </ClCompile>
-    <ClCompile Include="Src\PrimitiveGroup.cpp">
+    <ClCompile Include="Src\LostCore-D3D11.cpp">
       <Filter>Src</Filter>
     </ClCompile>
     <ClCompile Include="Src\RenderContext.cpp">
       <Filter>Src</Filter>
     </ClCompile>
     <ClCompile Include="Src\RenderContextBase.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
-    <ClCompile Include="Src\Material.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
-    <ClCompile Include="Src\Texture.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
-    <ClCompile Include="Src\BlendStateDef.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
-    <ClCompile Include="Src\RasterizerStateDef.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
-    <ClCompile Include="Src\DepthStencilStateDef.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
-    <ClCompile Include="GdiFont.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
-    <ClCompile Include="Src\SamplerStateDef.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
-    <ClCompile Include="Src\ConstantBuffer.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
-    <ClCompile Include="Src\VertexDef.cpp">
       <Filter>Src</Filter>
     </ClCompile>
   </ItemGroup>
@@ -95,6 +109,18 @@
     </Filter>
     <Filter Include="Src">
       <UniqueIdentifier>{a9aaef79-6ebf-479a-84ed-67b7beb39951}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Pipelines">
+      <UniqueIdentifier>{14041756-4fb4-4f0d-94d6-353ba43e948d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Buffers">
+      <UniqueIdentifier>{adcaf5aa-82e2-427c-b768-b40d667acec8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Implements">
+      <UniqueIdentifier>{6869302e-7e31-40e6-b166-1ce9e718c6ce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="States">
+      <UniqueIdentifier>{4354d858-6cf3-4836-80f9-c3220821b223}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
