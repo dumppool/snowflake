@@ -106,7 +106,7 @@ namespace LostCore
 		virtual bool Config(const FJson& config) override;
 		virtual bool Load(const char* url) override;
 
-		void Fini();
+		void Destroy();
 
 	private:
 		FRect Root;

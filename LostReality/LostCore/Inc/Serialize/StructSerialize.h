@@ -11,15 +11,6 @@
 
 namespace LostCore
 {
-	FORCEINLINE FVertexTypes::Details GetVertexDetails(int flag)
-	{
-		return LostCore::FVertexTypes::GetVertexDetail3D(
-			(flag & EVertexElement::UV) == EVertexElement::UV,
-			(flag & EVertexElement::Normal) == EVertexElement::Normal,
-			(flag & EVertexElement::Tangent) == EVertexElement::Tangent,
-			(flag & EVertexElement::VertexColor) == EVertexElement::VertexColor,
-			(flag & EVertexElement::Skin) == EVertexElement::Skin);
-	}
 
 	FORCEINLINE uint32 GetAlignedSize(uint32 sz, uint32 alignment)
 	{
@@ -477,17 +468,17 @@ FORCEINLINE void LostCore::FMeshData::BuildGPUData(uint32 flags = 0)
 		{
 			stream << Coordinates[vert.Index];
 
-			if ((flags & EVertexElement::UV) == EVertexElement::UV)
+			if (HAS_FLAGS(VERTEX_TEXCOORD0, flags))
 			{
 				stream << (splitUV ? vert.TexCoord : TexCoords[vert.Index]);
 			}
 
-			if ((flags & EVertexElement::Normal) == EVertexElement::Normal)
+			if (HAS_FLAGS(VERTEX_NORMAL, flags))
 			{
 				stream << (splitNormal ? vert.Normal : Normals[vert.Index]);
 			}
 
-			if ((flags & EVertexElement::Tangent) == EVertexElement::Tangent)
+			if (HAS_FLAGS(VERTEX_TANGENT, flags))
 			{
 				if (splitNormal)
 				{
@@ -499,7 +490,7 @@ FORCEINLINE void LostCore::FMeshData::BuildGPUData(uint32 flags = 0)
 				}
 			}
 
-			if ((flags & EVertexElement::VertexColor) == EVertexElement::VertexColor)
+			if (HAS_FLAGS(VERTEX_COLOR, flags))
 			{
 				if (splitVertexColor)
 				{
@@ -511,7 +502,7 @@ FORCEINLINE void LostCore::FMeshData::BuildGPUData(uint32 flags = 0)
 				}
 			}
 
-			if ((flags & EVertexElement::Skin) == EVertexElement::Skin)
+			if (HAS_FLAGS(VERTEX_SKIN, flags))
 			{
 				stream << BlendWeights[vert.Index] << BlendIndices[vert.Index];
 			}

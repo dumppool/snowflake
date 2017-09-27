@@ -90,64 +90,12 @@ namespace D3D11
 		bool bInitialized;
 		std::map<std::string, TRefCountPtr<ID3D11BlendState>> StateMap;
 
-		FBlendStateMap() : bInitialized(false)
-		{
+		FBlendStateMap();
+		~FBlendStateMap();
 
-		}
-
-		~FBlendStateMap()
-		{
-			ReleaseComObjects();
-		}
-
-		void Initialize(const TRefCountPtr<ID3D11Device>& device)
-		{
-			const char* head = "FBlendStateMap::Initialize";
-
-			if (bInitialized)
-			{
-				return;
-			}
-
-			StateMap.insert(std::make_pair(FBlendState_Solid::GetName(), FBlendState_Solid::GetState(device)));
-			LVMSG(head, "Insert blend state[%s]", FBlendState_Solid::GetName().c_str());
-
-			StateMap.insert(std::make_pair(FBlendState_Add::GetName(), FBlendState_Add::GetState(device)));
-			LVMSG(head, "Insert blend state[%s]", FBlendState_Add::GetName().c_str());
-
-			bInitialized = true;
-		}
-
-		void ReleaseComObjects()
-		{
-			if (!bInitialized)
-			{
-				return;
-			}
-
-			for (auto it = StateMap.begin(); it != StateMap.end(); ++it)
-			{
-				it->second = nullptr;
-			}
-
-			StateMap.clear();
-			bInitialized = false;
-		}
-
-		FORCEINLINE TRefCountPtr<ID3D11BlendState> GetState(const std::string& key)
-		{
-			if (bInitialized)
-			{
-				for (auto element : StateMap)
-				{
-					if (element.first.compare(key) == 0)
-					{
-						return element.second;
-					}
-				}
-			}
-
-			return TRefCountPtr<ID3D11BlendState>();
-		}
+		void InitializeState(uint32 overallFlags, const array<uint32, 8>& flags);
+		void Initialize();
+		void ReleaseComObjects();
+		FORCEINLINE TRefCountPtr<ID3D11BlendState> GetState(uint32 flags);
 	};
 }

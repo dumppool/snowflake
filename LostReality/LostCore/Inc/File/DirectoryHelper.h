@@ -321,9 +321,14 @@ namespace LostCore
 			return false;
 		}
 
-		bool GetShaderAbsolutePath(const string& url, string& output)
+		bool GetShaderCodeAbsolutePath(const string& url, string& output)
 		{
-			return GetSpecifiedAbsolutePath(K_SHADER, url, output);
+			return GetSpecifiedAbsolutePath(K_SHADER_CODE, url, output);
+		}
+
+		bool GetShaderBlobAbsolutePath(const string& url, string& output)
+		{
+			return GetSpecifiedAbsolutePath(K_SHADER_BLOB, url, output);
 		}
 
 		bool GetPrimitiveAbsolutePath(const string& url, string& output)

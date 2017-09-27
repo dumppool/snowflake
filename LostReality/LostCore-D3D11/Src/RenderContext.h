@@ -21,25 +21,71 @@ namespace D3D11
 	class FRenderContext : public LostCore::IRenderContext
 	{
 	public:
-		FRenderContext(LostCore::EContextID id);
+		FORCEINLINE static FRenderContext* Get()
+		{
+			static FRenderContext SInst;
+			return &SInst;
+		}
+
+		FORCEINLINE static TRefCountPtr<ID3D11Device> GetDevice(const char* head)
+		{
+			FRenderContext* rc = (FRenderContext::Get());
+			if (rc == nullptr)
+			{
+				if (head != nullptr)
+				{
+					LVERR(head, "null render context");
+				}
+
+				return nullptr;
+			}
+
+			TRefCountPtr<ID3D11Device> dev = rc->GetDevice();
+			if (!dev.IsValid() && head != nullptr)
+			{
+				LVERR(head, "null d3d11 device, render context may not be initialized or failed");
+			}
+
+			return dev;
+		}
+
+		FORCEINLINE static TRefCountPtr<ID3D11DeviceContext> GetDeviceContext(const char* head)
+		{
+			FRenderContext* rc = static_cast<FRenderContext*>(FRenderContext::Get());
+			if (rc == nullptr)
+			{
+				if (head != nullptr)
+				{
+					LVERR(head, "null render context");
+				}
+
+				return nullptr;
+			}
+
+			TRefCountPtr<ID3D11DeviceContext> cxt = rc->GetDeviceContext();
+			if (!cxt.IsValid() && head != nullptr)
+			{
+				LVERR(head, "null d3d11 device context, render context may not be initialized or failed");
+			}
+
+			return cxt;
+		}
+
+	public:
+		FRenderContext();
 
 		// Í¨¹ý IRenderContext ¼Ì³Ð
 		virtual ~FRenderContext() override;
-		virtual bool Init(HWND wnd, bool bWindowed, int32 width, int32 height) override;
-		virtual void Fini() override;
-		virtual bool EnableShadeModel(LostCore::EShadeModel sm)override;
-		virtual LostCore::EShadeModel GetShadeModel() const override;
-		virtual LostCore::FFloat4x4 GetViewProjectMatrix() const override;
+		virtual bool Initialize(LostCore::EContextID id) override;
+		virtual bool InitializeScreen(HWND wnd, bool bWindowed, int32 width, int32 height) override;
 		virtual void SetViewProjectMatrix(const LostCore::FFloat4x4 & vp) override;
-		virtual LostCore::EContextID GetContextID() const override;
-		virtual const char * GetContextString() const override;
 		virtual void BeginFrame(float sec) override;
 		virtual void EndFrame(float sec) override;
-		virtual float GetWidth() const override;
-		virtual float GetHeight() const override;
+
+	private:
+		virtual void Destroy();
 
 	public:
-
 		FORCEINLINE TRefCountPtr<ID3D11Device> GetDevice()
 		{
 			return Device;
@@ -68,50 +114,6 @@ namespace D3D11
 		void EnableWireframe(bool bEnable)
 		{
 			bWireframe = bEnable;
-		}
-
-		FORCEINLINE static TRefCountPtr<ID3D11Device> GetDevice(LostCore::IRenderContext* rc, const char* head)
-		{
-			FRenderContext* crc = static_cast<FRenderContext*>(rc);
-			if (crc == nullptr)
-			{
-				if (head != nullptr)
-				{
-					LVERR(head, "null render context");
-				}
-
-				return nullptr;
-			}
-
-			TRefCountPtr<ID3D11Device> dev = crc->GetDevice();
-			if (!dev.IsValid() && head != nullptr)
-			{
-				LVERR(head, "null d3d11 device, render context may not be initialized or failed");
-			}
-
-			return dev;
-		}
-
-		FORCEINLINE static TRefCountPtr<ID3D11DeviceContext> GetDeviceContext(LostCore::IRenderContext* rc, const char* head)
-		{
-			FRenderContext* crc = static_cast<FRenderContext*>(rc);
-			if (crc == nullptr)
-			{
-				if (head != nullptr)
-				{
-					LVERR(head, "null render context");
-				}
-				
-				return nullptr;
-			}
-
-			TRefCountPtr<ID3D11DeviceContext> cxt = crc->GetDeviceContext();
-			if (!cxt.IsValid() && head != nullptr)
-			{
-				LVERR(head, "null d3d11 device context, render context may not be initialized or failed");
-			}
-
-			return cxt;
 		}
 
 	private:

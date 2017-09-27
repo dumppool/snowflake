@@ -52,22 +52,10 @@ namespace LostCore
 	public:
 		virtual ~IRenderContext() {}
 
-		virtual bool Init(HWND wnd, bool bWindowed, int32 width, int32 height) = 0;
-		virtual void Fini() = 0;
-
-		virtual bool EnableShadeModel(EShadeModel sm) = 0;
-		virtual EShadeModel GetShadeModel() const = 0;
-
-		virtual FFloat4x4 GetViewProjectMatrix() const = 0;
-		virtual void SetViewProjectMatrix(const FFloat4x4& vp) = 0;
-
-		virtual EContextID GetContextID() const = 0;
-		virtual const char* GetContextString() const = 0;
-
+		virtual bool Initialize(LostCore::EContextID id) = 0;
+		virtual bool InitializeScreen(HWND wnd, bool bWindowed, int32 width, int32 height) = 0;
 		virtual void BeginFrame(float sec) = 0;
 		virtual void EndFrame(float sec) = 0;
-
-		virtual float GetWidth() const = 0;
-		virtual float GetHeight() const = 0;
+		virtual void SetViewProjectMatrix(const FFloat4x4& vp) = 0;
 	};
 }

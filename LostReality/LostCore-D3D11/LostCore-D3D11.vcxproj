@@ -161,6 +161,7 @@
     <ClInclude Include="Src\GdiFont.h" />
     <ClInclude Include="Src\RenderContext.h" />
     <ClInclude Include="Src\RenderContextBase.h" />
+    <ClInclude Include="Src\ShaderManager.h" />
     <ClInclude Include="States\BlendStateDef.h" />
     <ClInclude Include="States\DepthStencilStateDef.h" />
     <ClInclude Include="States\RasterizerStateDef.h" />
@@ -193,6 +194,7 @@
     <ClCompile Include="Src\LostCore-D3D11.cpp" />
     <ClCompile Include="Src\RenderContext.cpp" />
     <ClCompile Include="Src\RenderContextBase.cpp" />
+    <ClCompile Include="Src\ShaderManager.cpp" />
     <ClCompile Include="States\BlendStateDef.cpp" />
     <ClCompile Include="States\DepthStencilStateDef.cpp" />
     <ClCompile Include="States\RasterizerStateDef.cpp" />

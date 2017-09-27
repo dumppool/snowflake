@@ -153,12 +153,6 @@ struct FTempMesh
 
 	bool IsSkeletal() const;
 
-	bool HasElementNormal() const;
-
-	bool HasElementTangent() const;
-
-	bool HasElementVertexColor() const;
-
 	// 不考虑import整个场景的需求
 	void ExtractVertex();
 
@@ -280,21 +274,6 @@ bool FTempMesh::IsSkeletal() const
 	return IsValid() && Mesh->GetDeformerCount(FbxDeformer::eSkin) > 0;
 }
 
-bool FTempMesh::HasElementNormal() const
-{
-	return (MeshData.VertexFlags & EVertexElement::Normal) == EVertexElement::Normal;
-}
-
-bool FTempMesh::HasElementTangent() const
-{
-	return (MeshData.VertexFlags & EVertexElement::Tangent) == EVertexElement::Tangent;
-}
-
-bool FTempMesh::HasElementVertexColor() const
-{
-	return (MeshData.VertexFlags & EVertexElement::VertexColor) == EVertexElement::VertexColor;
-}
-
 void FTempMesh::ExtractVertex()
 {
 	const char* head = "ExtractVertex";
@@ -338,7 +317,7 @@ void FTempMesh::ExtractVertex()
 	MeshData.VertexFlags = 0;
 	if (IsSkeletal())
 	{
-		MeshData.VertexFlags |= EVertexElement::Skin;
+		MeshData.VertexFlags |= VERTEX_SKIN;
 	}
 
 	if (MeshData.Name.empty() && !MeshData.Skeleton.Data.Name.empty())
@@ -419,11 +398,11 @@ void FTempMesh::ExtractVertex()
 		vcHead = nullptr;
 	}
 
-	MeshData.VertexFlags |= (coordHead != nullptr ? EVertexElement::Coordinate : 0);
-	MeshData.VertexFlags |= (normalHead != nullptr ? EVertexElement::Normal : 0);
-	MeshData.VertexFlags |= (tangentHead != nullptr  && binormalHead != nullptr ? EVertexElement::Tangent : 0);
-	MeshData.VertexFlags |= (uvHead != nullptr ? EVertexElement::UV : 0);
-	MeshData.VertexFlags |= (vcHead != nullptr ? EVertexElement::VertexColor : 0);
+	assert(coordHead != nullptr);
+	MeshData.VertexFlags |= (normalHead != nullptr ? VERTEX_NORMAL : 0);
+	MeshData.VertexFlags |= (tangentHead != nullptr  && binormalHead != nullptr ? VERTEX_TANGENT : 0);
+	MeshData.VertexFlags |= (uvHead != nullptr ? VERTEX_TEXCOORD0 : 0);
+	MeshData.VertexFlags |= (vcHead != nullptr ? VERTEX_COLOR : 0);
 
 	if (coordHead == nullptr)
 	{
@@ -558,15 +537,15 @@ void FTempMesh::ExtractVertex()
 			|| (FConvertOptions::Get()->bForceRegenerateTangent);
 
 		genTangent &= genNormal || (normalHead != nullptr);
-		genTangent &= (MeshData.VertexFlags & EVertexElement::UV) == EVertexElement::UV;
+		genTangent &= HAS_FLAGS(VERTEX_TEXCOORD0, MeshData.VertexFlags);
 
 		if (genNormal)
 		{
 			GenerateNormal(vecLocalToBone, genTangent);
 		}
 
-		MeshData.VertexFlags |= genNormal ? EVertexElement::Normal : 0;
-		MeshData.VertexFlags |= genTangent ? EVertexElement::Tangent : 0;
+		MeshData.VertexFlags |= genNormal ? VERTEX_NORMAL : 0;
+		MeshData.VertexFlags |= genTangent ? VERTEX_TANGENT : 0;
 	}
 }
 

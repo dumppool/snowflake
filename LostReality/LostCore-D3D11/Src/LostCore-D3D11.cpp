@@ -27,20 +27,18 @@ EReturnCode D3D11::CreateRenderContext(LostCore::EContextID id, LostCore::IRende
 	case LostCore::EContextID::D3D11_DXGI0:
 	case LostCore::EContextID::D3D11_DXGI1:
 	{
-		obj = new FRenderContext(id);
-		if (obj == nullptr)
+		obj = FRenderContext::Get();
+		if (obj->Initialize(id))
 		{
-			return SErrorOutOfMemory;
+			return SSuccess;
 		}
 		else
 		{
-			assert(id == obj->GetContextID());
-			*context = obj;
-			return SSuccess;
+			return SErrorInternalError;
 		}
 	}
 	default:
-		return SErrorInternalError;
+		return SErrorInvalidParameters;
 	}
 }
 

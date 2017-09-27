@@ -43,7 +43,7 @@ namespace LostCore
 		FBasicModel* RayTest(const FRay& ray, FRay::FT& dist);
 
 	private:
-		void Fini();
+		void Destroy();
 
 		vector<FBasicModel*> Models;
 		vector<FBasicCamera*> Cameras;

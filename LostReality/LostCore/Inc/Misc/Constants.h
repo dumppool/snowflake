@@ -158,6 +158,8 @@
 #define K_MODEL							"Model"
 #define K_PRIMITIVE						"Primitive"
 #define K_SHADER						"Shader"
+#define K_SHADER_BLOB					"ShaderBlob"
+#define K_SHADER_CODE					"ShaderCode"
 #define K_ANIMATION						"Animation"
 #define K_AUTO							"Auto"
 #define K_PATH							"Path"
@@ -197,16 +199,6 @@
 #define FLAG_DISPLAY_SKEL		(1<<2)
 #define FLAG_DISPLAY_BB			(1<<3)
 
-enum EVertexElement
-{
-	Coordinate			= 0x1,
-	UV					= 0x2,
-	Normal				= 0x4,
-	Tangent				= 0x8,
-	VertexColor			= 0x10,
-	Skin				= 0x20,
-};
-
 #define MAX_BONES_PER_VERTEX 4
 #define MAX_BONES_PER_BATCH 128
 #define MAX_BONES_PER_MESH (1<<16)
@@ -222,6 +214,47 @@ enum EVertexElement
 #define SHADER_SLOT_CS		(1<<9)
 
 #define ACTOR_VISIBLE		(1<<0)
+
+#define VERTEX_TEXCOORD0		(1<<1)
+#define VERTEX_NORMAL			(1<<2)
+#define VERTEX_TANGENT			(1<<3)
+#define VERTEX_COLOR			(1<<4)
+#define VERTEX_SKIN				(1<<5)
+#define VERTEX_TEXCOORD1		(1<<6)
+#define VERTEX_COORDINATE2D		(1<<7)
+
+#define SEMANTICS_POSITION				"POSITION"
+#define SEMANTICS_TEXCOORD				"TEXCOORD"
+#define SEMANTICS_NORMAL				"NORMAL"
+#define SEMANTICS_TANGENT				"TANGENT"
+#define SEMANTICS_BINORMAL				"BINORMAL"
+#define SEMANTICS_COLOR					"COLOR"
+#define SEMANTICS_WEIGHTS				"BLENDWEIGHTS"
+#define SEMANTICS_INDICES				"BLENDINDICES"
+
+#define DS_DEPTH_READ			(1<<1)
+#define DS_DEPTH_WRITE			(1<<2)
+#define DS_STENCIL_READ			(1<<3)
+#define DS_STENCIL_WRITE		(1<<4)
+
+#define RAS_FILL_WIREFRAME		(1<<1)
+#define RAS_CULL_FRONT			(1<<2)
+#define RAS_CULL_NONE			(1<<3) // RAS_CULL_NONE优先级高于RAS_CULL_FRONT
+
+enum class EBlendMode : uint8
+{
+	None = 0,
+	Add,
+	AlphaBlend,
+};
+
+#define BLEND_ALL_INDEPENDENT		(1<<1)
+#define BLEND_ALL_ALPHA_TO_COVERAGE	(1<<2)
+#define BLEND_MODE_MASK			0xff
+#define BLEND_WRITE_RED			(1<<10)
+#define BLEND_WRITE_GREEN		(1<<11)
+#define BLEND_WRITE_BLUE		(1<<12)
+#define BLEND_WRITE_ALPHA		(1<<13)
 
 static const char* SAttributeTypeString[] = {
 	"Unknown",

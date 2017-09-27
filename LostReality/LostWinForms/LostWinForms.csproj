@@ -80,6 +80,24 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="hlsl\buffer_def.fx" />
+    <Content Include="hlsl\ConstantBuffers.fx" />
+    <Content Include="hlsl\constants.fx" />
+    <Content Include="hlsl\direct.fx" />
+    <Content Include="hlsl\dummy.fx" />
+    <Content Include="hlsl\gui.fx" />
+    <Content Include="hlsl\lighting.fx" />
+    <Content Include="hlsl\main.fx" />
+    <Content Include="hlsl\vertices.fx" />
+    <Content Include="hlsl\xyzn.fx" />
+    <Content Include="hlsl\xyzn_skinned.fx" />
+    <Content Include="hlsl\xyzrgb.fx" />
+    <Content Include="hlsl\xyzrgb_skinned.fx" />
+    <Content Include="hlsl\xyzuvnrgb_skinned.fx" />
+    <Content Include="hlsl\xyzuvntb_skinned.fx" />
+    <Content Include="hlsl\xyzuvn_skinned.fx" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

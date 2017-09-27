@@ -147,14 +147,18 @@ namespace LostCore
 	{
 		ifstream file;
 		file.open(filePath, ios::in | ios::binary | ios::ate);
-		bool failed = file.fail();
+		if (file.fail())
+		{
+			file.close();
+			return false;
+		}
+
 		auto sz = file.tellg();
 		Reserve((uint32)sz);
 		file.seekg(0);
 		file.read((char*)Begin, sz);
 		file.close();
-
-		return !failed;
+		return true;
 	}
 
 	/************************************************************
@@ -317,6 +321,32 @@ namespace LostCore
 	FORCEINLINE FBinaryIO& Deserialize(FBinaryIO& stream, uint8* buf, uint32 sz)
 	{
 		memcpy(buf, stream.Retrieve(sz), sz);
+		return stream;
+	}
+
+	// vector<uint8>本质上只是一块buffer,否则会用到string.
+	FORCEINLINE FBinaryIO& operator<<(FBinaryIO& stream, const std::vector<uint8>& data)
+	{
+		uint32 sz = data.capacity();
+		stream << sz;
+		if (sz > 0)
+		{
+			Serialize(stream, data.data(), sz);
+		}
+
+		return stream;
+	}
+
+	FORCEINLINE FBinaryIO& operator >> (FBinaryIO& stream, std::vector<uint8>& data)
+	{
+		uint32 sz;
+		stream >> sz;
+		if (sz > 0)
+		{
+			data.reserve(sz);
+			Deserialize(stream, data.data(), sz);
+		}
+
 		return stream;
 	}
 }

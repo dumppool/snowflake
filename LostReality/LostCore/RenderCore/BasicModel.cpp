@@ -429,12 +429,13 @@ void LostCore::FStaticModel::UpdateGizmosNormalTangent()
 	AxisRenderer.ResetData();
 
 	FMeshData& prim = *GetPrimitiveData();
-	bool displayTangent = (prim.VertexFlags&EVertexElement::Tangent) == EVertexElement::Tangent &&
-		FGlobalHandler::Get()->IsDisplay(FLAG_DISPLAY_TANGENT);
+	bool displayTangent =
+		HAS_FLAGS(VERTEX_TANGENT, prim.VertexFlags) &&
+		HAS_FLAGS(FLAG_DISPLAY_TANGENT, FGlobalHandler::Get()->GetDisplayFlags());
 
 	bool displayNormal = !displayTangent &&
-		(prim.VertexFlags&EVertexElement::Normal) == EVertexElement::Normal &&
-		FGlobalHandler::Get()->IsDisplay(FLAG_DISPLAY_NORMAL);
+		HAS_FLAGS(VERTEX_NORMAL, prim.VertexFlags)&&
+		HAS_FLAGS(FLAG_DISPLAY_NORMAL, FGlobalHandler::Get()->GetDisplayFlags());
 
 	if (!displayNormal && !displayTangent)
 	{
@@ -613,12 +614,13 @@ void LostCore::FSkeletalModel::UpdateGizmosNormalTangent()
 	SkeletonRenderer.ResetData();
 
 	FMeshData& prim = *GetPrimitiveData();
-	bool displayTangent = (prim.VertexFlags&EVertexElement::Tangent) == EVertexElement::Tangent &&
-		FGlobalHandler::Get()->IsDisplay(FLAG_DISPLAY_TANGENT);
+	bool displayTangent = 
+		HAS_FLAGS(VERTEX_TANGENT, prim.VertexFlags) &&
+		HAS_FLAGS(FLAG_DISPLAY_TANGENT, FGlobalHandler::Get()->GetDisplayFlags());
 
 	bool displayNormal = !displayTangent &&
-		(prim.VertexFlags&EVertexElement::Normal) == EVertexElement::Normal &&
-		FGlobalHandler::Get()->IsDisplay(FLAG_DISPLAY_NORMAL);
+		HAS_FLAGS(VERTEX_NORMAL, prim.VertexFlags) &&
+		HAS_FLAGS(FLAG_DISPLAY_NORMAL, FGlobalHandler::Get()->GetDisplayFlags());
 
 	if (!displayNormal && !displayTangent)
 	{

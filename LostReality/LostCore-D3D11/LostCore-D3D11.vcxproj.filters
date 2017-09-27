@@ -53,6 +53,9 @@
     <ClInclude Include="Src\RenderContextBase.h">
       <Filter>Src</Filter>
     </ClInclude>
+    <ClInclude Include="Src\ShaderManager.h">
+      <Filter>Src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
@@ -100,6 +103,9 @@
       <Filter>Src</Filter>
     </ClCompile>
     <ClCompile Include="Src\RenderContextBase.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\ShaderManager.cpp">
       <Filter>Src</Filter>
     </ClCompile>
   </ItemGroup>

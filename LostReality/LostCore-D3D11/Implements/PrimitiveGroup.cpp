@@ -36,7 +36,7 @@ D3D11::FPrimitiveGroup::~FPrimitiveGroup()
 void D3D11::FPrimitiveGroup::Draw(LostCore::IRenderContext * rc, float sec)
 {
 	const char* head = "D3D11::FPrimitiveGroup::Draw";
-	TRefCountPtr<ID3D11DeviceContext> cxt = FRenderContext::GetDeviceContext(rc, head);
+	TRefCountPtr<ID3D11DeviceContext> cxt = FRenderContext::GetDeviceContext(head);
 	if (!cxt.IsValid())
 	{
 		return;
@@ -60,7 +60,7 @@ void D3D11::FPrimitiveGroup::Draw(LostCore::IRenderContext * rc, float sec)
 bool D3D11::FPrimitiveGroup::ConstructVB(IRenderContext* rc, const void * buf, uint32 bytes, uint32 stride, bool bDynamic)
 {
 	const char* head = "D3D11::FPrimitiveGroup::ConstructVB";
-	TRefCountPtr<ID3D11Device> device = FRenderContext::GetDevice(rc, head);
+	TRefCountPtr<ID3D11Device> device = FRenderContext::GetDevice(head);
 	if (!device.IsValid())
 	{
 		return false;
@@ -78,7 +78,7 @@ bool D3D11::FPrimitiveGroup::ConstructVB(IRenderContext* rc, const void * buf, u
 bool D3D11::FPrimitiveGroup::ConstructIB(IRenderContext* rc, const void * buf, uint32 bytes, uint32 stride, bool bDynamic)
 {
 	const char* head = "D3D11::FPrimitiveGroup::ConstructIB";
-	TRefCountPtr<ID3D11Device> device = FRenderContext::GetDevice(rc, head);
+	TRefCountPtr<ID3D11Device> device = FRenderContext::GetDevice(head);
 	if (!device.IsValid())
 	{
 		return false;
@@ -123,7 +123,7 @@ void D3D11::FPrimitiveGroup::SetTopology(EPrimitiveTopology topo)
 void D3D11::FPrimitiveGroup::UpdateVB(LostCore::IRenderContext * rc, const void * buf, uint32 bytes)
 {
 	const char* head = "D3D11::FPrimitiveGroup::UpdateVB";
-	TRefCountPtr<ID3D11DeviceContext> cxt = FRenderContext::GetDeviceContext(rc, head);
+	TRefCountPtr<ID3D11DeviceContext> cxt = FRenderContext::GetDeviceContext(head);
 	if (!cxt.IsValid())
 	{
 		return;
@@ -138,7 +138,7 @@ void D3D11::FPrimitiveGroup::UpdateVB(LostCore::IRenderContext * rc, const void 
 	if (bytes > (VertexCount * VertexStride))
 	{
 		VertexBuffer = nullptr;
-		TRefCountPtr<ID3D11Device> device = FRenderContext::GetDevice(rc, head);
+		TRefCountPtr<ID3D11Device> device = FRenderContext::GetDevice(head);
 		VertexCount = bytes / VertexStride;
 		assert(SSuccess == CreatePrimitiveVertex(device.GetReference(), buf, bytes, bIsVBDynamic, VertexBuffer));
 	}

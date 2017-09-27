@@ -38,7 +38,7 @@ namespace LostCore
 		FBasicModel* GetTarget();
 
 	private:
-		void Fini();
+		void Destroy();
 
 		enum class EOp : uint8
 		{

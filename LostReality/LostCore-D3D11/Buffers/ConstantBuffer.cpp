@@ -10,13 +10,13 @@
 #include "stdafx.h"
 #include "ConstantBuffer.h"
 
-bool D3D11::FConstantBuffer::Initialize(LostCore::IRenderContext * rc, int32 byteWidth, bool dynamic)
+bool D3D11::FConstantBuffer::Initialize(int32 byteWidth, bool dynamic)
 {
 	ByteWidth = byteWidth;
 	bDynamic = dynamic;
 
 	const char* head = "D3D11::FConstantBuffer::Initialize";
-	auto device = FRenderContext::GetDevice(rc, head);
+	auto device = FRenderContext::GetDevice(head);
 	if (!device.IsValid())
 	{
 		return false;
@@ -40,10 +40,10 @@ bool D3D11::FConstantBuffer::Initialize(LostCore::IRenderContext * rc, int32 byt
 	return true;
 }
 
-void D3D11::FConstantBuffer::UpdateBuffer(LostCore::IRenderContext * rc, const void * buf, int32 sz)
+void D3D11::FConstantBuffer::UpdateBuffer(const void * buf, int32 sz)
 {
 	const char* head = "D3D11::FConstantBuffer::UpdateBuffer";
-	auto cxt = FRenderContext::GetDeviceContext(rc, head);
+	auto cxt = FRenderContext::GetDeviceContext(head);
 	if (!cxt.IsValid())
 	{
 		return;
@@ -55,10 +55,10 @@ void D3D11::FConstantBuffer::UpdateBuffer(LostCore::IRenderContext * rc, const v
 	cxt->UpdateSubresource(Buffer.GetReference(), 0, nullptr, buf, 0, 0);
 }
 
-void D3D11::FConstantBuffer::Bind(LostCore::IRenderContext * rc, int32 slot)
+void D3D11::FConstantBuffer::Bind(int32 slot)
 {
 	const char* head = "D3D11::FConstantBuffer::Bind";
-	auto cxt = FRenderContext::GetDeviceContext(rc, head);
+	auto cxt = FRenderContext::GetDeviceContext(head);
 	if (!cxt.IsValid())
 	{
 		return;

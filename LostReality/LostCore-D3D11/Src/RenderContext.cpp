@@ -18,9 +18,8 @@
 
 using namespace LostCore;
 
-D3D11::FRenderContext::FRenderContext(LostCore::EContextID id)
-	: ContextID(id)
-	, Device(nullptr)
+D3D11::FRenderContext::FRenderContext()
+	: Device(nullptr)
 	, Context(nullptr)
 	, SwapChain(nullptr)
 	, ShadeModel(EShadeModel::Undefined)
@@ -33,12 +32,40 @@ D3D11::FRenderContext::FRenderContext(LostCore::EContextID id)
 
 D3D11::FRenderContext::~FRenderContext()
 {
-	Fini();
+	Destroy();
 }
 
-bool D3D11::FRenderContext::Init(HWND wnd, bool bWindowed, int32 width, int32 height)
+bool D3D11::FRenderContext::Initialize(LostCore::EContextID id)
 {
-	D3D11::CreateDevice(ContextID, Device, Context);
+	ContextID = id;
+	return SSuccess == D3D11::CreateDevice(ContextID, Device, Context);
+}
+
+void D3D11::FRenderContext::Destroy()
+{
+	ShadeModel = EShadeModel::Undefined;
+	bWireframe = false;
+
+	//Font.Destroy();
+
+	FBlendStateMap::Get()->ReleaseComObjects();
+	FRasterizerStateMap::Get()->ReleaseComObjects();
+	FDepthStencilStateMap::Get()->ReleaseComObjects();
+	FSamplerStateMap::Get()->ReleaseComObjects();
+
+	SAFE_DELETE(RenderTarget);
+	SAFE_DELETE(DepthStencil);
+	SAFE_DELETE(GlobalConstantBuffer);
+
+	SwapChain = nullptr;
+	Context = nullptr;
+
+	//ReportLiveObjects();
+	Device = nullptr;
+}
+
+bool D3D11::FRenderContext::InitializeScreen(HWND wnd, bool bWindowed, int32 width, int32 height)
+{
 	D3D11::CreateSwapChain(Device.GetReference(), wnd, bWindowed, width, height, SwapChain);
 	if (Device.IsValid())
 	{
@@ -72,7 +99,7 @@ bool D3D11::FRenderContext::Init(HWND wnd, bool bWindowed, int32 width, int32 he
 	Param.ScreenHeight = (float)height;
 	Param.ScreenWidthRcp = (float)1.f / width;
 	Param.ScreenHeightRcp = (float)1.f / height;
-	
+
 	// push & initialize ascii chars
 	const int32 sz = 127 - '!';
 	WCHAR chars[sz];
@@ -80,64 +107,15 @@ bool D3D11::FRenderContext::Init(HWND wnd, bool bWindowed, int32 width, int32 he
 	{
 		chars[i] = 127 + i;
 	}
-	
+
 	//Font.Initialize(this, LostCore::FFontConfig(), chars, sz);
 
 	return Device.IsValid() && Context.IsValid() && SwapChain.IsValid() && GlobalConstantBuffer->Initialize(this, sizeof(Param), false);
 }
 
-void D3D11::FRenderContext::Fini()
-{
-	ShadeModel = EShadeModel::Undefined;
-	bWireframe = false;
-
-	//Font.Destroy();
-
-	FBlendStateMap::Get()->ReleaseComObjects();
-	FRasterizerStateMap::Get()->ReleaseComObjects();
-	FDepthStencilStateMap::Get()->ReleaseComObjects();
-	FSamplerStateMap::Get()->ReleaseComObjects();
-
-	SAFE_DELETE(RenderTarget);
-	SAFE_DELETE(DepthStencil);
-	SAFE_DELETE(GlobalConstantBuffer);
-
-	SwapChain = nullptr;
-	Context = nullptr;
-
-	//ReportLiveObjects();
-	Device = nullptr;
-}
-
-bool D3D11::FRenderContext::EnableShadeModel(EShadeModel sm)
-{
-	ShadeModel = sm;
-	return false;
-}
-
-EShadeModel D3D11::FRenderContext::GetShadeModel() const
-{
-	return ShadeModel;
-}
-
-FFloat4x4 D3D11::FRenderContext::GetViewProjectMatrix() const
-{
-	return Param.ViewProject;
-}
-
 void D3D11::FRenderContext::SetViewProjectMatrix(const FFloat4x4 & vp)
 {
 	Param.ViewProject = vp;
-}
-
-EContextID D3D11::FRenderContext::GetContextID() const
-{
-	return ContextID;
-}
-
-const char * D3D11::FRenderContext::GetContextString() const
-{
-	return LostCore::GetContextDesc(ContextID);
 }
 
 void D3D11::FRenderContext::BeginFrame(float sec)
@@ -157,7 +135,7 @@ void D3D11::FRenderContext::BeginFrame(float sec)
 			FRasterizerStateMap::Get()->GetState("WIREFRAME") :
 			FRasterizerStateMap::Get()->GetState("SOLID"));
 
-		Context->OMSetDepthStencilState(FDepthStencilStateMap::Get()->GetState("Z_ENABLE_WRITE"), 0);
+		//Context->OMSetDepthStencilState(FDepthStencilStateMap::Get()->GetState("Z_ENABLE_WRITE"), 0);
 
 		GlobalConstantBuffer->UpdateBuffer(this, &Param.GetBuffer(), sizeof(Param));
 		GlobalConstantBuffer->Bind(this, 0 | SHADER_SLOT_VS | SHADER_SLOT_PS);
@@ -170,16 +148,6 @@ void D3D11::FRenderContext::EndFrame(float sec)
 	{
 		SwapChain->Present(0, 0);
 	}
-}
-
-float D3D11::FRenderContext::GetWidth() const
-{
-	return Param.ScreenWidth;
-}
-
-float D3D11::FRenderContext::GetHeight() const
-{
-	return Param.ScreenHeight;
 }
 
 void D3D11::FRenderContext::ReportLiveObjects()

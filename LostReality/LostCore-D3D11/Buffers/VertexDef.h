@@ -11,346 +11,95 @@
 
 namespace D3D11
 {
-	/********************************************************
-	Vertex detail
-	*/
-	ALIGNED_LR(16) struct FVertex_0
-	{
-		LostCore::FFloat3 XYZ;
-		LostCore::FFloat2 UV;
-
-		FORCEINLINE static LostCore::FVertexTypes::Details GetDetails()
-		{
-			return LostCore::FVertexTypes::GetVertexDetail3D(true, false, false, false, false);
-		}
-
-		FORCEINLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
-		{
-			static D3D11_INPUT_ELEMENT_DESC SDesc[] =
-			{
-				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_0, XYZ), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, offsetof(FVertex_0, UV),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			};
-
-			return std::make_pair(SDesc, ARRAYSIZE(SDesc));
-		}
-	};
-
-	ALIGNED_LR(16) struct FVertex_1
-	{
-		LostCore::FFloat3 XYZ;
-		LostCore::FFloat2 UV;
-		LostCore::FFloat3 N;
-
-		FORCEINLINE static LostCore::FVertexTypes::Details GetDetails()
-		{
-			return LostCore::FVertexTypes::GetVertexDetail3D(true, true, false, false, false);
-		}
-
-		FORCEINLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
-		{
-			static D3D11_INPUT_ELEMENT_DESC SDesc[] =
-			{
-				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_1, XYZ), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_1, N), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, offsetof(FVertex_1, UV),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			};
-
-			return std::make_pair(SDesc, ARRAYSIZE(SDesc));
-		}
-	};
-
-	ALIGNED_LR(16) struct FVertex_2
-	{
-		LostCore::FFloat3 XYZ;
-		LostCore::FFloat2 UV;
-		LostCore::FFloat3 N;
-		LostCore::FFloat3 RGB;
-
-		FORCEINLINE static LostCore::FVertexTypes::Details GetDetails()
-		{
-			return LostCore::FVertexTypes::GetVertexDetail3D(true, true, false, true, false);
-		}
-
-		FORCEINLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
-		{
-			static D3D11_INPUT_ELEMENT_DESC SDesc[] =
-			{
-				{ "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_2, RGB), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_2, XYZ), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_2, N), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, offsetof(FVertex_2, UV),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			};
-
-			return std::make_pair(SDesc, ARRAYSIZE(SDesc));
-		}
-	};
-
-	ALIGNED_LR(16) struct FVertex_3
-	{
-		LostCore::FFloat2 XY;
-		LostCore::FFloat4 Color;
-
-		FORCEINLINE static LostCore::FVertexTypes::Details GetDetails()
-		{
-			return LostCore::FVertexTypes::GetVertexDetail2D(false, true);
-		}
-
-		FORCEINLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
-		{
-			static D3D11_INPUT_ELEMENT_DESC SDesc[] =
-			{
-				{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(FVertex_3, Color), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, offsetof(FVertex_3, XY), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			};
-
-			return std::make_pair(SDesc, ARRAYSIZE(SDesc));
-		}
-	};
-
-	ALIGNED_LR(16) struct FVertex_4
-	{
-		LostCore::FFloat2 XY;
-		LostCore::FFloat2 UV;
-		LostCore::FFloat4 Color;
-
-		FORCEINLINE static LostCore::FVertexTypes::Details GetDetails()
-		{
-			return LostCore::FVertexTypes::GetVertexDetail2D(true, true);
-		}
-
-		FORCEINLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
-		{
-			static D3D11_INPUT_ELEMENT_DESC SDesc[] =
-			{
-				{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(FVertex_4, Color), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, offsetof(FVertex_4, XY), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, offsetof(FVertex_4, UV), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			};
-
-			return std::make_pair(SDesc, ARRAYSIZE(SDesc));
-		}
-	};
-
-	ALIGNED_LR(16) struct FVertex_5
-	{
-		LostCore::FFloat3 XYZ;
-		LostCore::FFloat2 UV;
-		LostCore::FFloat3 N;
-		LostCore::FFloat3 Color;
-		LostCore::FFloat4 BlendWeights;
-		LostCore::FSInt4 BlendIndices;
-
-		FORCEINLINE static LostCore::FVertexTypes::Details GetDetails()
-		{
-			return LostCore::FVertexTypes::GetVertexDetail3D(true, true, false, true, true);
-		}
-
-		FORCEINLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
-		{
-			static D3D11_INPUT_ELEMENT_DESC SDesc[] =
-			{
-				{ "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_5, Color), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_5, XYZ), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_5, N), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, offsetof(FVertex_5, UV),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "BLENDWEIGHTS", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(FVertex_5, BlendWeights),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "BLENDINDICES", 0, DXGI_FORMAT_R32G32B32A32_SINT, 0, offsetof(FVertex_5, BlendIndices),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			};
-
-			return std::make_pair(SDesc, ARRAYSIZE(SDesc));
-		}
-	};
-
-	ALIGNED_LR(16) struct FVertex_6
-	{
-		LostCore::FFloat3 XYZ;
-		LostCore::FFloat2 UV;
-		LostCore::FFloat3 N;
-		LostCore::FFloat4 BlendWeights;
-		LostCore::FSInt4 BlendIndices;
-
-		FORCEINLINE static LostCore::FVertexTypes::Details GetDetails()
-		{
-			return LostCore::FVertexTypes::GetVertexDetail3D(true, true, false, false, true);
-		}
-
-		FORCEINLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
-		{
-			static D3D11_INPUT_ELEMENT_DESC SDesc[] =
-			{
-				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_6, XYZ), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_6, N), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, offsetof(FVertex_6, UV),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "BLENDWEIGHTS", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(FVertex_6, BlendWeights),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "BLENDINDICES", 0, DXGI_FORMAT_R32G32B32A32_SINT, 0, offsetof(FVertex_6, BlendIndices),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			};
-
-			return std::make_pair(SDesc, ARRAYSIZE(SDesc));
-		}
-	};
-
-	ALIGNED_LR(16) struct FVertex_7
-	{
-		LostCore::FFloat3 XYZ;
-		LostCore::FFloat3 N;
-
-		FORCEINLINE static LostCore::FVertexTypes::Details GetDetails()
-		{
-			return LostCore::FVertexTypes::GetVertexDetail3D(false, true, false, false, false);
-		}
-
-		FORCEINLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
-		{
-			static D3D11_INPUT_ELEMENT_DESC SDesc[] =
-			{
-				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_7, XYZ), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_7, N), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			};
-
-			return std::make_pair(SDesc, ARRAYSIZE(SDesc));
-		}
-	};
-
-	ALIGNED_LR(16) struct FVertex_7_Skinned
-	{
-		LostCore::FFloat3 XYZ;
-		LostCore::FFloat3 N;
-		LostCore::FFloat4 BlendWeights;
-		LostCore::FSInt4 BlendIndices;
-
-		FORCEINLINE static LostCore::FVertexTypes::Details GetDetails()
-		{
-			return LostCore::FVertexTypes::GetVertexDetail3D(false, true, false, false, true);
-		}
-
-		FORCEINLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
-		{
-			static D3D11_INPUT_ELEMENT_DESC SDesc[] =
-			{
-				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_7_Skinned, XYZ), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_7_Skinned, N), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "BLENDWEIGHTS", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(FVertex_7_Skinned, BlendWeights),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "BLENDINDICES", 0, DXGI_FORMAT_R32G32B32A32_SINT, 0, offsetof(FVertex_7_Skinned, BlendIndices),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			};
-
-			return std::make_pair(SDesc, ARRAYSIZE(SDesc));
-		}
-	};
-
-	ALIGNED_LR(16) struct FVertex_8
-	{
-		LostCore::FFloat3 XYZ;
-		LostCore::FColor96 COLOR;
-
-		FORCEINLINE static LostCore::FVertexTypes::Details GetDetails()
-		{
-			return LostCore::FVertexTypes::GetVertexDetail3D(false, false, false, true, false);
-		}
-
-		FORCEINLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
-		{
-			static D3D11_INPUT_ELEMENT_DESC SDesc[] =
-			{
-				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_8, XYZ), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_8, COLOR), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			};
-
-			return std::make_pair(SDesc, ARRAYSIZE(SDesc));
-		}
-	};
-
-	ALIGNED_LR(16) struct FVertex_9
-	{
-		LostCore::FFloat3 XYZ;
-		LostCore::FFloat2 UV;
-		LostCore::FFloat3 Normal;
-		LostCore::FFloat3 Tangent;
-		LostCore::FFloat3 Binormal;
-		LostCore::FFloat4 BlendWeights;
-		LostCore::FSInt4 BlendIndices;
-
-		FORCEINLINE static LostCore::FVertexTypes::Details GetDetails()
-		{
-			return LostCore::FVertexTypes::GetVertexDetail3D(true, true, true, false, true);
-		}
-
-		FORCEINLINE static std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc()
-		{
-			static D3D11_INPUT_ELEMENT_DESC SDesc[] =
-			{
-				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_9, XYZ), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, offsetof(FVertex_9, UV), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_9, Normal), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_9, Tangent), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "BINORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offsetof(FVertex_9, Binormal), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "BLENDWEIGHTS", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offsetof(FVertex_9, BlendWeights),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "BLENDINDICES", 0, DXGI_FORMAT_R32G32B32A32_SINT, 0, offsetof(FVertex_9, BlendIndices),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			};
-
-			return std::make_pair(SDesc, ARRAYSIZE(SDesc));
-		}
-	};
-
 	struct FInputElementDescMap
 	{
+		map<uint32, vector<D3D11_INPUT_ELEMENT_DESC>> Descriptions;
+
 		static FInputElementDescMap* Get()
 		{
 			static FInputElementDescMap Inst;
 			return &Inst;
 		}
 
-		std::map<std::string, std::pair<D3D11_INPUT_ELEMENT_DESC*, int32>> DescMap;
-
-		FInputElementDescMap()
+		FORCEINLINE vector<D3D11_INPUT_ELEMENT_DESC> GetDesc(uint32 flags)
 		{
 			const char* head = "FInputElementDescMap";
-
-			DescMap.insert(std::make_pair(FVertex_0::GetDetails().Name, FVertex_0::GetDesc()));
-			LVMSG(head, "register: %s, stride: %d, aligned stride: %d", FVertex_0::GetDetails().Name.c_str(), FVertex_0::GetDetails().Stride, sizeof(FVertex_0));
-
-			DescMap.insert(std::make_pair(FVertex_1::GetDetails().Name, FVertex_1::GetDesc()));
-			LVMSG(head, "register: %s, stride: %d, aligned stride: %d", FVertex_1::GetDetails().Name.c_str(), FVertex_1::GetDetails().Stride, sizeof(FVertex_1));
-
-			DescMap.insert(std::make_pair(FVertex_2::GetDetails().Name, FVertex_2::GetDesc()));
-			LVMSG(head, "register: %s, stride: %d, aligned stride: %d", FVertex_2::GetDetails().Name.c_str(), FVertex_2::GetDetails().Stride, sizeof(FVertex_2));
-
-			DescMap.insert(std::make_pair(FVertex_3::GetDetails().Name, FVertex_3::GetDesc()));
-			LVMSG(head, "register: %s, stride: %d, aligned stride: %d", FVertex_3::GetDetails().Name.c_str(), FVertex_3::GetDetails().Stride, sizeof(FVertex_3));
-
-			DescMap.insert(std::make_pair(FVertex_4::GetDetails().Name, FVertex_4::GetDesc()));
-			LVMSG(head, "register: %s, stride: %d, aligned stride: %d", FVertex_4::GetDetails().Name.c_str(), FVertex_4::GetDetails().Stride, sizeof(FVertex_4));
-
-			DescMap.insert(std::make_pair(FVertex_5::GetDetails().Name, FVertex_5::GetDesc()));
-			LVMSG(head, "register: %s, stride: %d, aligned stride: %d", FVertex_5::GetDetails().Name.c_str(), FVertex_5::GetDetails().Stride, sizeof(FVertex_5));
-
-			DescMap.insert(std::make_pair(FVertex_6::GetDetails().Name, FVertex_6::GetDesc()));
-			LVMSG(head, "register: %s, stride: %d, aligned stride: %d", FVertex_6::GetDetails().Name.c_str(), FVertex_6::GetDetails().Stride, sizeof(FVertex_6));
-
-			DescMap.insert(std::make_pair(FVertex_7::GetDetails().Name, FVertex_7::GetDesc()));
-			LVMSG(head, "register: %s, stride: %d, aligned stride: %d", FVertex_7::GetDetails().Name.c_str(), FVertex_7::GetDetails().Stride, sizeof(FVertex_7));
-
-			DescMap.insert(std::make_pair(FVertex_7_Skinned::GetDetails().Name, FVertex_7_Skinned::GetDesc()));
-			LVMSG(head, "register: %s, stride: %d, aligned stride: %d", FVertex_7_Skinned::GetDetails().Name.c_str(), FVertex_7_Skinned::GetDetails().Stride, sizeof(FVertex_7_Skinned));
-
-			DescMap.insert(std::make_pair(FVertex_8::GetDetails().Name, FVertex_8::GetDesc()));
-			LVMSG(head, "register: %s, stride: %d, aligned stride: %d", FVertex_8::GetDetails().Name.c_str(), FVertex_8::GetDetails().Stride, sizeof(FVertex_8));
-
-			DescMap.insert(std::make_pair(FVertex_9::GetDetails().Name, FVertex_9::GetDesc()));
-			LVMSG(head, "register: %s, stride: %d, aligned stride: %d", FVertex_9::GetDetails().Name.c_str(), FVertex_9::GetDetails().Stride, sizeof(FVertex_9));
-		}
-
-		FORCEINLINE std::pair<D3D11_INPUT_ELEMENT_DESC*, int32> GetDesc(const std::string& key)
-		{
-			for (auto element : DescMap)
+			auto it = Descriptions.find(flags);
+			if (it == Descriptions.end())
 			{
-				if (element.first.compare(key) == 0)
+				vector<D3D11_INPUT_ELEMENT_DESC> item;
+				uint32 offset = 0;
+				string semantics("");
+				if (HAS_FLAGS(VERTEX_COORDINATE2D, flags))
 				{
-					return element.second;
+					item.push_back({ SEMANTICS_POSITION, 0, DXGI_FORMAT_R32G32_FLOAT, 0, offset, D3D11_INPUT_PER_VERTEX_DATA, 0 });
+					offset += sizeof(float) * 2;
+					semantics.append("|").append(SEMANTICS_POSITION);
 				}
+				else
+				{
+					item.push_back({ SEMANTICS_POSITION, 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offset, D3D11_INPUT_PER_VERTEX_DATA, 0 });
+					offset += sizeof(float) * 3;
+					semantics.append("|").append(SEMANTICS_POSITION);
+				}
+
+				if (HAS_FLAGS(VERTEX_TEXCOORD0, flags))
+				{
+					item.push_back({ SEMANTICS_TEXCOORD, 0, DXGI_FORMAT_R32G32_FLOAT, 0, offset, D3D11_INPUT_PER_VERTEX_DATA, 0 });
+					offset += sizeof(float) * 2;
+					semantics.append("|").append(SEMANTICS_TEXCOORD).append("0");
+				}
+
+				if (HAS_FLAGS(VERTEX_TEXCOORD1, flags))
+				{
+					item.push_back({ SEMANTICS_TEXCOORD, 1, DXGI_FORMAT_R32G32_FLOAT, 0, offset, D3D11_INPUT_PER_VERTEX_DATA, 0 });
+					offset += sizeof(float) * 2;
+					semantics.append("|").append(SEMANTICS_TEXCOORD).append("1");
+				}
+
+				if (HAS_FLAGS(VERTEX_NORMAL, flags))
+				{
+					item.push_back({ SEMANTICS_NORMAL, 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offset, D3D11_INPUT_PER_VERTEX_DATA, 0 });
+					offset += sizeof(float) * 3;
+					semantics.append("|").append(SEMANTICS_NORMAL);
+				}
+
+				if (HAS_FLAGS(VERTEX_TANGENT, flags))
+				{
+					item.push_back({ SEMANTICS_TANGENT, 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offset, D3D11_INPUT_PER_VERTEX_DATA, 0 });
+					offset += sizeof(float) * 3;
+					semantics.append("|").append(SEMANTICS_TANGENT);
+
+					item.push_back({ SEMANTICS_BINORMAL, 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offset, D3D11_INPUT_PER_VERTEX_DATA, 0 });
+					offset += sizeof(float) * 3;
+					semantics.append("|").append(SEMANTICS_BINORMAL);
+				}
+
+				if (HAS_FLAGS(VERTEX_COLOR, flags))
+				{
+					item.push_back({ SEMANTICS_COLOR, 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offset, D3D11_INPUT_PER_VERTEX_DATA, 0 });
+					offset += sizeof(float) * 3;
+					semantics.append("|").append(SEMANTICS_COLOR);
+				}
+
+				if (HAS_FLAGS(VERTEX_SKIN, flags))
+				{
+					item.push_back({ SEMANTICS_WEIGHTS, 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offset, D3D11_INPUT_PER_VERTEX_DATA, 0 });
+					offset += sizeof(float) * 4;
+					semantics.append("|").append(SEMANTICS_WEIGHTS);
+
+					item.push_back({ SEMANTICS_INDICES, 0, DXGI_FORMAT_R32G32B32A32_SINT, 0, offset, D3D11_INPUT_PER_VERTEX_DATA, 0 });
+					offset += sizeof(float) * 4;
+					semantics.append("|").append(SEMANTICS_INDICES);
+				}
+
+				Descriptions[flags] = item;
+
+				assert(offset == LostCore::GetVertexDetails(flags).Stride);
+				LVMSG(head, "register: %s, stride: %d", semantics.c_str(), offset);
 			}
 
-			return std::make_pair(nullptr, 0);
+			return it->second;
 		}
 	};
 }

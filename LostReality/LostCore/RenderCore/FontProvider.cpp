@@ -18,7 +18,7 @@ using namespace LostCore;
 
 LostCore::FFontProvider::~FFontProvider()
 {
-	Fini();
+	Destroy();
 
 	assert(GdiFont == nullptr);
 }
@@ -52,7 +52,7 @@ void LostCore::FFontProvider::Init()
 	//GdiFont->Initialize(config, const_cast<wchar_t*>(ws2.c_str()), ws2.size());
 }
 
-void LostCore::FFontProvider::Fini()
+void LostCore::FFontProvider::Destroy()
 {
 	WrappedDestroyGdiFont(forward<IFontInterface*>(GdiFont));
 	GdiFont = nullptr;

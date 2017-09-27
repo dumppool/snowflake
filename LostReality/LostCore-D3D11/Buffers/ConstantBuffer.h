@@ -26,9 +26,9 @@ namespace D3D11
 			Buffer = nullptr;
 		}
 
-		virtual bool Initialize(LostCore::IRenderContext * rc, int32 byteWidth, bool dynamic) override;
-		virtual void UpdateBuffer(LostCore::IRenderContext * rc, const void* buf, int32 sz) override;
-		virtual void Bind(LostCore::IRenderContext* rc, int32 slot);
+		virtual bool Initialize(int32 byteWidth, bool dynamic) override;
+		virtual void UpdateBuffer(const void* buf, int32 sz) override;
+		virtual void Bind(int32 slot);
 
 		int32 GetByteWidth() const
 		{

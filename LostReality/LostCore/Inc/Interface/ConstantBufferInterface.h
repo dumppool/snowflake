@@ -15,8 +15,8 @@ namespace LostCore
 	{
 	public:
 		virtual ~IConstantBuffer() {}
-		virtual bool Initialize(LostCore::IRenderContext * rc, int32 sz, bool dynamic) = 0;
-		virtual void UpdateBuffer(IRenderContext* rc, const void* buf, int32 sz) = 0;
-		virtual void Bind(IRenderContext* rc, int32 slot) = 0;
+		virtual bool Initialize(int32 sz, bool dynamic) = 0;
+		virtual void UpdateBuffer(const void* buf, int32 sz) = 0;
+		virtual void Bind(int32 slot) = 0;
 	};
 }

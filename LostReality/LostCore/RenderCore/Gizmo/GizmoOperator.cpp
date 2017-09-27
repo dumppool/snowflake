@@ -11,7 +11,7 @@ LostCore::FGizmoOperator::FGizmoOperator()
 
 LostCore::FGizmoOperator::~FGizmoOperator()
 {
-	Fini();
+	Destroy();
 }
 
 bool LostCore::FGizmoOperator::Load(const string & url)
@@ -194,7 +194,7 @@ LostCore::FBasicModel * LostCore::FGizmoOperator::GetTarget()
 	return Target;
 }
 
-void LostCore::FGizmoOperator::Fini()
+void LostCore::FGizmoOperator::Destroy()
 {
 	for (auto& comp : Components)
 	{

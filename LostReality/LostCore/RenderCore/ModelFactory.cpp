@@ -20,10 +20,8 @@ FBasicModel * LostCore::FModelFactory::NewModel(const string & url)
 		return nullptr;
 	}
 
-	assert(config.find(K_VERTEX_ELEMENT) != config.end());
-	uint32 flag = config.value(K_VERTEX_ELEMENT, 0);
 	FBasicModel* model = nullptr;
-	if ((flag & EVertexElement::Skin) == EVertexElement::Skin)
+	if (HAS_FLAGS(VERTEX_SKIN, config[K_VERTEX_ELEMENT]))
 	{
 		model = new FSkeletalModel;
 	}

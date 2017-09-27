@@ -290,7 +290,7 @@ LostCore::FBasicGUI::FBasicGUI() : Font(nullptr)
 
 LostCore::FBasicGUI::~FBasicGUI()
 {
-	Fini();
+	Destroy();
 }
 
 void LostCore::FBasicGUI::Tick()
@@ -322,8 +322,8 @@ bool LostCore::FBasicGUI::Load(const char* url)
 	return true;
 }
 
-void LostCore::FBasicGUI::Fini()
+void LostCore::FBasicGUI::Destroy()
 {
-	FFontProvider::Get()->Fini();
+	FFontProvider::Get()->Destroy();
 	Root.Clear();
 }

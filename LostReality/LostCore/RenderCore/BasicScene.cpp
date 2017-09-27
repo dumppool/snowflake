@@ -20,7 +20,7 @@ FBasicScene::FBasicScene()
 
 FBasicScene::~FBasicScene()
 {
-	Fini();
+	Destroy();
 
 	assert(Models.size() == 0);
 }
@@ -176,7 +176,7 @@ FBasicModel* LostCore::FBasicScene::RayTest(const FRay & ray, FRay::FT & dist)
 	return nearest;
 }
 
-void LostCore::FBasicScene::Fini()
+void LostCore::FBasicScene::Destroy()
 {
 	ClearModels();
 }
