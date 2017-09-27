@@ -69,7 +69,7 @@ public:
 	void UnHover();
 
 private:
-	void Fini();
+	void Destroy();
 	void InitializeScene();
 	void StartRenderLoop();
 	void StartTickLoop();
@@ -290,13 +290,13 @@ FFBXEditor::FFBXEditor()
 	FGlobalHandler::Get()->SetShutdownCallback([&]
 	()
 	{
-		this->Fini();
+		this->Destroy();
 	});
 }
 
 FFBXEditor::~FFBXEditor()
 {
-	Fini();
+	Destroy();
 
 	assert(RC == nullptr);
 	assert(Camera == nullptr);
@@ -648,7 +648,7 @@ void FFBXEditor::DrawPostScene()
 	FBasicWorld::DrawPostScene();
 }
 
-void FFBXEditor::Fini()
+void FFBXEditor::Destroy()
 {
 	FGlobalHandler::Get()->SetMoveCameraCallback(nullptr);
 	FGlobalHandler::Get()->SetRotateCameraCallback(nullptr);

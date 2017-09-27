@@ -66,7 +66,7 @@ namespace LostCore
 
 	private:
 		void ValidateBoundingBox();
-		void Fini();
+		void Destroy();
 
 		string Url;
 		IPrimitiveGroup* Primitive;
@@ -101,7 +101,7 @@ namespace LostCore
 		void UpdateGizmosNormalTangent();
 
 	private:
-		void Fini();
+		void Destroy();
 
 	private:
 		FSingleMatrixParameter World;
@@ -134,7 +134,7 @@ namespace LostCore
 		void UpdateGizmosSkeleton();
 
 	private:
-		void Fini();
+		void Destroy();
 
 	private:
 

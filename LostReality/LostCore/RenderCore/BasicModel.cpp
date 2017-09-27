@@ -27,7 +27,7 @@ LostCore::FBasicModel::FBasicModel()
 
 LostCore::FBasicModel::~FBasicModel()
 {
-	Fini();
+	Destroy();
 }
 
 bool LostCore::FBasicModel::Config(const FJson & config)
@@ -338,7 +338,7 @@ void LostCore::FBasicModel::ValidateBoundingBox()
 	}
 }
 
-void LostCore::FBasicModel::Fini()
+void LostCore::FBasicModel::Destroy()
 {
 	if (Primitive != nullptr)
 	{
@@ -371,7 +371,7 @@ LostCore::FStaticModel::FStaticModel() : FBasicModel()
 
 LostCore::FStaticModel::~FStaticModel()
 {
-	Fini();
+	Destroy();
 }
 
 void LostCore::FStaticModel::Tick()
@@ -506,7 +506,7 @@ void LostCore::FStaticModel::UpdateGizmosNormalTangent()
 	}
 }
 
-void LostCore::FStaticModel::Fini()
+void LostCore::FStaticModel::Destroy()
 {
 }
 
@@ -516,10 +516,10 @@ LostCore::FSkeletalModel::FSkeletalModel() : FBasicModel()
 
 LostCore::FSkeletalModel::~FSkeletalModel()
 {
-	Fini();
+	Destroy();
 }
 
-void LostCore::FSkeletalModel::Fini()
+void LostCore::FSkeletalModel::Destroy()
 {
 }
 

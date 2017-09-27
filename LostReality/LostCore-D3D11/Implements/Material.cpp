@@ -26,7 +26,7 @@ D3D11::FMaterial::~FMaterial()
 void D3D11::FMaterial::Bind(LostCore::IRenderContext * rc)
 {
 	const char* head = "D3D11::FMaterial::Draw";
-	auto cxt = FRenderContext::GetDeviceContext(rc, head);
+	auto cxt = FRenderContext::GetDeviceContext(head);
 	if (!cxt.IsValid())
 	{
 		return;
