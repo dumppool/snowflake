@@ -149,8 +149,8 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Buffers\ConstantBuffer.h" />
     <ClInclude Include="Buffers\VertexDef.h" />
+    <ClInclude Include="Implements\ConstantBuffer.h" />
     <ClInclude Include="Implements\Material.h" />
     <ClInclude Include="Implements\PrimitiveGroup.h" />
     <ClInclude Include="Implements\Texture.h" />
@@ -158,6 +158,7 @@
     <ClInclude Include="Pipelines\DeferredPipeline.h" />
     <ClInclude Include="Pipelines\ForwardPipeline.h" />
     <ClInclude Include="Pipelines\PipelineInterface.h" />
+    <ClInclude Include="Pipelines\RenderObject.h" />
     <ClInclude Include="Src\GdiFont.h" />
     <ClInclude Include="Src\RenderContext.h" />
     <ClInclude Include="Src\RenderContextBase.h" />
@@ -169,7 +170,6 @@
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Buffers\ConstantBuffer.cpp" />
     <ClCompile Include="Buffers\VertexDef.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
@@ -185,11 +185,13 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Implements\ConstantBuffer.cpp" />
     <ClCompile Include="Implements\Material.cpp" />
     <ClCompile Include="Implements\PrimitiveGroup.cpp" />
     <ClCompile Include="Implements\Texture.cpp" />
     <ClCompile Include="Pipelines\DeferredPipeline.cpp" />
     <ClCompile Include="Pipelines\ForwardPipeline.cpp" />
+    <ClCompile Include="Pipelines\RenderObject.cpp" />
     <ClCompile Include="Src\GdiFont.cpp" />
     <ClCompile Include="Src\LostCore-D3D11.cpp" />
     <ClCompile Include="Src\RenderContext.cpp" />

@@ -17,6 +17,8 @@ namespace D3D11
 {
 	class FTexture2D;
 	class FConstantBuffer;
+	class FPrimitiveGroup;
+	class IPipeline;
 
 	class FRenderContext : public LostCore::IRenderContext
 	{
@@ -79,8 +81,8 @@ namespace D3D11
 		virtual bool Initialize(LostCore::EContextID id) override;
 		virtual bool InitializeScreen(HWND wnd, bool bWindowed, int32 width, int32 height) override;
 		virtual void SetViewProjectMatrix(const LostCore::FFloat4x4 & vp) override;
-		virtual void BeginFrame(float sec) override;
-		virtual void EndFrame(float sec) override;
+		virtual void BeginFrame() override;
+		virtual void EndFrame() override;
 
 	private:
 		virtual void Destroy();
@@ -113,23 +115,30 @@ namespace D3D11
 
 		void EnableWireframe(bool bEnable)
 		{
-			bWireframe = bEnable;
 		}
+
+		void CommitPrimitiveGroup(FPrimitiveGroup* pg);
+		void CommitBuffer(FConstantBuffer* mat);
 
 	private:
 		void ReportLiveObjects();
+		void InitializeStateObjects();
+		void DestroyStateObjects();
+		void InitializePipelines();
+		void DestroyPipelines();
 
 		LostCore::EContextID					ContextID;
 		TRefCountPtr<ID3D11Device>				Device;
 		TRefCountPtr<ID3D11DeviceContext>		Context;
 		TRefCountPtr<IDXGISwapChain>			SwapChain;
-		LostCore::EShadeModel					ShadeModel;
-		bool									bWireframe;
 		FTexture2D*								RenderTarget;
 		FTexture2D*								DepthStencil;
 		D3D11_VIEWPORT							Viewport;
 		LostCore::FGlobalParameter				Param;
 		FConstantBuffer*						GlobalConstantBuffer;
+
+		IPipeline*								ActivedPipeline;
+		map<EPipeline, IPipeline*>				Pipelines;
 
 		//FGdiFont* Font;
 	};

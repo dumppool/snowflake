@@ -34,9 +34,9 @@ void D3D11::FRasterizerStateMap::InitializeState(uint32 flags)
 	ZeroMemory(&desc, sizeof(desc));
 	desc.AntialiasedLineEnable = FALSE;
 
-	if (HAS_FLAGS(RAS_CULL_NONE, flags))
+	if (HAS_FLAGS(RAS_CULL_BACK, flags))
 	{
-		desc.CullMode = D3D11_CULL_NONE;
+		desc.CullMode = D3D11_CULL_BACK;
 	}
 	else if (HAS_FLAGS(RAS_CULL_FRONT, flags))
 	{
@@ -44,7 +44,7 @@ void D3D11::FRasterizerStateMap::InitializeState(uint32 flags)
 	}
 	else
 	{
-		desc.CullMode = D3D11_CULL_BACK;
+		desc.CullMode = D3D11_CULL_NONE;
 	}
 
 	desc.DepthBias = 0;
@@ -95,15 +95,20 @@ void D3D11::FRasterizerStateMap::ReleaseComObjects()
 
 TRefCountPtr<ID3D11RasterizerState> D3D11::FRasterizerStateMap::GetState(uint32 flags)
 {
-	if (bInitialized)
+	if (!bInitialized)
 	{
-		auto it = StateMap.find(flags);
-		if (it == StateMap.end())
-		{
-			InitializeState(flags);
-		}
+		Initialize();
+	}
 
-		assert((it = StateMap.find(flags)) != StateMap.end());
+	auto it = StateMap.find(flags);
+	if (it != StateMap.end())
+	{
+		return it->second;
+	}
+
+	InitializeState(flags);
+	if ((it = StateMap.find(flags)) != StateMap.end())
+	{
 		return it->second;
 	}
 

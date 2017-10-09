@@ -9,6 +9,5 @@ namespace LostCore
 	public:
 		virtual ~IDrawable() {}
 
-		virtual void Draw(IRenderContext* rc, float sec) = 0;
 	};
 }

@@ -53,9 +53,6 @@
     <ClInclude Include="Inc\Animation.h">
       <Filter>Inc</Filter>
     </ClInclude>
-    <ClInclude Include="RenderCore\Resource\MeshLoader.h">
-      <Filter>RenderCore\Resource</Filter>
-    </ClInclude>
     <ClInclude Include="Inc\BasicModel.h">
       <Filter>Inc</Filter>
     </ClInclude>
@@ -188,9 +185,6 @@
     </ClCompile>
     <ClCompile Include="RenderCore\Skeleton\Animation.cpp">
       <Filter>RenderCore\Skeleton</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderCore\Resource\MeshLoader.cpp">
-      <Filter>RenderCore\Resource</Filter>
     </ClCompile>
     <ClCompile Include="RenderCore\BasicModel.cpp">
       <Filter>RenderCore</Filter>

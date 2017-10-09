@@ -107,6 +107,8 @@ namespace D3D11
 			PS = nullptr;
 			IL = nullptr;
 		}
+
+		void Bind();
 	};
 
 	class FShaderManager
@@ -122,12 +124,12 @@ namespace D3D11
 		~FShaderManager();
 
 		void Save();
-		void Load(LostCore::IRenderContext* rc);
+		void Load();
 
 		// 调用前确保所有shader object不再被使用.
 		void Destroy();
 
-		FShaderObject* GetShader(LostCore::IRenderContext* rc, const FShaderKey& key);
+		FShaderObject* GetShader(const FShaderKey& key);
 
 	private:
 		set<FShaderKeyBlobs>::const_iterator Compile(const FShaderKey& key);

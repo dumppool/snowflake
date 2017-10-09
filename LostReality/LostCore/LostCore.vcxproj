@@ -201,7 +201,6 @@
     <ClInclude Include="Inc\Threading\CommandQueue.h" />
     <ClInclude Include="Inc\VertexTypes.h" />
     <ClInclude Include="RenderCore\FontProvider.h" />
-    <ClInclude Include="RenderCore\Resource\MeshLoader.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
@@ -230,7 +229,6 @@
     <ClCompile Include="RenderCore\Gizmo\GizmoLine.cpp" />
     <ClCompile Include="RenderCore\Gizmo\GizmoOperator.cpp" />
     <ClCompile Include="RenderCore\ModelFactory.cpp" />
-    <ClCompile Include="RenderCore\Resource\MeshLoader.cpp" />
     <ClCompile Include="RenderCore\Skeleton\Animation.cpp" />
     <ClCompile Include="Src\FBXEditor.cpp" />
     <ClCompile Include="Src\GlobalHandler.cpp" />

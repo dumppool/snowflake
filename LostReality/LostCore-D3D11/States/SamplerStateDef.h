@@ -48,61 +48,14 @@ namespace D3D11
 		}
 
 		bool bInitialized;
-		std::map<std::string, TRefCountPtr<ID3D11SamplerState>> StateMap;
+		std::map<uint32, TRefCountPtr<ID3D11SamplerState>> StateMap;
 
-		FSamplerStateMap() : bInitialized(false)
-		{
-		}
+		FSamplerStateMap();
+		~FSamplerStateMap();
 
-		~FSamplerStateMap()
-		{
-			ReleaseComObjects();
-		}
-
-		void Initialize(const TRefCountPtr<ID3D11Device>& device)
-		{
-			if (bInitialized)
-			{
-				return;
-			}
-
-			const char* head = "FSamplerStateMap::Initialize";
-			StateMap.insert(std::make_pair(FSamplerState_0::GetName(), FSamplerState_0::GetState(device)));
-			LVMSG(head, "insert SamplerState[%s]", FSamplerState_0::GetName().c_str());
-
-			bInitialized = true;
-		}
-
-		void ReleaseComObjects()
-		{
-			if (!bInitialized)
-			{
-				return;
-			}
-
-			for (auto& element : StateMap)
-			{
-				element.second = nullptr;
-			}
-
-			StateMap.clear();
-			bInitialized = false;
-		}
-
-		FORCEINLINE TRefCountPtr<ID3D11SamplerState> GetState(const std::string& key)
-		{
-			if (bInitialized)
-			{
-				for (auto& element : StateMap)
-				{
-					if (element.first.compare(key) == 0)
-					{
-						return element.second;
-					}
-				}
-			}
-
-			return TRefCountPtr<ID3D11SamplerState>();
-		}
+		void InitializeState(uint32 flags);
+		void Initialize();
+		void ReleaseComObjects();
+		TRefCountPtr<ID3D11SamplerState> GetState(uint32 flags);
 	};
 }

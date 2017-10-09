@@ -10,6 +10,16 @@
 #include "stdafx.h"
 #include "ConstantBuffer.h"
 
+D3D11::FConstantBuffer::FConstantBuffer()
+	: ShaderSlot(0)
+{
+}
+
+D3D11::FConstantBuffer::~FConstantBuffer()
+{
+	Buffer = nullptr;
+}
+
 bool D3D11::FConstantBuffer::Initialize(int32 byteWidth, bool dynamic)
 {
 	ByteWidth = byteWidth;
@@ -55,45 +65,68 @@ void D3D11::FConstantBuffer::UpdateBuffer(const void * buf, int32 sz)
 	cxt->UpdateSubresource(Buffer.GetReference(), 0, nullptr, buf, 0, 0);
 }
 
-void D3D11::FConstantBuffer::Bind(int32 slot)
+void D3D11::FConstantBuffer::SetShaderSlot(int32 slot)
 {
-	const char* head = "D3D11::FConstantBuffer::Bind";
+	ShaderSlot = slot;
+}
+
+int32 D3D11::FConstantBuffer::GetShaderSlot() const
+{
+	return ShaderSlot;
+}
+
+void D3D11::FConstantBuffer::SetShaderFlags(int32 flags)
+{
+	ShaderFlags = flags;
+}
+
+int32 D3D11::FConstantBuffer::GetShaderFlags() const
+{
+	return ShaderFlags;
+}
+
+void D3D11::FConstantBuffer::Bind()
+{
+	const char* head = "FConstantBuffer::Bind";
 	auto cxt = FRenderContext::GetDeviceContext(head);
 	if (!cxt.IsValid())
 	{
 		return;
 	}
 
-	assert(slot >= 0);
-
 	auto ref = Buffer.GetReference();
-	if ((slot&SHADER_SLOT_VS) == SHADER_SLOT_VS)
+	if (HAS_FLAGS(SHADER_FLAG_VS, ShaderFlags))
 	{
-		cxt->VSSetConstantBuffers(slot&SHADER_SLOT_MASK, 1, &ref);
+		cxt->VSSetConstantBuffers(ShaderSlot, 1, &ref);
 	}
 
-	if ((slot&SHADER_SLOT_PS) == SHADER_SLOT_PS)
+	if (HAS_FLAGS(SHADER_FLAG_VS, ShaderFlags))
 	{
-		cxt->PSSetConstantBuffers(slot&SHADER_SLOT_MASK, 1, &ref);
+		cxt->PSSetConstantBuffers(ShaderSlot, 1, &ref);
 	}
-	
-	if ((slot&SHADER_SLOT_GS) == SHADER_SLOT_GS)
+
+	if (HAS_FLAGS(SHADER_FLAG_VS, ShaderFlags))
 	{
-		cxt->GSSetConstantBuffers(slot&SHADER_SLOT_MASK, 1, &ref);
+		cxt->GSSetConstantBuffers(ShaderSlot, 1, &ref);
 	}
-	
-	if ((slot&SHADER_SLOT_HS) == SHADER_SLOT_HS)
+
+	if (HAS_FLAGS(SHADER_FLAG_VS, ShaderFlags))
 	{
-		cxt->HSSetConstantBuffers(slot&SHADER_SLOT_MASK, 1, &ref);
+		cxt->HSSetConstantBuffers(ShaderSlot, 1, &ref);
 	}
-	
-	if ((slot&SHADER_SLOT_DS) == SHADER_SLOT_DS)
+
+	if (HAS_FLAGS(SHADER_FLAG_VS, ShaderFlags))
 	{
-		cxt->DSSetConstantBuffers(slot&SHADER_SLOT_MASK, 1, &ref);
+		cxt->DSSetConstantBuffers(ShaderSlot, 1, &ref);
 	}
-	
-	if ((slot&SHADER_SLOT_CS) == SHADER_SLOT_CS)
+
+	if (HAS_FLAGS(SHADER_FLAG_VS, ShaderFlags))
 	{
-		cxt->CSSetConstantBuffers(slot&SHADER_SLOT_MASK, 1, &ref);
+		cxt->CSSetConstantBuffers(ShaderSlot, 1, &ref);
 	}
+}
+
+void D3D11::FConstantBuffer::Commit()
+{
+	FRenderContext::Get()->CommitBuffer(this);
 }

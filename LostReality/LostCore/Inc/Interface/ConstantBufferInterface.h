@@ -17,6 +17,12 @@ namespace LostCore
 		virtual ~IConstantBuffer() {}
 		virtual bool Initialize(int32 sz, bool dynamic) = 0;
 		virtual void UpdateBuffer(const void* buf, int32 sz) = 0;
-		virtual void Bind(int32 slot) = 0;
+		virtual void Commit() = 0;
+
+		virtual void SetShaderSlot(int32 slot) = 0;
+		virtual int32 GetShaderSlot() const = 0;
+
+		virtual void SetShaderFlags(int32 flags) = 0;
+		virtual int32 GetShaderFlags() const = 0;
 	};
 }

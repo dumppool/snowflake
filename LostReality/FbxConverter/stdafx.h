@@ -21,9 +21,6 @@ using FMatrixCurveAlias = LostCore::FMatrixCurve;
 // sdk includes
 #include <fbxsdk.h>
 
-#include "FbxSamples/Common/Common.h"
-#include "FbxSamples/ImportScene/DisplayMesh.h"
-#include "FbxSamples/ImportScene/DisplayAnimation.h"
-#include "FbxSamples/ImportScene/DisplayHierarchy.h"
+#include "samples/Common/Common.h"
 
 #include "Importer.h"

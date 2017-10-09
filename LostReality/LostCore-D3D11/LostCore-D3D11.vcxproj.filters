@@ -8,9 +8,6 @@
     <ClInclude Include="Inc\LostCore-D3D11.h">
       <Filter>Inc</Filter>
     </ClInclude>
-    <ClInclude Include="Buffers\ConstantBuffer.h">
-      <Filter>Buffers</Filter>
-    </ClInclude>
     <ClInclude Include="Buffers\VertexDef.h">
       <Filter>Buffers</Filter>
     </ClInclude>
@@ -56,13 +53,16 @@
     <ClInclude Include="Src\ShaderManager.h">
       <Filter>Src</Filter>
     </ClInclude>
+    <ClInclude Include="Pipelines\RenderObject.h">
+      <Filter>Pipelines</Filter>
+    </ClInclude>
+    <ClInclude Include="Implements\ConstantBuffer.h">
+      <Filter>Implements</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="stdafx.cpp" />
-    <ClCompile Include="Buffers\ConstantBuffer.cpp">
-      <Filter>Buffers</Filter>
-    </ClCompile>
     <ClCompile Include="Buffers\VertexDef.cpp">
       <Filter>Buffers</Filter>
     </ClCompile>
@@ -107,6 +107,12 @@
     </ClCompile>
     <ClCompile Include="Src\ShaderManager.cpp">
       <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="Pipelines\RenderObject.cpp">
+      <Filter>Pipelines</Filter>
+    </ClCompile>
+    <ClCompile Include="Implements\ConstantBuffer.cpp">
+      <Filter>Implements</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -217,8 +217,8 @@ void LostCore::FRect::ReconstructPrimitive()
 
 		const int32 indices[] = {0, 1, 2, 1, 3, 2};
 
-		if (!RectPrimitive->ConstructVB(rc, vertices, sizeof(vertices), sizeof(_Vertex), false) ||
-			!RectPrimitive->ConstructIB(rc, indices, sizeof(indices), sizeof(int32), false))
+		if (!RectPrimitive->ConstructVB(vertices, sizeof(vertices), sizeof(_Vertex), false) ||
+			!RectPrimitive->ConstructIB(indices, sizeof(indices), sizeof(int32), false))
 		{
 			return;
 		}
@@ -230,10 +230,13 @@ void LostCore::FRect::ReconstructPrimitive()
 		}
 
 		if (SSuccess != WrappedCreateConstantBuffer(&RectBuffer) ||
-			!RectBuffer->Initialize(rc, sizeof(Param), false))
+			!RectBuffer->Initialize(sizeof(Param), false))
 		{
 			return;
 		}
+
+		RectBuffer->SetShaderSlot(SHADER_SLOT_MATRICES);
+		RectBuffer->SetShaderFlags(SHADER_FLAG_VS);
 
 		// 临时代码，查看字体贴图
 		RectMaterial->UpdateTexture(rc, FFontProvider::Get()->GetGdiFont()->GetFontTextures()[0], 0);
@@ -268,8 +271,8 @@ void LostCore::FRect::DrawPrivate()
 
 	if (RectBuffer != nullptr)
 	{
-		RectBuffer->UpdateBuffer(rc, (const void*)&Param.GetBuffer(), sizeof(Param));
-		RectBuffer->Bind(rc, 1 | SHADER_SLOT_VS);
+		RectBuffer->UpdateBuffer((const void*)&Param.GetBuffer(), sizeof(Param));
+		RectBuffer->Commit();
 	}
 
 	if (RectMaterial != nullptr)
@@ -279,9 +282,8 @@ void LostCore::FRect::DrawPrivate()
 
 	if (RectPrimitive != nullptr && RectMaterial != nullptr)
 	{
-		RectPrimitive->Draw(rc, sec);
+		RectPrimitive->Commit();
 	}
-
 }
 
 LostCore::FBasicGUI::FBasicGUI() : Font(nullptr)

@@ -8,7 +8,7 @@
 */
 
 #include "stdafx.h"
-#include "Buffers/ConstantBuffer.h"
+#include "Implements/ConstantBuffer.h"
 #include "Implements/PrimitiveGroup.h"
 #include "Implements/Material.h"
 
@@ -21,14 +21,14 @@ EReturnCode D3D11::CreateRenderContext(LostCore::EContextID id, LostCore::IRende
 		return SErrorInvalidParameters;
 	}
 
-	LostCore::IRenderContext* obj = nullptr;
+	*context = nullptr;
 	switch (id)
 	{
 	case LostCore::EContextID::D3D11_DXGI0:
 	case LostCore::EContextID::D3D11_DXGI1:
 	{
-		obj = FRenderContext::Get();
-		if (obj->Initialize(id))
+		*context = FRenderContext::Get();
+		if ((*context)->Initialize(id))
 		{
 			return SSuccess;
 		}
@@ -108,7 +108,7 @@ EReturnCode D3D11::DestroyConstantBuffer(LostCore::IConstantBuffer * cb)
 	return SSuccess;
 }
 
-
+/*
 EReturnCode D3D11::CreateMaterial(LostCore::IMaterial** material)
 {
 	if (material == nullptr)
@@ -135,6 +135,7 @@ EReturnCode D3D11::DestroyMaterial(LostCore::IMaterial * material)
 
 	return SSuccess;
 }
+*/
 
 #include "GdiFont.h"
 

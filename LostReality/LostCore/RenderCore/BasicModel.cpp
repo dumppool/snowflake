@@ -10,7 +10,7 @@
 #include "stdafx.h"
 #include "BasicModel.h"
 #include "PrimitiveGroupInterface.h"
-#include "Resource/MeshLoader.h"
+//#include "Resource/MeshLoader.h"
 
 using namespace LostCore;
 
@@ -99,22 +99,22 @@ void LostCore::FBasicModel::DrawModel()
 
 	if (MatricesBuffer != nullptr)
 	{
-		MatricesBuffer->Bind(rc, 1 | SHADER_SLOT_VS);
+		MatricesBuffer->Commit();
 	}
 
 	if (CustomBuffer != nullptr)
 	{
-		CustomBuffer->Bind(rc, 2 | SHADER_SLOT_VS | SHADER_SLOT_PS);
+		CustomBuffer->Commit();
 	}
 
-	if (Material != nullptr)
-	{
-		Material->Bind(rc);
-	}
+	//if (Material != nullptr)
+	//{
+	//	Material->Bind(rc);
+	//}
 
 	if (Primitive != nullptr)
 	{
-		Primitive->Draw(rc, sec);
+		Primitive->Commit();
 	}
 }
 
@@ -141,14 +141,16 @@ bool LostCore::FBasicModel::ConfigPrimitive(const string& url, IPrimitiveGroup*&
 	// 根据渲染数据创建索引/定点缓存.
 	if (D3D11::WrappedCreatePrimitiveGroup(&pg) == SSuccess)
 	{
+		pg->SetVertexElement(pgdata.VertexFlags);
+
 		if (pgdata.IndexCount > 0)
 		{
 			uint32 ibStride = pgdata.VertexCount < (1 << 16) ? 2 : 4;
-			assert(pg->ConstructIB(rc, &(pgdata.Indices[0]), pgdata.Indices.size(), ibStride, false));
+			assert(pg->ConstructIB(&(pgdata.Indices[0]), pgdata.Indices.size(), ibStride, false));
 		}
 
 		uint32 vbStride = GetAlignedSize(GetVertexDetails(pgdata.VertexFlags).Stride, 16);
-		assert(pg->ConstructVB(rc, &(pgdata.Vertices[0]), pgdata.Vertices.size(), vbStride, false));
+		assert(pg->ConstructVB(&(pgdata.Vertices[0]), pgdata.Vertices.size(), vbStride, false));
 	}
 
 	return pg != nullptr;
@@ -159,8 +161,14 @@ bool LostCore::FBasicModel::ConfigMaterial(const string& url)
 	bool success = true;
 	auto rc = FGlobalHandler::Get()->GetRenderContext();
 	success &= D3D11::WrappedCreateConstantBuffer(&MatricesBuffer) == SSuccess;
-	success &= D3D11::WrappedCreateConstantBuffer(&CustomBuffer) == SSuccess && CustomBuffer->Initialize(rc, sizeof(Custom), false);
-	success &= D3D11::WrappedCreateMaterial(&Material) == SSuccess && Material->Initialize(rc, url.c_str());
+	success &= D3D11::WrappedCreateConstantBuffer(&CustomBuffer) == SSuccess && CustomBuffer->Initialize(sizeof(Custom), false);
+	if (success)
+	{
+		CustomBuffer->SetShaderSlot(SHADER_SLOT_CUSTOM);
+		CustomBuffer->SetShaderFlags(SHADER_FLAG_VS | SHADER_FLAG_PS);
+	}
+
+	//success &= D3D11::WrappedCreateMaterial(&Material) == SSuccess && Material->Initialize(rc, url.c_str());
 	return success;
 }
 
@@ -168,7 +176,7 @@ void LostCore::FBasicModel::UpdateConstant()
 {
 	if (CustomBuffer != nullptr)
 	{
-		CustomBuffer->UpdateBuffer(FGlobalHandler::Get()->GetRenderContext(), &Custom.GetBuffer(), sizeof(Custom));
+		CustomBuffer->UpdateBuffer(&Custom.GetBuffer(), sizeof(Custom));
 	}
 }
 
@@ -289,10 +297,10 @@ void LostCore::FBasicModel::Clone(FBasicModel & model)
 
 void LostCore::FBasicModel::EnableDepthTest(bool depthTest)
 {
-	if (Material != nullptr)
-	{
-		Material->SetDepthStencilState(depthTest ? K_DEPTH_STENCIL_Z_WRITE : K_DEPTH_STENCIL_ALWAYS);
-	}
+	//if (Material != nullptr)
+	//{
+	//	Material->SetDepthStencilState(depthTest ? K_DEPTH_STENCIL_Z_WRITE : K_DEPTH_STENCIL_ALWAYS);
+	//}
 }
 
 void LostCore::FBasicModel::EnableFlags(uint32 flags)
@@ -346,11 +354,11 @@ void LostCore::FBasicModel::Destroy()
 		Primitive = nullptr;
 	}
 
-	if (Material != nullptr)
-	{
-		D3D11::WrappedDestroyMaterial(forward<IMaterial*>(Material));
-		Material = nullptr;
-	}
+	//if (Material != nullptr)
+	//{
+	//	D3D11::WrappedDestroyMaterial(forward<IMaterial*>(Material));
+	//	Material = nullptr;
+	//}
 
 	if (MatricesBuffer != nullptr)
 	{
@@ -401,7 +409,12 @@ bool LostCore::FStaticModel::ConfigMaterial(const string & url)
 	auto cb = GetMatricesBuffer();
 	if (cb != nullptr)
 	{
-		success &= cb->Initialize(FGlobalHandler::Get()->GetRenderContext(), sizeof(World), false);
+		success &= cb->Initialize(sizeof(World), false);
+		if (success)
+		{
+			cb->SetShaderSlot(SHADER_SLOT_MATRICES);
+			cb->SetShaderFlags(SHADER_FLAG_VS | SHADER_FLAG_PS);
+		}
 	}
 
 	return success;
@@ -413,7 +426,7 @@ void LostCore::FStaticModel::UpdateConstant()
 	auto cb = GetMatricesBuffer();
 	if (cb != nullptr)
 	{
-		cb->UpdateBuffer(FGlobalHandler::Get()->GetRenderContext(), (const void*)&World.GetBuffer(), sizeof(World));
+		cb->UpdateBuffer((const void*)&World.GetBuffer(), sizeof(World));
 	}
 }
 
@@ -570,7 +583,7 @@ void LostCore::FSkeletalModel::UpdateConstant()
 	auto cb = GetMatricesBuffer();
 	if (cb != nullptr)
 	{
-		cb->UpdateBuffer(FGlobalHandler::Get()->GetRenderContext(), (const void*)&Matrices.GetBuffer(), sizeof(Matrices));
+		cb->UpdateBuffer((const void*)&Matrices.GetBuffer(), sizeof(Matrices));
 	}
 }
 
@@ -594,7 +607,12 @@ bool LostCore::FSkeletalModel::ConfigMaterial(const string & url)
 	auto cb = GetMatricesBuffer();
 	if (cb != nullptr)
 	{
-		success &= cb->Initialize(FGlobalHandler::Get()->GetRenderContext(), sizeof(Matrices), false);
+		success &= cb->Initialize(sizeof(Matrices), false);
+		if (success)
+		{
+			cb->SetShaderSlot(SHADER_SLOT_MATRICES);
+			cb->SetShaderFlags(SHADER_FLAG_VS);
+		}
 	}
 
 	return success;

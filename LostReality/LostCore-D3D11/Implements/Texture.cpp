@@ -70,7 +70,7 @@ bool D3D11::FTexture2D::Construct(
 	if (bIsShaderResource)
 	{
 		BindFlags |= D3D11_BIND_SHADER_RESOURCE;
-		Sampler = FSamplerStateMap::Get()->GetState("DEFAULT");
+		Sampler = FSamplerStateMap::Get()->GetState(0);
 	}
 
 	AccessFlags = 0x0;

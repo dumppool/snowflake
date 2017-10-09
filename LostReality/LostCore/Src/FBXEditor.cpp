@@ -680,7 +680,7 @@ void FFBXEditor::Destroy()
 bool FFBXEditor::InitializeWindow(HWND wnd, bool windowed, int32 width, int32 height)
 {
 	auto ret = WrappedCreateRenderContext(EContextID::D3D11_DXGI0, &RC);
-	if (RC != nullptr && RC->Init(wnd, windowed, width, height))
+	if (RC != nullptr && RC->InitializeScreen(wnd, windowed, width, height))
 	{
 		ScreenWidth = width;
 		ScreenHeight = height;

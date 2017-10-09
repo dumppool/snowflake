@@ -54,8 +54,8 @@ namespace LostCore
 
 		virtual bool Initialize(LostCore::EContextID id) = 0;
 		virtual bool InitializeScreen(HWND wnd, bool bWindowed, int32 width, int32 height) = 0;
-		virtual void BeginFrame(float sec) = 0;
-		virtual void EndFrame(float sec) = 0;
+		virtual void BeginFrame() = 0;
+		virtual void EndFrame() = 0;
 		virtual void SetViewProjectMatrix(const FFloat4x4& vp) = 0;
 	};
 }

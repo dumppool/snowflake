@@ -48,20 +48,29 @@ bool LostCore::FSegmentTool::ConstructPrimitive(const void* buf, uint32 bytes)
 
 	assert(Material == nullptr && Primitive == nullptr);
 
-	bConstructed = SSuccess == D3D11::WrappedCreateMaterial(&Material);
-	bConstructed &= SSuccess == D3D11::WrappedCreateConstantBuffer(&ConstantBuffer);
+	//bConstructed = SSuccess == D3D11::WrappedCreateMaterial(&Material);
+	bConstructed = SSuccess == D3D11::WrappedCreateConstantBuffer(&ConstantBuffer);
 	bConstructed &= SSuccess == D3D11::WrappedCreatePrimitiveGroup(&Primitive);
 
 	assert(bConstructed);
 
 	// TODO: ÅäÖÃ
-	Material->SetDepthStencilState(bDepthTest ? K_DEPTH_STENCIL_Z_WRITE : K_DEPTH_STENCIL_ALWAYS);
+	//Material->SetDepthStencilState(bDepthTest ? K_DEPTH_STENCIL_Z_WRITE : K_DEPTH_STENCIL_ALWAYS);
 	Primitive->SetTopology(LostCore::EPrimitiveTopology::LineList);
 
-	bConstructed &= ConstantBuffer->Initialize(rc, sizeof(World), false);
-	bConstructed &= Material->Initialize(rc, "default_xyzrgb.json");
-	bConstructed &= Primitive->ConstructVB(rc, buf, bytes, GetAlignedSize(sizeof(FSegmentVertex), 16), false);
+	bConstructed &= ConstantBuffer->Initialize(sizeof(World), false);
+	if (bConstructed)
+	{
+		ConstantBuffer->SetShaderSlot(SHADER_SLOT_MATRICES);
+		ConstantBuffer->SetShaderFlags(SHADER_FLAG_VS);
+	}
 
+	//bConstructed &= Material->Initialize(rc, "default_xyzrgb.json");
+	bConstructed &= Primitive->ConstructVB(buf, bytes, GetAlignedSize(sizeof(FSegmentVertex), 16), false);
+	if (bConstructed)
+	{
+		Primitive->SetVertexElement(VERTEX_COLOR);
+	}
 
 	assert(bConstructed);
 	return bConstructed;
@@ -112,7 +121,7 @@ void LostCore::FSegmentTool::Draw()
 
 	if (bConstructed)
 	{
-		Primitive->UpdateVB(rc, &buf[0], buf.size());
+		Primitive->UpdateVB(&buf[0], buf.size());
 	}
 	else
 	{
@@ -121,18 +130,18 @@ void LostCore::FSegmentTool::Draw()
 
 	if (ConstantBuffer != nullptr)
 	{
-		ConstantBuffer->UpdateBuffer(rc, &World.GetBuffer(), sizeof(World));
-		ConstantBuffer->Bind(rc, 1 | SHADER_SLOT_VS);
+		ConstantBuffer->UpdateBuffer(&World.GetBuffer(), sizeof(World));
+		ConstantBuffer->Commit();
 	}
 
-	if (Material != nullptr)
-	{
-		Material->Bind(rc);
-	}
+	//if (Material != nullptr)
+	//{
+	//	Material->Bind(rc);
+	//}
 
 	if (Primitive != nullptr)
 	{
-		Primitive->Draw(rc, sec);
+		Primitive->Commit();
 	}
 }
 

@@ -97,6 +97,7 @@ namespace D3D11
 
 				assert(offset == LostCore::GetVertexDetails(flags).Stride);
 				LVMSG(head, "register: %s, stride: %d", semantics.c_str(), offset);
+				return item;
 			}
 
 			return it->second;

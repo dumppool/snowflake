@@ -205,13 +205,16 @@
 
 #define MAGIC_VERTEX 0xaabbabab
 
-#define SHADER_SLOT_MASK	(0xf)
-#define SHADER_SLOT_VS		(1<<4)
-#define SHADER_SLOT_PS		(1<<5)
-#define SHADER_SLOT_GS		(1<<6)
-#define SHADER_SLOT_HS		(1<<7)
-#define SHADER_SLOT_DS		(1<<8)
-#define SHADER_SLOT_CS		(1<<9)
+#define SHADER_SLOT_GLOBAL		0
+#define SHADER_SLOT_MATRICES	1
+#define SHADER_SLOT_CUSTOM		2
+
+#define SHADER_FLAG_VS		(1<<4)
+#define SHADER_FLAG_PS		(1<<5)
+#define SHADER_FLAG_GS		(1<<6)
+#define SHADER_FLAG_HS		(1<<7)
+#define SHADER_FLAG_DS		(1<<8)
+#define SHADER_FLAG_CS		(1<<9)
 
 #define ACTOR_VISIBLE		(1<<0)
 
@@ -239,7 +242,7 @@
 
 #define RAS_FILL_WIREFRAME		(1<<1)
 #define RAS_CULL_FRONT			(1<<2)
-#define RAS_CULL_NONE			(1<<3) // RAS_CULL_NONE优先级高于RAS_CULL_FRONT
+#define RAS_CULL_BACK			(1<<3)
 
 enum class EBlendMode : uint8
 {
@@ -248,13 +251,46 @@ enum class EBlendMode : uint8
 	AlphaBlend,
 };
 
-#define BLEND_ALL_INDEPENDENT		(1<<1)
-#define BLEND_ALL_ALPHA_TO_COVERAGE	(1<<2)
-#define BLEND_MODE_MASK			0xff
-#define BLEND_WRITE_RED			(1<<10)
-#define BLEND_WRITE_GREEN		(1<<11)
-#define BLEND_WRITE_BLUE		(1<<12)
-#define BLEND_WRITE_ALPHA		(1<<13)
+enum class EBlendWrite : uint8
+{
+	None = 0,
+	R,
+	G,
+	B,
+	A,
+	RG,
+	RGB,
+	RGBA,
+};
+
+#define BLEND_MODE_OFFSET		0
+#define BLEND_WRITE_OFFSET		8
+#define BS_INDEPENDENT_ALPHA	(1<<20)
+#define BS_ALPHA_TO_COVERAGE	(1<<21)
+
+#define SS_DEFAULT
+
+enum class EPipeline : uint8
+{
+	Forward = 1,
+	Deferred,
+};
+
+enum class ERenderOrder : uint8
+{
+	Opacity,
+	Masked,
+	Translucent,
+	End,
+};
+
+struct FRenderOrderComparison
+{
+	bool operator()(const ERenderOrder& o1, const ERenderOrder& o2) const
+	{
+		return (uint8)o1 < (uint8)o2;
+	}
+};
 
 static const char* SAttributeTypeString[] = {
 	"Unknown",

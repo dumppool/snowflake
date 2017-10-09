@@ -13,8 +13,11 @@
 #include "States/RasterizerStateDef.h"
 #include "States/DepthStencilStateDef.h"
 #include "States/SamplerStateDef.h"
-#include "Buffers/ConstantBuffer.h"
+#include "Implements/ConstantBuffer.h"
 #include "Implements/Texture.h"
+
+#include "Pipelines/ForwardPipeline.h"
+#include "Pipelines/DeferredPipeline.h"
 
 using namespace LostCore;
 
@@ -22,11 +25,10 @@ D3D11::FRenderContext::FRenderContext()
 	: Device(nullptr)
 	, Context(nullptr)
 	, SwapChain(nullptr)
-	, ShadeModel(EShadeModel::Undefined)
-	, bWireframe(false)
 	, RenderTarget(nullptr)
 	, DepthStencil(nullptr)
 	, GlobalConstantBuffer(new FConstantBuffer)
+	, ActivedPipeline(nullptr)
 {
 }
 
@@ -38,20 +40,19 @@ D3D11::FRenderContext::~FRenderContext()
 bool D3D11::FRenderContext::Initialize(LostCore::EContextID id)
 {
 	ContextID = id;
-	return SSuccess == D3D11::CreateDevice(ContextID, Device, Context);
+	D3D11::CreateDevice(ContextID, Device, Context);
+	GlobalConstantBuffer->Initialize(sizeof(Param), false);
+	GlobalConstantBuffer->SetShaderSlot(SHADER_SLOT_GLOBAL);
+	GlobalConstantBuffer->SetShaderFlags(SHADER_FLAG_VS | SHADER_FLAG_PS);
+	InitializeStateObjects();
+	InitializePipelines();
+	return Device.IsValid();
 }
 
 void D3D11::FRenderContext::Destroy()
 {
-	ShadeModel = EShadeModel::Undefined;
-	bWireframe = false;
-
-	//Font.Destroy();
-
-	FBlendStateMap::Get()->ReleaseComObjects();
-	FRasterizerStateMap::Get()->ReleaseComObjects();
-	FDepthStencilStateMap::Get()->ReleaseComObjects();
-	FSamplerStateMap::Get()->ReleaseComObjects();
+	DestroyPipelines();
+	DestroyStateObjects();
 
 	SAFE_DELETE(RenderTarget);
 	SAFE_DELETE(DepthStencil);
@@ -67,13 +68,6 @@ void D3D11::FRenderContext::Destroy()
 bool D3D11::FRenderContext::InitializeScreen(HWND wnd, bool bWindowed, int32 width, int32 height)
 {
 	D3D11::CreateSwapChain(Device.GetReference(), wnd, bWindowed, width, height, SwapChain);
-	if (Device.IsValid())
-	{
-		FBlendStateMap::Get()->Initialize(Device);
-		FRasterizerStateMap::Get()->Initialize(Device);
-		FDepthStencilStateMap::Get()->Initialize(Device);
-		FSamplerStateMap::Get()->Initialize(Device);
-	}
 
 	assert(RenderTarget == nullptr);
 	{
@@ -101,16 +95,15 @@ bool D3D11::FRenderContext::InitializeScreen(HWND wnd, bool bWindowed, int32 wid
 	Param.ScreenHeightRcp = (float)1.f / height;
 
 	// push & initialize ascii chars
-	const int32 sz = 127 - '!';
-	WCHAR chars[sz];
-	for (int32 i = 0; i < sz; ++i)
-	{
-		chars[i] = 127 + i;
-	}
+	//const int32 sz = 127 - '!';
+	//WCHAR chars[sz];
+	//for (int32 i = 0; i < sz; ++i)
+	//{
+	//	chars[i] = 127 + i;
+	//}
 
 	//Font.Initialize(this, LostCore::FFontConfig(), chars, sz);
-
-	return Device.IsValid() && Context.IsValid() && SwapChain.IsValid() && GlobalConstantBuffer->Initialize(this, sizeof(Param), false);
+	return SwapChain.IsValid();
 }
 
 void D3D11::FRenderContext::SetViewProjectMatrix(const FFloat4x4 & vp)
@@ -118,9 +111,9 @@ void D3D11::FRenderContext::SetViewProjectMatrix(const FFloat4x4 & vp)
 	Param.ViewProject = vp;
 }
 
-void D3D11::FRenderContext::BeginFrame(float sec)
+void D3D11::FRenderContext::BeginFrame()
 {
-	if (Context.IsValid())
+	if (Context.IsValid() && ActivedPipeline != nullptr)
 	{
 		auto rtv = RenderTarget->GetRenderTargetRHI().GetReference();
 		auto dsv = DepthStencil->GetDepthStencilRHI().GetReference();
@@ -131,23 +124,37 @@ void D3D11::FRenderContext::BeginFrame(float sec)
 
 		Context->RSSetViewports(1, &Viewport);
 
-		Context->RSSetState(bWireframe ?
-			FRasterizerStateMap::Get()->GetState("WIREFRAME") :
-			FRasterizerStateMap::Get()->GetState("SOLID"));
+		//Context->RSSetState(bWireframe ?
+		//	FRasterizerStateMap::Get()->GetState("WIREFRAME") :
+		//	FRasterizerStateMap::Get()->GetState("SOLID"));
 
 		//Context->OMSetDepthStencilState(FDepthStencilStateMap::Get()->GetState("Z_ENABLE_WRITE"), 0);
 
-		GlobalConstantBuffer->UpdateBuffer(this, &Param.GetBuffer(), sizeof(Param));
-		GlobalConstantBuffer->Bind(this, 0 | SHADER_SLOT_VS | SHADER_SLOT_PS);
+		GlobalConstantBuffer->UpdateBuffer(&Param.GetBuffer(), sizeof(Param));
+		GlobalConstantBuffer->Commit();
+
+		ActivedPipeline->Render();
 	}
 }
 
-void D3D11::FRenderContext::EndFrame(float sec)
+void D3D11::FRenderContext::EndFrame()
 {
 	if (SwapChain.IsValid())
 	{
 		SwapChain->Present(0, 0);
 	}
+}
+
+void D3D11::FRenderContext::CommitPrimitiveGroup(FPrimitiveGroup * pg)
+{
+	assert(ActivedPipeline != nullptr);
+	ActivedPipeline->CommitPrimitiveGroup(pg);
+}
+
+void D3D11::FRenderContext::CommitBuffer(FConstantBuffer * buf)
+{
+	assert(ActivedPipeline != nullptr);
+	ActivedPipeline->CommitBuffer(buf);
 }
 
 void D3D11::FRenderContext::ReportLiveObjects()
@@ -161,4 +168,44 @@ void D3D11::FRenderContext::ReportLiveObjects()
 		}
 	}
 #endif
+}
+
+void D3D11::FRenderContext::InitializeStateObjects()
+{
+	// 不需要显式的初始化
+	//if (Device.IsValid())
+	//{
+	//	FBlendStateMap::Get()->Initialize();
+	//	FRasterizerStateMap::Get()->Initialize();
+	//	FDepthStencilStateMap::Get()->Initialize();
+	//	FSamplerStateMap::Get()->Initialize();
+	//}
+}
+
+void D3D11::FRenderContext::DestroyStateObjects()
+{
+	FBlendStateMap::Get()->ReleaseComObjects();
+	FRasterizerStateMap::Get()->ReleaseComObjects();
+	FDepthStencilStateMap::Get()->ReleaseComObjects();
+	FSamplerStateMap::Get()->ReleaseComObjects();
+}
+
+void D3D11::FRenderContext::InitializePipelines()
+{
+	auto pl = new FForwardPipeline;
+	pl->Initialize();
+	Pipelines[pl->GetEnum()] = pl;
+
+	ActivedPipeline = pl;
+}
+
+void D3D11::FRenderContext::DestroyPipelines()
+{
+	for (auto it : Pipelines)
+	{
+		it.second->Destroy();
+		SAFE_DELETE(it.second);
+	}
+
+	Pipelines.clear();
 }

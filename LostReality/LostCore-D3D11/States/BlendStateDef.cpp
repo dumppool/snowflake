@@ -23,7 +23,7 @@ D3D11::FBlendStateMap::~FBlendStateMap()
 	ReleaseComObjects();
 }
 
-void D3D11::FBlendStateMap::InitializeState(uint32 overallFlags, const array<uint32, 8>& flags)
+void D3D11::FBlendStateMap::InitializeState(uint32 flags)
 {
 	const char* head = "FBlendStateMap::InitializeState";
 	auto device = FRenderContext::GetDevice(head);
@@ -36,51 +36,88 @@ void D3D11::FBlendStateMap::InitializeState(uint32 overallFlags, const array<uin
 
 	D3D11_BLEND_DESC desc;
 	ZeroMemory(&desc, sizeof(D3D11_BLEND_DESC));
-	desc.AlphaToCoverageEnable = TRUE;
-	desc.IndependentBlendEnable = FALSE;
-	for (int32 i = 0; i < 8; i++)
+
+	if (HAS_FLAGS(BS_INDEPENDENT_ALPHA, flags))
 	{
-		auto& f = flags[i];
-		auto blendMode = (EBlendMode)(f & BLEND_MODE_MASK);
-		if (blendMode == EBlendMode::None)
-		{
-			desc.RenderTarget[0].BlendEnable = FALSE;
-			desc.AlphaToCoverageEnable = FALSE;
-			desc.IndependentBlendEnable = FALSE;
-		}
-		else if (blendMode == EBlendMode::Add)
-		{
-			desc.AlphaToCoverageEnable = TRUE;
-			desc.IndependentBlendEnable = FALSE;
-			desc.RenderTarget[0].BlendEnable = TRUE;
-			desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-			desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-			desc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
-			desc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
-			desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-			desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-			desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
-		}
-		else if (blendMode == EBlendMode::AlphaBlend)
-		{
-			desc.AlphaToCoverageEnable = TRUE;
-			desc.IndependentBlendEnable = FALSE;
-			desc.RenderTarget[0].BlendEnable = TRUE;
-			desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-			desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-			desc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
-			desc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
-			desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-			desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-			desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
-		}
+		desc.IndependentBlendEnable = TRUE;
+	}
+
+	if (HAS_FLAGS(BS_ALPHA_TO_COVERAGE, flags))
+	{
+		desc.AlphaToCoverageEnable = TRUE;
+	}
+
+	auto blendMode = (EBlendMode)((flags >> BLEND_MODE_OFFSET) & 0xff);
+	if (blendMode == EBlendMode::None)
+	{
+		desc.RenderTarget[0].BlendEnable = FALSE;
+	}
+	else if (blendMode == EBlendMode::Add)
+	{
+		desc.RenderTarget[0].BlendEnable = TRUE;
+		desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+		desc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
+		desc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
+		desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+		desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+		desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
+	}
+	else if (blendMode == EBlendMode::AlphaBlend)
+	{
+		desc.RenderTarget[0].BlendEnable = TRUE;
+		desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+		desc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
+		desc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
+		desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+		desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+		desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
+	}
+
+	auto blendWrite = (EBlendWrite)((flags >> BLEND_WRITE_OFFSET) & 0xff);
+	if (blendWrite == EBlendWrite::None)
+	{
+		
+	}
+	else if (blendWrite == EBlendWrite::R)
+	{
+		desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_RED;
+	}
+	else if (blendWrite == EBlendWrite::G)
+	{
+		desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_GREEN;
+	}
+	else if (blendWrite == EBlendWrite::B)
+	{
+		desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_BLUE;
+	}
+	else if (blendWrite == EBlendWrite::A)
+	{
+		desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALPHA;
+	}
+	else if (blendWrite == EBlendWrite::RG)
+	{
+		desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_RED | 
+			D3D11_COLOR_WRITE_ENABLE_GREEN;
+	}
+	else if (blendWrite == EBlendWrite::RGB)
+	{
+		desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_RED |
+			D3D11_COLOR_WRITE_ENABLE_GREEN |
+			D3D11_COLOR_WRITE_ENABLE_BLUE;
+	}
+	else if (blendWrite == EBlendWrite::RGBA)
+	{
+		desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 	}
 
 	HRESULT hr = device->CreateBlendState(&desc, state.GetInitReference());
 	if (FAILED(hr))
 	{
-		LVERR("FBlendState_Add::GetState", "create blend state failed: 0x%08x(%d)", hr, hr);
+		LVERR(head, "create blend state failed: 0x%08x(%d)", hr, hr);
 	}
+
+	StateMap[flags] = state;
+	LVMSG(head, "Created blend state for 0x%08x.", flags);
 }
 
 void D3D11::FBlendStateMap::Initialize()
@@ -92,11 +129,17 @@ void D3D11::FBlendStateMap::Initialize()
 		return;
 	}
 
-	StateMap.insert(std::make_pair(FBlendState_Solid::GetName(), FBlendState_Solid::GetState(device)));
-	LVMSG(head, "Insert blend state[%s]", FBlendState_Solid::GetName().c_str());
+	InitializeState(
+		((uint32)EBlendMode::None<<BLEND_MODE_OFFSET) |
+		((uint32)EBlendWrite::RGBA << BLEND_WRITE_OFFSET));
 
-	StateMap.insert(std::make_pair(FBlendState_Add::GetName(), FBlendState_Add::GetState(device)));
-	LVMSG(head, "Insert blend state[%s]", FBlendState_Add::GetName().c_str());
+	InitializeState(
+		((uint32)EBlendMode::Add << BLEND_MODE_OFFSET) |
+		((uint32)EBlendWrite::RGBA << BLEND_WRITE_OFFSET));
+
+	InitializeState(
+		((uint32)EBlendMode::AlphaBlend << BLEND_MODE_OFFSET) |
+		((uint32)EBlendWrite::RGBA << BLEND_WRITE_OFFSET));
 
 	bInitialized = true;
 }
@@ -119,15 +162,21 @@ void D3D11::FBlendStateMap::ReleaseComObjects()
 
 TRefCountPtr<ID3D11BlendState> D3D11::FBlendStateMap::GetState(uint32 flags)
 {
-	if (bInitialized)
+	if (!bInitialized)
 	{
-		for (auto element : StateMap)
-		{
-			if (element.first.compare(key) == 0)
-			{
-				return element.second;
-			}
-		}
+		Initialize();
+	}
+
+	auto it = StateMap.find(flags);
+	if (it != StateMap.end())
+	{
+		return it->second;
+	}
+
+	InitializeState(flags);
+	if ((it = StateMap.find(flags)) != StateMap.end())
+	{
+		return it->second;
 	}
 
 	return TRefCountPtr<ID3D11BlendState>();

@@ -22,7 +22,7 @@ static const string SShaderPsMain = "PsMain";
 
 D3D11::FShaderManager::FShaderManager()
 {
-	Load(nullptr);
+	Load();
 }
 
 D3D11::FShaderManager::~FShaderManager()
@@ -42,7 +42,7 @@ void D3D11::FShaderManager::Destroy()
 	ShaderMap.clear();
 }
 
-FShaderObject * D3D11::FShaderManager::GetShader(LostCore::IRenderContext* rc, const FShaderKey & key)
+FShaderObject * D3D11::FShaderManager::GetShader(const FShaderKey & key)
 {
 	auto it = ShaderMap.find(key);
 	if (it != ShaderMap.end())
@@ -69,7 +69,7 @@ void D3D11::FShaderManager::Save()
 	stream.WriteToFile(blobsUrl);
 }
 
-void D3D11::FShaderManager::Load(LostCore::IRenderContext* rc)
+void D3D11::FShaderManager::Load()
 {
 	string blobsUrl;
 	FDirectoryHelper::Get()->GetShaderBlobAbsolutePath(SShaderBlobs, blobsUrl);
@@ -89,13 +89,13 @@ set<FShaderKeyBlobs>::const_iterator D3D11::FShaderManager::GetBlobs(const FShad
 		blobIt = Compile(key);
 	}
 
-	return KeyBlobs.end();
+	return blobIt;
 }
 
 set<FShaderKeyBlobs>::const_iterator D3D11::FShaderManager::Compile(const FShaderKey & key)
 {
 	const char* head = "FShaderManager::Compile";
-	TRefCountPtr<ID3D11Device> device = FRenderContext::GetDevice(nullptr, head);
+	TRefCountPtr<ID3D11Device> device = FRenderContext::GetDevice(head);
 	if (!device.IsValid())
 	{
 		return KeyBlobs.end();
@@ -113,33 +113,35 @@ set<FShaderKeyBlobs>::const_iterator D3D11::FShaderManager::Compile(const FShade
 	flag1 |= D3DCOMPILE_DEBUG;
 #endif
 
+	static vector<string> temp(10);
 	static vector<D3D_SHADER_MACRO> SConstMacros;
 	if (SConstMacros.size() == 0)
 	{
-		SConstMacros.push_back({ NAME_VERTEX_TEXCOORD0, to_string(VERTEX_TEXCOORD0).c_str() });
-		SConstMacros.push_back({ NAME_VERTEX_NORMAL, to_string(VERTEX_NORMAL).c_str() });
-		SConstMacros.push_back({ NAME_VERTEX_TANGENT, to_string(VERTEX_TANGENT).c_str() });
-		SConstMacros.push_back({ NAME_VERTEX_COLOR, to_string(VERTEX_COLOR).c_str() });
-		SConstMacros.push_back({ NAME_VERTEX_SKIN, to_string(VERTEX_SKIN).c_str() });
-		SConstMacros.push_back({ NAME_VERTEX_TEXCOORD1, to_string(VERTEX_TEXCOORD1).c_str() });
-		SConstMacros.push_back({ NAME_VERTEX_COORDINATE2D, to_string(VERTEX_COORDINATE2D).c_str() });
-		SConstMacros.push_back({ NAME_MAX_BONES, to_string(MAX_BONES_PER_BATCH).c_str() });
+		SConstMacros.push_back({ NAME_VERTEX_TEXCOORD0, (temp[0] = to_string(VERTEX_TEXCOORD0)).c_str() });
+		SConstMacros.push_back({ NAME_VERTEX_NORMAL, (temp[1] = to_string(VERTEX_NORMAL)).c_str() });
+		SConstMacros.push_back({ NAME_VERTEX_TANGENT, (temp[2] = to_string(VERTEX_TANGENT)).c_str() });
+		SConstMacros.push_back({ NAME_VERTEX_COLOR, (temp[3] = to_string(VERTEX_COLOR)).c_str() });
+		SConstMacros.push_back({ NAME_VERTEX_SKIN, (temp[4] = to_string(VERTEX_SKIN)).c_str() });
+		SConstMacros.push_back({ NAME_VERTEX_TEXCOORD1, (temp[5] = to_string(VERTEX_TEXCOORD1)).c_str() });
+		SConstMacros.push_back({ NAME_VERTEX_COORDINATE2D, (temp[6] = to_string(VERTEX_COORDINATE2D)).c_str() });
+		SConstMacros.push_back({ NAME_MAX_BONES, (temp[7] = to_string(MAX_BONES_PER_BATCH)).c_str() });
 	}
 
 	vector<D3D_SHADER_MACRO> macros;
+	vector<string> temp2(10);
 	// Vertex & Pixel
 	{
 		std::string url;
 		if (!FDirectoryHelper::Get()->GetShaderCodeAbsolutePath(SShaderMainFX, url))
 		{
-			LVERR(head, "cant find shader file: %s", SShaderMainFX);
+			LVERR(head, "cant find shader file: %s", SShaderMainFX.c_str());
 			return KeyBlobs.end();
 		}
 
 		macros = SConstMacros;
-		macros.push_back({ NAME_LIT_MODE, to_string((uint8)key.LitMode).c_str() });
-		macros.push_back({ NAME_VERTEX_FLAGS, to_string(key.VertexElement).c_str() });
-		macros.push_back({ NAME_CUSTOM_BUFFER, to_string(key.CustomBufferVersion).c_str() });
+		macros.push_back({ NAME_LIT_MODE, (temp2[0] = to_string((uint8)key.LitMode)).c_str() });
+		macros.push_back({ NAME_VERTEX_FLAGS, (temp2[1] = to_string(key.VertexElement)).c_str() });
+		macros.push_back({ NAME_CUSTOM_BUFFER, (temp2[2] = to_string(key.CustomBufferVersion)).c_str() });
 		macros.push_back({ nullptr, nullptr });
 
 		auto urlw = UTF8ToWide(url);
@@ -148,13 +150,22 @@ set<FShaderKeyBlobs>::const_iterator D3D11::FShaderManager::Compile(const FShade
 
 		if (FAILED(hr) || !shaderBlob.IsValid())
 		{
-			LVERR(head, "compile %s(%s, %s) failed: %s", SShaderMainFX.c_str(), SShaderVsMain.c_str(),
-				"vs_5_0", errorBlob.IsValid() ? errorBlob->GetBufferPointer() : "[empty]");
+			string macroString;
+			for (auto item : macros)
+			{
+				if (item.Name != nullptr)
+				{
+					macroString.append(item.Name).append(":").append(item.Definition).append(", ");
+				}
+			}
+
+			LVERR(head, "compile %s(%s, %s) failed: macro: %s, %s.", SShaderMainFX.c_str(), SShaderVsMain.c_str(),
+				"vs_5_0", macroString.c_str(), errorBlob.IsValid() ? errorBlob->GetBufferPointer() : "[empty]");
 			return KeyBlobs.end();
 		}
-
+		
 		auto& vsBlob = keyBlobs.Blobs[EShaderID::Vertex];
-		vsBlob.reserve(shaderBlob->GetBufferSize());
+		vsBlob.resize(shaderBlob->GetBufferSize());
 		memcpy(vsBlob.data(), shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize());
 
 		if (FAILED(hr = D3DCompileFromFile(urlw.c_str(), macros.data(), D3D_COMPILE_STANDARD_FILE_INCLUDE,
@@ -166,20 +177,21 @@ set<FShaderKeyBlobs>::const_iterator D3D11::FShaderManager::Compile(const FShade
 		}
 
 		auto& psBlob = keyBlobs.Blobs[EShaderID::Pixel];
-		psBlob.reserve(shaderBlob->GetBufferSize());
+		psBlob.resize(shaderBlob->GetBufferSize());
 		memcpy(psBlob.data(), shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize());
+
+		pair<set<FShaderKeyBlobs>::iterator, bool> it = KeyBlobs.insert(keyBlobs);
+		LVMSG(head, "insert new compiled blob %s%s", keyBlobs.ToString().c_str(), it.second ? "." : " failed!");
+		return it.first;
 	}
 
-	auto it = KeyBlobs.insert(keyBlobs);
-	LVMSG(head, "inserting new compiled blob %s%s", keyBlobs.ToString().c_str(), it.second ? "." : " failed!");
-
-	return it.first;
+	return KeyBlobs.end();
 }
 
 FShaderObject* D3D11::FShaderManager::CreateShaderObject(set<FShaderKeyBlobs>::const_iterator blobIt)
 {
 	const char* head = "FShaderManager::CreateShaderObject";
-	TRefCountPtr<ID3D11Device> device = FRenderContext::GetDevice(nullptr, head);
+	TRefCountPtr<ID3D11Device> device = FRenderContext::GetDevice(head);
 	if (!device.IsValid())
 	{
 		return nullptr;
@@ -218,7 +230,6 @@ FShaderObject* D3D11::FShaderManager::CreateShaderObject(set<FShaderKeyBlobs>::c
 	}
 
 	ShaderMap[blobIt->Key] = shaderObj;
-	LVMSG(head, "inserting shader %s", blobIt->ToString().c_str());
 	return shaderObj;
 }
 
@@ -300,16 +311,37 @@ string D3D11::FShaderKeyBlobs::ToString() const
 	string shaderInfo;
 	for (auto& it : Blobs)
 	{
-		char info[32];
-		memset(info, 0, 32);
-		snprintf(info, 31, "-%s-%dB", SShaderString[(uint8)it.first], it.second.size());
+		char info[128];
+		memset(info, 0, 128);
+		snprintf(info, 127, "-%s-%dB", SShaderString[(uint8)it.first], it.second.size());
 		shaderInfo.append(info);
 	}
 
-	char result[64];
-	memset(result, 0, 64);
-	snprintf(result, 63, "lit%d-ve%d-buf%d-code%d-%s", (uint8)Key.LitMode, 
+	char result[128];
+	memset(result, 0, 128);
+	snprintf(result, 127, "lit%d-ve%d-buf%d-code%d-%s", (uint8)Key.LitMode, 
 		Key.VertexElement, Key.CustomBufferVersion, Key.CodeVersion, shaderInfo.c_str());
 
 	return result;
+}
+
+void D3D11::FShaderObject::Bind()
+{
+	const char* head = "FShaderObject::Bind";
+	auto cxt = FRenderContext::GetDeviceContext(head);
+	if (!cxt.IsValid())
+	{
+		return;
+	}
+
+	if (VS.IsValid() && IL.IsValid())
+	{
+		cxt->VSSetShader(VS.GetReference(), nullptr, 0);
+		cxt->IASetInputLayout(IL.GetReference());
+	}
+
+	if (PS.IsValid())
+	{
+		cxt->PSSetShader(PS.GetReference(), nullptr, 0);
+	}
 }

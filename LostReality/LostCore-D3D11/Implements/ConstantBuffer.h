@@ -17,18 +17,20 @@ namespace D3D11
 
 	struct FConstantBuffer : public LostCore::IConstantBuffer
 	{
-		FConstantBuffer()
-		{
-		}
-
-		virtual ~FConstantBuffer() override
-		{
-			Buffer = nullptr;
-		}
+		FConstantBuffer();
+		virtual ~FConstantBuffer() override;
 
 		virtual bool Initialize(int32 byteWidth, bool dynamic) override;
 		virtual void UpdateBuffer(const void* buf, int32 sz) override;
-		virtual void Bind(int32 slot);
+		virtual void Commit() override;
+
+		virtual void SetShaderSlot(int32 slot) override;
+		virtual int32 GetShaderSlot() const override;
+
+		virtual void SetShaderFlags(int32 flags) override;
+		virtual int32 GetShaderFlags() const override;
+
+		void Bind();
 
 		int32 GetByteWidth() const
 		{
@@ -44,5 +46,7 @@ namespace D3D11
 		int32		ByteWidth;
 		bool		bDynamic;
 		TRefCountPtr<ID3D11Buffer> Buffer;
+		int32		ShaderSlot;
+		int32		ShaderFlags;
 	};
 }

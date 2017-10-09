@@ -78,7 +78,7 @@ void FBasicWorld::DrawPreScene()
 		GetCamera()->Draw();
 	}
 
-	rc->BeginFrame(sec);
+	rc->BeginFrame();
 }
 
 void FBasicWorld::DrawPostScene()
@@ -88,6 +88,6 @@ void FBasicWorld::DrawPostScene()
 
 	if (rc != nullptr)
 	{
-		rc->EndFrame(sec);
+		rc->EndFrame();
 	}
 }

@@ -94,15 +94,20 @@ void D3D11::FDepthStencilStateMap::ReleaseComObjects()
 
 TRefCountPtr<ID3D11DepthStencilState> D3D11::FDepthStencilStateMap::GetState(uint32 flags)
 {
-	if (bInitialized)
+	if (!bInitialized)
 	{
-		auto it = StateMap.find(flags);
-		if (it == StateMap.end())
-		{
-			InitializeState(flags);
-		}
+		Initialize();
+	}
 
-		assert((it = StateMap.find(flags)) != StateMap.end());
+	auto it = StateMap.find(flags);
+	if (it != StateMap.end())
+	{
+		return it->second;
+	}
+
+	InitializeState(flags);
+	if ((it = StateMap.find(flags)) != StateMap.end())
+	{
 		return it->second;
 	}
 

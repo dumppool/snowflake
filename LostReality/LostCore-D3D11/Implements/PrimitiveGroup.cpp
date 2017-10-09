@@ -24,6 +24,7 @@ D3D11::FPrimitiveGroup::FPrimitiveGroup()
 	, IndexBufferOffset(0)
 	, IndexCount(0)
 	, Topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST)
+	, RenderOrder(ERenderOrder::Opacity)
 {
 }
 
@@ -33,31 +34,32 @@ D3D11::FPrimitiveGroup::~FPrimitiveGroup()
 	IndexBuffer = nullptr;
 }
 
-void D3D11::FPrimitiveGroup::Draw(LostCore::IRenderContext * rc, float sec)
+void D3D11::FPrimitiveGroup::Commit()
 {
-	const char* head = "D3D11::FPrimitiveGroup::Draw";
-	TRefCountPtr<ID3D11DeviceContext> cxt = FRenderContext::GetDeviceContext(head);
-	if (!cxt.IsValid())
-	{
-		return;
-	}
-
-	auto buf = VertexBuffer.GetReference();
-	cxt->IASetVertexBuffers(VertexBufferSlot, VertexBufferNum, &buf, &VertexStride, &VertexBufferOffset);
-	cxt->IASetIndexBuffer(IndexBuffer.GetReference(), IndexFormat, IndexBufferOffset);
-	cxt->IASetPrimitiveTopology(Topology);
-
-	if (IndexBuffer.IsValid())
-	{
-		cxt->DrawIndexed(IndexCount, 0, 0);
-	}
-	else
-	{
-		cxt->Draw(VertexCount, 0);
-	}
+	FRenderContext::Get()->CommitPrimitiveGroup(this);
 }
 
-bool D3D11::FPrimitiveGroup::ConstructVB(IRenderContext* rc, const void * buf, uint32 bytes, uint32 stride, bool bDynamic)
+void D3D11::FPrimitiveGroup::SetVertexElement(uint32 flags)
+{
+	VertexElement = flags;
+}
+
+uint32 D3D11::FPrimitiveGroup::GetVertexElement() const
+{
+	return VertexElement;
+}
+
+void D3D11::FPrimitiveGroup::SetRenderOrder(ERenderOrder ro)
+{
+	RenderOrder = ro;
+}
+
+ERenderOrder D3D11::FPrimitiveGroup::GetRenderOrder() const
+{
+	return RenderOrder;
+}
+
+bool D3D11::FPrimitiveGroup::ConstructVB(const void * buf, uint32 bytes, uint32 stride, bool bDynamic)
 {
 	const char* head = "D3D11::FPrimitiveGroup::ConstructVB";
 	TRefCountPtr<ID3D11Device> device = FRenderContext::GetDevice(head);
@@ -75,7 +77,7 @@ bool D3D11::FPrimitiveGroup::ConstructVB(IRenderContext* rc, const void * buf, u
 	return SSuccess == CreatePrimitiveVertex(device.GetReference(), buf, bytes, bIsVBDynamic, VertexBuffer);
 }
 
-bool D3D11::FPrimitiveGroup::ConstructIB(IRenderContext* rc, const void * buf, uint32 bytes, uint32 stride, bool bDynamic)
+bool D3D11::FPrimitiveGroup::ConstructIB(const void * buf, uint32 bytes, uint32 stride, bool bDynamic)
 {
 	const char* head = "D3D11::FPrimitiveGroup::ConstructIB";
 	TRefCountPtr<ID3D11Device> device = FRenderContext::GetDevice(head);
@@ -120,7 +122,7 @@ void D3D11::FPrimitiveGroup::SetTopology(EPrimitiveTopology topo)
 	}
 }
 
-void D3D11::FPrimitiveGroup::UpdateVB(LostCore::IRenderContext * rc, const void * buf, uint32 bytes)
+void D3D11::FPrimitiveGroup::UpdateVB(const void * buf, uint32 bytes)
 {
 	const char* head = "D3D11::FPrimitiveGroup::UpdateVB";
 	TRefCountPtr<ID3D11DeviceContext> cxt = FRenderContext::GetDeviceContext(head);
@@ -153,5 +155,29 @@ void D3D11::FPrimitiveGroup::UpdateVB(LostCore::IRenderContext * rc, const void 
 		destRegion.front = 0;
 		destRegion.back = 1;
 		cxt->UpdateSubresource(VertexBuffer.GetReference(), 0, &destRegion, buf, 0, 0);
+	}
+}
+
+void D3D11::FPrimitiveGroup::Draw()
+{
+	const char* head = "D3D11::FPrimitiveGroup::Draw";
+	TRefCountPtr<ID3D11DeviceContext> cxt = FRenderContext::GetDeviceContext(head);
+	if (!cxt.IsValid())
+	{
+		return;
+	}
+
+	auto buf = VertexBuffer.GetReference();
+	cxt->IASetVertexBuffers(VertexBufferSlot, VertexBufferNum, &buf, &VertexStride, &VertexBufferOffset);
+	cxt->IASetIndexBuffer(IndexBuffer.GetReference(), IndexFormat, IndexBufferOffset);
+	cxt->IASetPrimitiveTopology(Topology);
+
+	if (IndexBuffer.IsValid())
+	{
+		cxt->DrawIndexed(IndexCount, 0, 0);
+	}
+	else
+	{
+		cxt->Draw(VertexCount, 0);
 	}
 }

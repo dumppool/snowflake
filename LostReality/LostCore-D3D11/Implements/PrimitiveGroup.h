@@ -18,13 +18,21 @@ namespace D3D11
 		virtual ~FPrimitiveGroup() override;
 
 		// Í¨¹ý IPrimitiveGroup ¼Ì³Ð
-		virtual void Draw(LostCore::IRenderContext * rc, float sec) override;
-		virtual bool ConstructVB(LostCore::IRenderContext* rc, const void * buf, uint32 bytes, uint32 stride, bool bDynamic) override;
-		virtual bool ConstructIB(LostCore::IRenderContext* rc, const void * buf, uint32 bytes, uint32 stride, bool bDynamic) override;
+		virtual void Commit() override;
+		virtual void SetVertexElement(uint32 flags) override;
+		virtual uint32 GetVertexElement() const override;
+		virtual void SetRenderOrder(ERenderOrder ro) override;
+		virtual ERenderOrder GetRenderOrder() const override;
+		virtual bool ConstructVB(const void * buf, uint32 bytes, uint32 stride, bool bDynamic) override;
+		virtual bool ConstructIB(const void * buf, uint32 bytes, uint32 stride, bool bDynamic) override;
 		virtual void SetTopology(LostCore::EPrimitiveTopology topo) override;
-		virtual void UpdateVB(LostCore::IRenderContext* rc, const void* buf, uint32 bytes) override;
+		virtual void UpdateVB(const void* buf, uint32 bytes) override;
+
+		void Draw();
 
 	private:
+		uint32 VertexElement;
+
 		TRefCountPtr<ID3D11Buffer>			VertexBuffer;
 		uint32 VertexBufferSlot;
 		uint32 VertexBufferNum;
@@ -39,6 +47,7 @@ namespace D3D11
 		DXGI_FORMAT IndexFormat;
 		bool bIsIBDynamic;
 
+		ERenderOrder RenderOrder;
 		D3D11_PRIMITIVE_TOPOLOGY Topology;
 	};
 }

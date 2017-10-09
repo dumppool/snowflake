@@ -58,7 +58,7 @@ void D3D11::FMaterial::Bind(LostCore::IRenderContext * rc)
 		}
 	}
 
-	cxt->OMSetDepthStencilState(FDepthStencilStateMap::Get()->GetState(DepthStencilName), 0);
+	//cxt->OMSetDepthStencilState(FDepthStencilStateMap::Get()->GetState(DepthStencilName), 0);
 }
 
 bool D3D11::FMaterial::InitializeShader(LostCore::IRenderContext * rc, const char * path)
