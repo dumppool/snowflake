@@ -79,7 +79,7 @@ bool D3D11::FRenderContext::InitializeScreen(HWND wnd, bool bWindowed, int32 wid
 	assert(DepthStencil == nullptr);
 	{
 		DepthStencil = new FTexture2D;
-		DepthStencil->Construct(this, width, height, SDepthStencilFormat, true, false, false, false, nullptr, 0);
+		DepthStencil->Construct(width, height, SDepthStencilFormat, true, false, false, false, nullptr, 0);
 	}
 
 	Viewport.Width = (FLOAT)width;
@@ -155,6 +155,12 @@ void D3D11::FRenderContext::CommitBuffer(FConstantBuffer * buf)
 {
 	assert(ActivedPipeline != nullptr);
 	ActivedPipeline->CommitBuffer(buf);
+}
+
+void D3D11::FRenderContext::CommitShaderResource(FTexture2D * srv)
+{
+	assert(ActivedPipeline != nullptr);
+	ActivedPipeline->CommitShaderResource(srv);
 }
 
 void D3D11::FRenderContext::ReportLiveObjects()

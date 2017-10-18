@@ -119,6 +119,7 @@ namespace D3D11
 
 		void CommitPrimitiveGroup(FPrimitiveGroup* pg);
 		void CommitBuffer(FConstantBuffer* mat);
+		void CommitShaderResource(FTexture2D* srv);
 
 	private:
 		void ReportLiveObjects();

@@ -38,8 +38,11 @@ namespace D3D11
 		FGdiFont();
 		virtual ~FGdiFont() override;
 
-		bool Initialize(LostCore::IRenderContext* rc, const LostCore::FFontConfig& config, WCHAR* chars, int32 sz) override;
-		virtual std::vector<LostCore::ITexture*> GetFontTextures() const override;
+		bool Initialize(const LostCore::FFontConfig& config, const WCHAR* chars, int32 sz) override;
+		virtual LostCore::FCharacterTexturePair GetCharacter(WCHAR c) override;
+		virtual LostCore::FFontConfig GetConfig() const override;
+		virtual void EndFrame() override;
+
 		void Destroy();
 
 		//bool DrawString(const std::string& str, 
@@ -50,5 +53,6 @@ namespace D3D11
 
 	private:
 		FGdiFontProperty Property;
+		wstring PendingCharacters;
 	};
 }

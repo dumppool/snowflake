@@ -173,7 +173,7 @@ namespace LostCore
 		vector<FFloat3> Binormals;
 
 		// ¶¥µãÉ«
-		vector<FColor96> VertexColors;
+		vector<FColor128> VertexColors;
 
 		// ¹Ç÷ÀË÷Òý
 		vector<FFloat4>	BlendWeights;
@@ -199,7 +199,7 @@ namespace LostCore
 			FFloat3				Normal;
 			FFloat3				Tangent;
 			FFloat3				Binormal;
-			FColor96			Color;
+			FColor24			Color;
 
 			bool operator==(const FVertex& rhs) const
 			{

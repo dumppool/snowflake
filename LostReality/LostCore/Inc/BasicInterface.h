@@ -21,6 +21,5 @@ namespace LostCore
 		virtual bool Config(const FJson& config) = 0;
 		virtual bool Load(const char* url) = 0;
 		virtual void Tick() = 0;
-		virtual void Draw() = 0;
 	};
 }

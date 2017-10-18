@@ -8,14 +8,14 @@
 */
 
 #include "stdafx.h"
-#include "FBXEditor.h"
-#include "BasicWorld.h"
+#include "Console/StackCounterConsole.h"
+#include "UserInterface/FontProvider.h"
 
 #include "LostCore-D3D11.h"
 using namespace D3D11;
 using namespace LostCore;
 
-class FFBXEditor : public FBasicWorld
+class FFBXEditor
 {
 	typedef function<void()> CommandType;
 
@@ -23,16 +23,8 @@ public:
 	FFBXEditor();
 	~FFBXEditor();
 
-	// FBasicWorld overridew 
-	virtual bool Config(const FJson& config) override;
-	virtual bool Load(const char* url) override;
-	virtual void Tick() override;
-	virtual void DrawPostScene() override;
-
-	virtual bool InitializeWindow(HWND wnd, bool windowed, int32 width, int32 height) override;
-	virtual FBasicCamera* GetCamera() override;
-	virtual FBasicScene* GetScene() override;
-
+	void Tick();
+	bool InitializeWindow(HWND wnd, bool windowed, int32 width, int32 height);
 	void PushCommand(const CommandType& cmd);
 	void LoadFBX(
 		const char * file,
@@ -71,7 +63,6 @@ public:
 private:
 	void Destroy();
 	void InitializeScene();
-	void StartRenderLoop();
 	void StartTickLoop();
 	void FlushNotifies();
 
@@ -89,11 +80,6 @@ private:
 
 	string OutputDir;
 
-	FCommandQueue<CommandType> RenderCommands;
-	bool bKeepRendering;
-	thread RenderThread;
-
-	// ‘›tick“≤‘⁄render loop¿Ô.
 	FCommandQueue<CommandType> TickCommands;
 	bool bKeepTicking;
 	thread TickThread;
@@ -103,6 +89,9 @@ private:
 
 	int32 ScreenWidth;
 	int32 ScreenHeight;
+
+	FBasicGUI* GUI;
+	FStackCounterConsole* Console;
 
 	static const char * const SConverterExe;
 	static const char * const SConverterOutput;
@@ -118,10 +107,11 @@ FFBXEditor::FFBXEditor()
 	, RC(nullptr)
 	, Camera(nullptr)
 	, TickCommands(true)
-	, RenderCommands(true)
 	, CurrSelectedModel(nullptr)
 	, CurrHoveredModel(nullptr)
 	, GizmoOp(nullptr)
+	, GUI(nullptr)
+	, Console(nullptr)
 {
 	char* temp = nullptr;
 	size_t sz = 0;
@@ -617,35 +607,8 @@ void FFBXEditor::UnHover()
 	}
 }
 
-bool FFBXEditor::Config(const FJson & config)
-{
-	return false;
-}
-
-bool FFBXEditor::Load(const char * url)
-{
-	return false;
-}
-
 void FFBXEditor::Tick()
 {
-	FBasicWorld::Tick();
-	if (GizmoOp != nullptr)
-	{
-		GizmoOp->Tick();
-	}
-
-	FlushNotifies();
-}
-
-void FFBXEditor::DrawPostScene()
-{
-	if (GizmoOp != nullptr)
-	{
-		GizmoOp->Draw();
-	}
-
-	FBasicWorld::DrawPostScene();
 }
 
 void FFBXEditor::Destroy()
@@ -653,26 +616,25 @@ void FFBXEditor::Destroy()
 	FGlobalHandler::Get()->SetMoveCameraCallback(nullptr);
 	FGlobalHandler::Get()->SetRotateCameraCallback(nullptr);
 
-	bKeepRendering = false;
-	if (RenderThread.joinable())
-	{
-		RenderThread.join();
-	}
-
 	bKeepTicking = false;
 	if (TickThread.joinable())
 	{
 		TickThread.join();
 	}
 
+	SAFE_DELETE(Console);
+	SAFE_DELETE(GUI);
+
+	FFontProvider::Get()->Destroy();
+
 	SAFE_DELETE(GizmoOp);
 
 	CurrSelectedModel = nullptr;
 	CurrHoveredModel = nullptr;
 
-	SAFE_DELETE(RC);
 	SAFE_DELETE(Scene);
 	SAFE_DELETE(Camera);
+	SAFE_DELETE(RC);
 
 	FGlobalHandler::Get()->SetRenderContextPP(nullptr);
 }
@@ -691,8 +653,15 @@ bool FFBXEditor::InitializeWindow(HWND wnd, bool windowed, int32 width, int32 he
 			Log(ELogFlag::LogError, "failed to load gizmo config: %s", "axis.json");
 		}
 
-		RenderThread = thread([=]() {this->StartRenderLoop(); });
-		//TickThread = thread([=]() {this->StartTickLoop(); });
+		FFontProvider::Get()->Initialize();
+
+		GUI = new FBasicGUI;
+		GUI->Initialize(FFloat2(width, height));
+
+		Console = new FStackCounterConsole;
+		Console->Initialize(GUI->GetRoot());
+
+		TickThread = thread([=]() {this->StartTickLoop(); });
 		return true;
 	}
 	else
@@ -701,20 +670,10 @@ bool FFBXEditor::InitializeWindow(HWND wnd, bool windowed, int32 width, int32 he
 	}
 }
 
-FBasicCamera * FFBXEditor::GetCamera()
+void FFBXEditor::StartTickLoop()
 {
-	return Camera;
-}
-
-FBasicScene * FFBXEditor::GetScene()
-{
-	return Scene;
-}
-
-void FFBXEditor::StartRenderLoop()
-{
-	bKeepRendering = true;
-	while (bKeepRendering) 
+	bKeepTicking = true;
+	while (bKeepTicking) 
 	{
 		static auto SLastStamp = chrono::system_clock::now();
 		auto now = chrono::system_clock::now();
@@ -723,35 +682,54 @@ void FFBXEditor::StartRenderLoop()
 
 		FGlobalHandler::Get()->SetFrameTime(sec.count());
 
-		RenderCommands.Swap(TickCommands);
 		CommandType cmd;
-		while (RenderCommands.Pop(cmd))
+		while (TickCommands.Pop(cmd))
 		{
 			cmd();
 		}
 
-		
-		Tick();
-		Draw();
+		auto rc = FGlobalHandler::Get()->GetRenderContext();
+		if (rc != nullptr)
+		{
+			FlushNotifies();
+
+			if (Scene != nullptr)
+			{
+				Scene->Tick();
+			}
+
+			if (GizmoOp != nullptr)
+			{
+				GizmoOp->Tick();
+			}
+
+			if (Camera != nullptr)
+			{
+				Camera->Tick();
+			}
+
+			if (Console != nullptr)
+			{
+				Console->FinishCounting();
+			}
+
+			if (GUI != nullptr)
+			{
+				GUI->Tick();
+			}
+
+			rc->BeginFrame();
+			rc->EndFrame();
+
+			FFontProvider::Get()->EndFrame();
+
+			if (Console != nullptr)
+			{
+				Console->FinishDisplay();
+			}
+		}
 
 		this_thread::sleep_for(chrono::milliseconds(1));
-	}
-
-	LVMSG("FFBXEditor::StartRenderLoop", "Loop finished");
-}
-
-void FFBXEditor::StartTickLoop()
-{
-	bKeepTicking = true;
-	while (bKeepTicking)
-	{
-		CommandType cmd;
-		while (RenderCommands.Pop(cmd))
-		{
-			cmd();
-		}
-
-		Tick();
 	}
 
 	LVMSG("FFBXEditor::StartTickLoop", "Loop finished");
@@ -759,6 +737,9 @@ void FFBXEditor::StartTickLoop()
 
 void FFBXEditor::FlushNotifies()
 {
+	static FStackCounterRequest SCounter("FFBXEditor::FlushNotifies");
+	FScopedStackCounterRequest req(SCounter);
+
 	string name;
 	FFloat3 pos, rot;
 	if (CurrSelectedModel != nullptr)
@@ -793,6 +774,9 @@ void FFBXEditor::Log(ELogFlag level, const char * fmt, ...)
 
 FBasicModel * FFBXEditor::ScreenRayTest(int32 x, int32 y)
 {
+	//static FStackCounterRequest SCounter("FFBXEditor::ScreenRayTest");
+	//FScopedStackCounterRequest req(SCounter);
+
 	if (Camera == nullptr || Scene == nullptr)
 	{
 		return nullptr;

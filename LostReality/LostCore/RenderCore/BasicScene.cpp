@@ -36,17 +36,6 @@ void FBasicScene::Tick()
 	}
 }
 
-void FBasicScene::Draw()
-{
-	for (auto sm : Models)
-	{
-		if (sm != nullptr)
-		{
-			sm->Draw();
-		}
-	}
-}
-
 bool LostCore::FBasicScene::Config(const FJson & config)
 {
 	if (config.find(K_NODES) != config.end())

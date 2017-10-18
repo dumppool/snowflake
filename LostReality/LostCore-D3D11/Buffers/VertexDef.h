@@ -77,8 +77,8 @@ namespace D3D11
 
 				if (HAS_FLAGS(VERTEX_COLOR, flags))
 				{
-					item.push_back({ SEMANTICS_COLOR, 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, offset, D3D11_INPUT_PER_VERTEX_DATA, 0 });
-					offset += sizeof(float) * 3;
+					item.push_back({ SEMANTICS_COLOR, 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, offset, D3D11_INPUT_PER_VERTEX_DATA, 0 });
+					offset += sizeof(float) * 4;
 					semantics.append("|").append(SEMANTICS_COLOR);
 				}
 

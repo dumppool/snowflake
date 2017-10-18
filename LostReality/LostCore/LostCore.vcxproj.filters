@@ -10,9 +10,6 @@
     <ClInclude Include="Inc\BasicScene.h">
       <Filter>Inc</Filter>
     </ClInclude>
-    <ClInclude Include="Inc\BasicWorld.h">
-      <Filter>Inc</Filter>
-    </ClInclude>
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Inc\Math\Matrix.h">
       <Filter>Inc\Math</Filter>
@@ -46,9 +43,6 @@
     </ClInclude>
     <ClInclude Include="Inc\BasicGUI.h">
       <Filter>Inc</Filter>
-    </ClInclude>
-    <ClInclude Include="RenderCore\FontProvider.h">
-      <Filter>RenderCore</Filter>
     </ClInclude>
     <ClInclude Include="Inc\Animation.h">
       <Filter>Inc</Filter>
@@ -161,13 +155,22 @@
     <ClInclude Include="Inc\CameraFactory.h">
       <Filter>Inc</Filter>
     </ClInclude>
+    <ClInclude Include="RenderCore\UserInterface\FontProvider.h">
+      <Filter>RenderCore\UserInterface</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderCore\UserInterface\TextBox.h">
+      <Filter>RenderCore\UserInterface</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderCore\Console\StackCounterConsole.h">
+      <Filter>RenderCore\Console</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderCore\UserInterface\ListBox.h">
+      <Filter>RenderCore\UserInterface</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="stdafx.cpp" />
-    <ClCompile Include="RenderCore\BasicWorld.cpp">
-      <Filter>RenderCore</Filter>
-    </ClCompile>
     <ClCompile Include="Src\LostCore.cpp">
       <Filter>Src</Filter>
     </ClCompile>
@@ -175,12 +178,6 @@
       <Filter>RenderCore</Filter>
     </ClCompile>
     <ClCompile Include="RenderCore\BasicCamera.cpp">
-      <Filter>RenderCore</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderCore\BasicGUI.cpp">
-      <Filter>RenderCore</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderCore\FontProvider.cpp">
       <Filter>RenderCore</Filter>
     </ClCompile>
     <ClCompile Include="RenderCore\Skeleton\Animation.cpp">
@@ -209,6 +206,21 @@
     </ClCompile>
     <ClCompile Include="RenderCore\CameraFactory.cpp">
       <Filter>RenderCore</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderCore\UserInterface\BasicGUI.cpp">
+      <Filter>RenderCore\UserInterface</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderCore\UserInterface\TextBox.cpp">
+      <Filter>RenderCore\UserInterface</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderCore\UserInterface\FontProvider.cpp">
+      <Filter>RenderCore\UserInterface</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderCore\Console\StackCounterConsole.cpp">
+      <Filter>RenderCore\Console</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderCore\UserInterface\ListBox.cpp">
+      <Filter>RenderCore\UserInterface</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -250,6 +262,12 @@
     </Filter>
     <Filter Include="Inc\Interface">
       <UniqueIdentifier>{f333c99e-de8e-4923-9198-64d07ee84dd7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RenderCore\UserInterface">
+      <UniqueIdentifier>{0f82f836-1cd1-49f9-b332-a1104ddd1223}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RenderCore\Console">
+      <UniqueIdentifier>{181b7b0e-b729-4448-ae6f-d1637e9592ef}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

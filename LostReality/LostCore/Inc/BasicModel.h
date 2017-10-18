@@ -29,7 +29,6 @@ namespace LostCore
 		virtual bool Config(const FJson& config);
 		virtual FJson Save();
 		virtual void Tick();
-		virtual void Draw();
 
 		virtual void SetWorldMatrix(const FFloat4x4& world) = 0;
 		virtual FFloat4x4 GetWorldMatrix() = 0;
@@ -59,8 +58,8 @@ namespace LostCore
 		virtual void UpdateConstant();
 		virtual void UpdateGizmosBoundingBox();
 
-		virtual void DrawGizmos();
-		virtual void DrawModel();
+		virtual void CommitGizmos();
+		virtual void CommitModel();
 
 		FSegmentTool* GetSegmentRenderer();
 
@@ -95,7 +94,7 @@ namespace LostCore
 	protected:
 		virtual bool ConfigMaterial(const string& url) override;
 		virtual void UpdateConstant() override;
-		virtual void DrawGizmos() override;
+		virtual void CommitGizmos() override;
 		//virtual void RayTest() = 0;
 
 		void UpdateGizmosNormalTangent();
@@ -128,7 +127,7 @@ namespace LostCore
 		virtual bool ConfigPrimitive(const string& url, IPrimitiveGroup*& pg, FMeshData& pgdata) override;
 		virtual bool ConfigMaterial(const string& url) override;
 
-		virtual void DrawGizmos();
+		virtual void CommitGizmos();
 
 		void UpdateGizmosNormalTangent();
 		void UpdateGizmosSkeleton();

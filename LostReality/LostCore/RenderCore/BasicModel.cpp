@@ -82,17 +82,17 @@ FJson LostCore::FBasicModel::Save()
 
 void LostCore::FBasicModel::Tick()
 {
+	static FStackCounterRequest SCounter("FBasicModel::Tick");
+	FScopedStackCounterRequest scopedCounter(SCounter);
+
 	UpdateConstant();
 	UpdateGizmosBoundingBox();
+
+	CommitModel();
+	CommitGizmos();
 }
 
-void LostCore::FBasicModel::Draw()
-{
-	DrawModel();
-	DrawGizmos();
-}
-
-void LostCore::FBasicModel::DrawModel()
+void LostCore::FBasicModel::CommitModel()
 {
 	auto rc = FGlobalHandler::Get()->GetRenderContext();
 	auto sec = FGlobalHandler::Get()->GetFrameTime();
@@ -189,7 +189,7 @@ void LostCore::FBasicModel::UpdateGizmosBoundingBox()
 		auto ptMin = world.ApplyPoint(BoundingBox.Min);
 		auto ptMax = world.ApplyPoint(BoundingBox.Max);
 
-		const FColor96 col((uint32)0xffff00);
+		const FColor128 col((uint32)0xffff00);
 		FSegmentData seg;
 		seg.StartPtColor = seg.StopPtColor = col;
 
@@ -246,9 +246,9 @@ void LostCore::FBasicModel::UpdateGizmosBoundingBox()
 	}
 }
 
-void LostCore::FBasicModel::DrawGizmos()
+void LostCore::FBasicModel::CommitGizmos()
 {
-	SegmentRenderer.Draw();
+	SegmentRenderer.Commit();
 }
 
 IPrimitiveGroup * LostCore::FBasicModel::GetPrimitive()
@@ -430,10 +430,10 @@ void LostCore::FStaticModel::UpdateConstant()
 	}
 }
 
-void LostCore::FStaticModel::DrawGizmos()
+void LostCore::FStaticModel::CommitGizmos()
 {
-	FBasicModel::DrawGizmos();
-	AxisRenderer.Draw();
+	FBasicModel::CommitGizmos();
+	AxisRenderer.Commit();
 }
 
 void LostCore::FStaticModel::UpdateGizmosNormalTangent()
@@ -455,8 +455,8 @@ void LostCore::FStaticModel::UpdateGizmosNormalTangent()
 		return;
 	}
 
-	const FColor96 normalColor((uint32)0x0000ff);
-	const FColor96 endColor((uint32)0xffffff);
+	const FColor128 normalColor((uint32)0x0000ff);
+	const FColor128 endColor((uint32)0xffffff);
 	const float segLen = FGlobalHandler::Get()->GetDisplayNormalLength();
 	auto& world = World.Matrix;
 	for (uint32 i = 0; i < prim.Coordinates.size(); ++i)
@@ -618,11 +618,11 @@ bool LostCore::FSkeletalModel::ConfigMaterial(const string & url)
 	return success;
 }
 
-void LostCore::FSkeletalModel::DrawGizmos()
+void LostCore::FSkeletalModel::CommitGizmos()
 {
-	FBasicModel::DrawGizmos();
-	AxisRenderer.Draw();
-	SkeletonRenderer.Draw();
+	FBasicModel::CommitGizmos();
+	AxisRenderer.Commit();
+	SkeletonRenderer.Commit();
 }
 
 void LostCore::FSkeletalModel::UpdateGizmosNormalTangent()
@@ -645,8 +645,8 @@ void LostCore::FSkeletalModel::UpdateGizmosNormalTangent()
 		return;
 	}
 
-	const FColor96 normalColor((uint32)0x0000ff);
-	const FColor96 endColor((uint32)0xffffff);
+	const FColor128 normalColor((uint32)0x0000ff);
+	const FColor128 endColor((uint32)0xffffff);
 	const float segLen = FGlobalHandler::Get()->GetDisplayNormalLength();
 	for (uint32 i = 0; i < prim.Coordinates.size(); ++i)
 	{
@@ -748,8 +748,8 @@ void LostCore::FSkeletalModel::UpdateGizmosSkeleton()
 		{
 			FSegmentData seg;
 			seg.StartPt = skel.second.first;
-			seg.StartPtColor = FColor96((uint32)0x80ff40);
-			seg.StopPtColor = FColor96((uint32)0xffffff);
+			seg.StartPtColor = FColor128((uint32)0x80ff40);
+			seg.StopPtColor = FColor128((uint32)0xffffff);
 			for (auto & childSkel : skel.second.second)
 			{
 				seg.StopPt = childSkel;

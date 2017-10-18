@@ -10,6 +10,7 @@
 #include "GdiFont.h"
 #include "Implements/Texture.h"
 
+using namespace LostCore;
 using namespace D3D11;
 using namespace Gdiplus;
 
@@ -26,7 +27,7 @@ D3D11::FGdiFont::~FGdiFont()
 	Destroy();
 }
 
-bool D3D11::FGdiFont::Initialize(LostCore::IRenderContext* rc, const LostCore::FFontConfig & config, WCHAR* chars, int32 sz)
+bool D3D11::FGdiFont::Initialize(const LostCore::FFontConfig & config, const WCHAR* chars, int32 sz)
 {
 	const char* head = "D3D11::FGdiFont::Initialize";
 
@@ -268,7 +269,7 @@ bool D3D11::FGdiFont::Initialize(LostCore::IRenderContext* rc, const LostCore::F
 		RETURN_FALSE;
 	}
 
-	Property.FontTexture->Construct(rc, STexWidth, Property.TexHeight, DXGI_FORMAT_B8G8R8A8_UNORM, false, false, true, false, bmpData.Scan0, STexWidth * 4);
+	Property.FontTexture->Construct(STexWidth, Property.TexHeight, DXGI_FORMAT_B8G8R8A8_UNORM, false, false, true, false, bmpData.Scan0, STexWidth * 4);
 
 	bmp3.UnlockBits(&bmpData);
 
@@ -276,11 +277,30 @@ bool D3D11::FGdiFont::Initialize(LostCore::IRenderContext* rc, const LostCore::F
 	return true;
 }
 
-std::vector<LostCore::ITexture*> D3D11::FGdiFont::GetFontTextures() const
+LostCore::FCharacterTexturePair D3D11::FGdiFont::GetCharacter(WCHAR c)
 {
-	std::vector<LostCore::ITexture*> ret;
-	ret.push_back(Property.FontTexture);
-	return ret;
+	auto it = Property.CharDesc.find(FCharDesc(c));
+	if (it == Property.CharDesc.end())
+	{
+		PendingCharacters.append(&c);
+		return FCharacterTexturePair(FCharDesc(), nullptr);
+	}
+
+	return FCharacterTexturePair(FCharDesc(it->Char, it->X, it->Y, it->Width, it->Height), Property.FontTexture);
+}
+
+LostCore::FFontConfig D3D11::FGdiFont::GetConfig() const
+{
+	return Property.Config;
+}
+
+void D3D11::FGdiFont::EndFrame()
+{
+	if (!PendingCharacters.empty())
+	{
+		Initialize(Property.Config, PendingCharacters.data(), PendingCharacters.length());
+		PendingCharacters.clear();
+	}
 }
 
 void D3D11::FGdiFont::Destroy()
@@ -289,5 +309,6 @@ void D3D11::FGdiFont::Destroy()
 }
 
 D3D11::FGdiFontProperty::FGdiFontProperty()
+	: FontTexture(nullptr)
 {
 }

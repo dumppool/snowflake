@@ -59,11 +59,6 @@ FJson LostCore::FBasicCamera::Save()
 
 void LostCore::FBasicCamera::Tick()
 {
-
-}
-
-void LostCore::FBasicCamera::Draw()
-{
 	auto rc = FGlobalHandler::Get()->GetRenderContext();
 	if (rc != nullptr)
 	{

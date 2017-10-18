@@ -13,6 +13,7 @@ namespace D3D11
 	{
 		FPrimitiveGroup* PrimitiveGroup;
 		vector<FConstantBuffer*> ConstantBuffers;
+		vector<FTexture2D*> ShaderResources;
 
 		FRenderObject();
 

@@ -66,7 +66,7 @@ namespace LostCore
 
 		if (HAS_FLAGS(VERTEX_COLOR, flags))
 		{
-			offset += sizeof(float) * 3;
+			offset += sizeof(float) * 4;
 			name.append("_color");
 		}
 

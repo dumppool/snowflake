@@ -18,6 +18,12 @@ namespace LostCore
 		float ScreenWidthRcp;
 		float ScreenHeightRcp;
 		LostCore::FFloat4x4 ViewProject;
+		FColor128 AmbientColor;
+		FColor128 DirectionalLitColor;
+		FFloat3 DirectionalLitDir;
+		FColor128 PointLitColor;
+		FFloat3 PointLitPosition;
+		float Unused[2];
 
 		FGlobalParameter GetBuffer() const
 		{
@@ -66,6 +72,13 @@ namespace LostCore
 
 		FFloat3 Unused;
 
+		FRectParameter(const FFloat2& size, const FFloat2 origin, float scale)
+			: Size(size)
+			, Origin(origin)
+			, Scale(scale)
+		{
+		}
+
 		FRectParameter()
 			: Size(0.f, 0.f)
 			, Origin(0.f, 0.f)
@@ -84,7 +97,7 @@ namespace LostCore
 		FColor128 Color;
 
 		FCustomParameter()
-			: Color((uint32)0x0)
+			: Color(0x0)
 		{}
 
 		FCustomParameter GetBuffer() const

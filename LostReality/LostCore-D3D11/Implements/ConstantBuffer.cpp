@@ -41,9 +41,10 @@ bool D3D11::FConstantBuffer::Initialize(int32 byteWidth, bool dynamic)
 	desc.CPUAccessFlags = bDynamic ? D3D11_CPU_ACCESS_WRITE : 0;
 	desc.ByteWidth = ByteWidth;
 
-	if (FAILED(device->CreateBuffer(&desc, nullptr, Buffer.GetInitReference())))
+	auto hr = device->CreateBuffer(&desc, nullptr, Buffer.GetInitReference());
+	if (FAILED(hr))
 	{
-		LVERR(head, "create buffer failed");
+		LVERR(head, "create buffer failed: 0x%08x(%d).", hr, hr);
 		return false;
 	}
 
@@ -100,27 +101,27 @@ void D3D11::FConstantBuffer::Bind()
 		cxt->VSSetConstantBuffers(ShaderSlot, 1, &ref);
 	}
 
-	if (HAS_FLAGS(SHADER_FLAG_VS, ShaderFlags))
+	if (HAS_FLAGS(SHADER_FLAG_PS, ShaderFlags))
 	{
 		cxt->PSSetConstantBuffers(ShaderSlot, 1, &ref);
 	}
 
-	if (HAS_FLAGS(SHADER_FLAG_VS, ShaderFlags))
+	if (HAS_FLAGS(SHADER_FLAG_GS, ShaderFlags))
 	{
 		cxt->GSSetConstantBuffers(ShaderSlot, 1, &ref);
 	}
 
-	if (HAS_FLAGS(SHADER_FLAG_VS, ShaderFlags))
+	if (HAS_FLAGS(SHADER_FLAG_HS, ShaderFlags))
 	{
 		cxt->HSSetConstantBuffers(ShaderSlot, 1, &ref);
 	}
 
-	if (HAS_FLAGS(SHADER_FLAG_VS, ShaderFlags))
+	if (HAS_FLAGS(SHADER_FLAG_DS, ShaderFlags))
 	{
 		cxt->DSSetConstantBuffers(ShaderSlot, 1, &ref);
 	}
 
-	if (HAS_FLAGS(SHADER_FLAG_VS, ShaderFlags))
+	if (HAS_FLAGS(SHADER_FLAG_CS, ShaderFlags))
 	{
 		cxt->CSSetConstantBuffers(ShaderSlot, 1, &ref);
 	}

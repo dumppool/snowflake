@@ -19,4 +19,5 @@ void D3D11::FRenderObject::Reset()
 {
 	PrimitiveGroup = nullptr;
 	ConstantBuffers.clear();
+	ShaderResources.clear();
 }

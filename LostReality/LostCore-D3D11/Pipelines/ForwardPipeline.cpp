@@ -12,7 +12,13 @@
 
 #include "Implements/ConstantBuffer.h"
 #include "Implements/PrimitiveGroup.h"
+#include "Implements/Texture.h"
+#include "States/DepthStencilStateDef.h"
+#include "States/BlendStateDef.h"
+#include "States/RasterizerStateDef.h"
 #include "Src/ShaderManager.h"
+
+using namespace LostCore;
 
 D3D11::FForwardPipeline::FForwardPipeline()
 {
@@ -47,25 +53,31 @@ EPipeline D3D11::FForwardPipeline::GetEnum() const
 
 void D3D11::FForwardPipeline::CommitPrimitiveGroup(FPrimitiveGroup * pg)
 {
-	if (pg != nullptr)
-	{
-		Commiting.PrimitiveGroup = pg;
-		auto& objs = RenderObjects.find(pg->GetRenderOrder());
-		objs->second.push_back(Commiting);
-		Commiting.Reset();
-	}
+	static FStackCounterRequest SCounter("FForwardPipeline::CommitPrimitiveGroup");
+	FScopedStackCounterRequest scopedCounter(SCounter);
+
+	assert(pg != nullptr);
+	Commiting.PrimitiveGroup = pg;
+	auto& objs = RenderObjects.find(pg->GetRenderOrder());
+	objs->second.push_back(Commiting);
+	Commiting.Reset();
 }
 
 void D3D11::FForwardPipeline::CommitBuffer(FConstantBuffer * buf)
 {
-	if (buf != nullptr)
-	{
-		Commiting.ConstantBuffers.push_back(buf);
-	}
+	assert(buf != nullptr);
+	Commiting.ConstantBuffers.push_back(buf);
+}
+
+void D3D11::FForwardPipeline::CommitShaderResource(FTexture2D * tex)
+{
+	assert(tex != nullptr);
+	Commiting.ShaderResources.push_back(tex);
 }
 
 void D3D11::FForwardPipeline::BeginFrame()
 {
+	Commiting.Reset();
 }
 
 void D3D11::FForwardPipeline::EndFrame()
@@ -73,9 +85,57 @@ void D3D11::FForwardPipeline::EndFrame()
 }
 
 void D3D11::FForwardPipeline::Render()
-{ 
+{
+	static FStackCounterRequest SCounter("FForwardPipeline::Render");
+	FScopedStackCounterRequest scopedCounter(SCounter);
+
+	auto cxt = FRenderContext::GetDeviceContext("FForwardPipeline::Render");
+
 	for (auto& objs : RenderObjects)
 	{
+		if (objs.first == ERenderOrder::Opacity)
+		{
+			auto ds = FDepthStencilStateMap::Get()->GetState(DS_DEPTH_READ | DS_DEPTH_WRITE);
+			cxt->OMSetDepthStencilState(ds.GetReference(), 0);
+
+			auto blendMode = EBlendMode::None;
+			auto blendWrite = EBlendWrite::RGB;
+			uint32 blendFlags = (uint8(blendMode) << BLEND_MODE_OFFSET) | (uint8(blendWrite) << BLEND_WRITE_OFFSET);
+			auto blend = FBlendStateMap::Get()->GetState(blendFlags);
+			cxt->OMSetBlendState(blend.GetReference(), nullptr, ~0);
+
+			auto rs = FRasterizerStateMap::Get()->GetState(RAS_CULL_BACK);
+			cxt->RSSetState(rs.GetReference());
+		}
+		else if (objs.first == ERenderOrder::Translucent)
+		{
+			auto ds = FDepthStencilStateMap::Get()->GetState(DS_DEPTH_READ);
+			cxt->OMSetDepthStencilState(ds.GetReference(), 0);
+
+			auto blendMode = EBlendMode::AlphaBlend;
+			auto blendWrite = EBlendWrite::RGBA;
+			uint32 blendFlags = (uint8(blendMode) << BLEND_MODE_OFFSET) | (uint8(blendWrite) << BLEND_WRITE_OFFSET);
+			auto blend = FBlendStateMap::Get()->GetState(blendFlags);
+			cxt->OMSetBlendState(blend.GetReference(), nullptr, ~0);
+
+			auto rs = FRasterizerStateMap::Get()->GetState(RAS_CULL_BACK);
+			cxt->RSSetState(rs.GetReference());
+		}
+		else if (objs.first == ERenderOrder::UI)
+		{
+			auto ds = FDepthStencilStateMap::Get()->GetState(0);
+			cxt->OMSetDepthStencilState(ds.GetReference(), 0);
+
+			auto blendMode = EBlendMode::AlphaBlend;
+			auto blendWrite = EBlendWrite::RGBA;
+			uint32 blendFlags = (uint8(blendMode) << BLEND_MODE_OFFSET) | (uint8(blendWrite) << BLEND_WRITE_OFFSET);
+			auto blend = FBlendStateMap::Get()->GetState(blendFlags);
+			cxt->OMSetBlendState(blend.GetReference(), nullptr, ~0);
+
+			auto rs = FRasterizerStateMap::Get()->GetState(RAS_CULL_BACK);
+			cxt->RSSetState(rs.GetReference());
+		}
+
 		for (auto& obj : objs.second)
 		{
 			FShaderKey key;
@@ -86,6 +146,11 @@ void D3D11::FForwardPipeline::Render()
 			for (auto buf : obj.ConstantBuffers)
 			{
 				buf->Bind();
+			}
+
+			for (auto tex : obj.ShaderResources)
+			{
+				tex->BindShaderResource(cxt);
 			}
 
 			obj.PrimitiveGroup->Draw();

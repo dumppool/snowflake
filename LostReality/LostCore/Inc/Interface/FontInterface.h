@@ -134,11 +134,22 @@ namespace LostCore
 		}
 	};
 
+	struct FCharacterTexturePair
+	{
+		FCharDesc Desc;
+		ITexture* Texture;
+
+		FCharacterTexturePair(const FCharDesc& desc, ITexture* tex) : Desc(desc), Texture(tex) {}
+		FCharacterTexturePair() : FCharacterTexturePair(FCharDesc(), nullptr) {}
+	};
+
 	class IFontInterface
 	{
 	public:
 		virtual ~IFontInterface() {}
-		virtual bool Initialize(LostCore::IRenderContext* rc, const LostCore::FFontConfig& config, WCHAR* chars, int32 sz) = 0;
-		virtual std::vector<ITexture*> GetFontTextures() const = 0;
+		virtual bool Initialize(const LostCore::FFontConfig& config, const WCHAR* chars, int32 sz) = 0;
+		virtual FCharacterTexturePair GetCharacter(WCHAR c) = 0;
+		virtual FFontConfig GetConfig() const = 0;
+		virtual void EndFrame() = 0;
 	};
 }

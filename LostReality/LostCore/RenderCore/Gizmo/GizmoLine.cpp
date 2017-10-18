@@ -106,7 +106,7 @@ void LostCore::FSegmentTool::DestroyPrimitive()
 	bConstructed = false;
 }
 
-void LostCore::FSegmentTool::Draw()
+void LostCore::FSegmentTool::Commit()
 {
 	if (Data.size() == 0)
 	{

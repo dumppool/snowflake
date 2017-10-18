@@ -1,6 +1,7 @@
 {
 	"Material": "res/material/",
-	"Shader": "res/shader/",
+	"ShaderCode": "res/ShaderCode/",
+	"ShaderBlob": "res/ShaderBlob/",
 	"Primitive": "res/primitive/",
 	"Model": "res/model/",
 	"Scene": "res/scene/",

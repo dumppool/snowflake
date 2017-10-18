@@ -27,6 +27,7 @@ namespace D3D11
 
 		virtual void CommitPrimitiveGroup(FPrimitiveGroup* pg) = 0;
 		virtual void CommitBuffer(FConstantBuffer* buf) = 0;
+		virtual void CommitShaderResource(FTexture2D* tex) = 0;
 
 		virtual void BeginFrame() = 0;
 		virtual void EndFrame() = 0;

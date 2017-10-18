@@ -15,8 +15,9 @@ namespace D3D11
 	Constant buffer
 	*/
 
-	struct FConstantBuffer : public LostCore::IConstantBuffer
+	class FConstantBuffer : public LostCore::IConstantBuffer
 	{
+	public:
 		FConstantBuffer();
 		virtual ~FConstantBuffer() override;
 

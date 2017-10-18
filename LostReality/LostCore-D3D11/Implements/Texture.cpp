@@ -35,8 +35,51 @@ D3D11::FTexture2D::~FTexture2D()
 	AccessFlags = 0x0;
 }
 
+void D3D11::FTexture2D::CommitShaderResource()
+{
+	FRenderContext::Get()->CommitShaderResource(this);
+}
+
+int32 D3D11::FTexture2D::GetWidth() const
+{
+	return Width;
+}
+
+int32 D3D11::FTexture2D::GetHeight() const
+{
+	return Height;
+}
+
+void D3D11::FTexture2D::SetShaderResourceSlot(int32 slot)
+{
+	ShaderResourceSlot = slot;
+}
+
+void D3D11::FTexture2D::SetRenderTargetSlot(int32 slot)
+{
+	RenderTargetSlot = slot;
+}
+
+void D3D11::FTexture2D::BindShaderResource(TRefCountPtr<ID3D11DeviceContext>& cxt)
+{
+	assert(IsShaderResource());
+	auto srv = ShaderResource.GetReference();
+	auto sampler = Sampler.GetReference();
+	cxt->PSSetShaderResources(ShaderResourceSlot, 1, &srv);
+	cxt->PSSetSamplers(ShaderResourceSlot, 1, &sampler);
+}
+
+int32 D3D11::FTexture2D::GetShaderResourceSlot() const
+{
+	return ShaderResourceSlot;
+}
+
+int32 D3D11::FTexture2D::GetRenderTargetSlot() const
+{
+	return RenderTargetSlot;
+}
+
 bool D3D11::FTexture2D::Construct(
-	IRenderContext* rc,
 	uint32 width, 
 	uint32 height, 
 	uint32 format, 

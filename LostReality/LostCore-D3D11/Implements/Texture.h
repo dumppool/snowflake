@@ -17,33 +17,33 @@ namespace D3D11
 		FTexture2D();
 		virtual ~FTexture2D() override;
 
-		// Í¨¹ý ITexture ¼Ì³Ð
+		virtual void CommitShaderResource() override;
+		virtual int32 GetWidth() const override;
+		virtual int32 GetHeight() const override;
 
-		virtual bool Construct(
-			LostCore::IRenderContext* rc,
-			uint32 width, 
-			uint32 height, 
-			uint32 format, 
-			bool bIsDepthStencil, 
-			bool bIsRenderTarget, 
-			bool bIsShaderResource,
-			bool bIsWritable,
-			void* initialData, 
-			uint32 initialPitch);
-
-		virtual int32 GetWidth() const override
-		{
-			return Width;
-		}
-
-		virtual int32 GetHeight() const override
-		{
-			return Height;
-		}
-
-		virtual bool ConstructFromSwapChain(const TRefCountPtr<IDXGISwapChain>& swapChain);
+		virtual void SetShaderResourceSlot(int32 slot) override;
+		virtual void SetRenderTargetSlot(int32 slot) override;
 
 	public:
+
+		void BindShaderResource(TRefCountPtr<ID3D11DeviceContext>& cxt);
+
+		int32 GetShaderResourceSlot() const;
+		int32 GetRenderTargetSlot() const;
+
+		bool Construct(
+			uint32 width,
+			uint32 height,
+			uint32 format,
+			bool bIsDepthStencil,
+			bool bIsRenderTarget,
+			bool bIsShaderResource,
+			bool bIsWritable,
+			void* initialData,
+			uint32 initialPitch);
+
+		bool ConstructFromSwapChain(const TRefCountPtr<IDXGISwapChain>& swapChain);
+
 		bool IsRenderTarget() const;
 		TRefCountPtr<ID3D11ShaderResourceView> GetShaderResourceRHI();
 
@@ -70,5 +70,8 @@ namespace D3D11
 
 		int32 Width;
 		int32 Height;
+
+		int32 ShaderResourceSlot;
+		int32 RenderTargetSlot;
 	};
 }

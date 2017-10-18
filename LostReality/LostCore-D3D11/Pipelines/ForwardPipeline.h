@@ -26,6 +26,7 @@ namespace D3D11
 		virtual EPipeline GetEnum() const override;
 		virtual void CommitPrimitiveGroup(FPrimitiveGroup* pg) override;
 		virtual void CommitBuffer(FConstantBuffer* buf) override;
+		virtual void CommitShaderResource(FTexture2D* tex) override;
 		virtual void BeginFrame() override;
 		virtual void EndFrame() override;
 		virtual void Render() override;

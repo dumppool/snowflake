@@ -17,9 +17,9 @@ using namespace std;
 using namespace LostCore;
 
 LostCore::FAxisRenderer::FAxisRenderer()
-	: ColorAxisX((uint32)0xff0000)
-	, ColorAxisY((uint32)0x0000ff)
-	, ColorAxisZ((uint32)0x00ff00)
+	: ColorAxisX(0xff0000)
+	, ColorAxisY(0x0000ff)
+	, ColorAxisZ(0x00ff00)
 {
 	ResetData();
 }
@@ -29,7 +29,7 @@ void LostCore::FAxisRenderer::ResetData()
 	Data.clear();
 }
 
-void LostCore::FAxisRenderer::Draw()
+void LostCore::FAxisRenderer::Commit()
 {
 	if (Data.size() == 0)
 	{
@@ -63,7 +63,7 @@ void LostCore::FAxisRenderer::Draw()
 	}
 
 	SegmentTool.SetWorldMatrix(World);
-	SegmentTool.Draw();
+	SegmentTool.Commit();
 }
 
 void LostCore::FAxisRenderer::AddAxis(const FAxisData & axis)
@@ -76,7 +76,7 @@ void LostCore::FAxisRenderer::SetWorldMatrix(const FFloat4x4 & mat)
 	World = mat;
 }
 
-void LostCore::FAxisRenderer::SetColor(const FColor96 & colX, const FColor96 & colY, const FColor96 & colZ)
+void LostCore::FAxisRenderer::SetColor(const FColor128 & colX, const FColor128 & colY, const FColor128 & colZ)
 {
 	ColorAxisX = colX;
 	ColorAxisY = colY;

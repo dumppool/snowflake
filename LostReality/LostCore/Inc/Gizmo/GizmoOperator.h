@@ -32,7 +32,6 @@ namespace LostCore
 		void EndDrag();
 
 		void Tick();
-		void Draw();
 
 		void SetTarget(FBasicModel* target);
 		FBasicModel* GetTarget();

@@ -45,18 +45,18 @@ namespace LostCore
 		FFloat4x4 World;
 		vector<FAxisData> Data;
 
-		FColor96 ColorAxisX;
-		FColor96 ColorAxisY;
-		FColor96 ColorAxisZ;
+		FColor128 ColorAxisX;
+		FColor128 ColorAxisY;
+		FColor128 ColorAxisZ;
 
 	public:
 		FAxisRenderer();
 
 		void ResetData();
-		void Draw();
+		void Commit();
 		void AddAxis(const FAxisData& axis);
 		void SetWorldMatrix(const FFloat4x4& mat);
-		void SetColor(const FColor96& colX, const FColor96& colY, const FColor96& colZ);
+		void SetColor(const FColor128& colX, const FColor128& colY, const FColor128& colZ);
 
 		static FAxisRenderer* Get()
 		{

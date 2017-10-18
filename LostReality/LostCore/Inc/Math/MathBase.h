@@ -56,6 +56,12 @@ namespace LostCore
 	static const float SD2RConstant = SPI / 180.f;
 	static const float SR2DConstant = 180.f / SPI;
 
+	template<typename T>
+	FORCEINLINE T Max(const T& left, const T& right)
+	{
+		return (left > right) ? left : right;
+	}
+
 	template <typename T>
 	FORCEINLINE bool IsZero(T value, T tolerance = (T)SSmallFloat)
 	{

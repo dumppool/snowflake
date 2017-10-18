@@ -40,7 +40,7 @@ bool LostCore::FGizmoOperator::Config(const FJson & config)
 			comp.Id = EOp::PlacerX;
 			comp.Model = model;
 			comp.Model->EnableDepthTest(false);
-			comp.Model->SetColor(FColor128((uint32)0xffff0000));
+			comp.Model->SetColor(FColor128(0xffff0000));
 			comp.Local = w.SetRotate(FFloat3(0.0f, 90.0f, 0.0f));
 			comp.Plane = FPlane(FFloat3(0.0f, 1.0f, 0.0f), 0.0f);
 			Components.push_back(comp);
@@ -49,7 +49,7 @@ bool LostCore::FGizmoOperator::Config(const FJson & config)
 			comp.Id = EOp::PlacerY;
 			comp.Model = FModelFactory::NewModel(config[K_PLACER]);
 			comp.Model->EnableDepthTest(false);
-			comp.Model->SetColor(FColor128((uint32)0xff00ff00));
+			comp.Model->SetColor(FColor128(0xff00ff00));
 			comp.Local = w.SetRotate(FFloat3(90.0f, 0.0f, 0.0f));
 			comp.Plane = FPlane(FFloat3(0.0f, 0.0f, 1.0f), 0.0f);
 			Components.push_back(comp);
@@ -58,7 +58,7 @@ bool LostCore::FGizmoOperator::Config(const FJson & config)
 			comp.Id = EOp::PlacerZ;
 			comp.Model = FModelFactory::NewModel(config[K_PLACER]);
 			comp.Model->EnableDepthTest(false);
-			comp.Model->SetColor(FColor128((uint32)0xff0000ff));
+			comp.Model->SetColor(FColor128(0xff0000ff));
 			comp.Local = w.SetRotate(FFloat3(0.0f, 0.0f, 0.0f));
 			comp.Plane = FPlane(FFloat3(1.0f, 0.0f, 0.0f), 0.0f);
 			Components.push_back(comp);
@@ -150,6 +150,9 @@ void LostCore::FGizmoOperator::EndDrag()
 
 void LostCore::FGizmoOperator::Tick()
 {
+	static FStackCounterRequest SCounter("FGizmoOperator::Tick");
+	FScopedStackCounterRequest scopedCounter(SCounter);
+
 	if (Target == nullptr)
 	{
 		World.SetIdentity();
@@ -164,22 +167,6 @@ void LostCore::FGizmoOperator::Tick()
 			auto world = comp.Local * World;
 			comp.Model->SetWorldMatrix(world);
 			comp.Model->Tick();
-		}
-	}
-}
-
-void LostCore::FGizmoOperator::Draw()
-{
-	if (Target == nullptr)
-	{
-		return;
-	}
-
-	for (auto& comp : Components)
-	{
-		if (comp.Model != nullptr)
-		{
-			comp.Model->Draw();
 		}
 	}
 }

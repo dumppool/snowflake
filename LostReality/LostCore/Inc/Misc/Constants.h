@@ -192,6 +192,8 @@
 #define K_DEPTH_STENCIL_Z_WRITE			"Z_ENABLE_WRITE"
 #define K_DEPTH_STENCIL_ALWAYS			"ALWAYS"
 
+#define K_INDENT						"    "
+
 #define FLAG_UNKNOWN					0x0badfffa
 
 #define FLAG_DISPLAY_NORMAL		(1<<0)
@@ -281,6 +283,7 @@ enum class ERenderOrder : uint8
 	Opacity,
 	Masked,
 	Translucent,
+	UI,
 	End,
 };
 

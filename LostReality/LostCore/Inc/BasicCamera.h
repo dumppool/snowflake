@@ -30,7 +30,6 @@ namespace LostCore
 		virtual bool Config(const FJson& config);
 		virtual FJson Save();
 		virtual void Tick();
-		virtual void Draw();
 
 		void AddPositionWorld(const FFloat3& pos);
 		void AddEulerWorld(const FFloat3& euler);

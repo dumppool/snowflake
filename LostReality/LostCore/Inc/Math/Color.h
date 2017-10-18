@@ -32,45 +32,48 @@ namespace LostCore
 		{
 		}
 
-		explicit FColor128(float val)
-			: R(val), G(val), B(val), A(val)
-		{
-		}
-
 		FColor128(float r, float g, float b, float a = 0.f)
 			: R(r), G(g), B(b), A(a)
 		{
 		}
+
+		bool operator==(const FColor128& rhs) const
+		{
+			return (R == rhs.R
+				&& G == rhs.G
+				&& B == rhs.B
+				&& A == rhs.A);
+		}
 	};
 
-	struct FColor96
+	struct FColor24
 	{
 		float R;
 		float G;
 		float B;
 
-		FColor96() : R(0.f), G(0.f), B(0.f)
+		FColor24() : R(0.f), G(0.f), B(0.f)
 		{
 		}
 
-		explicit FColor96(uint32 rgb)
+		explicit FColor24(uint32 rgb)
 			: R(((rgb >> 16) & 0xff) / 255.f)
 			, G(((rgb >> 8) & 0xff) / 255.f)
 			, B(((rgb >> 0) & 0xff) / 255.f)
 		{
 		}
 
-		explicit FColor96(float val)
+		explicit FColor24(float val)
 			: R(val), G(val), B(val)
 		{
 		}
 
-		FColor96(float r, float g, float b)
+		FColor24(float r, float g, float b)
 			: R(r), G(g), B(b)
 		{
 		}
 
-		bool operator==(const FColor96& rhs) const
+		bool operator==(const FColor24& rhs) const
 		{
 			return (R == rhs.R
 				&& G == rhs.G

@@ -19,21 +19,53 @@ namespace LostCore
 	class IMaterial;
 	class ITexture;
 
+	__declspec(align(16)) struct FRectVertex 
+	{
+		static const void* GetDefaultVertices()
+		{
+			static const FRectVertex vertices[] =
+			{
+				{ FFloat2(0.f, 0.f),	FFloat2(0.f, 0.f), FColor128(0xffffff) },		// top left
+				{ FFloat2(1.f, 0.f),	FFloat2(1.f, 0.f), FColor128(0xffffff) },		// top right
+				{ FFloat2(0.f, 1.f),	FFloat2(0.f, 1.f), FColor128(0xffffff) },		// bottom left
+				{ FFloat2(1.f, 1.f),	FFloat2(1.f, 1.f), FColor128(0xffffff) },		// bottom right
+			};
+
+			return vertices;
+		}
+
+		static uint32 GetVertexElement()
+		{
+			return VERTEX_COORDINATE2D | VERTEX_COLOR | VERTEX_TEXCOORD0;
+		}
+
+		static const void* GetDefaultIndices()
+		{
+			static const int16 indices[] = { 0, 1, 2, 1, 3, 2 };
+			return indices;
+		}
+
+		FFloat2 XY;
+		FFloat2 TexCoord; 
+		FColor128 RGB; 
+	};
+
 	class FRect
 	{
-
 	public:
 		FRect();
 		~FRect();
 
-		void SetOrigin(const FFloat2& origin);
-		FFloat2 GetOrigin() const;
+		void SetOriginLocal(const FFloat2& origin);
+		FFloat2 GetOriginGlobal() const;
 
-		void SetScale(float val);
-		float GetScale() const;
+		void SetScaleLocal(float val);
+		float GetScaleGlobal() const;
 
 		void SetSize(const FFloat2& size);
 		FFloat2 GetSize() const;
+
+		void SetTexCoords(const array<FFloat2, 4>& texCoords);
 
 		//************************************
 		// Method:    HitTest 点击测试
@@ -50,33 +82,28 @@ namespace LostCore
 		// FullName:  lostvr::FRect::AddChild
 		// Access:    public 
 		// Parameter: FRect* child 子面板，为空或者父面板不为空无法成功添加
-		void AddChild(FRect* child);
+		virtual void AddChild(FRect* child);
 
 		//************************************
 		// Method:    DelChild 删除子面板
 		// FullName:  lostvr::FRect::DelChild
 		// Access:    public 
 		// Parameter: FRect* child 子面板，为空或者父面板不为this无法成功删除
-		void DelChild(FRect* child);
+		virtual void DelChild(FRect* child);
 
-		void Clear();
+		void Detach();
+		void ClearChildren(bool dealloc = false);
 
-		//************************************
-		// Method:    Draw 绘制
-		// FullName:  lostvr::FRect::Draw
-		// Access:    public 
-		// Parameter: IRenderContext * rc
-		// Parameter:  
-		void Draw();
+		virtual void Commit();
+		void SetTexture(ITexture* tex);
+		void ConstructPrimitive(const void* buf, int32 sz, int32 stride);
+		void HasGeometry(bool val);
 
-		void SetColorTexture(ITexture* tex);
-
-		virtual void ReconstructPrimitive();
-
-	private:
+	protected:
 		bool HitTestPrivate(const FFloat2& ppos, FRect** result) const;
 		void GetLocalPosition(const FFloat2& ppos, FFloat2& cpos) const;
-		void DrawPrivate();
+		void CommitPrivate();
+		void Destroy();
 
 		FRectParameter Param;
 
@@ -90,26 +117,29 @@ namespace LostCore
 		vector<FRect*> Children;
 
 		IPrimitiveGroup* RectPrimitive;
-		FFloat2 RectPrimitiveSize;
-		IMaterial* RectMaterial;
+		bool bConstructed;
+		bool bHasGeometry;
+		ITexture* RectTexture;
 		IConstantBuffer* RectBuffer;
 	};
 
-	class FBasicGUI : public IBasicInterface
+	class FBasicGUI
 	{
 	public:
 		FBasicGUI();
-		virtual ~FBasicGUI() override;
+		~FBasicGUI();
 
-		virtual void Tick() override;
-		virtual void Draw() override;
-		virtual bool Config(const FJson& config) override;
-		virtual bool Load(const char* url) override;
-
+		bool Initialize(const FFloat2& size);
 		void Destroy();
 
+		void Tick();
+
+		FRect* GetRoot()
+		{
+			return Root;
+		}
+
 	private:
-		FRect Root;
-		IFontInterface* Font;
+		FRect* Root;
 	};
 }

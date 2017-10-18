@@ -18,21 +18,21 @@ namespace LostCore
 	struct FSegmentVertex
 	{
 		FFloat3 Coordinate;
-		FColor96 Color;
+		FColor128 Color;
 		FFloat2 Unused;
 
 		FSegmentVertex() {}
-		FSegmentVertex(const FFloat3& pos, const FColor96& col)
+		FSegmentVertex(const FFloat3& pos, const FColor128& col)
 			: Coordinate(pos), Color(col) {}
 	};
 
 	struct FSegmentData
 	{
 		FFloat3 StartPt;
-		FColor96 StartPtColor;
+		FColor128 StartPtColor;
 
 		FFloat3 StopPt;
-		FColor96 StopPtColor;
+		FColor128 StopPtColor;
 	};
 
 	// 坐标轴绘制工具
@@ -57,7 +57,7 @@ namespace LostCore
 		~FSegmentTool();
 
 		void ResetData();
-		void Draw();
+		void Commit();
 		void AddSegment(const FSegmentData& seg);
 
 		void SetWorldMatrix(const FFloat4x4& mat);

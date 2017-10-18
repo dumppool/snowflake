@@ -29,7 +29,6 @@ namespace LostCore
 		virtual ~FBasicScene();
 
 		virtual void Tick();
-		virtual void Draw();
 		virtual bool Config(const FJson& config);
 		virtual bool Load(const string& url);
 		virtual FJson Save(const string& url);
