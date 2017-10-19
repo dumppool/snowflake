@@ -25,6 +25,24 @@ LostCore::FGlobalHandler::FGlobalHandler()
 {
 }
 
+EReturnCode LostCore::FGlobalHandler::InitializeProcessUnique()
+{
+	FProcessUnique::Initialize();
+	return SSuccess;
+}
+
+EReturnCode LostCore::FGlobalHandler::DestroyProcessUnique()
+{
+	FProcessUnique::Destroy();
+	return SSuccess;
+}
+
+EReturnCode LostCore::FGlobalHandler::SetProcessUnique(void* p)
+{
+	FProcessUnique::SetInstance((FProcessUnique*)p);
+	return SSuccess;
+}
+
 EReturnCode LostCore::FGlobalHandler::SetDisplayNormalLength(float value)
 {
 	DisplayNormalLength = value;
@@ -393,6 +411,12 @@ void LostCore::FGlobalHandler::UpdatePosAndRot(const FFloat3 & pos, const FFloat
 
 #define EXPORTER_PTR (LostCore::FGlobalHandler::Get())
 
+LostCore::FProcessUnique* LostCore::FProcessUnique::SInstance = nullptr;
+LostCore::FStackCounterManager* LostCore::FStackCounterManager::SInstance = nullptr;
+
+EXPORT_WRAP_0_DEF(InitializeProcessUnique);
+EXPORT_WRAP_0_DEF(DestroyProcessUnique);
+EXPORT_WRAP_1_DEF(SetProcessUnique, void*);
 EXPORT_WRAP_1_DEF(SetDisplayNormalLength, float);
 EXPORT_WRAP_3_DEF(MoveCamera, float, float, float); // x, y, z
 EXPORT_WRAP_3_DEF(RotateCamera, float, float, float); // pitch, yaw, roll

@@ -71,7 +71,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir);$(ProjectDir)Inc;$(ProjectDir)RenderCore;$(ProjectDir)Inc/Interface;../LostCore-D3D11/Inc</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir);$(ProjectDir)Inc;../LostCore-D3D11/Inc</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -193,6 +193,8 @@
     <ClInclude Include="Inc\Misc\Macros.h" />
     <ClInclude Include="Inc\Misc\Pointers.h" />
     <ClInclude Include="Inc\Misc\StringUtils.h" />
+    <ClInclude Include="Inc\Misc\Thread.h" />
+    <ClInclude Include="Inc\Misc\Tls.h" />
     <ClInclude Include="Inc\Misc\TypeDefs.h" />
     <ClInclude Include="Inc\ModelFactory.h" />
     <ClInclude Include="Inc\Serialize\Serialization.h" />

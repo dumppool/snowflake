@@ -17,6 +17,8 @@
 #include "Misc/Pointers.h"
 #include "Misc/StringUtils.h"
 #include "Misc/Log.h"
+#include "Misc/Tls.h"
+#include "Misc/Thread.h"
 #include "Misc/Counters.h"
 
 #include "VertexTypes.h"

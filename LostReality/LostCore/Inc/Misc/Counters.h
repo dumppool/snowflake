@@ -78,6 +78,8 @@ namespace LostCore
 
 		LARGE_INTEGER Stamp;
 		double Past;
+		int32 Count;
+		int32 Depth;
 
 		bool bUnFold;
 
@@ -93,29 +95,30 @@ namespace LostCore
 		FORCEINLINE int32 GetDepth() const;
 		FORCEINLINE void GetChildCounters(vector<FStackCounter*>& counters) const;
 		FORCEINLINE void GetVisibleChildCounters(vector<FStackCounter*>& counters) const;
-		FORCEINLINE string ToString(const string& indent, int32 numLayers) const;
+		FORCEINLINE array<string, 2> GetDescs(const string& indent) const;
+
+		FORCEINLINE bool IsLeaf() const;
+		FORCEINLINE void MergeLeaves();
 	};
 
-	class FStackCounterManager
+	class FStackCounterManager : public FTlsSingletonTemplate<FStackCounterManager>
 	{
-		static const int32 SMaxID = (1 << 20);
-		static const int32 SRoot = 0;
-		static const int32 SOthers = 1;
 
 		int32 LastAllocatedID;
 		vector<int32> IDPool;
 
+		int32 MaxNumLines;
+
 		// Frame data.
 		FStackCounter* Current;
 		FStackCounter Root;
-		vector<string> Statics;
+		vector<array<string, 2>> Statics;
 
 	public:
-		static FStackCounterManager* Get()
-		{
-			static FStackCounterManager SInst;
-			return &SInst;
-		}
+		static const int32 SMaxID = (1 << 20);
+		static const int32 SRoot = 0;
+		static const int32 SOthers = 1;
+		static const int32 SClassIndex = 1;
 
 		FORCEINLINE FStackCounterManager();
 
@@ -128,9 +131,10 @@ namespace LostCore
 		FORCEINLINE FStackCounter* AllocCounter();
 		FORCEINLINE void DeallocCounter(FStackCounter* counter);
 
+		FORCEINLINE void SetMaxNumLines(int32 num);
 		FORCEINLINE void Finish();
-		FORCEINLINE void EndFrame();
-		FORCEINLINE vector<string> GetDisplayContent() const;
+		FORCEINLINE void RecycleCounters();
+		FORCEINLINE vector<array<string, 2>> GetDisplayContent() const;
 	};
 
 	FORCEINLINE FStackCounterRequest::FStackCounterRequest(const string& name)
@@ -139,6 +143,7 @@ namespace LostCore
 	{
 		auto tid = this_thread::get_id();
 		auto mgrAddr = FStackCounterManager::Get();
+		LVMSG("FStackCounterRequest::FStackCounterRequest", "thread id: %d, manager address: 0x%08x.", tid, mgrAddr);
 	}
 
 	FORCEINLINE FStackCounterRequest::~FStackCounterRequest()
@@ -159,6 +164,8 @@ namespace LostCore
 	FORCEINLINE FStackCounter::FStackCounter() 
 		: ParentCounter(nullptr)
 		, bUnFold(true)
+		, Count(0)
+		, Depth(0)
 	{
 		ChildCounters.clear();
 	}
@@ -171,10 +178,13 @@ namespace LostCore
 	{
 		Stamp = FPerformanceCounter::GetStamp();
 		ChildCounters.clear();
+		Count = 1;
 		ParentCounter = parentCounter;
+		Depth = 1;
 		if (ParentCounter != nullptr)
 		{
 			ParentCounter->ChildCounters.insert(pair<int32, FStackCounter*>(RequestId, this));
+			Depth = ParentCounter->GetDepth() + 1;
 		}
 	}
 
@@ -187,12 +197,7 @@ namespace LostCore
 
 	FORCEINLINE int32 FStackCounter::GetDepth() const
 	{
-		if (ChildCounters.size() == 0)
-		{
-			return 1;
-		}
-
-		return ChildCounters.begin()->second->GetDepth() + 1;
+		return Depth;
 	}
 
 	FORCEINLINE void FStackCounter::GetChildCounters(vector<FStackCounter*>& counters) const
@@ -211,31 +216,88 @@ namespace LostCore
 			for (auto item : ChildCounters)
 			{
 				counters.push_back(item.second);
+				if (counters.size() == counters.capacity())
+				{
+					return;
+				}
+
 				item.second->GetVisibleChildCounters(counters);
 			}
 		}
 	}
 
-	FORCEINLINE string FStackCounter::ToString(const string & indent, int32 numLayers) const
+	FORCEINLINE array<string, 2> FStackCounter::GetDescs(const string & indent) const
 	{
-		const int32 rightStart = numLayers * string("....").length() + FStackCounter::SMaxNameLen;
-		int32 sepLen = rightStart;
-		sepLen -= indent.length();
-		sepLen -= Name.length();
-		sepLen = (sepLen > 4 ? sepLen : 4);
-		string sep(sepLen, '.');
+		string head(indent);
+		head.append(string(4*(GetDepth()-1), '.')).append(Name);
 
-		string info(indent + Name + sep);
+		char info[128];
+		memset(info, 0, 128);
 		float percentage = Past * 100 / (ParentCounter != nullptr ? ParentCounter->Past : Past);
-		info.append(to_string(percentage)).append("%").append("....");
-		info.append(to_string((float)Past * 1000.0f)).append("MS");
-		return info;
+		snprintf(info, 127, "%d %0.2fPercent %0.2fMS %d", Count, percentage, Past*1000, Depth);
+
+		return array<string, 2>({ head, info });
+	}
+
+	FORCEINLINE bool FStackCounter::IsLeaf() const
+	{
+		return ChildCounters.empty();
+	}
+
+	FORCEINLINE void FStackCounter::MergeLeaves()
+	{
+		if (ChildCounters.empty())
+		{
+			return;
+		}
+
+		auto lastIt = ChildCounters.begin();
+		auto it = lastIt;
+		it++;
+		while (it != ChildCounters.end())
+		{
+			if (it->first != lastIt->first)
+			{
+				lastIt = it++;
+			}
+			else if (it->second->IsLeaf() && !lastIt->second->IsLeaf())
+			{
+				lastIt = it++;
+			}
+			else if (it->second->IsLeaf() && lastIt->second->IsLeaf())
+			{
+				lastIt->second->Past += it->second->Past;
+				lastIt->second->Count++;
+				FStackCounterManager::Get()->DeallocCounter(it->second);
+				it = ChildCounters.erase(it);
+			}
+			else
+			{
+				it++;
+			}
+		}
+
+		auto pastAll = 0.0;
+		for (auto item : ChildCounters)
+		{
+			pastAll += item.second->Past;
+			item.second->MergeLeaves();
+		}
+
+		auto counter = FStackCounterManager::Get()->AllocCounter();
+		counter->RequestId = FStackCounterManager::SOthers;
+		counter->Name = "Others";
+		counter->Past = Past - pastAll;
+		counter->ParentCounter = this;
+		counter->Depth = GetDepth() + 1;
+		ChildCounters.insert(pair<int32, FStackCounter*>(counter->RequestId, counter));
 	}
 
 	FORCEINLINE FStackCounterManager::FStackCounterManager()
 		: Current(nullptr)
 		, LastAllocatedID(SOthers)
 		, IDPool(0)
+		, MaxNumLines(10)
 	{
 		Root.Name = "Root";
 		Root.RequestId = SRoot;
@@ -243,9 +305,9 @@ namespace LostCore
 		Current = &Root;
 	}
 
-	FORCEINLINE void FStackCounterManager::EndFrame()
+	FORCEINLINE void FStackCounterManager::RecycleCounters()
 	{
-		assert(Current == &Root);
+		assert(Current == &Root || Current == nullptr);
 
 		vector<FStackCounter*> counters;
 		Root.GetChildCounters(counters);
@@ -255,7 +317,7 @@ namespace LostCore
 		}
 	}
 
-	FORCEINLINE vector<string> FStackCounterManager::GetDisplayContent() const
+	FORCEINLINE vector<array<string,2>> FStackCounterManager::GetDisplayContent() const
 	{
 		return Statics;
 	}
@@ -305,21 +367,27 @@ namespace LostCore
 		SAFE_DELETE(counter);
 	}
 
+	FORCEINLINE void FStackCounterManager::SetMaxNumLines(int32 num)
+	{
+		MaxNumLines = num;
+	}
+
 	FORCEINLINE void FStackCounterManager::Finish()
 	{
-		// TODO: 合并相同request id的叶子节点.
 		Root.Stop();
+		Root.MergeLeaves();
 
 		Statics.clear();
 		vector<FStackCounter*> counters;
+		counters.reserve(MaxNumLines);
 		Root.GetVisibleChildCounters(counters);
 
-		auto depth = Root.GetDepth();
 		for (auto item : counters)
 		{
-			Statics.push_back(item->ToString(">> ", depth));
+			Statics.push_back(item->GetDescs(">> "));
 		}
 
+		RecycleCounters();
 		Root.Start(nullptr);
 	}
 }

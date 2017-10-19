@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include "FontInterface.h"
+#include "Interface/FontInterface.h"
 
 namespace LostCore
 {

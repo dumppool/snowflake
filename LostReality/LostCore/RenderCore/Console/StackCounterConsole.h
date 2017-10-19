@@ -27,9 +27,11 @@ namespace LostCore
 		void FinishDisplay();
 
 	private:
-		FTextBox* AllocTextBox();
+		FListBox* Panel0;
+		FListBox* Panel1;
+		FListBox* Panel2;
 
-		FListBox* Panel;
+		FTextBox* AllocTextBox();
 		vector<FTextBox*> OnlineText;
 		vector<FTextBox*> OfflineText;
 	};

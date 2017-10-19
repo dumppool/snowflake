@@ -20,6 +20,12 @@ namespace LostWinForms
         public delegate void PFN_Logger(Int32 level, StringBuilder msg);
 
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void InitializeProcessUnique();
+
+        [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void DestroyProcessUnique();
+
+        [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public static extern void SetLogger(PFN_Logger logger);
 
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
@@ -587,6 +593,9 @@ namespace LostWinForms
         {
             if (!bInitialized)
             {
+                // 初始化tls
+                InitializeProcessUnique();
+
                 // 初始化绘制窗口
                 InitializeWindow(RenderPanel.Handle, true, (uint)RenderPanel.Width, (uint)RenderPanel.Height);
 
@@ -610,6 +619,7 @@ namespace LostWinForms
             DelegateUpdatePosAndRot = null;
             SaveLocalUserData();
             Shutdown();
+            DestroyProcessUnique();
         }
 
         private void ImportOk_Click(object sender, EventArgs e)

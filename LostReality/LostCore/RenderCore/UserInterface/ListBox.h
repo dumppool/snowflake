@@ -9,7 +9,6 @@
 
 #pragma once
 
-#include "FontInterface.h"
 #include "Inc/BasicGUI.h"
 
 namespace LostCore
@@ -25,10 +24,14 @@ namespace LostCore
 
 		FListBox();
 
-		virtual void Commit() override;
+		virtual void Update() override;
+
+		void SetAlignment(EAlignment alignment);
+		void SetSpace(int32 val);
 
 	private:
 		EAlignment Alignment;
+		int32 Space;
 	};
 }
 

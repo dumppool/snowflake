@@ -9,7 +9,7 @@
 
 #include "stdafx.h"
 #include "BasicModel.h"
-#include "PrimitiveGroupInterface.h"
+#include "Interface/PrimitiveGroupInterface.h"
 //#include "Resource/MeshLoader.h"
 
 using namespace LostCore;

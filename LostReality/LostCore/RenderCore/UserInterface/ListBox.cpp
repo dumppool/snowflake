@@ -15,25 +15,35 @@ using namespace LostCore;
 LostCore::FListBox::FListBox()
 	: FRect()
 	, Alignment(EAlignment::Vertical)
+	, Space(0)
 {
 }
 
-void LostCore::FListBox::Commit()
+void LostCore::FListBox::Update()
 {
+	FRect::Update();
 	float offset = 0.0f;
 	for (auto item : Children)
 	{
 		if (Alignment == EAlignment::Vertical)
 		{
 			item->SetOriginLocal(FFloat2(0.0f, offset));
-			offset += item->GetSize().Y;
+			offset += item->GetSize().Y + Space;
 		}
 		else
 		{
 			item->SetOriginLocal(FFloat2(offset, 0.0f));
-			offset += item->GetSize().X;
+			offset += item->GetSize().X + Space;
 		}
 	}
+}
 
-	FRect::Commit();
+void LostCore::FListBox::SetAlignment(EAlignment alignment)
+{
+	Alignment = alignment;
+}
+
+void LostCore::FListBox::SetSpace(int32 val)
+{
+	Space = val;
 }

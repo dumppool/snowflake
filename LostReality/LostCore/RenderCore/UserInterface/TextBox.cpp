@@ -21,10 +21,11 @@ LostCore::FTextBox::FTextBox()
 {
 }
 
-void LostCore::FTextBox::Commit()
+void LostCore::FTextBox::Update()
 {
-	static FStackCounterRequest SCounter("FTextBox::Commit");
-	FScopedStackCounterRequest req(SCounter);
+	//static FStackCounterRequest SCounter("FTextBox::Commit");
+	//FScopedStackCounterRequest req(SCounter);
+	FRect::Update();
 
 	float offset = 0.0f;
 	for (auto item : Children)
@@ -33,7 +34,7 @@ void LostCore::FTextBox::Commit()
 		offset += item->GetSize().X + Space;
 	}
 
-	FRect::Commit();
+	SetSize(FFloat2(offset, GetSize().Y));
 }
 
 void LostCore::FTextBox::SetText(const wstring & text)
@@ -45,11 +46,11 @@ void LostCore::FTextBox::SetText(const wstring & text)
 	ClearChildren(true);
 
 	array<FRectVertex, 4> vertices;
-	memcpy(vertices.data(), FRectVertex::GetDefaultVertices(), 4 * sizeof(FRectVertex));
+	memcpy(vertices.data(), FRectVertex::GetDefaultVertices(FColor128(0xffffff00)), 4 * sizeof(FRectVertex));
 
 	auto font = FFontProvider::Get()->GetGdiFont();
 	assert(font != nullptr);
-	SetSize(FFloat2(0.0f, font->GetConfig().Height));
+	float width = 0.0f;
 	for (auto it = content.begin(); it != content.end(); it++)
 	{
 		auto desc = font->GetCharacter(*it);
@@ -59,6 +60,7 @@ void LostCore::FTextBox::SetText(const wstring & text)
 		}
 
 		const auto& charDesc = desc.Desc;
+		width += charDesc.Width;
 		const auto texSize = FFloat2(desc.Texture->GetWidth(), desc.Texture->GetHeight());
 		const auto charSize = FFloat2(charDesc.Width / texSize.X, charDesc.Height / texSize.Y);
 		const auto topLeft = FFloat2(charDesc.X / texSize.X, charDesc.Y / texSize.Y);
@@ -73,4 +75,6 @@ void LostCore::FTextBox::SetText(const wstring & text)
 		child->ConstructPrimitive(vertices.data(), 4 * sizeof(FRectVertex), sizeof(FRectVertex));
 		AddChild(child);
 	}
+
+	SetSize(FFloat2(width, font->GetConfig().Height));
 }

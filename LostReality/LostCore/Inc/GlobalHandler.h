@@ -153,6 +153,9 @@ namespace LostCore
 		Callback_IS AssetOperateCallback;
 
 	public: // 导出函数调用.		
+		EReturnCode InitializeProcessUnique();
+		EReturnCode DestroyProcessUnique();
+		EReturnCode SetProcessUnique(void* p);
 		EReturnCode SetDisplayNormalLength(float value);
 		EReturnCode MoveCamera(float x, float y, float z);
 		EReturnCode RotateCamera(float p, float y, float r);
@@ -225,6 +228,9 @@ namespace LostCore
 
 }
 
+EXPORT_WRAP_0_DCL(InitializeProcessUnique);
+EXPORT_WRAP_0_DCL(DestroyProcessUnique);
+EXPORT_WRAP_1_DCL(SetProcessUnique, void*);
 EXPORT_WRAP_1_DCL(SetDisplayNormalLength, float);
 EXPORT_WRAP_3_DCL(MoveCamera, float, float, float); // x, y, z
 EXPORT_WRAP_3_DCL(RotateCamera, float, float, float); // pitch, yaw, roll

@@ -21,14 +21,14 @@ namespace LostCore
 
 	__declspec(align(16)) struct FRectVertex 
 	{
-		static const void* GetDefaultVertices()
+		static const void* GetDefaultVertices(const FColor128& col)
 		{
 			static const FRectVertex vertices[] =
 			{
-				{ FFloat2(0.f, 0.f),	FFloat2(0.f, 0.f), FColor128(0xffffff) },		// top left
-				{ FFloat2(1.f, 0.f),	FFloat2(1.f, 0.f), FColor128(0xffffff) },		// top right
-				{ FFloat2(0.f, 1.f),	FFloat2(0.f, 1.f), FColor128(0xffffff) },		// bottom left
-				{ FFloat2(1.f, 1.f),	FFloat2(1.f, 1.f), FColor128(0xffffff) },		// bottom right
+				{ FFloat2(0.f, 0.f),	FFloat2(0.f, 0.f), col },		// top left
+				{ FFloat2(1.f, 0.f),	FFloat2(1.f, 0.f), col },		// top right
+				{ FFloat2(0.f, 1.f),	FFloat2(0.f, 1.f), col },		// bottom left
+				{ FFloat2(1.f, 1.f),	FFloat2(1.f, 1.f), col },		// bottom right
 			};
 
 			return vertices;
@@ -56,6 +56,8 @@ namespace LostCore
 		FRect();
 		~FRect();
 
+		FRect* GetRoot();
+
 		void SetOriginLocal(const FFloat2& origin);
 		FFloat2 GetOriginGlobal() const;
 
@@ -64,6 +66,12 @@ namespace LostCore
 
 		void SetSize(const FFloat2& size);
 		FFloat2 GetSize() const;
+
+		void SetAutoUpdateWidth(bool val);
+		bool GetAutoUpdateWidth() const;
+
+		void SetAutoUpdateHeight(bool val);
+		bool GetAutoUpdateHeight() const;
 
 		void SetTexCoords(const array<FFloat2, 4>& texCoords);
 
@@ -94,6 +102,7 @@ namespace LostCore
 		void Detach();
 		void ClearChildren(bool dealloc = false);
 
+		virtual void Update();
 		virtual void Commit();
 		void SetTexture(ITexture* tex);
 		void ConstructPrimitive(const void* buf, int32 sz, int32 stride);
@@ -119,6 +128,8 @@ namespace LostCore
 		IPrimitiveGroup* RectPrimitive;
 		bool bConstructed;
 		bool bHasGeometry;
+		bool bAutoUpdateWidth;
+		bool bAutoUpdateHeight;
 		ITexture* RectTexture;
 		IConstantBuffer* RectBuffer;
 	};

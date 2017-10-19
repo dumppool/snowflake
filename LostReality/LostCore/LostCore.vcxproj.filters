@@ -167,6 +167,12 @@
     <ClInclude Include="RenderCore\UserInterface\ListBox.h">
       <Filter>RenderCore\UserInterface</Filter>
     </ClInclude>
+    <ClInclude Include="Inc\Misc\Tls.h">
+      <Filter>Inc\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\Misc\Thread.h">
+      <Filter>Inc\Misc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />

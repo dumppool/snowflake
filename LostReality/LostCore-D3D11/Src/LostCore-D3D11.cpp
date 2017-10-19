@@ -14,6 +14,27 @@
 
 using namespace D3D11;
 
+LostCore::FProcessUnique* LostCore::FProcessUnique::SInstance = nullptr;
+LostCore::FStackCounterManager* LostCore::FStackCounterManager::SInstance = nullptr;
+
+EReturnCode D3D11::InitializeProcessUnique()
+{
+	LostCore::FProcessUnique::Initialize();
+	return SSuccess;
+}
+
+EReturnCode D3D11::DestroyProcessUnique()
+{
+	LostCore::FProcessUnique::Destroy();
+	return SSuccess;
+}
+
+EReturnCode D3D11::SetProcessUnique(void* p)
+{
+	LostCore::FProcessUnique::SetInstance((LostCore::FProcessUnique*)p);
+	return SSuccess;
+}
+
 EReturnCode D3D11::CreateRenderContext(LostCore::EContextID id, LostCore::IRenderContext** context)
 {
 	if (context == nullptr)

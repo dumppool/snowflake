@@ -62,7 +62,7 @@ void D3D11::FRasterizerStateMap::InitializeState(uint32 flags)
 	}
 
 	StateMap[flags] = state;
-	LVMSG(head, "Created rasterizer for 0x08x.", flags);
+	LVMSG(head, "Created rasterizer for 0x%08x.", flags);
 }
 
 void D3D11::FRasterizerStateMap::Initialize()

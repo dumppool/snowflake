@@ -9,7 +9,7 @@
 
 #include "stdafx.h"
 #include "BasicScene.h"
-#include "RenderContextInterface.h"
+#include "Interface/RenderContextInterface.h"
 
 using namespace LostCore;
 
@@ -27,6 +27,9 @@ FBasicScene::~FBasicScene()
 
 void FBasicScene::Tick()
 {
+	static FStackCounterRequest SCounter("FBasicScene::Tick");
+	FScopedStackCounterRequest req(SCounter);
+
 	for (auto sm : Models)
 	{
 		if (sm != nullptr)

@@ -18,7 +18,7 @@ namespace LostCore
 	public:
 		FTextBox();
 
-		virtual void Commit() override;
+		virtual void Update() override;
 
 		void SetText(const wstring& text);
 

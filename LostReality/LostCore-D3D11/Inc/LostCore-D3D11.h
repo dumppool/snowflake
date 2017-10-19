@@ -66,6 +66,9 @@ namespace D3D11 {
 		return SModuleHandle;
 	}
 
+	EXPORT_WRAP_0_DCL(InitializeProcessUnique);
+	EXPORT_WRAP_0_DCL(DestroyProcessUnique);
+	EXPORT_WRAP_1_DCL(SetProcessUnique, void*);
 	EXPORT_WRAP_2_DCL(CreateRenderContext, LostCore::EContextID, LostCore::IRenderContext**);
 	EXPORT_WRAP_1_DCL(DestroyRenderContext, LostCore::IRenderContext*);
 	EXPORT_WRAP_1_DCL(CreatePrimitiveGroup, LostCore::IPrimitiveGroup**);

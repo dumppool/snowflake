@@ -9,8 +9,8 @@
 
 #include "stdafx.h"
 #include "BasicGUI.h"
-#include "PrimitiveGroupInterface.h"
-#include "RenderContextInterface.h"
+#include "Interface/PrimitiveGroupInterface.h"
+#include "Interface/RenderContextInterface.h"
 #include "FontProvider.h"
 
 #include "LostCore-D3D11.h"
@@ -26,12 +26,25 @@ LostCore::FRect::FRect()
 	, RectTexture(nullptr)
 	, RectBuffer(nullptr)
 	, bHasGeometry(false)
+	, bAutoUpdateWidth(true)
+	, bAutoUpdateHeight(true)
 {
 }
 
 LostCore::FRect::~FRect()
 {
 	Destroy();
+}
+
+FRect * LostCore::FRect::GetRoot()
+{
+	FRect* root = this;
+	while (root->Parent != nullptr)
+	{
+		root = root->Parent;
+	}
+
+	return root;
 }
 
 void LostCore::FRect::SetOriginLocal(const FFloat2 & origin)
@@ -76,6 +89,26 @@ void LostCore::FRect::SetSize(const FFloat2 & size)
 FFloat2 LostCore::FRect::GetSize() const
 {
 	return Param.Size;
+}
+
+void LostCore::FRect::SetAutoUpdateWidth(bool val)
+{
+	bAutoUpdateWidth = val;
+}
+
+bool LostCore::FRect::GetAutoUpdateWidth() const
+{
+	return bAutoUpdateWidth;
+}
+
+void LostCore::FRect::SetAutoUpdateHeight(bool val)
+{
+	bAutoUpdateHeight = val;
+}
+
+bool LostCore::FRect::GetAutoUpdateHeight() const
+{
+	return bAutoUpdateHeight;
 }
 
 void LostCore::FRect::SetTexCoords(const array<FFloat2, 4>& texCoords)
@@ -182,6 +215,30 @@ void LostCore::FRect::Destroy()
 	ClearChildren(true);
 }
 
+void LostCore::FRect::Update()
+{
+	auto maxSize = GetSize();
+	for (auto it = Children.rbegin(); it != Children.rend(); ++it)
+	{
+		(*it)->Update();
+		auto size = (*it)->GetSize();
+		if (bAutoUpdateWidth)
+		{
+			maxSize.X = Max(size.X, maxSize.X);
+		}
+
+		if (bAutoUpdateHeight)
+		{
+			maxSize.Y = Max(size.Y, maxSize.Y);
+		}
+	}
+
+	if (bAutoUpdateWidth || bAutoUpdateHeight)
+	{
+		SetSize(maxSize);
+	}
+}
+
 void LostCore::FRect::Commit()
 {
 	CommitPrivate();
@@ -217,7 +274,7 @@ void LostCore::FRect::ConstructPrimitive(const void* buf, int32 sz, int32 stride
 	RectPrimitive->SetTopology(EPrimitiveTopology::TriangleList);
 	if (sz == 0)
 	{
-		RectPrimitive->ConstructVB(FRectVertex::GetDefaultVertices(), 4 * sizeof(FRectVertex), sizeof(FRectVertex), false);
+		RectPrimitive->ConstructVB(FRectVertex::GetDefaultVertices(FColor128(~0)), 4 * sizeof(FRectVertex), sizeof(FRectVertex), false);
 	}
 	else
 	{
@@ -295,6 +352,7 @@ LostCore::FBasicGUI::~FBasicGUI()
 
 void LostCore::FBasicGUI::Tick()
 {
+	Root->Update();
 	Root->Commit();
 }
 

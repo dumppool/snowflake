@@ -8,8 +8,8 @@
 */
 
 #include "stdafx.h"
-#include "Console/StackCounterConsole.h"
-#include "UserInterface/FontProvider.h"
+#include "RenderCore/Console/StackCounterConsole.h"
+#include "RenderCore/UserInterface/FontProvider.h"
 
 #include "LostCore-D3D11.h"
 using namespace D3D11;
@@ -82,7 +82,7 @@ private:
 
 	FCommandQueue<CommandType> TickCommands;
 	bool bKeepTicking;
-	thread TickThread;
+	FThread* TickThread;
 
 	// Editor tools
 	FGizmoOperator* GizmoOp;
@@ -112,6 +112,7 @@ FFBXEditor::FFBXEditor()
 	, GizmoOp(nullptr)
 	, GUI(nullptr)
 	, Console(nullptr)
+	, TickThread(nullptr)
 {
 	char* temp = nullptr;
 	size_t sz = 0;
@@ -617,11 +618,7 @@ void FFBXEditor::Destroy()
 	FGlobalHandler::Get()->SetRotateCameraCallback(nullptr);
 
 	bKeepTicking = false;
-	if (TickThread.joinable())
-	{
-		TickThread.join();
-	}
-
+	SAFE_DELETE(TickThread);
 	SAFE_DELETE(Console);
 	SAFE_DELETE(GUI);
 
@@ -661,7 +658,9 @@ bool FFBXEditor::InitializeWindow(HWND wnd, bool windowed, int32 width, int32 he
 		Console = new FStackCounterConsole;
 		Console->Initialize(GUI->GetRoot());
 
-		TickThread = thread([=]() {this->StartTickLoop(); });
+		D3D11::WrappedSetProcessUnique(FProcessUnique::Get());
+		TickThread = new FThread([=]() {this->StartTickLoop(); }, "TickThread");
+
 		return true;
 	}
 	else
