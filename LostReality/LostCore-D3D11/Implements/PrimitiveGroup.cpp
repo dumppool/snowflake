@@ -142,7 +142,8 @@ void D3D11::FPrimitiveGroup::UpdateVB(const void * buf, uint32 bytes)
 		VertexBuffer = nullptr;
 		TRefCountPtr<ID3D11Device> device = FRenderContext::GetDevice(head);
 		VertexCount = bytes / VertexStride;
-		assert(SSuccess == CreatePrimitiveVertex(device.GetReference(), buf, bytes, bIsVBDynamic, VertexBuffer));
+		auto result = CreatePrimitiveVertex(device.GetReference(), buf, bytes, bIsVBDynamic, VertexBuffer);
+		assert(SSuccess == result);
 	}
 	else
 	{

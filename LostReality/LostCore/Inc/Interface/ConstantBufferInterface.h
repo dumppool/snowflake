@@ -16,7 +16,7 @@ namespace LostCore
 	public:
 		virtual ~IConstantBuffer() {}
 		virtual bool Initialize(int32 sz, bool dynamic) = 0;
-		virtual void UpdateBuffer(const void* buf, int32 sz) = 0;
+		virtual void UpdateBuffer(const FBufFast& buf) = 0;
 		virtual void Commit() = 0;
 
 		virtual void SetShaderSlot(int32 slot) = 0;

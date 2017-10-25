@@ -29,7 +29,7 @@ namespace LostCore
 		{
 			if (SInstance == nullptr)
 			{
-				auto t = FProcessUnique::Get()->GetThread();
+				auto t = FProcessUnique::Get()->GetCurrentThread();
 				auto p = t->GetSingleton(T::SClassIndex);
 				if (p == nullptr)
 				{

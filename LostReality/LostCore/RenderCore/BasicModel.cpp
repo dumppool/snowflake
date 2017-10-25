@@ -10,10 +10,8 @@
 #include "stdafx.h"
 #include "BasicModel.h"
 #include "Interface/PrimitiveGroupInterface.h"
-//#include "Resource/MeshLoader.h"
 
 using namespace LostCore;
-
 
 LostCore::FBasicModel::FBasicModel()
 	: Url("")
@@ -146,11 +144,13 @@ bool LostCore::FBasicModel::ConfigPrimitive(const string& url, IPrimitiveGroup*&
 		if (pgdata.IndexCount > 0)
 		{
 			uint32 ibStride = pgdata.VertexCount < (1 << 16) ? 2 : 4;
-			assert(pg->ConstructIB(&(pgdata.Indices[0]), pgdata.Indices.size(), ibStride, false));
+			auto result = pg->ConstructIB(&(pgdata.Indices[0]), pgdata.Indices.size(), ibStride, false);
+			assert(result);
 		}
 
 		uint32 vbStride = GetAlignedSize(GetVertexDetails(pgdata.VertexFlags).Stride, 16);
-		assert(pg->ConstructVB(&(pgdata.Vertices[0]), pgdata.Vertices.size(), vbStride, false));
+		auto result = pg->ConstructVB(&(pgdata.Vertices[0]), pgdata.Vertices.size(), vbStride, false);
+		assert(result);
 	}
 
 	return pg != nullptr;
@@ -176,7 +176,9 @@ void LostCore::FBasicModel::UpdateConstant()
 {
 	if (CustomBuffer != nullptr)
 	{
-		CustomBuffer->UpdateBuffer(&Custom.GetBuffer(), sizeof(Custom));
+		FBufFast buf;
+		Custom.GetBuffer(buf);
+		CustomBuffer->UpdateBuffer(buf);
 	}
 }
 
@@ -426,7 +428,9 @@ void LostCore::FStaticModel::UpdateConstant()
 	auto cb = GetMatricesBuffer();
 	if (cb != nullptr)
 	{
-		cb->UpdateBuffer((const void*)&World.GetBuffer(), sizeof(World));
+		FBufFast buf;
+		World.GetBuffer(buf);
+		cb->UpdateBuffer(buf);
 	}
 }
 
@@ -583,7 +587,9 @@ void LostCore::FSkeletalModel::UpdateConstant()
 	auto cb = GetMatricesBuffer();
 	if (cb != nullptr)
 	{
-		cb->UpdateBuffer((const void*)&Matrices.GetBuffer(), sizeof(Matrices));
+		FBufFast buf;
+		Matrices.GetBuffer(buf);
+		cb->UpdateBuffer(buf);
 	}
 }
 

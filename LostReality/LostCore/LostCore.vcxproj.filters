@@ -71,9 +71,6 @@
     <ClInclude Include="Inc\Gizmo\GizmoLine.h">
       <Filter>Inc\Gizmo</Filter>
     </ClInclude>
-    <ClInclude Include="Inc\Threading\CommandQueue.h">
-      <Filter>Inc\Threading</Filter>
-    </ClInclude>
     <ClInclude Include="Inc\GlobalHandler.h">
       <Filter>Inc</Filter>
     </ClInclude>
@@ -173,9 +170,23 @@
     <ClInclude Include="Inc\Misc\Thread.h">
       <Filter>Inc\Misc</Filter>
     </ClInclude>
+    <ClInclude Include="RenderCore\Light\DirectionalLight.h">
+      <Filter>RenderCore\Light</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderCore\Light\PointLight.h">
+      <Filter>RenderCore\Light</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderCore\Light\SpotLight.h">
+      <Filter>RenderCore\Light</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\Misc\CounterMgr.h">
+      <Filter>Inc\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\Misc\CommandQueue.h">
+      <Filter>Inc\Misc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="Src\LostCore.cpp">
       <Filter>Src</Filter>
@@ -228,6 +239,15 @@
     <ClCompile Include="RenderCore\UserInterface\ListBox.cpp">
       <Filter>RenderCore\UserInterface</Filter>
     </ClCompile>
+    <ClCompile Include="RenderCore\Light\DirectionalLight.cpp">
+      <Filter>RenderCore\Light</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderCore\Light\PointLight.cpp">
+      <Filter>RenderCore\Light</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderCore\Light\SpotLight.cpp">
+      <Filter>RenderCore\Light</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="RenderCore">
@@ -248,9 +268,6 @@
     <Filter Include="RenderCore\Skeleton">
       <UniqueIdentifier>{24aa1a9a-c611-4f64-a6e3-6e6a4f0b6af2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="RenderCore\Resource">
-      <UniqueIdentifier>{7d9510d6-461c-455a-a0e0-38ffb316efa1}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Inc\Serialize">
       <UniqueIdentifier>{0f0f3142-2263-4f52-9369-a21c2475add1}</UniqueIdentifier>
     </Filter>
@@ -259,9 +276,6 @@
     </Filter>
     <Filter Include="Inc\Gizmo">
       <UniqueIdentifier>{ac821ada-0fa1-45a5-b8a9-a6506cb2350b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Inc\Threading">
-      <UniqueIdentifier>{4889cfec-c649-4981-b14d-aa099a0769ec}</UniqueIdentifier>
     </Filter>
     <Filter Include="Inc\Misc">
       <UniqueIdentifier>{f2cce9f6-5dc0-4e25-9292-388aaabee156}</UniqueIdentifier>
@@ -274,6 +288,9 @@
     </Filter>
     <Filter Include="RenderCore\Console">
       <UniqueIdentifier>{181b7b0e-b729-4448-ae6f-d1637e9592ef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RenderCore\Light">
+      <UniqueIdentifier>{7d9510d6-461c-455a-a0e0-38ffb316efa1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

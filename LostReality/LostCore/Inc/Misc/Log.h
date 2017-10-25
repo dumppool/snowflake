@@ -9,7 +9,25 @@
 
 #pragma once
 
-FORCEINLINE static void log_cap_cnt(const CHAR* prefix, const CHAR* head, const CHAR* fmt, ...)
+static string GetNowStr(bool asFileName = false)
+{
+	time_t t = ::time(0);
+	tm curr;
+	::localtime_s(&curr, &t);
+	char cdate[1024];
+	if (asFileName)
+	{
+		snprintf(cdate, 1023, "%dy%dm%dd%dh%dm%ds", 1900 + curr.tm_year, curr.tm_mon + 1, curr.tm_mday, curr.tm_hour, curr.tm_min, curr.tm_sec);
+	}
+	else
+	{
+		snprintf(cdate, 1023, "%d/%d/%d %d:%d:%d", 1900 + curr.tm_year, curr.tm_mon + 1, curr.tm_mday, curr.tm_hour, curr.tm_min, curr.tm_sec);
+	}
+	
+	return string(cdate);
+}
+
+static void log_cap_cnt(const CHAR* prefix, const CHAR* head, const CHAR* fmt, ...)
 {
 	char msg[1024];
 
@@ -18,12 +36,6 @@ FORCEINLINE static void log_cap_cnt(const CHAR* prefix, const CHAR* head, const 
 	vsnprintf(msg, 1023, fmt, args);
 	//msg[sz] = '\0';
 	va_end(args);
-
-	time_t t = ::time(0);
-	tm curr;
-	::localtime_s(&curr, &t);
-	char cdate[1024];
-	snprintf(cdate, 1023, "%d/%d/%d %d:%d:%d", 1900 + curr.tm_year, curr.tm_mon + 1, curr.tm_mday, curr.tm_hour, curr.tm_min, curr.tm_sec);
 
 	char* envdir = nullptr;
 	size_t sz = 0;
@@ -56,7 +68,7 @@ FORCEINLINE static void log_cap_cnt(const CHAR* prefix, const CHAR* head, const 
 		}
 	}
 
-	logfile << cdate << "\t";
+	logfile << GetNowStr() << "\t";
 	logfile << "PID: " << pid << "\t";
 	logfile << head << ": " << string(msg).c_str() << endl;
 	logfile.flush();

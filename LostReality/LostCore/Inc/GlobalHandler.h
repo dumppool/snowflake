@@ -151,6 +151,7 @@ namespace LostCore
 		Callback_II DraggingCallback;
 		Callback_V EndDragCallback;
 		Callback_IS AssetOperateCallback;
+		Callback_V RecordProfileCallback;
 
 	public: // 导出函数调用.		
 		EReturnCode InitializeProcessUnique();
@@ -191,6 +192,7 @@ namespace LostCore
 		EReturnCode OnDragging(int32 x, int32 y);
 		EReturnCode OnEndDrag();
 		EReturnCode AssetOperate(int32 op, const char* url);
+		EReturnCode RecordProfile();
 
 	public: // 模块内部方法.
 		FGlobalHandler();
@@ -220,6 +222,7 @@ namespace LostCore
 		void SetDraggingCallback(Callback_II callback);
 		void SetEndDragCallback(Callback_V callback);
 		void SetAssetOperateCallback(Callback_IS callback);
+		void SetRecordProfileCallback(Callback_V callback);
 
 		void UpdateFlagAndName(EUpdateFlag flag, const string& name);
 		void UpdateFlagAnd32Bit(EUpdateFlag flag, uint32 val);
@@ -250,3 +253,4 @@ EXPORT_WRAP_2_DCL(OnClick, int32, int32);
 EXPORT_WRAP_2_DCL(OnDragging, int32, int32);
 EXPORT_WRAP_0_DCL(OnEndDrag);
 EXPORT_WRAP_2_DCL(AssetOperate, int32, const char*);
+EXPORT_WRAP_0_DCL(RecordProfile);

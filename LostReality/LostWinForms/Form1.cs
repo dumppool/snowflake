@@ -100,6 +100,9 @@ namespace LostWinForms
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public static extern Int32 AssetOperate(UInt32 flag, String url);
 
+        [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public static extern Int32 RecordProfile();
+
         private const uint AssetOperateLoadModel = 0;
         private const uint AssetOperateLoadAnimation = 1;
         private const uint AssetOperateLoadScene = 2;
@@ -191,12 +194,29 @@ namespace LostWinForms
             SetUpdateFlagAndString(DelegateUpdateFlagAndString);
             DelegateUpdateFlagAnd32Bit = new PFN_UpdateFlagAnd32Bit(OnUpdateFlagAnd32Bit);
             SetUpdateFlagAnd32Bit(DelegateUpdateFlagAnd32Bit);
-            listBox1.SelectedIndexChanged += ListBox1_SelectedIndexChanged;
+            AnimListBox.SelectedIndexChanged += ListBox1_SelectedIndexChanged;
 
             DelegateUpdatePosAndRot = new PFN_UpdatePosAndRot(OnUpdatePosAndRot);
             SetUpdatePosAndRot(DelegateUpdatePosAndRot);
 
             ClearSceneToolStripMenuItem.Click += ClearSceneToolStripMenuItem_Click;
+            DisplayAnimationListCheckBox.Click += DisplayAnimationListCheckBox_Click;
+
+            RecordProfileToolStripMenuItem.Click += RecordProfileToolStripMenuItem_Click;
+        }
+
+        private void ExternalCall(Delegate eh, params object[] args)
+        {
+        }
+
+        private void RecordProfileToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            RecordProfile();
+        }
+
+        private void DisplayAnimationListCheckBox_Click(object sender, EventArgs e)
+        {
+            AnimListBox.Visible = DisplayAnimationListCheckBox.Checked;
         }
 
         private void SaveSceneToolStripMenuItem_Click(object sender, EventArgs e)
@@ -298,14 +318,14 @@ namespace LostWinForms
 
         private void ListBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            PlayAnimation(listBox1.Items[listBox1.SelectedIndex].ToString());
+            PlayAnimation(AnimListBox.Items[AnimListBox.SelectedIndex].ToString());
         }
 
         private void OnUpdateFlagAndString(uint flag, StringBuilder str)
         {
             if ((flag == UpdateAnimClear || flag == UpdateAnimAdd))
             {
-                listBox1.BeginInvoke(new PFN_UpdateFlagAndString(UpdateAnimList), flag, str);
+                AnimListBox.BeginInvoke(new PFN_UpdateFlagAndString(UpdateAnimList), flag, str);
             }
             else if (flag == UpdateMonitorTargetName)
             {
@@ -335,12 +355,12 @@ namespace LostWinForms
             if (flag == UpdateAnimClear)
             {
                 // clear
-                listBox1.Items.Clear();
+                AnimListBox.Items.Clear();
             }
             else if (flag == UpdateAnimAdd)
             {
                 // add
-                listBox1.Items.Add(anim);
+                AnimListBox.Items.Add(anim);
             }
         }
 

@@ -194,4 +194,14 @@ namespace LostCore
 	{
 		return InCircle(value - rangeMin, rangeMax - rangeMin) + rangeMin;
 	}
+
+	FORCEINLINE uint32 GetAlignedSize(uint32 sz, uint32 alignment)
+	{
+		return (sz + alignment - 1) & ~(alignment - 1);
+	}
+
+	FORCEINLINE uint32 GetPaddingSize(uint32 sz, uint32 alignment)
+	{
+		return GetAlignedSize(sz, alignment) - sz;
+	}
 }

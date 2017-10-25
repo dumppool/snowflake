@@ -130,7 +130,9 @@ void LostCore::FSegmentTool::Commit()
 
 	if (ConstantBuffer != nullptr)
 	{
-		ConstantBuffer->UpdateBuffer(&World.GetBuffer(), sizeof(World));
+		FBufFast buf;
+		World.GetBuffer(buf);
+		ConstantBuffer->UpdateBuffer(buf);
 		ConstantBuffer->Commit();
 	}
 

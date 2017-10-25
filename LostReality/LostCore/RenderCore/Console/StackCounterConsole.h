@@ -26,14 +26,19 @@ namespace LostCore
 		void FinishCounting();
 		void FinishDisplay();
 
+		void Record();
+
 	private:
+		FTextBox* AllocTextBox();
+
 		FListBox* Panel0;
 		FListBox* Panel1;
 		FListBox* Panel2;
 
-		FTextBox* AllocTextBox();
 		vector<FTextBox*> OnlineText;
 		vector<FTextBox*> OfflineText;
+
+		bool bRecordNext;
 	};
 }
 

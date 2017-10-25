@@ -17,13 +17,13 @@
 #include "Misc/Pointers.h"
 #include "Misc/StringUtils.h"
 #include "Misc/Log.h"
+#include "Misc/CommandQueue.h"
 #include "Misc/Tls.h"
-#include "Misc/Thread.h"
 #include "Misc/Counters.h"
+#include "Misc/Thread.h"
+#include "Misc/CounterMgr.h"
 
 #include "VertexTypes.h"
-
-#include "Threading/CommandQueue.h"
 
 #include "File/json.hpp"
 using FJson = nlohmann::json;

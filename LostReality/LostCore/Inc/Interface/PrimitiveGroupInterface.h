@@ -43,7 +43,7 @@ namespace LostCore
 		// UpdateVB只能再ConstructVB之后调用，并且要求Vertex是dynamic的.
 		// vertex stride不可以改变.
 		// 如果bytes大于VertexCount*VertexStride，UpdateVB内会重新创建VB.
-		// 调用UpdateVB会强行销毁IndexBuffer
+		// 调用UpdateVB会释放IndexBuffer
 		virtual void UpdateVB(const void* buf, uint32 bytes) = 0;
 	};
 }

@@ -11,17 +11,6 @@
 
 namespace LostCore
 {
-
-	FORCEINLINE uint32 GetAlignedSize(uint32 sz, uint32 alignment)
-	{
-		return (uint32)ceil(sz / (float)alignment)*alignment;
-	}
-
-	FORCEINLINE uint32 GetPaddingSize(uint32 sz, uint32 alignment)
-	{
-		return GetAlignedSize(sz, alignment) - sz;
-	}
-
 	// 树节点模板类
 	template<typename T>
 	struct TTreeNode

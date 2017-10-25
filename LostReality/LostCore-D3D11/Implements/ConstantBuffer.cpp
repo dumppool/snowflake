@@ -22,7 +22,7 @@ D3D11::FConstantBuffer::~FConstantBuffer()
 
 bool D3D11::FConstantBuffer::Initialize(int32 byteWidth, bool dynamic)
 {
-	ByteWidth = byteWidth;
+	ByteWidth = LostCore::GetAlignedSize(byteWidth, 16);
 	bDynamic = dynamic;
 
 	const char* head = "D3D11::FConstantBuffer::Initialize";
@@ -36,7 +36,7 @@ bool D3D11::FConstantBuffer::Initialize(int32 byteWidth, bool dynamic)
 	memset(&desc, 0, sizeof(desc));
 	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 
-	// does not consider immutable
+	// ÔÝ²»¿¼ÂÇimmutable
 	desc.Usage = bDynamic ? D3D11_USAGE_DYNAMIC : D3D11_USAGE_DEFAULT;
 	desc.CPUAccessFlags = bDynamic ? D3D11_CPU_ACCESS_WRITE : 0;
 	desc.ByteWidth = ByteWidth;
@@ -51,19 +51,13 @@ bool D3D11::FConstantBuffer::Initialize(int32 byteWidth, bool dynamic)
 	return true;
 }
 
-void D3D11::FConstantBuffer::UpdateBuffer(const void * buf, int32 sz)
+void D3D11::FConstantBuffer::UpdateBuffer(const FBufFast& buf)
 {
-	const char* head = "D3D11::FConstantBuffer::UpdateBuffer";
+	const char* head = "FConstantBuffer::UpdateBuffer";
 	auto cxt = FRenderContext::GetDeviceContext(head);
-	if (!cxt.IsValid())
-	{
-		return;
-	}
 
-	assert(sz == ByteWidth);
 	assert(Buffer.IsValid());
-
-	cxt->UpdateSubresource(Buffer.GetReference(), 0, nullptr, buf, 0, 0);
+	cxt->UpdateSubresource(Buffer.GetReference(), 0, nullptr, buf.data(), 0, 0);
 }
 
 void D3D11::FConstantBuffer::SetShaderSlot(int32 slot)

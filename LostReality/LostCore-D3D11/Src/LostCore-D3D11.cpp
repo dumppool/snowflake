@@ -14,18 +14,19 @@
 
 using namespace D3D11;
 
+bool LostCore::FProcessUnique::SIsOriginal = false;
 LostCore::FProcessUnique* LostCore::FProcessUnique::SInstance = nullptr;
 LostCore::FStackCounterManager* LostCore::FStackCounterManager::SInstance = nullptr;
 
 EReturnCode D3D11::InitializeProcessUnique()
 {
-	LostCore::FProcessUnique::Initialize();
+	LostCore::FProcessUnique::StaticInitialize();
 	return SSuccess;
 }
 
 EReturnCode D3D11::DestroyProcessUnique()
 {
-	LostCore::FProcessUnique::Destroy();
+	LostCore::FProcessUnique::StaticDestroy();
 	return SSuccess;
 }
 

@@ -19,33 +19,33 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{1705208B-D15B-4AD5-B1CA-F97C4B41DF74}</ProjectGuid>
+    <ProjectGuid>{56E4897D-5167-40F3-ADDA-CCF761741297}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>LostCore</RootNamespace>
+    <RootNamespace>ConsoleApplication1</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -71,30 +71,28 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir);$(ProjectDir)Inc;../LostCore-D3D11/Inc</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);../LostCore/Inc;</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir);$(ProjectDir)Inc;$(ProjectDir)Interface;$(ProjectDir)RenderCore;../Utilities/Inc;../LostCore-D3D11/Inc</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir);$(ProjectDir)Inc;../Utilities/Inc;</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);;../LostCore/Inc;</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir);$(ProjectDir)Inc;../Utilities/Inc;</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;LOSTCORE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
@@ -103,11 +101,11 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;_WINDOWS;_USRDLL;LOSTCORE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
@@ -118,11 +116,11 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;LOSTCORE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -135,11 +133,11 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>NDEBUG;_WINDOWS;_USRDLL;LOSTCORE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -149,95 +147,19 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Inc\Animation.h" />
-    <ClInclude Include="Inc\BasicCamera.h" />
-    <ClInclude Include="Inc\BasicGUI.h" />
-    <ClInclude Include="Inc\BasicInterface.h" />
-    <ClInclude Include="Inc\BasicModel.h" />
-    <ClInclude Include="Inc\BasicScene.h" />
-    <ClInclude Include="Inc\CameraFactory.h" />
-    <ClInclude Include="Inc\ConstantBuffers.h" />
-    <ClInclude Include="Inc\File\DirectoryHelper.h" />
-    <ClInclude Include="Inc\File\json.hpp" />
-    <ClInclude Include="Inc\Gizmo\GizmoAxis.h" />
-    <ClInclude Include="Inc\Gizmo\GizmoLine.h" />
-    <ClInclude Include="Inc\Gizmo\GizmoOperator.h" />
-    <ClInclude Include="Inc\GlobalHandler.h" />
-    <ClInclude Include="Inc\Interface\ConstantBufferInterface.h" />
-    <ClInclude Include="Inc\Interface\Drawable.h" />
-    <ClInclude Include="Inc\Interface\FontInterface.h" />
-    <ClInclude Include="Inc\Interface\MaterialInterface.h" />
-    <ClInclude Include="Inc\Interface\PrimitiveGroupInterface.h" />
-    <ClInclude Include="Inc\Interface\RenderContextInterface.h" />
-    <ClInclude Include="Inc\Interface\TextureInterface.h" />
-    <ClInclude Include="Inc\LostCore.h" />
-    <ClInclude Include="Inc\LostCoreIncludes.h" />
-    <ClInclude Include="Inc\Math\AABB.h" />
-    <ClInclude Include="Inc\Math\Color.h" />
-    <ClInclude Include="Inc\Math\Curves.h" />
-    <ClInclude Include="Inc\Math\Intersect.h" />
-    <ClInclude Include="Inc\Math\Line.h" />
-    <ClInclude Include="Inc\Math\MathBase.h" />
-    <ClInclude Include="Inc\Math\Matrix.h" />
-    <ClInclude Include="Inc\Math\Plane.h" />
-    <ClInclude Include="Inc\Math\Quat.h" />
-    <ClInclude Include="Inc\Math\Transform2.h" />
-    <ClInclude Include="Inc\Math\Vector2.h" />
-    <ClInclude Include="Inc\Math\Vector3.h" />
-    <ClInclude Include="Inc\Math\Vector4.h" />
-    <ClInclude Include="Inc\Misc\CommandQueue.h" />
-    <ClInclude Include="Inc\Misc\Constants.h" />
-    <ClInclude Include="Inc\Misc\CounterMgr.h" />
-    <ClInclude Include="Inc\Misc\Counters.h" />
-    <ClInclude Include="Inc\Misc\Export.h" />
-    <ClInclude Include="Inc\Misc\Includs.h" />
-    <ClInclude Include="Inc\Misc\Log.h" />
-    <ClInclude Include="Inc\Misc\Macros.h" />
-    <ClInclude Include="Inc\Misc\Pointers.h" />
-    <ClInclude Include="Inc\Misc\StringUtils.h" />
-    <ClInclude Include="Inc\Misc\Thread.h" />
-    <ClInclude Include="Inc\Misc\Tls.h" />
-    <ClInclude Include="Inc\Misc\TypeDefs.h" />
-    <ClInclude Include="Inc\ModelFactory.h" />
-    <ClInclude Include="Inc\Serialize\Serialization.h" />
-    <ClInclude Include="Inc\Serialize\StructSerialize.h" />
-    <ClInclude Include="Inc\VertexTypes.h" />
-    <ClInclude Include="RenderCore\Console\StackCounterConsole.h" />
-    <ClInclude Include="RenderCore\Light\DirectionalLight.h" />
-    <ClInclude Include="RenderCore\Light\PointLight.h" />
-    <ClInclude Include="RenderCore\Light\SpotLight.h" />
-    <ClInclude Include="RenderCore\UserInterface\FontProvider.h" />
-    <ClInclude Include="RenderCore\UserInterface\ListBox.h" />
-    <ClInclude Include="RenderCore\UserInterface\TextBox.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="targetver.h" />
+    <ClInclude Include="ThreadSynchronize.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="RenderCore\BasicCamera.cpp" />
-    <ClCompile Include="RenderCore\BasicModel.cpp" />
-    <ClCompile Include="RenderCore\BasicScene.cpp" />
-    <ClCompile Include="RenderCore\CameraFactory.cpp" />
-    <ClCompile Include="RenderCore\Console\StackCounterConsole.cpp" />
-    <ClCompile Include="RenderCore\Gizmo\GizmoAxis.cpp" />
-    <ClCompile Include="RenderCore\Gizmo\GizmoLine.cpp" />
-    <ClCompile Include="RenderCore\Gizmo\GizmoOperator.cpp" />
-    <ClCompile Include="RenderCore\Light\DirectionalLight.cpp" />
-    <ClCompile Include="RenderCore\Light\PointLight.cpp" />
-    <ClCompile Include="RenderCore\Light\SpotLight.cpp" />
-    <ClCompile Include="RenderCore\ModelFactory.cpp" />
-    <ClCompile Include="RenderCore\Skeleton\Animation.cpp" />
-    <ClCompile Include="RenderCore\UserInterface\BasicGUI.cpp" />
-    <ClCompile Include="RenderCore\UserInterface\FontProvider.cpp" />
-    <ClCompile Include="RenderCore\UserInterface\ListBox.cpp" />
-    <ClCompile Include="RenderCore\UserInterface\TextBox.cpp" />
-    <ClCompile Include="Src\FBXEditor.cpp" />
-    <ClCompile Include="Src\GlobalHandler.cpp" />
-    <ClCompile Include="Src\LostCore.cpp" />
+    <ClCompile Include="ConsoleApplication1.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="ThreadSynchronize.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

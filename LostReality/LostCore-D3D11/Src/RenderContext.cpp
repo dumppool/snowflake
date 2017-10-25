@@ -130,7 +130,9 @@ void D3D11::FRenderContext::BeginFrame()
 
 		//Context->OMSetDepthStencilState(FDepthStencilStateMap::Get()->GetState("Z_ENABLE_WRITE"), 0);
 
-		GlobalConstantBuffer->UpdateBuffer(&Param.GetBuffer(), sizeof(Param));
+		FBufFast buf;
+		Param.GetBuffer(buf);
+		GlobalConstantBuffer->UpdateBuffer(buf);
 		GlobalConstantBuffer->Commit();
 
 		ActivedPipeline->Render();

@@ -35,8 +35,10 @@ namespace LostCore
 		uint32 RemainingSize() const;
 		void * Data();
 
-		void WriteToFile(const std::string& filePath);
-		bool ReadFromFile(const std::string& filePath);
+		void WriteToFile(const std::string& url);
+		bool ReadFromFile(const std::string& url);
+
+		void WriteToTextFile(const std::string& url);
 	};
 
 	FORCEINLINE FBinaryIO::FBinaryIO()
@@ -127,15 +129,15 @@ namespace LostCore
 		return Begin;
 	}
 
-	FORCEINLINE void FBinaryIO::WriteToFile(const std::string& filePath)
+	FORCEINLINE void FBinaryIO::WriteToFile(const std::string& url)
 	{
 		ofstream file;
-		file.open(filePath, ios::out|ios::binary);
+		file.open(url, ios::out|ios::binary);
 		if (file.fail())
 		{
 			char errstr[128];
 			strerror_s(errstr, errno);
-			LVERR("FBinaryIO::WriteToFile", "failed to write[%s]: %s", filePath.c_str(), errstr);
+			LVERR("FBinaryIO::WriteToFile", "failed to write[%s]: %s", url.c_str(), errstr);
 			return;
 		}
 
@@ -143,10 +145,10 @@ namespace LostCore
 		file.close();
 	}
 
-	FORCEINLINE bool FBinaryIO::ReadFromFile(const std::string& filePath)
+	FORCEINLINE bool FBinaryIO::ReadFromFile(const std::string& url)
 	{
 		ifstream file;
-		file.open(filePath, ios::in | ios::binary | ios::ate);
+		file.open(url, ios::in | ios::binary | ios::ate);
 		if (file.fail())
 		{
 			file.close();
@@ -159,6 +161,22 @@ namespace LostCore
 		file.read((char*)Begin, sz);
 		file.close();
 		return true;
+	}
+
+	FORCEINLINE void FBinaryIO::WriteToTextFile(const std::string& url)
+	{
+		ofstream file;
+		file.open(url, ios::out);
+		if (file.fail())
+		{
+			char errstr[128];
+			strerror_s(errstr, errno);
+			LVERR("FBinaryIO::WriteToTextFile", "failed to write[%s]: %s", url.c_str(), errstr);
+			return;
+		}
+
+		file.write((const char*)Data(), RemainingSize());
+		file.close();
 	}
 
 	/************************************************************

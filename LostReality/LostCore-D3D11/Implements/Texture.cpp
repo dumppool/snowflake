@@ -142,28 +142,33 @@ bool D3D11::FTexture2D::Construct(
 		sr.pSysMem = initialData;
 		sr.SysMemPitch = initialPitch;
 		sr.SysMemSlicePitch = 0;
-		assert(SUCCEEDED(device->CreateTexture2D(&desc, &sr, Texture.GetInitReference())));
+		auto succeeded = SUCCEEDED(device->CreateTexture2D(&desc, &sr, Texture.GetInitReference()));
+		assert(succeeded);
 	}
 	else
 	{
-		assert(SUCCEEDED(device->CreateTexture2D(&desc, nullptr, Texture.GetInitReference())));
+		auto succeeded = SUCCEEDED(device->CreateTexture2D(&desc, nullptr, Texture.GetInitReference()));
+		assert(succeeded);
 	}
 
 	if (bIsRenderTarget)
 	{
 		CD3D11_RENDER_TARGET_VIEW_DESC cdesc(Texture.GetReference(), D3D11_RTV_DIMENSION_TEXTURE2D);
-		assert(SUCCEEDED(device->CreateRenderTargetView(Texture.GetReference(), &cdesc, RenderTarget.GetInitReference())));
+		auto succeeded = SUCCEEDED(device->CreateRenderTargetView(Texture.GetReference(), &cdesc, RenderTarget.GetInitReference()));
+		assert(succeeded);
 	}
 	else if (bIsDepthStencil)
 	{
 		CD3D11_DEPTH_STENCIL_VIEW_DESC cdesc(Texture.GetReference(), D3D11_DSV_DIMENSION_TEXTURE2D);
-		assert(SUCCEEDED(device->CreateDepthStencilView(Texture.GetReference(), &cdesc, DepthStencil.GetInitReference())));
+		auto succeeded = SUCCEEDED(device->CreateDepthStencilView(Texture.GetReference(), &cdesc, DepthStencil.GetInitReference()));
+		assert(succeeded);
 	}
 
 	if (bIsShaderResource)
 	{
 		CD3D11_SHADER_RESOURCE_VIEW_DESC cdesc(Texture.GetReference(), D3D11_SRV_DIMENSION_TEXTURE2D);
-		assert(SUCCEEDED(device->CreateShaderResourceView(Texture.GetReference(), &cdesc, ShaderResource.GetInitReference())));
+		auto succeeded = SUCCEEDED(device->CreateShaderResourceView(Texture.GetReference(), &cdesc, ShaderResource.GetInitReference()));
+		assert(succeeded);
 	}
 
 	return true;
@@ -182,10 +187,12 @@ bool D3D11::FTexture2D::ConstructFromSwapChain(const TRefCountPtr<IDXGISwapChain
 	Height = desc.Height;
 
 	TRefCountPtr<ID3D11Device> device;
-	assert(SUCCEEDED(swapChain->GetDevice(__uuidof(ID3D11Device), (void**)device.GetInitReference())));
+	auto succeeded = SUCCEEDED(swapChain->GetDevice(__uuidof(ID3D11Device), (void**)device.GetInitReference()));
+	assert(succeeded);
 
 	CD3D11_RENDER_TARGET_VIEW_DESC cdesc(Texture.GetReference(), D3D11_RTV_DIMENSION_TEXTURE2D);
-	assert(SUCCEEDED(device->CreateRenderTargetView(Texture.GetReference(), &cdesc, RenderTarget.GetInitReference())));
+	succeeded = SUCCEEDED(device->CreateRenderTargetView(Texture.GetReference(), &cdesc, RenderTarget.GetInitReference()));
+	assert(succeeded);
 
 	return true;
 }

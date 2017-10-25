@@ -22,7 +22,7 @@ namespace D3D11
 		virtual ~FConstantBuffer() override;
 
 		virtual bool Initialize(int32 byteWidth, bool dynamic) override;
-		virtual void UpdateBuffer(const void* buf, int32 sz) override;
+		virtual void UpdateBuffer(const FBufFast& buf) override;
 		virtual void Commit() override;
 
 		virtual void SetShaderSlot(int32 slot) override;

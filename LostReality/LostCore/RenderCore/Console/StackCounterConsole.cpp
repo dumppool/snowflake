@@ -16,6 +16,10 @@
 using namespace LostCore;
 
 LostCore::FStackCounterConsole::FStackCounterConsole()
+	: Panel0(nullptr)
+	, Panel1(nullptr)
+	, Panel2(nullptr)
+	, bRecordNext(false)
 {
 }
 
@@ -53,20 +57,32 @@ void LostCore::FStackCounterConsole::FinishCounting()
 	float textHeight = font->GetConfig().Height;
 	float panelHeight = Panel1->GetSize().Y;
 	auto maxNumLines = int32(panelHeight / textHeight);
-	FStackCounterManager::Get()->SetMaxNumLines(maxNumLines);
 	FStackCounterManager::Get()->Finish();
 
+	static FStackCounterRequest SCounter("FStackCounterConsole::FinishCounting");
+	FScopedStackCounterRequest scopedCounter(SCounter);
+
 	auto tb = AllocTextBox();
-	tb->SetText(UTF8ToWide(string("Thread: ").append(FProcessUnique::Get()->GetThread()->GetName())));
+	tb->SetText(UTF8ToWide(string("Thread: ").append(FProcessUnique::Get()->GetCurrentThread()->GetName())));
 	Panel1->AddChild(tb);
 
 	char head[128];
 	memset(head, 0, 128);
 	auto frameTime = FGlobalHandler::Get()->GetFrameTime();
-	snprintf(head, 127, "%.1fFPS %.2fMS", 1.0f / frameTime, 1000 * frameTime);
+	snprintf(head, 127, "%.1fFPS %.2fms", 1.0f / frameTime, 1000 * frameTime);
 	tb = AllocTextBox();
 	tb->SetText(UTF8ToWide(head));
 	Panel2->AddChild(tb);
+
+	ofstream stream;
+	if (bRecordNext)
+	{
+		string url("StackStatics-"), ext(".csv"), output;
+		FDirectoryHelper::Get()->GetSpecifiedAbsolutePath("Profile", url.append(GetNowStr(true)).append(ext), output);
+		stream.open(output);
+		stream << "Thread: " << FProcessUnique::Get()->GetCurrentThread()->GetName() << "\n";
+		stream << "FrameTime: " << to_string(1000 * frameTime) << "ms, FPS: " << to_string(1/frameTime) << "\n";
+	}
 
 	auto content = FStackCounterManager::Get()->GetDisplayContent();
 	for (auto item : content)
@@ -78,6 +94,17 @@ void LostCore::FStackCounterConsole::FinishCounting()
 		auto tb2 = AllocTextBox();
 		tb2->SetText(UTF8ToWide(item[1]));
 		Panel2->AddChild(tb2);
+
+		if (bRecordNext)
+		{
+			stream << item[0] << "," << item[1] << "\n";
+		}
+	}
+
+	if (bRecordNext)
+	{
+		bRecordNext = false;
+		stream.close();
 	}
 }
 
@@ -91,6 +118,11 @@ void LostCore::FStackCounterConsole::FinishDisplay()
 	}
 
 	OnlineText.clear();
+}
+
+void LostCore::FStackCounterConsole::Record()
+{
+	bRecordNext = true;
 }
 
 FTextBox * LostCore::FStackCounterConsole::AllocTextBox()

@@ -24,7 +24,7 @@ public:
 	~FFBXEditor();
 
 	void Tick();
-	bool InitializeWindow(HWND wnd, bool windowed, int32 width, int32 height);
+	void InitializeWindow(HWND wnd, bool windowed, int32 width, int32 height);
 	void PushCommand(const CommandType& cmd);
 	void LoadFBX(
 		const char * file,
@@ -61,6 +61,8 @@ public:
 	void UnHover();
 
 private:
+	void InitializeEnvironment();
+	void InitializeCallback();
 	void Destroy();
 	void InitializeScene();
 	void StartTickLoop();
@@ -82,7 +84,7 @@ private:
 
 	FCommandQueue<CommandType> TickCommands;
 	bool bKeepTicking;
-	FThread* TickThread;
+	FTickThread* TickThread;
 
 	// Editor tools
 	FGizmoOperator* GizmoOp;
@@ -100,8 +102,6 @@ private:
 const char * const FFBXEditor::SConverterExe = "FbxConverter.exe";
 const char * const FFBXEditor::SConverterOutput = "FBXEditor/";
 
-static FFBXEditor SEditor;
-
 FFBXEditor::FFBXEditor()
 	: OutputDir("")
 	, RC(nullptr)
@@ -114,175 +114,8 @@ FFBXEditor::FFBXEditor()
 	, Console(nullptr)
 	, TickThread(nullptr)
 {
-	char* temp = nullptr;
-	size_t sz = 0;
-	if (!_dupenv_s(&temp, &sz, "APPDATA") == 0 || temp == nullptr)
-	{
-		::MessageBoxA(0, "FFBXEditor", "failed to get environment path", 0);
-		return;
-	}
-
-	OutputDir = string(temp).append("\\_LostReality\\");
-	free(temp);
-
-	FGlobalHandler::Get()->SetRenderContextPP(&RC);
-
-	//FDirectoryHelper::Get()->GetPrimitiveAbsolutePath(SConverterOutput, OutputDir);
-	FGlobalHandler::Get()->SetMoveCameraCallback([&]
-	(float x, float y, float z)
-	{
-		if (Camera != nullptr)
-		{
-			Camera->AddPositionLocal(FFloat3(x, y, z));
-		}
-	});
-
-	FGlobalHandler::Get()->SetRotateCameraCallback([&]
-	(float p, float y, float r)
-	{
-		if (Camera != nullptr)
-		{
-			Camera->AddEulerWorld(FFloat3(p, y, r));
-		}
-	});
-
-	FGlobalHandler::Get()->SetPlayAnimationCallback([&]
-	(const string& anim)
-	{
-		if (reinterpret_cast<FSkeletalModel*>(CurrSelectedModel) != nullptr)
-		{
-			reinterpret_cast<FSkeletalModel*>(CurrSelectedModel)->PlayAnimation(anim);
-		}
-	});
-
-	FGlobalHandler::Get()->SetInitializeWindowCallback([&]
-	(HWND wnd, bool windowed, int32 width, int32 height)
-	{
-		InitializeWindow(wnd, windowed, width, height);
-	});
-
-
-	FGlobalHandler::Get()->SetAssetOperateCallback([&]
-	(int32 op, const char* url)
-	{
-		string localUrl(url);
-		if ((EAssetOperation)op == EAssetOperation::LoadModel)
-		{
-			PushCommand([=]()
-			{
-				LoadModel(localUrl);
-			});
-		}
-		else if ((EAssetOperation)op == EAssetOperation::LoadAnimation)
-		{
-			PushCommand([=]()
-			{
-				LoadAnimation(localUrl);
-			});
-		}
-		else if ((EAssetOperation)op == EAssetOperation::LoadScene)
-		{
-			PushCommand([=]()
-			{
-				CloseScene();
-				LoadScene(localUrl);
-			});
-		}
-		else if ((EAssetOperation)op == EAssetOperation::SaveScene)
-		{
-			PushCommand([=]()
-			{
-				SaveScene(localUrl);
-			});
-		}
-	});
-
-	FGlobalHandler::Get()->SetLoadFBXCallback([&]
-	(	const char * file,
-		const char* primitiveOutput,
-		const char* animationOutput,
-		bool clearScene,
-		bool importTexCoord,
-		bool importAnimation,
-		bool importVertexColor,
-		bool mergeNormalTangentAll,
-		bool importNormal,
-		bool forceRegenerateNormal,
-		bool generateNormalIfNotFound,
-		bool importTangent,
-		bool forceRegenerateTangent,
-		bool generateTangentIfNotFound)
-	{
-		string filePath(file), primPath(primitiveOutput), animPath(animationOutput);
-		this->PushCommand([=]()
-		{
-			LoadFBX(
-				filePath.c_str(),
-				primPath.c_str(),
-				animPath.c_str(),
-				clearScene,
-				importTexCoord,
-				importAnimation,
-				importVertexColor,
-				mergeNormalTangentAll,
-				importNormal,
-				forceRegenerateNormal,
-				generateNormalIfNotFound,
-				importTangent,
-				forceRegenerateTangent,
-				forceRegenerateTangent);
-		});
-	});
-
-	FGlobalHandler::Get()->SetClearSceneCallback([&]
-	()
-	{
-		PushCommand([=]()
-		{
-			ClearScene();
-		});
-	});
-
-	FGlobalHandler::Get()->SetHoverCallback([&]
-	(int32 x, int32 y)
-	{
-		this->PushCommand([=]()
-		{
-			this->OnPicking(x, y);
-		});
-	});
-
-	FGlobalHandler::Get()->SetClickCallback([&]
-	(int32 x, int32 y)
-	{
-		this->PushCommand([=]()
-		{
-			this->OnClick(x, y);
-		});
-	});
-
-	FGlobalHandler::Get()->SetDraggingCallback([&]
-	(int32 x, int32 y)
-	{
-		this->PushCommand([=]()
-		{
-			this->OnDragging(x, y);
-		});
-	});
-
-	FGlobalHandler::Get()->SetEndDragCallback([&]()
-	{
-		this->PushCommand([=]()
-		{
-			this->OnEndDrag();
-		});
-	});
-
-	FGlobalHandler::Get()->SetShutdownCallback([&]
-	()
-	{
-		this->Destroy();
-	});
+	InitializeEnvironment();
+	InitializeCallback();
 }
 
 FFBXEditor::~FFBXEditor()
@@ -436,7 +269,8 @@ void FFBXEditor::LoadFBX(
 			string path = elem.value(K_PATH, "");
 			ReplaceChar(path, "/", "\\");
 			string fileAbs(CopyFileTo(animationOutputAbs, path)), fileRel;
-			assert(FDirectoryHelper::Get()->GetAnimationRelativePath(fileAbs, fileRel));
+			auto result = FDirectoryHelper::Get()->GetAnimationRelativePath(fileAbs, fileRel);
+			assert(result);
 			Log(ELogFlag::LogInfo, "Output anim: %s, [%s]", fileRel.c_str(), fileAbs.c_str());
 
 			LoadAnimation(fileRel);
@@ -456,7 +290,8 @@ void FFBXEditor::LoadFBX(
 				string path = elem.value(K_PATH, "");
 				ReplaceChar(path, "/", "\\");
 				string fileAbs(CopyFileTo(primitiveOutputAbs, path)), fileRel;
-				assert(FDirectoryHelper::Get()->GetPrimitiveRelativePath(fileAbs, fileRel));
+				auto result = FDirectoryHelper::Get()->GetPrimitiveRelativePath(fileAbs, fileRel);
+				assert(result);
 				Log(ELogFlag::LogInfo, "Output primitive: %s, [%s]", fileRel.c_str(), fileAbs.c_str());
 
 				FJson config;
@@ -612,6 +447,198 @@ void FFBXEditor::Tick()
 {
 }
 
+void FFBXEditor::InitializeEnvironment()
+{
+	char* temp = nullptr;
+	size_t sz = 0;
+	if (!_dupenv_s(&temp, &sz, "APPDATA") == 0 || temp == nullptr)
+	{
+		::MessageBoxA(0, "FFBXEditor", "failed to get environment path", 0);
+		return;
+	}
+
+	OutputDir = string(temp).append("\\_LostReality\\");
+	free(temp);
+}
+
+void FFBXEditor::InitializeCallback()
+{
+	FGlobalHandler::Get()->SetRenderContextPP(&RC);
+
+	//FDirectoryHelper::Get()->GetPrimitiveAbsolutePath(SConverterOutput, OutputDir);
+	FGlobalHandler::Get()->SetMoveCameraCallback([&]
+	(float x, float y, float z)
+	{
+		if (Camera != nullptr)
+		{
+			Camera->AddPositionLocal(FFloat3(x, y, z));
+		}
+	});
+
+	FGlobalHandler::Get()->SetRotateCameraCallback([&]
+	(float p, float y, float r)
+	{
+		if (Camera != nullptr)
+		{
+			Camera->AddEulerWorld(FFloat3(p, y, r));
+		}
+	});
+
+	FGlobalHandler::Get()->SetPlayAnimationCallback([&]
+	(const string& anim)
+	{
+		if (reinterpret_cast<FSkeletalModel*>(CurrSelectedModel) != nullptr)
+		{
+			reinterpret_cast<FSkeletalModel*>(CurrSelectedModel)->PlayAnimation(anim);
+		}
+	});
+
+	FGlobalHandler::Get()->SetInitializeWindowCallback([&]
+	(HWND wnd, bool windowed, int32 width, int32 height)
+	{
+		InitializeWindow(wnd, windowed, width, height);
+	});
+
+
+	FGlobalHandler::Get()->SetAssetOperateCallback([&]
+	(int32 op, const char* url)
+	{
+		string localUrl(url);
+		if ((EAssetOperation)op == EAssetOperation::LoadModel)
+		{
+			PushCommand([=]()
+			{
+				LoadModel(localUrl);
+			});
+		}
+		else if ((EAssetOperation)op == EAssetOperation::LoadAnimation)
+		{
+			PushCommand([=]()
+			{
+				LoadAnimation(localUrl);
+			});
+		}
+		else if ((EAssetOperation)op == EAssetOperation::LoadScene)
+		{
+			PushCommand([=]()
+			{
+				CloseScene();
+				LoadScene(localUrl);
+			});
+		}
+		else if ((EAssetOperation)op == EAssetOperation::SaveScene)
+		{
+			PushCommand([=]()
+			{
+				SaveScene(localUrl);
+			});
+		}
+	});
+
+	FGlobalHandler::Get()->SetLoadFBXCallback([&]
+	(const char * file,
+		const char* primitiveOutput,
+		const char* animationOutput,
+		bool clearScene,
+		bool importTexCoord,
+		bool importAnimation,
+		bool importVertexColor,
+		bool mergeNormalTangentAll,
+		bool importNormal,
+		bool forceRegenerateNormal,
+		bool generateNormalIfNotFound,
+		bool importTangent,
+		bool forceRegenerateTangent,
+		bool generateTangentIfNotFound)
+	{
+		string filePath(file), primPath(primitiveOutput), animPath(animationOutput);
+		this->PushCommand([=]()
+		{
+			LoadFBX(
+				filePath.c_str(),
+				primPath.c_str(),
+				animPath.c_str(),
+				clearScene,
+				importTexCoord,
+				importAnimation,
+				importVertexColor,
+				mergeNormalTangentAll,
+				importNormal,
+				forceRegenerateNormal,
+				generateNormalIfNotFound,
+				importTangent,
+				forceRegenerateTangent,
+				forceRegenerateTangent);
+		});
+	});
+
+	FGlobalHandler::Get()->SetClearSceneCallback([&]
+	()
+	{
+		PushCommand([=]()
+		{
+			ClearScene();
+		});
+	});
+
+	FGlobalHandler::Get()->SetHoverCallback([&]
+	(int32 x, int32 y)
+	{
+		this->PushCommand([=]()
+		{
+			this->OnPicking(x, y);
+		});
+	});
+
+	FGlobalHandler::Get()->SetClickCallback([&]
+	(int32 x, int32 y)
+	{
+		this->PushCommand([=]()
+		{
+			this->OnClick(x, y);
+		});
+	});
+
+	FGlobalHandler::Get()->SetDraggingCallback([&]
+	(int32 x, int32 y)
+	{
+		this->PushCommand([=]()
+		{
+			this->OnDragging(x, y);
+		});
+	});
+
+	FGlobalHandler::Get()->SetEndDragCallback([&]()
+	{
+		this->PushCommand([=]()
+		{
+			this->OnEndDrag();
+		});
+	});
+
+	FGlobalHandler::Get()->SetShutdownCallback([&]
+	()
+	{
+		this->PushCommand([=]()
+		{
+			this->Destroy();
+		});
+	});
+
+	// TODO: FGlobalHandler应该是进程全局唯一单例，而FStackCounterManager是线程本地单例
+	FGlobalHandler::Get()->SetRecordProfileCallback([=]
+	()
+	{
+		this->PushCommand([=]()
+		{
+			if (Console != nullptr)
+			{
+				Console->Record();
+			}
+		});
+	});
+}
+
 void FFBXEditor::Destroy()
 {
 	FGlobalHandler::Get()->SetMoveCameraCallback(nullptr);
@@ -636,7 +663,7 @@ void FFBXEditor::Destroy()
 	FGlobalHandler::Get()->SetRenderContextPP(nullptr);
 }
 
-bool FFBXEditor::InitializeWindow(HWND wnd, bool windowed, int32 width, int32 height)
+void FFBXEditor::InitializeWindow(HWND wnd, bool windowed, int32 width, int32 height)
 {
 	auto ret = WrappedCreateRenderContext(EContextID::D3D11_DXGI0, &RC);
 	if (RC != nullptr && RC->InitializeScreen(wnd, windowed, width, height))
@@ -659,13 +686,7 @@ bool FFBXEditor::InitializeWindow(HWND wnd, bool windowed, int32 width, int32 he
 		Console->Initialize(GUI->GetRoot());
 
 		D3D11::WrappedSetProcessUnique(FProcessUnique::Get());
-		TickThread = new FThread([=]() {this->StartTickLoop(); }, "TickThread");
-
-		return true;
-	}
-	else
-	{
-		return false;
+		TickThread = new FTickThread([=]() {this->StartTickLoop(); }, "TickThread");
 	}
 }
 
@@ -795,4 +816,29 @@ FBasicModel * FFBXEditor::ScreenRayTest(int32 x, int32 y)
 	auto result = Scene->RayTest(worldRay, minDist);
 	FGlobalHandler::Get()->UpdateFlagAnd32Bit(EUpdateFlag::UpdateRayTestDistance, *(uint32*)&minDist);
 	return result;
+}
+
+BOOL APIENTRY DllMain(HMODULE hModule,
+	DWORD  ul_reason_for_call,
+	LPVOID lpReserved
+)
+{
+	FFBXEditor* editor = nullptr;
+	switch (ul_reason_for_call)
+	{
+	case DLL_PROCESS_ATTACH:
+	{
+		editor = new FFBXEditor;
+		break;
+	}
+	case DLL_PROCESS_DETACH:
+	{
+		SAFE_DELETE(editor);
+		break;
+	}
+	case DLL_THREAD_ATTACH:
+	case DLL_THREAD_DETACH:
+		break;
+	}
+	return TRUE;
 }

@@ -22,18 +22,19 @@ LostCore::FGlobalHandler::FGlobalHandler()
 	, UpdateFlagAnd32BitFunc(nullptr)
 	, UpdatePosAndRotFunc(nullptr)
 	, AssetOperateCallback(nullptr)
+	, RecordProfileCallback(nullptr)
 {
 }
 
 EReturnCode LostCore::FGlobalHandler::InitializeProcessUnique()
 {
-	FProcessUnique::Initialize();
+	FProcessUnique::StaticInitialize();
 	return SSuccess;
 }
 
 EReturnCode LostCore::FGlobalHandler::DestroyProcessUnique()
 {
-	FProcessUnique::Destroy();
+	FProcessUnique::StaticDestroy();
 	return SSuccess;
 }
 
@@ -285,6 +286,19 @@ EReturnCode LostCore::FGlobalHandler::AssetOperate(int32 op, const char * url)
 	}
 }
 
+EReturnCode LostCore::FGlobalHandler::RecordProfile()
+{
+	if (RecordProfileCallback != nullptr)
+	{
+		RecordProfileCallback();
+		return SSuccess;
+	}
+	else
+	{
+		return SErrorNotImplemented;
+	}
+}
+
 void LostCore::FGlobalHandler::SetRenderContextPP(IRenderContext ** rc)
 {
 	RenderContextPP = rc;
@@ -385,6 +399,11 @@ void LostCore::FGlobalHandler::SetAssetOperateCallback(Callback_IS callback)
 	AssetOperateCallback = callback;
 }
 
+void LostCore::FGlobalHandler::SetRecordProfileCallback(Callback_V callback)
+{
+	RecordProfileCallback = callback;
+}
+
 void LostCore::FGlobalHandler::UpdateFlagAndName(EUpdateFlag flag, const string & name)
 {
 	if (UpdateFlagAndNameFunc != nullptr)
@@ -411,8 +430,9 @@ void LostCore::FGlobalHandler::UpdatePosAndRot(const FFloat3 & pos, const FFloat
 
 #define EXPORTER_PTR (LostCore::FGlobalHandler::Get())
 
-LostCore::FProcessUnique* LostCore::FProcessUnique::SInstance = nullptr;
-LostCore::FStackCounterManager* LostCore::FStackCounterManager::SInstance = nullptr;
+bool FProcessUnique::SIsOriginal = false;
+FProcessUnique* FProcessUnique::SInstance = nullptr;
+FStackCounterManager* FStackCounterManager::SInstance = nullptr;
 
 EXPORT_WRAP_0_DEF(InitializeProcessUnique);
 EXPORT_WRAP_0_DEF(DestroyProcessUnique);
@@ -436,5 +456,6 @@ EXPORT_WRAP_2_DEF(OnClick, int32, int32);
 EXPORT_WRAP_2_DEF(OnDragging, int32, int32);
 EXPORT_WRAP_0_DEF(OnEndDrag);
 EXPORT_WRAP_2_DEF(AssetOperate, int32, const char*);
+EXPORT_WRAP_0_DEF(RecordProfile);
 
 #undef EXPORTER_PTR

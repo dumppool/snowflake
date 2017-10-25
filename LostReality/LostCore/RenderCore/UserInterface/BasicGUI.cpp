@@ -217,6 +217,9 @@ void LostCore::FRect::Destroy()
 
 void LostCore::FRect::Update()
 {
+	static FStackCounterRequest SCounter("FRect::Update");
+	//FScopedStackCounterRequest scopedCounter(SCounter);
+
 	auto maxSize = GetSize();
 	for (auto it = Children.rbegin(); it != Children.rend(); ++it)
 	{
@@ -241,6 +244,9 @@ void LostCore::FRect::Update()
 
 void LostCore::FRect::Commit()
 {
+	static FStackCounterRequest SCounter("FRect::Commit");
+	//FScopedStackCounterRequest scopedCounter(SCounter);
+
 	CommitPrivate();
 	for (auto it = Children.rbegin(); it != Children.rend(); ++it)
 	{
@@ -326,7 +332,9 @@ void LostCore::FRect::CommitPrivate()
 	if (RectBuffer != nullptr)
 	{
 		FRectParameter param(GetSize(), GetOriginGlobal(), GetScaleGlobal());
-		RectBuffer->UpdateBuffer((const void*)&param.GetBuffer(), sizeof(param));
+		FBufFast buf;
+		param.GetBuffer(buf);
+		RectBuffer->UpdateBuffer(buf);
 		RectBuffer->Commit();
 	}
 
@@ -352,6 +360,9 @@ LostCore::FBasicGUI::~FBasicGUI()
 
 void LostCore::FBasicGUI::Tick()
 {
+	static FStackCounterRequest SCounter("FBasicGUI::Tick");
+	FScopedStackCounterRequest scopedCounter(SCounter);
+
 	Root->Update();
 	Root->Commit();
 }
