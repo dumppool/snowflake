@@ -349,7 +349,7 @@ EReturnCode D3D11::CreateRenderTargetView(
 
 EReturnCode D3D11::CreatePrimitiveVertex(
 	const TRefCountPtr<ID3D11Device>& device, 
-	const void* buf, uint32 bytes, bool bDynamic, 
+	const FBuf& buf, bool bDynamic,
 	TRefCountPtr<ID3D11Buffer>& vb)
 {
 	const CHAR* head = "D3D11::CreatePrimitiveVertex";
@@ -360,15 +360,15 @@ EReturnCode D3D11::CreatePrimitiveVertex(
 		return SErrorInvalidParameters;
 	}
 
-	if (buf == nullptr || bytes == 0)
+	if (buf.empty())
 	{
 		LVERR(head, "Invalid input buf");
 		return SErrorInvalidParameters;
 	}
 
 	// Vertex Buffer
-	D3D11_BUFFER_DESC desc{ bytes, bDynamic ? D3D11_USAGE_DYNAMIC : D3D11_USAGE_DEFAULT, D3D11_BIND_VERTEX_BUFFER, bDynamic?D3D11_CPU_ACCESS_WRITE:0, 0, 0 };
-	D3D11_SUBRESOURCE_DATA data{ buf, 0, 0 };
+	D3D11_BUFFER_DESC desc{ buf.size(), bDynamic ? D3D11_USAGE_DYNAMIC : D3D11_USAGE_DEFAULT, D3D11_BIND_VERTEX_BUFFER, bDynamic?D3D11_CPU_ACCESS_WRITE:0, 0, 0 };
+	D3D11_SUBRESOURCE_DATA data{ buf.data(), 0, 0 };
 	HRESULT hr = device->CreateBuffer(&desc, &data, vb.GetInitReference());
 	if (FAILED(hr))
 	{
@@ -381,7 +381,7 @@ EReturnCode D3D11::CreatePrimitiveVertex(
 
 EReturnCode D3D11::CreatePrimitiveIndex(
 	const TRefCountPtr<ID3D11Device>& device,
-	const void* buf, uint32 bytes, bool bDynamic, 
+	const FBuf& buf, bool bDynamic,
 	TRefCountPtr<ID3D11Buffer>& ib)
 {
 	const CHAR* head = "D3D11::CreatePrimitiveIndex";
@@ -392,15 +392,15 @@ EReturnCode D3D11::CreatePrimitiveIndex(
 		return SErrorInvalidParameters;
 	}
 
-	if (buf == nullptr || bytes == 0)
+	if (buf.empty())
 	{
 		LVERR(head, "Invalid input buf");
 		return SErrorInvalidParameters;
 	}
 
 	// Vertex Buffer
-	D3D11_BUFFER_DESC desc{ bytes, bDynamic ? D3D11_USAGE_DYNAMIC : D3D11_USAGE_DEFAULT, D3D11_BIND_INDEX_BUFFER, 0, 0, 0 };
-	D3D11_SUBRESOURCE_DATA data{ buf, 0, 0 };
+	D3D11_BUFFER_DESC desc{ buf.size(), bDynamic ? D3D11_USAGE_DYNAMIC : D3D11_USAGE_DEFAULT, D3D11_BIND_INDEX_BUFFER, 0, 0, 0 };
+	D3D11_SUBRESOURCE_DATA data{ buf.data(), 0, 0 };
 	HRESULT hr = device->CreateBuffer(&desc, &data, ib.GetInitReference());
 	if (FAILED(hr))
 	{

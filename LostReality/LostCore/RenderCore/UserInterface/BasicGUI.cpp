@@ -199,19 +199,9 @@ void LostCore::FRect::ClearChildren(bool dealloc)
 
 void LostCore::FRect::Destroy()
 {
-	if (RectPrimitive != nullptr)
-	{
-		WrappedDestroyPrimitiveGroup(forward<IPrimitiveGroup*>(RectPrimitive));
-		RectPrimitive = nullptr;
-		bConstructed = false;
-	}
-
-	if (RectBuffer != nullptr)
-	{
-		WrappedDestroyConstantBuffer(forward<IConstantBuffer*>(RectBuffer));
-		RectBuffer = nullptr;
-	}
-
+	RectPrimitive = nullptr;
+	RectBuffer = nullptr;
+	bConstructed = false;
 	ClearChildren(true);
 }
 
@@ -257,12 +247,12 @@ void LostCore::FRect::Commit()
 	}
 }
 
-void LostCore::FRect::SetTexture(ITexture * tex)
+void LostCore::FRect::SetTexture(ITexturePtr tex)
 {
 	RectTexture = tex;
 }
 
-void LostCore::FRect::ConstructPrimitive(const void* buf, int32 sz, int32 stride)
+void LostCore::FRect::ConstructPrimitive(const FBuf& buf, int32 stride)
 {
 	if (!bHasGeometry)
 	{
@@ -270,31 +260,22 @@ void LostCore::FRect::ConstructPrimitive(const void* buf, int32 sz, int32 stride
 	}
 
 	bConstructed = true;
-	if (SSuccess != WrappedCreatePrimitiveGroup(&RectPrimitive))
-	{
-		return;
-	}
-
+	WrappedCreatePrimitiveGroup(RectPrimitive);
 	RectPrimitive->SetVertexElement(FRectVertex::GetVertexElement());
 	RectPrimitive->SetRenderOrder(ERenderOrder::UI);
 	RectPrimitive->SetTopology(EPrimitiveTopology::TriangleList);
-	if (sz == 0)
+	if (buf.empty())
 	{
-		RectPrimitive->ConstructVB(FRectVertex::GetDefaultVertices(FColor128(~0)), 4 * sizeof(FRectVertex), sizeof(FRectVertex), false);
+		RectPrimitive->ConstructVB(*FRectVertex::GetDefaultVertices(FColor128(~0)), sizeof(FRectVertex), false);
 	}
 	else
 	{
-		RectPrimitive->ConstructVB(buf, sz, stride, false);
+		RectPrimitive->ConstructVB(buf, stride, false);
 	}
 
-	RectPrimitive->ConstructIB(FRectVertex::GetDefaultIndices(), 6 * sizeof(int16), sizeof(int16), false);
+	RectPrimitive->ConstructIB(*FRectVertex::GetDefaultIndices(), sizeof(int16), false);
 
-	if (SSuccess != WrappedCreateConstantBuffer(&RectBuffer) ||
-		!RectBuffer->Initialize(sizeof(Param), false))
-	{
-		return;
-	}
-
+	WrappedCreateConstantBuffer(RectBuffer);
 	RectBuffer->SetShaderSlot(SHADER_SLOT_MATRICES);
 	RectBuffer->SetShaderFlags(SHADER_FLAG_VS);
 }
@@ -326,13 +307,14 @@ void LostCore::FRect::CommitPrivate()
 
 	if (!bConstructed)
 	{
-		ConstructPrimitive(nullptr, 0, 0);
+		FBuf buf;
+		ConstructPrimitive(buf, 0);
 	}
 
 	if (RectBuffer != nullptr)
 	{
 		FRectParameter param(GetSize(), GetOriginGlobal(), GetScaleGlobal());
-		FBufFast buf;
+		FBuf buf;
 		param.GetBuffer(buf);
 		RectBuffer->UpdateBuffer(buf);
 		RectBuffer->Commit();

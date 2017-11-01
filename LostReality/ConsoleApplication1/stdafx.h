@@ -7,12 +7,13 @@
 
 #include "targetver.h"
 
-#include <stdio.h>
-#include <tchar.h>
+//#include <stdio.h>
+//#include <tchar.h>
 
 #define MODULE_MSG_PREFIX "TestInfo"
 #define MODULE_WARN_PREFIX "TestWarn"
 #define MODULE_ERR_PREFIX "TestError"
+#define MODULE_DEBUG_PREFIX "TestDebug"
 #include "LostCoreIncludes.h"
 
 

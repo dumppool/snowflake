@@ -25,15 +25,15 @@ LostCore::FFontProvider::~FFontProvider()
 
 void LostCore::FFontProvider::Initialize()
 {
-	WrappedCreateGdiFont(&GdiFont);
+	WrappedCreateGdiFont(GdiFont);
 
-	// push & initialize ascii chars
-	const int32 sz = 127 - '!';
-	WCHAR chars[sz];
-	for (int32 i = 0; i < sz; ++i)
+	int32 curr = 32, last = 127;
+	wstring initialString;
+	initialString.resize(last - curr);
+	for_each(initialString.begin(), initialString.end(), [&](WCHAR& elem)
 	{
-		chars[i] = '!' + i;
-	}
+		elem = WCHAR(curr++);
+	});
 
 	FFontConfig config;
 	config.FontName = L"Consolas";
@@ -44,27 +44,23 @@ void LostCore::FFontProvider::Initialize()
 	config.Weight = 0;
 	config.Quality = NONANTIALIASED_QUALITY;
 	config.CharSet = DEFAULT_CHARSET;
-	GdiFont->Initialize(config, chars, sz);
-
-	//std::wstring ws2 = L"的空空大口大口的看到v次";
-	//GdiFont->Initialize(config, const_cast<wchar_t*>(ws2.c_str()), ws2.size());
+	GdiFont->Initialize(config, initialString);
 }
 
 void LostCore::FFontProvider::Destroy()
 {
-	WrappedDestroyGdiFont(forward<IFontInterface*>(GdiFont));
 	GdiFont = nullptr;
 }
 
-void LostCore::FFontProvider::EndFrame()
+void LostCore::FFontProvider::UpdateRes()
 {
 	if (GdiFont != nullptr)
 	{
-		GdiFont->EndFrame();
+		GdiFont->UpdateRes();
 	}
 }
 
-IFontInterface * LostCore::FFontProvider::GetGdiFont()
+IFontPtr LostCore::FFontProvider::GetGdiFont()
 {
 	return GdiFont;
 }

@@ -47,16 +47,20 @@ namespace LostCore
 		FColor128 Color;
 	};
 
-	class IRenderContext
+	class IRenderContext : public ITickTask
 	{
+		typedef function<void()> FCmd;
+
 	public:
 		virtual ~IRenderContext() {}
 
-		virtual bool Initialize(LostCore::EContextID id) = 0;
-		virtual bool InitializeScreen(HWND wnd, bool bWindowed, int32 width, int32 height) = 0;
-		virtual void BeginFrame() = 0;
+		virtual void InitializeDevice(LostCore::EContextID id, HWND wnd, bool bWindowed, int32 width, int32 height) = 0;
+		//virtual void BeginFrame() = 0;
 		//virtual void RenderFrame() = 0;
-		virtual void EndFrame() = 0;
+		//virtual void EndFrame() = 0;
 		virtual void SetViewProjectMatrix(const FFloat4x4& vp) = 0;
+		virtual void FirstCommit() = 0;
+		virtual void FinishCommit() = 0;
+		virtual void PushCommand(const FCmd& cmd) = 0;
 	};
 }

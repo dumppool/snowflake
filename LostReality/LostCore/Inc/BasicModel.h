@@ -42,17 +42,17 @@ namespace LostCore
 		const string& GetUrl() const;
 
 		FAABoundingBox* GetBoundingBox();
-		IPrimitiveGroup* GetPrimitive();
+		IPrimitiveGroupPtr GetPrimitive();
 		IMaterial* GetMaterial();
-		IConstantBuffer* GetMatricesBuffer();
-		IConstantBuffer* GetCustomBuffer();
+		IConstantBufferPtr GetMatricesBuffer();
+		IConstantBufferPtr GetCustomBuffer();
 		FMeshData* GetPrimitiveData();
 		void SetColor(const FColor128& color);
 
 		bool RayTest(const FRay& ray, FRay::FT& dist);
 
 	protected:
-		virtual bool ConfigPrimitive(const string& url, IPrimitiveGroup*& pg, FMeshData& pgdata);
+		virtual bool ConfigPrimitive(const string& url, IPrimitiveGroupPtr& pg, FMeshData& pgdata);
 		virtual bool ConfigMaterial(const string& url);
 
 		virtual void UpdateConstant();
@@ -68,14 +68,14 @@ namespace LostCore
 		void Destroy();
 
 		string Url;
-		IPrimitiveGroup* Primitive;
+		IPrimitiveGroupPtr Primitive;
 		IMaterial* Material;
-		IConstantBuffer* MatricesBuffer;
+		IConstantBufferPtr MatricesBuffer;
 		FMeshData PrimitiveData;
 		FSegmentTool SegmentRenderer;
 		FAABoundingBox BoundingBox;
 		FCustomParameter Custom;
-		IConstantBuffer* CustomBuffer;
+		IConstantBufferPtr CustomBuffer;
 
 		uint32 ActorFlags;
 	};
@@ -124,7 +124,7 @@ namespace LostCore
 		virtual void UpdateConstant() override;
 		//virtual void RayTest() = 0;
 
-		virtual bool ConfigPrimitive(const string& url, IPrimitiveGroup*& pg, FMeshData& pgdata) override;
+		virtual bool ConfigPrimitive(const string& url, IPrimitiveGroupPtr& pg, FMeshData& pgdata) override;
 		virtual bool ConfigMaterial(const string& url) override;
 
 		virtual void CommitGizmos();

@@ -15,17 +15,26 @@
 using namespace D3D11;
 using namespace LostCore;
 
-class FFBXEditor
+class FFBXEditor : public ITickTask
 {
-	typedef function<void()> CommandType;
+	typedef function<void()> FCmd;
 
 public:
 	FFBXEditor();
 	~FFBXEditor();
 
-	void Tick();
+	// Inherited via ITickTask
+	virtual bool Initialize() override;
+	virtual void Tick() override;
+	virtual void Destroy() override;
+
+	// 启动editor.
 	void InitializeWindow(HWND wnd, bool windowed, int32 width, int32 height);
-	void PushCommand(const CommandType& cmd);
+
+	// 关闭editor
+	void Shutdown();
+
+	void PushCommand(const FCmd& cmd);
 	void LoadFBX(
 		const char * file,
 		const char* primitiveOutput,
@@ -63,9 +72,7 @@ public:
 private:
 	void InitializeEnvironment();
 	void InitializeCallback();
-	void Destroy();
 	void InitializeScene();
-	void StartTickLoop();
 	void FlushNotifies();
 
 	void Log(ELogFlag level, const char* fmt, ...);
@@ -82,9 +89,7 @@ private:
 
 	string OutputDir;
 
-	FCommandQueue<CommandType> TickCommands;
-	bool bKeepTicking;
-	FTickThread* TickThread;
+	FCommandQueue<FCmd> TickCommands;
 
 	// Editor tools
 	FGizmoOperator* GizmoOp;
@@ -95,8 +100,11 @@ private:
 	FBasicGUI* GUI;
 	FStackCounterConsole* Console;
 
+	FTickThread* Thread;
+
 	static const char * const SConverterExe;
 	static const char * const SConverterOutput;
+
 };
 
 const char * const FFBXEditor::SConverterExe = "FbxConverter.exe";
@@ -112,7 +120,7 @@ FFBXEditor::FFBXEditor()
 	, GizmoOp(nullptr)
 	, GUI(nullptr)
 	, Console(nullptr)
-	, TickThread(nullptr)
+	, Thread(nullptr)
 {
 	InitializeEnvironment();
 	InitializeCallback();
@@ -131,7 +139,12 @@ void FFBXEditor::InitializeScene()
 {
 }
 
-void FFBXEditor::PushCommand(const CommandType & cmd)
+void FFBXEditor::Shutdown()
+{
+	SAFE_DELETE(Thread);
+}
+
+void FFBXEditor::PushCommand(const FCmd & cmd)
 {
 	TickCommands.Push(cmd);
 }
@@ -443,8 +456,88 @@ void FFBXEditor::UnHover()
 	}
 }
 
+bool FFBXEditor::Initialize()
+{
+	return true;
+}
+
 void FFBXEditor::Tick()
 {
+	static auto SLastStamp = chrono::system_clock::now();
+	auto now = chrono::system_clock::now();
+	auto sec = chrono::duration<float>(now - SLastStamp);
+	SLastStamp = now;
+
+	FGlobalHandler::Get()->SetFrameTime(sec.count());
+
+	FCmd cmd;
+	while (TickCommands.Pop(cmd))
+	{
+		cmd();
+	}
+
+	if (RC != nullptr)
+	{
+		FlushNotifies();
+
+		RC->FirstCommit();
+
+		if (Camera != nullptr)
+		{
+			Camera->Tick();
+		}
+
+		if (Scene != nullptr)
+		{
+			Scene->Tick();
+		}
+
+		if (GizmoOp != nullptr)
+		{
+			GizmoOp->Tick();
+		}
+
+		if (Console != nullptr)
+		{
+			Console->FinishCounting();
+		}
+
+		if (GUI != nullptr)
+		{
+			GUI->Tick();
+		}
+
+		RC->FinishCommit();
+
+		FFontProvider::Get()->UpdateRes();
+
+		if (Console != nullptr)
+		{
+			Console->FinishDisplay();
+		}
+	}
+}
+
+void FFBXEditor::Destroy()
+{
+	FGlobalHandler::Get()->SetMoveCameraCallback(nullptr);
+	FGlobalHandler::Get()->SetRotateCameraCallback(nullptr);
+
+	SAFE_DELETE(Console);
+	SAFE_DELETE(GUI);
+
+	FFontProvider::Get()->Destroy();
+
+	SAFE_DELETE(GizmoOp);
+
+	CurrSelectedModel = nullptr;
+	CurrHoveredModel = nullptr;
+
+	SAFE_DELETE(Scene);
+	SAFE_DELETE(Camera);
+	SAFE_DELETE(RC);
+
+	FGlobalHandler::Get()->SetRenderContextPP(nullptr);
 }
 
 void FFBXEditor::InitializeEnvironment()
@@ -619,10 +712,7 @@ void FFBXEditor::InitializeCallback()
 	FGlobalHandler::Get()->SetShutdownCallback([&]
 	()
 	{
-		this->PushCommand([=]()
-		{
-			this->Destroy();
-		});
+		Shutdown();
 	});
 
 	// TODO: FGlobalHandler应该是进程全局唯一单例，而FStackCounterManager是线程本地单例
@@ -639,120 +729,34 @@ void FFBXEditor::InitializeCallback()
 	});
 }
 
-void FFBXEditor::Destroy()
-{
-	FGlobalHandler::Get()->SetMoveCameraCallback(nullptr);
-	FGlobalHandler::Get()->SetRotateCameraCallback(nullptr);
-
-	bKeepTicking = false;
-	SAFE_DELETE(TickThread);
-	SAFE_DELETE(Console);
-	SAFE_DELETE(GUI);
-
-	FFontProvider::Get()->Destroy();
-
-	SAFE_DELETE(GizmoOp);
-
-	CurrSelectedModel = nullptr;
-	CurrHoveredModel = nullptr;
-
-	SAFE_DELETE(Scene);
-	SAFE_DELETE(Camera);
-	SAFE_DELETE(RC);
-
-	FGlobalHandler::Get()->SetRenderContextPP(nullptr);
-}
-
 void FFBXEditor::InitializeWindow(HWND wnd, bool windowed, int32 width, int32 height)
 {
-	auto ret = WrappedCreateRenderContext(EContextID::D3D11_DXGI0, &RC);
-	if (RC != nullptr && RC->InitializeScreen(wnd, windowed, width, height))
+	if (Thread != nullptr)
 	{
-		ScreenWidth = width;
-		ScreenHeight = height;
-
-		GizmoOp = new FGizmoOperator;
-		if (!GizmoOp->Load("axis.json"))
-		{
-			Log(ELogFlag::LogError, "failed to load gizmo config: %s", "axis.json");
-		}
-
-		FFontProvider::Get()->Initialize();
-
-		GUI = new FBasicGUI;
-		GUI->Initialize(FFloat2(width, height));
-
-		Console = new FStackCounterConsole;
-		Console->Initialize(GUI->GetRoot());
-
-		D3D11::WrappedSetProcessUnique(FProcessUnique::Get());
-		TickThread = new FTickThread([=]() {this->StartTickLoop(); }, "TickThread");
-	}
-}
-
-void FFBXEditor::StartTickLoop()
-{
-	bKeepTicking = true;
-	while (bKeepTicking) 
-	{
-		static auto SLastStamp = chrono::system_clock::now();
-		auto now = chrono::system_clock::now();
-		auto sec = chrono::duration<float>(now - SLastStamp);
-		SLastStamp = now;
-
-		FGlobalHandler::Get()->SetFrameTime(sec.count());
-
-		CommandType cmd;
-		while (TickCommands.Pop(cmd))
-		{
-			cmd();
-		}
-
-		auto rc = FGlobalHandler::Get()->GetRenderContext();
-		if (rc != nullptr)
-		{
-			FlushNotifies();
-
-			if (Scene != nullptr)
-			{
-				Scene->Tick();
-			}
-
-			if (GizmoOp != nullptr)
-			{
-				GizmoOp->Tick();
-			}
-
-			if (Camera != nullptr)
-			{
-				Camera->Tick();
-			}
-
-			if (Console != nullptr)
-			{
-				Console->FinishCounting();
-			}
-
-			if (GUI != nullptr)
-			{
-				GUI->Tick();
-			}
-
-			rc->BeginFrame();
-			rc->EndFrame();
-
-			FFontProvider::Get()->EndFrame();
-
-			if (Console != nullptr)
-			{
-				Console->FinishDisplay();
-			}
-		}
-
-		this_thread::sleep_for(chrono::milliseconds(1));
+		return;
 	}
 
-	LVMSG("FFBXEditor::StartTickLoop", "Loop finished");
+	auto ret = WrappedCreateRenderContext(&RC);
+	RC->InitializeDevice(EContextID::D3D11_DXGI0, wnd, windowed, width, height);
+	FFontProvider::Get()->Initialize();
+
+	ScreenWidth = width;
+	ScreenHeight = height;
+
+	GizmoOp = new FGizmoOperator;
+	if (!GizmoOp->Load("axis.json"))
+	{
+		Log(ELogFlag::LogError, "failed to load gizmo config: %s", "axis.json");
+	}
+
+
+	GUI = new FBasicGUI;
+	GUI->Initialize(FFloat2(width, height));
+
+	Console = new FStackCounterConsole;
+	Console->Initialize(GUI->GetRoot());
+
+	Thread = new FTickThread(this, "EDitorTick");
 }
 
 void FFBXEditor::FlushNotifies()

@@ -11,9 +11,6 @@
 
 namespace LostCore
 {
-	class IRenderContext;
-	class ITexture;
-
 	class FFontConfig
 	{
 	public:
@@ -137,19 +134,22 @@ namespace LostCore
 	struct FCharacterTexturePair
 	{
 		FCharDesc Desc;
-		ITexture* Texture;
+		ITexturePtr Texture;
 
-		FCharacterTexturePair(const FCharDesc& desc, ITexture* tex) : Desc(desc), Texture(tex) {}
-		FCharacterTexturePair() : FCharacterTexturePair(FCharDesc(), nullptr) {}
+		FCharacterTexturePair(const FCharDesc& desc, const ITexturePtr& tex) : Desc(desc), Texture(tex) {}
+		FCharacterTexturePair() {}
 	};
 
-	class IFontInterface
+	class IFont
 	{
 	public:
-		virtual ~IFontInterface() {}
-		virtual bool Initialize(const LostCore::FFontConfig& config, const WCHAR* chars, int32 sz) = 0;
+		virtual ~IFont() {}
+		virtual void Initialize(const LostCore::FFontConfig& config, const wstring& chars) = 0;
 		virtual FCharacterTexturePair GetCharacter(WCHAR c) = 0;
 		virtual FFontConfig GetConfig() const = 0;
-		virtual void EndFrame() = 0;
+		virtual void UpdateRes() = 0;
 	};
+
+	typedef shared_ptr<IFont>  IFontPtr;
+	typedef weak_ptr<IFont> IFontWeakPtr;
 }

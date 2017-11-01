@@ -14,14 +14,14 @@
 
 namespace LostCore
 {
-	class IFontInterface;
+	class IFont;
 	class IPrimitiveGroup;
 	class IMaterial;
 	class ITexture;
 
 	__declspec(align(16)) struct FRectVertex 
 	{
-		static const void* GetDefaultVertices(const FColor128& col)
+		static FBuf* GetDefaultVertices(const FColor128& col)
 		{
 			static const FRectVertex vertices[] =
 			{
@@ -31,7 +31,28 @@ namespace LostCore
 				{ FFloat2(1.f, 1.f),	FFloat2(1.f, 1.f), col },		// bottom right
 			};
 
-			return vertices;
+			static FBuf SVertices;
+			if (SVertices.empty())
+			{
+				const FRectVertex vertices[] =
+				{
+					{ FFloat2(0.f, 0.f),	FFloat2(0.f, 0.f), col },		// top left
+					{ FFloat2(1.f, 0.f),	FFloat2(1.f, 0.f), col },		// top right
+					{ FFloat2(0.f, 1.f),	FFloat2(0.f, 1.f), col },		// bottom left
+					{ FFloat2(1.f, 1.f),	FFloat2(1.f, 1.f), col },		// bottom right
+				};
+
+				int32 offset = 0;
+				int32 pitch = sizeof(FRectVertex);
+				SVertices.resize(4 * pitch);
+				for (int32 index = 0; index < 4; index++)
+				{
+					memcpy(SVertices.data() + offset, vertices + offset, pitch);
+					offset += pitch;
+				}
+			}
+
+			return &SVertices;
 		}
 
 		static uint32 GetVertexElement()
@@ -39,10 +60,17 @@ namespace LostCore
 			return VERTEX_COORDINATE2D | VERTEX_COLOR | VERTEX_TEXCOORD0;
 		}
 
-		static const void* GetDefaultIndices()
+		static FBuf* GetDefaultIndices()
 		{
-			static const int16 indices[] = { 0, 1, 2, 1, 3, 2 };
-			return indices;
+			static FBuf SIndices;
+			if (SIndices.empty())
+			{
+				const int16 indices[] = { 0, 1, 2, 1, 3, 2 };
+				SIndices.resize(sizeof(indices));
+				memcpy(SIndices.data(), indices, sizeof(indices));
+			}
+
+			return &SIndices;
 		}
 
 		FFloat2 XY;
@@ -104,8 +132,8 @@ namespace LostCore
 
 		virtual void Update();
 		virtual void Commit();
-		void SetTexture(ITexture* tex);
-		void ConstructPrimitive(const void* buf, int32 sz, int32 stride);
+		void SetTexture(ITexturePtr tex);
+		void ConstructPrimitive(const FBuf& buf, int32 stride);
 		void HasGeometry(bool val);
 
 	protected:
@@ -125,13 +153,13 @@ namespace LostCore
 		// 次序：深度从前到后，绘制时需从后到前。
 		vector<FRect*> Children;
 
-		IPrimitiveGroup* RectPrimitive;
+		IPrimitiveGroupPtr RectPrimitive;
 		bool bConstructed;
 		bool bHasGeometry;
 		bool bAutoUpdateWidth;
 		bool bAutoUpdateHeight;
-		ITexture* RectTexture;
-		IConstantBuffer* RectBuffer;
+		ITexturePtr RectTexture;
+		IConstantBufferPtr RectBuffer;
 	};
 
 	class FBasicGUI

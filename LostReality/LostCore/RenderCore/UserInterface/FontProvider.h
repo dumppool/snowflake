@@ -28,12 +28,12 @@ namespace LostCore
 
 		void Initialize();
 		void Destroy();
-		void EndFrame();
+		void UpdateRes();
 
-		IFontInterface* GetGdiFont();
+		IFontPtr GetGdiFont();
 
 	private:
-		IFontInterface* GdiFont;
+		IFontPtr GdiFont;
 	};
 }
 

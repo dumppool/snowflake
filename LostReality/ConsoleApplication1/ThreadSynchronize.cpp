@@ -89,3 +89,110 @@ bool FCountPrimeNumsTask::IsThreadPrivate()
 {
 	return false;
 }
+
+static set<int32> SIntSet0;
+static set<int32> SIntSet1;
+
+FSyncProducer::FSyncProducer()
+	: Thread(new FTickThread(this, "SyncProducer"))
+	, Data(1)
+	, Cmds(true)
+{
+}
+
+FSyncProducer::~FSyncProducer()
+{
+	SAFE_DELETE(Thread);
+}
+
+double FSyncProducer::GetData(int32 * data)
+{
+	return Data.SyncRead(data);
+}
+
+void FSyncProducer::PushMsg(string& buf)
+{
+	Cmds.Push([=]() {
+		cout << buf.data() << endl;
+	});
+}
+
+bool FSyncProducer::Initialize()
+{
+	cout << "FSyncProducer::Initialize" << endl;
+	return true;
+}
+
+void FSyncProducer::Tick()
+{
+	//auto r = rand();
+	//Data.Ref() = r;
+	//auto past = Data.SyncCommit();
+	//SIntSet0.insert(r);
+	//cout << "Write data: " << past * 1000 << "ms, " << r << endl;
+	function<void()> cmd;
+	while (Cmds.Pop(cmd))
+	{
+		cmd();
+	}
+}
+
+void FSyncProducer::Destroy()
+{
+	cout << "FSyncProducer::Destroy" << endl;
+}
+
+FSyncConsumer::FSyncConsumer()
+	: Thread(new FTickThread(this, "FSyncConsumer"))
+	, Producer(new FSyncProducer)
+{
+}
+
+FSyncConsumer::~FSyncConsumer()
+{
+	SAFE_DELETE(Thread);
+	SAFE_DELETE(Producer);
+}
+
+bool FSyncConsumer::Initialize()
+{
+	cout << "FSyncConsumer::Initialize" << endl;
+	Messages.push_back("Hello world.");
+	Messages.push_back("Commit message in consumer thread.");
+	Messages.push_back("When commit, messages will be captured before pushed into producer's command queue.");
+	Messages.push_back("In producer thread, command will be popped and output one by one.");
+	return true;
+}
+
+void FSyncConsumer::Tick()
+{
+	//int32 val;
+	//auto past = Producer->GetData(&val);
+	//SIntSet1.insert(val);
+	//cout << "Get data: " << past*1000 << "ms, " << val << endl;
+	if (Messages.empty())
+		return;
+
+
+	Producer->PushMsg(Messages[0]);
+	Messages.erase(Messages.begin());
+}
+
+void FSyncConsumer::Destroy()
+{
+	cout << "FSyncConsumer::Destroy" << endl;
+}
+
+FSyncSample::FSyncSample(int32 sec)
+{
+	FProcessUnique::StaticInitialize();
+	FSyncConsumer consumer;
+
+	this_thread::sleep_for(chrono::seconds(sec));
+	cout << "Time's UP" << endl;
+}
+
+FSyncSample::~FSyncSample()
+{
+	FProcessUnique::StaticDestroy();
+}

@@ -8,7 +8,6 @@
 */
 #include "stdafx.h"
 #include "GdiFont.h"
-#include "Implements/Texture.h"
 
 using namespace LostCore;
 using namespace D3D11;
@@ -27,14 +26,69 @@ D3D11::FGdiFont::~FGdiFont()
 	Destroy();
 }
 
-bool D3D11::FGdiFont::Initialize(const LostCore::FFontConfig & config, const WCHAR* chars, int32 sz)
+void D3D11::FGdiFont::Initialize(const LostCore::FFontConfig & config, const wstring& chars)
 {
-	const char* head = "D3D11::FGdiFont::Initialize";
+	if (FRenderContext::Get()->InRenderThread())
+	{
+		auto ret = ExecInitialize(config, chars);
+		assert(ret);
+	}
+	else
+	{
+		auto p = shared_from_this();
+		FRenderContext::Get()->PushCommand([=]()
+		{
+			auto ret = p->ExecInitialize(config, chars);
+			assert(ret);
+		});
+	}
+}
+
+LostCore::FCharacterTexturePair D3D11::FGdiFont::GetCharacter(WCHAR c)
+{
+	auto it = Property.CharDesc.find(FCharDesc(c));
+	if (it == Property.CharDesc.end())
+	{
+		PendingCharacters.append(&c);
+		return FCharacterTexturePair();
+	}
+
+	return FCharacterTexturePair(FCharDesc(it->Char, it->X, it->Y, it->Width, it->Height), Property.FontTexture);
+}
+
+LostCore::FFontConfig D3D11::FGdiFont::GetConfig() const
+{
+	return Property.Config;
+}
+
+void D3D11::FGdiFont::UpdateRes()
+{
+	if (FRenderContext::Get()->InRenderThread())
+	{
+		ExecUpdateRes();
+	}
+	else
+	{
+		auto p = shared_from_this();
+		FRenderContext::Get()->PushCommand([=]()
+		{
+			p->ExecUpdateRes();
+		});
+	}
+}
+
+void D3D11::FGdiFont::Destroy()
+{
+	Property.FontTexture = nullptr;
+}
+
+bool D3D11::FGdiFont::ExecInitialize(const LostCore::FFontConfig & config, const wstring& chars)
+{
+	const char* head = "FGdiFont::ExecInitialize";
 
 	std::set<WCHAR> inputChars;
-	inputChars.insert(chars, chars + sz);
+	inputChars.insert(chars.begin(), chars.end());
 	inputChars.insert(Property.Chars.begin(), Property.Chars.end());
-	sz = inputChars.size();
 	bool bDirt = Property.Chars != inputChars;
 
 	if (Property.Config == config && !bDirt)
@@ -48,8 +102,7 @@ bool D3D11::FGdiFont::Initialize(const LostCore::FFontConfig & config, const WCH
 
 	std::vector<WCHAR> vecChars(inputChars.begin(), inputChars.end());
 
-	SAFE_DELETE(Property.FontTexture);
-	Property.FontTexture = new FTexture2D;
+	Property.FontTexture = FTexture2DPtr(new FTexture2D);
 
 	auto hint = Property.Config.bAntiAliased ? TextRenderingHintAntiAliasGridFit : TextRenderingHintSingleBitPerPixelGridFit;
 	hint = TextRenderingHintClearTypeGridFit;
@@ -86,7 +139,7 @@ bool D3D11::FGdiFont::Initialize(const LostCore::FFontConfig & config, const WCH
 		RETURN_FALSE;
 	}
 
-	int32 size = (int32)(Property.Config.Height) * sz;
+	int32 size = (int32)(Property.Config.Height) * vecChars.size();
 	Bitmap bmp(size, size, PixelFormat32bppARGB);
 	if (Gdiplus::Ok != (ret = bmp.GetLastStatus()))
 	{
@@ -110,7 +163,7 @@ bool D3D11::FGdiFont::Initialize(const LostCore::FFontConfig & config, const WCH
 	Property.CharHeight = font.GetHeight(&graphics);
 
 	RectF rect;
-	if (Gdiplus::Ok != (ret = graphics.MeasureString(&vecChars[0], sz, &font, PointF(0, 0), &rect)))
+	if (Gdiplus::Ok != (ret = graphics.MeasureString(vecChars.data(), vecChars.size(), &font, PointF(0, 0), &rect)))
 	{
 		LVERR(head, "Graphics::MeasureString failed: %d", ret);
 		RETURN_FALSE;
@@ -277,38 +330,16 @@ bool D3D11::FGdiFont::Initialize(const LostCore::FFontConfig & config, const WCH
 	return true;
 }
 
-LostCore::FCharacterTexturePair D3D11::FGdiFont::GetCharacter(WCHAR c)
+void D3D11::FGdiFont::ExecUpdateRes()
 {
-	auto it = Property.CharDesc.find(FCharDesc(c));
-	if (it == Property.CharDesc.end())
-	{
-		PendingCharacters.append(&c);
-		return FCharacterTexturePair(FCharDesc(), nullptr);
-	}
-
-	return FCharacterTexturePair(FCharDesc(it->Char, it->X, it->Y, it->Width, it->Height), Property.FontTexture);
-}
-
-LostCore::FFontConfig D3D11::FGdiFont::GetConfig() const
-{
-	return Property.Config;
-}
-
-void D3D11::FGdiFont::EndFrame()
-{
+	assert(FRenderContext::Get()->InRenderThread());
 	if (!PendingCharacters.empty())
 	{
-		Initialize(Property.Config, PendingCharacters.data(), PendingCharacters.length());
+		Initialize(Property.Config, PendingCharacters);
 		PendingCharacters.clear();
 	}
 }
 
-void D3D11::FGdiFont::Destroy()
-{
-	SAFE_DELETE(Property.FontTexture);
-}
-
 D3D11::FGdiFontProperty::FGdiFontProperty()
-	: FontTexture(nullptr)
 {
 }

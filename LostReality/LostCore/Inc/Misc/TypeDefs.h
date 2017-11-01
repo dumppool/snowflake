@@ -21,6 +21,3 @@ typedef long long int64;
 using namespace std;
 
 typedef vector<uint8> FBuf;
-
-// FBufFast用reserve/capacity,在容器的拷贝赋值过程中会丢失数据,慎用
-typedef vector<uint8> FBufFast;

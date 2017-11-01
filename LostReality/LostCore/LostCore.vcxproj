@@ -189,6 +189,7 @@
     <ClInclude Include="Inc\Misc\Constants.h" />
     <ClInclude Include="Inc\Misc\CounterMgr.h" />
     <ClInclude Include="Inc\Misc\Counters.h" />
+    <ClInclude Include="Inc\Misc\Exceptions.h" />
     <ClInclude Include="Inc\Misc\Export.h" />
     <ClInclude Include="Inc\Misc\Includs.h" />
     <ClInclude Include="Inc\Misc\Log.h" />

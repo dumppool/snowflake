@@ -69,14 +69,11 @@ namespace D3D11 {
 	EXPORT_WRAP_0_DCL(InitializeProcessUnique);
 	EXPORT_WRAP_0_DCL(DestroyProcessUnique);
 	EXPORT_WRAP_1_DCL(SetProcessUnique, void*);
-	EXPORT_WRAP_2_DCL(CreateRenderContext, LostCore::EContextID, LostCore::IRenderContext**);
+	EXPORT_WRAP_1_DCL(CreateRenderContext, LostCore::IRenderContext**);
 	EXPORT_WRAP_1_DCL(DestroyRenderContext, LostCore::IRenderContext*);
-	EXPORT_WRAP_1_DCL(CreatePrimitiveGroup, LostCore::IPrimitiveGroup**);
-	EXPORT_WRAP_1_DCL(DestroyPrimitiveGroup, LostCore::IPrimitiveGroup*);
-	EXPORT_WRAP_1_DCL(CreateConstantBuffer, LostCore::IConstantBuffer**);
-	EXPORT_WRAP_1_DCL(DestroyConstantBuffer, LostCore::IConstantBuffer*);
-	EXPORT_WRAP_1_DCL(CreateMaterial, LostCore::IMaterial**);
-	EXPORT_WRAP_1_DCL(DestroyMaterial, LostCore::IMaterial*);
-	EXPORT_WRAP_1_DCL(CreateGdiFont, LostCore::IFontInterface**);
-	EXPORT_WRAP_1_DCL(DestroyGdiFont, LostCore::IFontInterface*);
+	EXPORT_WRAP_1_DCL(CreatePrimitiveGroup, LostCore::IPrimitiveGroupPtr&);
+	EXPORT_WRAP_1_DCL(CreateConstantBuffer, LostCore::IConstantBufferPtr&);
+	//EXPORT_WRAP_1_DCL(CreateMaterial, LostCore::IMaterial**);
+	//EXPORT_WRAP_1_DCL(DestroyMaterial, LostCore::IMaterial*);
+	EXPORT_WRAP_1_DCL(CreateGdiFont, LostCore::IFontPtr&);
 }

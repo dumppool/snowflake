@@ -41,12 +41,6 @@
     <ClInclude Include="Pipelines\PipelineInterface.h">
       <Filter>Pipelines</Filter>
     </ClInclude>
-    <ClInclude Include="Src\GdiFont.h">
-      <Filter>Src</Filter>
-    </ClInclude>
-    <ClInclude Include="Src\RenderContext.h">
-      <Filter>Src</Filter>
-    </ClInclude>
     <ClInclude Include="Src\RenderContextBase.h">
       <Filter>Src</Filter>
     </ClInclude>
@@ -57,6 +51,12 @@
       <Filter>Pipelines</Filter>
     </ClInclude>
     <ClInclude Include="Implements\ConstantBuffer.h">
+      <Filter>Implements</Filter>
+    </ClInclude>
+    <ClInclude Include="Implements\GdiFont.h">
+      <Filter>Implements</Filter>
+    </ClInclude>
+    <ClInclude Include="Implements\RenderContext.h">
       <Filter>Implements</Filter>
     </ClInclude>
   </ItemGroup>
@@ -93,13 +93,7 @@
     <ClCompile Include="Pipelines\ForwardPipeline.cpp">
       <Filter>Pipelines</Filter>
     </ClCompile>
-    <ClCompile Include="Src\GdiFont.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
     <ClCompile Include="Src\LostCore-D3D11.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
-    <ClCompile Include="Src\RenderContext.cpp">
       <Filter>Src</Filter>
     </ClCompile>
     <ClCompile Include="Src\RenderContextBase.cpp">
@@ -112,6 +106,12 @@
       <Filter>Pipelines</Filter>
     </ClCompile>
     <ClCompile Include="Implements\ConstantBuffer.cpp">
+      <Filter>Implements</Filter>
+    </ClCompile>
+    <ClCompile Include="Implements\GdiFont.cpp">
+      <Filter>Implements</Filter>
+    </ClCompile>
+    <ClCompile Include="Implements\RenderContext.cpp">
       <Filter>Implements</Filter>
     </ClCompile>
   </ItemGroup>

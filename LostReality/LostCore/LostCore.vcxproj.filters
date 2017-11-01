@@ -185,6 +185,9 @@
     <ClInclude Include="Inc\Misc\CommandQueue.h">
       <Filter>Inc\Misc</Filter>
     </ClInclude>
+    <ClInclude Include="Inc\Misc\Exceptions.h">
+      <Filter>Inc\Misc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp" />

@@ -9,9 +9,10 @@
 
 #pragma once
 
+#include "Implements/Texture.h"
+
 namespace D3D11
 {
-	class FTexture2D;
 	static const int32 STexWidth = 1024;
 	//static const WCHAR SStartChar = '!';
 	//static const WCHAR SEndChar = 127;
@@ -25,31 +26,34 @@ namespace D3D11
 		float					CharHeight;
 		int32					TexHeight;
 		float					SpaceWidth;
-		FTexture2D*				FontTexture;
+		FTexture2DPtr			FontTexture;
 		std::set<WCHAR>			Chars;
 		std::set<LostCore::FCharDesc> CharDesc;
 
 		FGdiFontProperty();
 	};
 
-	class FGdiFont : public LostCore::IFontInterface
+	class FGdiFont : public LostCore::IFont, public enable_shared_from_this<FGdiFont>
 	{
 	public:
 		FGdiFont();
 		virtual ~FGdiFont() override;
 
-		bool Initialize(const LostCore::FFontConfig& config, const WCHAR* chars, int32 sz) override;
+		virtual void Initialize(const LostCore::FFontConfig& config, const wstring& chars) override;
 		virtual LostCore::FCharacterTexturePair GetCharacter(WCHAR c) override;
 		virtual LostCore::FFontConfig GetConfig() const override;
-		virtual void EndFrame() override;
+		virtual void UpdateRes() override;
 
 		void Destroy();
 
-		//bool DrawString(const std::string& str, 
-		FTexture2D* GetTexture()
+		FTexture2DPtr GetTexture()
 		{
 			return Property.FontTexture;
 		}
+
+	private:
+		bool ExecInitialize(const LostCore::FFontConfig& config, const wstring& chars);
+		void ExecUpdateRes();
 
 	private:
 		FGdiFontProperty Property;

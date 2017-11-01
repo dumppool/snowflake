@@ -29,13 +29,12 @@ namespace LostCore
 		double SyncCommit();
 		double SyncRead(T* obj);
 
-		operator T&();
+		T& Ref();
 
 	private:
-		int32 ReadIndex;
-		int32 WriteIndex;
-		mutex SyncMutex;
-		condition_variable Cond;
+		atomic<bool> bWaitingForRead;
+		atomic<int32> ReadIndex;
+		atomic<int32> WriteIndex;
 		vector<T> Objects;
 	};
 
@@ -115,12 +114,12 @@ namespace LostCore
 		class FPrivate : public IPayload
 		{
 		public:
-			explicit FPrivate(const function<void()>& payload);
+			FORCEINLINE explicit FPrivate(const function<void()>& payload);
 
 			// Inherited via IPayload
-			virtual void Execute() override;
-			virtual void OnFinished(double sec) override;
-			virtual bool IsThreadPrivate() override;
+			FORCEINLINE virtual void Execute() override;
+			FORCEINLINE virtual void OnFinished(double sec) override;
+			FORCEINLINE virtual bool IsThreadPrivate() override;
 
 		private:
 			function<void()> Payload;
@@ -176,6 +175,13 @@ namespace LostCore
 		ITickTask* Task;
 		bool bRunning;
 	};
+
+	FORCEINLINE int32 GetThreadId(thread::id id)
+	{
+		stringstream ss;
+		ss << id;
+		return stoi(ss.str());
+	}
 
 	FProcessUnique::FProcessUnique()
 		: Commands(true)
@@ -324,6 +330,7 @@ namespace LostCore
 		assert(this_thread::get_id() == Thread.get_id());
 		assert(IndexedSingletonMap.find(index) == IndexedSingletonMap.end());
 		IndexedSingletonMap[index] = singleton;
+		LVDEBUG("AddSingleton", "thread: %d, class: %d, 0x%08x.", GetThreadId(this_thread::get_id()), index, singleton);
 	}
 
 	void FThread::SetAffinity(uint32 mask)
@@ -417,7 +424,7 @@ namespace LostCore
 
 			timeStamp = FPerformanceCounter::GetTimeStamp();
 			Task->Tick();
-			this_thread::sleep_for(chrono::microseconds(100));
+			this_thread::sleep_for(chrono::microseconds(10));
 		}
 
 		Task->Destroy();
@@ -431,6 +438,7 @@ namespace LostCore
 		: ReadIndex(-1)
 		, WriteIndex(0)
 		, Objects(num)
+		, bWaitingForRead(false)
 	{
 	}
 	
@@ -452,13 +460,16 @@ namespace LostCore
 
 		// 更新写索引,通知可能已经阻塞的线程.
 		WriteIndex = (WriteIndex + 1) % Objects.size();
-		Cond.notify_all();
 
-		// 如果写索引指向不可写入,等待其他线程同步读取后通知,确保写索引总是可写入.
+		// 如果写索引指向不可写入,等待其他线程同步读取后通知,确保写索引总是可写入.		
 		if (ReadIndex == WriteIndex)
 		{
-			unique_lock<mutex> lck(SyncMutex);
-			Cond.wait(SyncMutex);
+			bWaitingForRead = true;
+		}
+
+		while (ReadIndex == WriteIndex && bWaitingForRead)
+		{
+			this_thread::yield();
 		}
 
 		return FPerformanceCounter::GetSeconds(timeStamp);
@@ -470,10 +481,9 @@ namespace LostCore
 		LARGE_INTEGER timeStamp = FPerformanceCounter::GetTimeStamp();
 
 		// 如果读索引指向不可读取,等待别的线程同步提交后通知.
-		if (ReadIndex == WriteIndex)
+		while (ReadIndex == -1 || (ReadIndex == WriteIndex && !bWaitingForRead))
 		{
-			unique_lock<mutex> lck(SyncMutex);
-			Cond.wait(lck);
+			this_thread::yield();
 		}
 
 		// obj指针非空则赋值.
@@ -484,13 +494,12 @@ namespace LostCore
 
 		// 更新读索引,通知可能已经阻塞的线程.
 		ReadIndex = (ReadIndex + 1) % Objects.size();
-		Cond.notify_all();
-
+		bWaitingForRead = false;
 		return FPerformanceCounter::GetSeconds(timeStamp);
 	}
 	
 	template<typename T>
-	TSynchronizer<T>::operator T&()
+	T & TSynchronizer<T>::Ref()
 	{
 		return Objects[WriteIndex];
 	}

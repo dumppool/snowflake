@@ -43,6 +43,8 @@ void LostCore::FTextBox::SetText(const wstring & text)
 	//FScopedStackCounterRequest req(SCounter);
 
 	content = text;
+	return;
+
 	ClearChildren(true);
 
 	array<FRectVertex, 4> vertices;
@@ -54,25 +56,31 @@ void LostCore::FTextBox::SetText(const wstring & text)
 	for (auto it = content.begin(); it != content.end(); it++)
 	{
 		auto desc = font->GetCharacter(*it);
-		if (desc.Texture == nullptr)
+		auto ptex = desc.Texture;
+		if (ptex == nullptr)
 		{
 			continue;
 		}
 
 		const auto& charDesc = desc.Desc;
 		width += charDesc.Width;
-		const auto texSize = FFloat2(desc.Texture->GetWidth(), desc.Texture->GetHeight());
+		const auto texSize = FFloat2(ptex->GetWidth(), ptex->GetHeight());
 		const auto charSize = FFloat2(charDesc.Width / texSize.X, charDesc.Height / texSize.Y);
 		const auto topLeft = FFloat2(charDesc.X / texSize.X, charDesc.Y / texSize.Y);
-		auto child = new FRect;
+		FRect* child = nullptr;
+		child = new FRect;
 		child->HasGeometry(true);
-		child->SetTexture(desc.Texture);
-		child->SetSize(FFloat2(charDesc.Width, charDesc.Height));
 		vertices[0].TexCoord = topLeft;
 		vertices[1].TexCoord = topLeft + FFloat2(charSize.X, 0.0f);
 		vertices[2].TexCoord = topLeft + FFloat2(0.0f, charSize.Y);
 		vertices[3].TexCoord = topLeft + charSize;
-		child->ConstructPrimitive(vertices.data(), 4 * sizeof(FRectVertex), sizeof(FRectVertex));
+
+		FBuf buf;
+		buf.resize(4 * sizeof(FRectVertex));
+		memcpy(buf.data(), vertices.data(), buf.size());
+		child->ConstructPrimitive(buf, sizeof(FRectVertex));
+		child->SetTexture(ptex);
+		child->SetSize(FFloat2(charDesc.Width, charDesc.Height));
 		AddChild(child);
 	}
 

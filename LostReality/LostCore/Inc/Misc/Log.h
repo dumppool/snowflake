@@ -89,6 +89,12 @@ log_cap_cnt(prefix, head, __VA_ARGS__);}
 #define LVWARN(head, ...) LVMSG_PREFIX(MODULE_WARN_PREFIX, head, __VA_ARGS__)
 //#endif
 
+#ifdef _DEBUG
+#define LVDEBUG(head, ...) LVMSG_PREFIX(MODULE_DEBUG_PREFIX, head, __VA_ARGS__)
+#else
+#define LVDEBUG(head, ...)
+#endif
+
 #define LVASSERT_PREFIX(prefix, Condition, head, ...) {\
 	if (!(Condition))\
 	{\

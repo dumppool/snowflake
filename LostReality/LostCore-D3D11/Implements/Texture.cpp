@@ -37,7 +37,7 @@ D3D11::FTexture2D::~FTexture2D()
 
 void D3D11::FTexture2D::CommitShaderResource()
 {
-	FRenderContext::Get()->CommitShaderResource(this);
+	FRenderContext::Get()->CommitShaderResource(shared_from_this());
 }
 
 int32 D3D11::FTexture2D::GetWidth() const
@@ -90,6 +90,7 @@ bool D3D11::FTexture2D::Construct(
 	void* initialData,
 	uint32 initialPitch)
 {
+	assert(FRenderContext::Get()->InRenderThread());
 	const char* head = "D3D11::FTexture2D::Construct";
 	TRefCountPtr<ID3D11Device> device = FRenderContext::GetDevice(head);
 	if (!device.IsValid())
@@ -176,6 +177,7 @@ bool D3D11::FTexture2D::Construct(
 
 bool D3D11::FTexture2D::ConstructFromSwapChain(const TRefCountPtr<IDXGISwapChain>& swapChain)
 {
+	assert(FRenderContext::Get()->InRenderThread());
 	const char* head = "D3D11::FTexture2D::ConstructFromSwapChain";
 
 	BindFlags = D3D11_BIND_RENDER_TARGET;

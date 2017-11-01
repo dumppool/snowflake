@@ -12,6 +12,10 @@
 
 D3D11::FConstantBuffer::FConstantBuffer()
 	: ShaderSlot(0)
+	, ByteWidth(0)
+	, bDynamic(false)
+	, ShaderFlags(0)
+	, Buffer(nullptr)
 {
 }
 
@@ -22,15 +26,12 @@ D3D11::FConstantBuffer::~FConstantBuffer()
 
 bool D3D11::FConstantBuffer::Initialize(int32 byteWidth, bool dynamic)
 {
+	assert(FRenderContext::Get()->InRenderThread());
+	const char* head = "FConstantBuffer::Initialize";
+
+	auto device = FRenderContext::GetDevice(head);
 	ByteWidth = LostCore::GetAlignedSize(byteWidth, 16);
 	bDynamic = dynamic;
-
-	const char* head = "D3D11::FConstantBuffer::Initialize";
-	auto device = FRenderContext::GetDevice(head);
-	if (!device.IsValid())
-	{
-		return false;
-	}
 
 	D3D11_BUFFER_DESC desc;
 	memset(&desc, 0, sizeof(desc));
@@ -44,20 +45,27 @@ bool D3D11::FConstantBuffer::Initialize(int32 byteWidth, bool dynamic)
 	auto hr = device->CreateBuffer(&desc, nullptr, Buffer.GetInitReference());
 	if (FAILED(hr))
 	{
-		LVERR(head, "create buffer failed: 0x%08x(%d).", hr, hr);
+		LVERR(head, "create buffer(%d) failed: 0x%08x(%d).", ByteWidth, hr, hr);
 		return false;
 	}
 
 	return true;
 }
 
-void D3D11::FConstantBuffer::UpdateBuffer(const FBufFast& buf)
+void D3D11::FConstantBuffer::UpdateBuffer(const FBuf& buf)
 {
-	const char* head = "FConstantBuffer::UpdateBuffer";
-	auto cxt = FRenderContext::GetDeviceContext(head);
-
-	assert(Buffer.IsValid());
-	cxt->UpdateSubresource(Buffer.GetReference(), 0, nullptr, buf.data(), 0, 0);
+	if (FRenderContext::Get()->InRenderThread())
+	{
+		ExecUpdateBuffer(buf);
+	}
+	else
+	{
+		auto p = shared_from_this();
+		FRenderContext::Get()->PushCommand([=]()
+		{
+			p->ExecUpdateBuffer(buf);
+		});
+	}
 }
 
 void D3D11::FConstantBuffer::SetShaderSlot(int32 slot)
@@ -121,7 +129,37 @@ void D3D11::FConstantBuffer::Bind()
 	}
 }
 
+inline int32 D3D11::FConstantBuffer::GetByteWidth() const
+{
+	return ByteWidth;
+}
+
+inline TRefCountPtr<ID3D11Buffer> D3D11::FConstantBuffer::GetBufferRHI()
+{
+	return Buffer;
+}
+
+bool D3D11::FConstantBuffer::IsValid() const
+{
+	return Buffer.IsValid();
+}
+
+void D3D11::FConstantBuffer::ExecUpdateBuffer(const FBuf & buf)
+{
+	assert(FRenderContext::Get()->InRenderThread());
+	const char* head = "FConstantBuffer::ExecUpdateBuffer";
+	auto cxt = FRenderContext::GetDeviceContext(head);
+
+	auto sz = buf.size();
+	if (this->ByteWidth != LostCore::GetAlignedSize(sz, 16) && !this->Initialize(sz, false))
+	{
+		return;
+	}
+
+	cxt->UpdateSubresource(this->Buffer.GetReference(), 0, nullptr, buf.data(), 0, 0);
+}
+
 void D3D11::FConstantBuffer::Commit()
 {
-	FRenderContext::Get()->CommitBuffer(this);
+	FRenderContext::Get()->CommitBuffer(shared_from_this());
 }

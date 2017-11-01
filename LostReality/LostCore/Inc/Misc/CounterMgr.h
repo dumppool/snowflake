@@ -108,7 +108,7 @@ namespace LostCore
 	{
 		auto tid = this_thread::get_id();
 		auto mgrAddr = FStackCounterManager::Get();
-		LVMSG("FStackCounterRequest::FStackCounterRequest", "thread id: %d, manager address: 0x%08x.", tid, mgrAddr);
+		LVDEBUG("FStackCounterRequest::FStackCounterRequest", "thread: %d, manager address: 0x%08x %s.", tid, mgrAddr, Name.c_str());
 	}
 
 	FStackCounterRequest::~FStackCounterRequest()

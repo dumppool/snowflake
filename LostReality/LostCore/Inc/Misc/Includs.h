@@ -28,4 +28,6 @@
 #include <mutex>
 #include <condition_variable>
 #include <queue>
+#include <atomic>
+#include <sstream>
 

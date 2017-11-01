@@ -22,26 +22,18 @@ namespace LostCore
 	template <typename T>
 	class FTlsSingletonTemplate
 	{
-		static T* SInstance;
-
 	public:
 		static FORCEINLINE T* Get()
 		{
-			if (SInstance == nullptr)
+			auto t = FProcessUnique::Get()->GetCurrentThread();
+			auto p = t->GetSingleton(T::SClassIndex);
+			if (p == nullptr)
 			{
-				auto t = FProcessUnique::Get()->GetCurrentThread();
-				auto p = t->GetSingleton(T::SClassIndex);
-				if (p == nullptr)
-				{
-					p = new T;
-					t->AddSingleton(T::SClassIndex, p);
-				}
-
-				SInstance = (T*)p;
+				p = new T;
+				t->AddSingleton(T::SClassIndex, p);
 			}
 
-			assert(SInstance != nullptr);
-			return SInstance;
+			return (T*)p;
 		}
 	};
 }

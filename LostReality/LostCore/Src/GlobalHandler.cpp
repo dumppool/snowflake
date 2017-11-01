@@ -29,11 +29,14 @@ LostCore::FGlobalHandler::FGlobalHandler()
 EReturnCode LostCore::FGlobalHandler::InitializeProcessUnique()
 {
 	FProcessUnique::StaticInitialize();
+	LVMSG("FGlobalHandler::InitializeProcessUnique", "ProcessUnique: 0x%08x", FProcessUnique::Get());
+	D3D11::WrappedSetProcessUnique(FProcessUnique::Get());
 	return SSuccess;
 }
 
 EReturnCode LostCore::FGlobalHandler::DestroyProcessUnique()
 {
+	LVMSG("FGlobalHandler::DestroyProcessUnique", "ProcessUnique: 0x%08x", FProcessUnique::Get());
 	FProcessUnique::StaticDestroy();
 	return SSuccess;
 }
@@ -432,7 +435,6 @@ void LostCore::FGlobalHandler::UpdatePosAndRot(const FFloat3 & pos, const FFloat
 
 bool FProcessUnique::SIsOriginal = false;
 FProcessUnique* FProcessUnique::SInstance = nullptr;
-FStackCounterManager* FStackCounterManager::SInstance = nullptr;
 
 EXPORT_WRAP_0_DEF(InitializeProcessUnique);
 EXPORT_WRAP_0_DEF(DestroyProcessUnique);

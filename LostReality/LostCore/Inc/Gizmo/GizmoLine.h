@@ -44,12 +44,11 @@ namespace LostCore
 
 		bool bConstructed;
 		uint32 CurrentPrimitiveBytes;
-		IPrimitiveGroup* Primitive;
-		IMaterial* Material;
-		IConstantBuffer* ConstantBuffer;
+		IPrimitiveGroupPtr Primitive;
+		IConstantBufferPtr ConstantBuffer;
 		bool bDepthTest;
 
-		bool ConstructPrimitive(const void* buf, uint32 bytes);
+		bool ConstructPrimitive(const FBuf& buf);
 		void DestroyPrimitive();
 
 	public:

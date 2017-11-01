@@ -13,10 +13,10 @@
 #include "Implements/Material.h"
 
 using namespace D3D11;
+using namespace LostCore;
 
 bool LostCore::FProcessUnique::SIsOriginal = false;
 LostCore::FProcessUnique* LostCore::FProcessUnique::SInstance = nullptr;
-LostCore::FStackCounterManager* LostCore::FStackCounterManager::SInstance = nullptr;
 
 EReturnCode D3D11::InitializeProcessUnique()
 {
@@ -32,101 +32,40 @@ EReturnCode D3D11::DestroyProcessUnique()
 
 EReturnCode D3D11::SetProcessUnique(void* p)
 {
+	LVMSG("D3D11::SetProcessUnique", "ProcessUnique: 0x%08x", p);
 	LostCore::FProcessUnique::SetInstance((LostCore::FProcessUnique*)p);
 	return SSuccess;
 }
 
-EReturnCode D3D11::CreateRenderContext(LostCore::EContextID id, LostCore::IRenderContext** context)
+EReturnCode D3D11::CreateRenderContext(LostCore::IRenderContext** context)
 {
 	if (context == nullptr)
 	{
 		return SErrorInvalidParameters;
 	}
 
-	*context = nullptr;
-	switch (id)
-	{
-	case LostCore::EContextID::D3D11_DXGI0:
-	case LostCore::EContextID::D3D11_DXGI1:
-	{
-		*context = FRenderContext::Get();
-		if ((*context)->Initialize(id))
-		{
-			return SSuccess;
-		}
-		else
-		{
-			return SErrorInternalError;
-		}
-	}
-	default:
-		return SErrorInvalidParameters;
-	}
+	assert(FRenderContext::Get() == nullptr);
+	FRenderContext::Get() = new FRenderContext;
+	*context = FRenderContext::Get();
+	return SSuccess;
 }
 
 EReturnCode D3D11::DestroyRenderContext(LostCore::IRenderContext * context)
 {
-	if (context != nullptr)
-	{
-		delete context;
-	}
-
+	assert(FRenderContext::Get() != nullptr);
+	SAFE_DELETE(FRenderContext::Get());
 	return SSuccess;
 }
 
-
-EReturnCode D3D11::CreatePrimitiveGroup(LostCore::IPrimitiveGroup ** pg)
+EReturnCode D3D11::CreatePrimitiveGroup(IPrimitiveGroupPtr& pgPtr)
 {
-	if (pg == nullptr)
-	{
-		return SErrorInvalidParameters;
-	}
-
-	auto obj = new FPrimitiveGroup;
-	if (obj == nullptr)
-	{
-		return SErrorOutOfMemory;
-	}
-
-	*pg = obj;
+	pgPtr = IPrimitiveGroupPtr(new FPrimitiveGroup);
 	return SSuccess;
 }
 
-EReturnCode D3D11::DestroyPrimitiveGroup(LostCore::IPrimitiveGroup * pg)
+EReturnCode D3D11::CreateConstantBuffer(IConstantBufferPtr& cbPtr)
 {
-	if (pg != nullptr)
-	{
-		delete pg;
-	}
-
-	return SSuccess;
-}
-
-
-EReturnCode D3D11::CreateConstantBuffer(LostCore::IConstantBuffer** cb)
-{
-	if (cb == nullptr)
-	{
-		return SErrorInvalidParameters;
-	}
-
-	auto obj = new FConstantBuffer;
-	if (obj == nullptr)
-	{
-		return SErrorOutOfMemory;
-	}
-
-	*cb = obj;
-	return SSuccess;
-}
-
-EReturnCode D3D11::DestroyConstantBuffer(LostCore::IConstantBuffer * cb)
-{
-	if (cb != nullptr)
-	{
-		delete cb;
-	}
-
+	cbPtr = IConstantBufferPtr(new FConstantBuffer);
 	return SSuccess;
 }
 
@@ -159,31 +98,10 @@ EReturnCode D3D11::DestroyMaterial(LostCore::IMaterial * material)
 }
 */
 
-#include "GdiFont.h"
+#include "Implements/GdiFont.h"
 
-EReturnCode D3D11::CreateGdiFont(LostCore::IFontInterface ** font)
+EReturnCode D3D11::CreateGdiFont(IFontPtr& fontPtr)
 {
-	if (font == nullptr)
-	{
-		return SErrorInvalidParameters;
-	}
-
-	auto obj = new FGdiFont;
-	if (obj == nullptr)
-	{
-		return SErrorOutOfMemory;
-	}
-
-	*font = obj;
-	return SSuccess;
-}
-
-EReturnCode D3D11::DestroyGdiFont(LostCore::IFontInterface * font)
-{
-	if (font != nullptr)
-	{
-		delete font;
-	}
-
+	fontPtr = IFontPtr(new FGdiFont);
 	return SSuccess;
 }

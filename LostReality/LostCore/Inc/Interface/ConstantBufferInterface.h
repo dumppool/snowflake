@@ -16,7 +16,7 @@ namespace LostCore
 	public:
 		virtual ~IConstantBuffer() {}
 		virtual bool Initialize(int32 sz, bool dynamic) = 0;
-		virtual void UpdateBuffer(const FBufFast& buf) = 0;
+		virtual void UpdateBuffer(const FBuf& buf) = 0;
 		virtual void Commit() = 0;
 
 		virtual void SetShaderSlot(int32 slot) = 0;
@@ -25,4 +25,7 @@ namespace LostCore
 		virtual void SetShaderFlags(int32 flags) = 0;
 		virtual int32 GetShaderFlags() const = 0;
 	};
+
+	typedef shared_ptr<IConstantBuffer> IConstantBufferPtr;
+	typedef weak_ptr<IConstantBuffer> IConstantBufferWeakPtr;
 }

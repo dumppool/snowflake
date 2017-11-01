@@ -60,3 +60,45 @@ private:
 	vector<LostCore::FThread*> Workers;
 	LARGE_INTEGER TimeStamp;
 };
+
+class FSyncProducer : public LostCore::ITickTask
+{
+	LostCore::FTickThread* Thread;
+	LostCore::TSynchronizer<int32> Data;
+	LostCore::FCommandQueue<function<void()>> Cmds;
+
+public:
+	FSyncProducer();
+	~FSyncProducer();
+
+	double GetData(int32* data);
+	void PushMsg(string& buf);
+
+	// Inherited via ITickTask
+	virtual bool Initialize() override;
+	virtual void Tick() override;
+	virtual void Destroy() override;
+};
+
+class FSyncConsumer : public LostCore::ITickTask
+{
+	LostCore::FTickThread* Thread;
+	FSyncProducer* Producer;
+	vector<string> Messages;
+
+public:
+	FSyncConsumer();
+	~FSyncConsumer();
+
+	// Inherited via ITickTask
+	virtual bool Initialize() override;
+	virtual void Tick() override;
+	virtual void Destroy() override;
+};
+
+class FSyncSample
+{
+public:
+	explicit FSyncSample(int32 sec);
+	~FSyncSample();
+};

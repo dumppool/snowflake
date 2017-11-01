@@ -1,8 +1,3 @@
-// stdafx.h : 标准系统包含文件的包含文件，
-// 或是经常使用但不常更改的
-// 特定于项目的包含文件
-//
-
 #pragma once
 
 #define WIN32_LEAN_AND_MEAN             // 从 Windows 头中排除极少使用的资料
@@ -18,42 +13,14 @@
 
 #include <gdiplus.h>
 #pragma comment(lib, "gdiplus.lib")
-//// file system includes
-//#include "File/json.hpp"
-//using FJson = nlohmann::json;
-//
-//
-//// interface includes
-//#include "RenderContextInterface.h"
-//#include "TextureInterface.h"
-//#include "MaterialInterface.h"
-//#include "PrimitiveGroupInterface.h"
-//#include "FontInterface.h"
-//
-//#include "Inc/LostCore-D3D11.h"
-//
-//#include "Keywords.h"
-//
-//// math includes
-//#include "Math/Vector2.h"
-//#include "Math/Vector3.h"
-//#include "Math/Vector4.h"
-//#include "Math/Matrix.h"
-//#include "Math/Color.h"
-//
-//#include "File/DirectoryHelper.h"
-//
-//// vertex detail includes
-//#include "VertexTypes.h"
-
-// local includes
 
 #define MODULE_MSG_PREFIX "lostcore-d3d11-log"
 #define MODULE_WARN_PREFIX "lostcore-d3d11-warn"
 #define MODULE_ERR_PREFIX "lostcore-d3d11-error"
+#define MODULE_DEBUG_PREFIX "lostcore-d3d11-debug"
 #include "LostCore.h"
 
 #include "Inc/LostCore-D3D11.h"
 
 #include "Src/RenderContextBase.h"
-#include "Src/RenderContext.h"
+#include "Implements/RenderContext.h"

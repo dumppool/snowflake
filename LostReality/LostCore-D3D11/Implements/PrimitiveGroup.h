@@ -11,7 +11,7 @@
 
 namespace D3D11
 {
-	class FPrimitiveGroup : public LostCore::IPrimitiveGroup
+	class FPrimitiveGroup : public LostCore::IPrimitiveGroup, public enable_shared_from_this<FPrimitiveGroup>
 	{
 	public:
 		FPrimitiveGroup();
@@ -23,12 +23,17 @@ namespace D3D11
 		virtual uint32 GetVertexElement() const override;
 		virtual void SetRenderOrder(ERenderOrder ro) override;
 		virtual ERenderOrder GetRenderOrder() const override;
-		virtual bool ConstructVB(const void * buf, uint32 bytes, uint32 stride, bool bDynamic) override;
-		virtual bool ConstructIB(const void * buf, uint32 bytes, uint32 stride, bool bDynamic) override;
+		virtual void ConstructVB(const FBuf& buf, uint32 stride, bool bDynamic) override;
+		virtual void ConstructIB(const FBuf& buf, uint32 stride, bool bDynamic) override;
 		virtual void SetTopology(LostCore::EPrimitiveTopology topo) override;
-		virtual void UpdateVB(const void* buf, uint32 bytes) override;
+		virtual void UpdateVB(const FBuf& buf) override;
 
 		void Draw();
+
+	private:
+		void ExecConstructVB(const FBuf& buf, uint32 stride, bool bDynamic);
+		void ExecConstructIB(const FBuf& buf, uint32 stride, bool bDynamic);
+		void ExecUpdateVB(const FBuf& buf);
 
 	private:
 		uint32 VertexElement;
@@ -50,4 +55,7 @@ namespace D3D11
 		ERenderOrder RenderOrder;
 		D3D11_PRIMITIVE_TOPOLOGY Topology;
 	};
+
+	typedef shared_ptr<FPrimitiveGroup> FPrimitiveGroupPtr;
+	typedef weak_ptr<FPrimitiveGroup> FPrimitiveGroupWeakPtr;
 }

@@ -21,6 +21,7 @@
 using namespace LostCore;
 
 D3D11::FForwardPipeline::FForwardPipeline()
+	: RenderObjects(3)
 {
 }
 
@@ -30,20 +31,20 @@ D3D11::FForwardPipeline::~FForwardPipeline()
 
 void D3D11::FForwardPipeline::Initialize()
 {
-	uint32 val = 0;
-	while (val != (uint32)ERenderOrder::End)
-	{
-		RenderObjects[(ERenderOrder)val++] = vector<FRenderObject>();
-	}
+	//uint32 val = 0;
+	//while (val != (uint32)ERenderOrder::End)
+	//{
+	//	RenderObjects.Ref()[(ERenderOrder)val++] = vector<FRenderObject>();
+	//}
 }
 
 void D3D11::FForwardPipeline::Destroy()
 {
-	uint32 val = 0;
-	while (val != (uint32)ERenderOrder::End)
-	{
-		assert(RenderObjects[(ERenderOrder)val].size() == 0);
-	}
+	//uint32 val = 0;
+	//while (val != (uint32)ERenderOrder::End)
+	//{
+	//	assert(RenderObjects.Ref()[(ERenderOrder)val].size() == 0);
+	//}
 }
 
 EPipeline D3D11::FForwardPipeline::GetEnum() const
@@ -51,47 +52,63 @@ EPipeline D3D11::FForwardPipeline::GetEnum() const
 	return EPipeline::Forward;
 }
 
-void D3D11::FForwardPipeline::CommitPrimitiveGroup(FPrimitiveGroup * pg)
+void D3D11::FForwardPipeline::CommitPrimitiveGroup(const FPrimitiveGroupPtr& pg)
 {
 	static FStackCounterRequest SCounter("FForwardPipeline::CommitPrimitiveGroup");
 	FScopedStackCounterRequest scopedCounter(SCounter);
 
+	if (RenderObjects.Ref().empty())
+	{
+		uint32 val = 0;
+		while (val != (uint32)ERenderOrder::End)
+		{
+			RenderObjects.Ref()[(ERenderOrder)val++] = vector<FRenderObject>();
+		}
+	}
+
 	assert(pg != nullptr);
-	Commiting.PrimitiveGroup = pg;
-	auto& objs = RenderObjects.find(pg->GetRenderOrder());
-	objs->second.push_back(Commiting);
-	Commiting.Reset();
+	Committing.PrimitiveGroup = pg;
+	auto& objs = RenderObjects.Ref().find(pg->GetRenderOrder());
+	objs->second.push_back(Committing);
+	Committing.Reset();
 }
 
-void D3D11::FForwardPipeline::CommitBuffer(FConstantBuffer * buf)
+void D3D11::FForwardPipeline::CommitBuffer(const FConstantBufferPtr& buf)
 {
 	assert(buf != nullptr);
-	Commiting.ConstantBuffers.push_back(buf);
+	Committing.ConstantBuffers.push_back(buf);
 }
 
-void D3D11::FForwardPipeline::CommitShaderResource(FTexture2D * tex)
+void D3D11::FForwardPipeline::CommitShaderResource(const FTexture2DPtr& tex)
 {
 	assert(tex != nullptr);
-	Commiting.ShaderResources.push_back(tex);
+	Committing.ShaderResources.push_back(tex);
+}
+
+void D3D11::FForwardPipeline::FinishCommit()
+{
+	RenderObjects.SyncCommit();
 }
 
 void D3D11::FForwardPipeline::BeginFrame()
 {
-	Commiting.Reset();
+	Committing.Reset();
 }
 
 void D3D11::FForwardPipeline::EndFrame()
 {
 }
 
-void D3D11::FForwardPipeline::Render()
+void D3D11::FForwardPipeline::RenderFrame()
 {
 	static FStackCounterRequest SCounter("FForwardPipeline::Render");
 	FScopedStackCounterRequest scopedCounter(SCounter);
 
 	auto cxt = FRenderContext::GetDeviceContext("FForwardPipeline::Render");
 
-	for (auto& objs : RenderObjects)
+	FMap renderObjects;
+	RenderObjects.SyncRead(&renderObjects);
+	for (auto& objs : renderObjects)
 	{
 		if (objs.first == ERenderOrder::Opacity)
 		{
@@ -138,9 +155,15 @@ void D3D11::FForwardPipeline::Render()
 
 		for (auto& obj : objs.second)
 		{
+			auto pg = obj.PrimitiveGroup;
+			if (pg == nullptr)
+			{
+				continue;
+			}
+
 			FShaderKey key;
 			key.LitMode = ELightingMode::Phone;
-			key.VertexElement = obj.PrimitiveGroup->GetVertexElement();
+			key.VertexElement = pg->GetVertexElement();
 			FShaderManager::Get()->GetShader(key)->Bind();
 
 			for (auto buf : obj.ConstantBuffers)
@@ -153,7 +176,7 @@ void D3D11::FForwardPipeline::Render()
 				tex->BindShaderResource(cxt);
 			}
 
-			obj.PrimitiveGroup->Draw();
+			pg->Draw();
 		}
 
 		objs.second.clear();

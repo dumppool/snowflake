@@ -112,142 +112,111 @@ void Test4()
 	snprintf(cdate, 1023, "%d/%d/%d %d:%d:%d", 1900 + curr.tm_year, curr.tm_mon + 1, curr.tm_mday, curr.tm_hour, curr.tm_min, curr.tm_sec);
 }
 
-struct FThreadWork
-{
-	bool bRunning;
-	thread T;
-
-	FThreadWork()
-	{
-		bRunning = true;
-		T = thread([=]() {Run(); });
-	}
-
-	~FThreadWork()
-	{
-		bRunning = false;
-		if (T.joinable())
-		{
-			T.join();
-		}
-	}
-
-	void Run()
-	{
-		cout << "Thread started." << endl;
-		while (bRunning)
-		{
-			this_thread::sleep_for(chrono::milliseconds(10));
-		}
-
-		cout << "Thread ended." << endl;
-	}
-};
-
-// Thread shutdown
 void Test5()
 {
-	auto t = new FThreadWork;
-	delete t;
-}
+	char str[] = "hello world.";
+	vector<uint8> buf;
 
-struct FCondition
-{
-	mutex Mutex;
-	condition_variable CondVariable;
+	buf.reserve(sizeof(str));
+	memcpy(buf.data(), str, sizeof(str));
 
-	void WaitForInvoke()
+	auto func = [&]()
 	{
-		unique_lock<mutex> lck(Mutex);
-		CondVariable.wait(lck);
-	}
+		vector<uint8> _buf;
+		_buf.reserve(buf.capacity());
+		memcpy(_buf.data(), buf.data(), buf.capacity());
+		cout << _buf.data() << endl;
+	};
 
-	void Invoke()
-	{
-		CondVariable.notify_all();
-	}
-};
-
-struct FConditionalThread
-{
-	thread T;
-	bool bInvoke;
-	FCondition Self;
-	FCondition* Master;
-
-	explicit FConditionalThread(FCondition* master) : Master(master), bInvoke(false)
-	{
-		T = thread([=]() {Run(); });
-	}
-
-	~FConditionalThread()
-	{
-		cout << "Prepare to release: " << T.get_id() << endl;
-		if (T.joinable())
-		{
-			T.join();
-		}
-	}
-
-	void Run()
-	{
-		while (!bInvoke && Master == nullptr)
-		{
-			this_thread::sleep_for(chrono::milliseconds(10));
-		}
-
-		if (Master != nullptr)
-		{
-			Master->WaitForInvoke();
-			cout << "Got invoked: " << T.get_id() << endl;
-		}
-		else
-		{
-			cout << "Prepare to Invoke: " << T.get_id() << endl;
-			Self.Invoke();
-		}
-	}
-};
-
-// Thread synchronize
-void Test6()
-{
-	FConditionalThread Master(nullptr);
-	this_thread::sleep_for(chrono::milliseconds(10));
-
-	const int numSlaves = 10;
-	FConditionalThread* Slaves[numSlaves];
-	for (int i = 0; i < numSlaves; ++i)
-	{
-		Slaves[i] = new FConditionalThread(&(Master.Self));
-	}
-
-	this_thread::sleep_for(chrono::milliseconds(10));
-	Master.bInvoke = true;
-
-	for (int i = 0; i < numSlaves; ++i)
-	{
-		delete Slaves[i];
-	}
+	func();
 }
 
 // Frame condition thread
 void Test7()
 {
-	FThreadSynchronizerSample sample;
+	{
+		FSyncSample sample(10);
+	}
+}
+
+void Test8()
+{
+	uint8 curr = 32, last = 127;
+	string initial;
+	initial.resize(last - curr);
+	for_each(initial.begin(), initial.end(), [&](char& elem)
+	{
+		elem = char(curr++);
+	});
+
+	cout << initial << endl;
+
+	curr = 32;
+	wstring initial2;
+	initial2.resize(last - curr);
+	for_each(initial2.begin(), initial2.end(), [&](wchar_t& elem)
+	{
+		elem = wchar_t(curr++);
+	});
+
+	wcout << initial2 << endl;
+}
+
+struct FStruct9 : public enable_shared_from_this<FStruct9>
+{
+	int32 Num;
+	//FStruct9() { cout << "ctor: " << Num << endl; }
+	explicit FStruct9(int32 num) :Num(num) { cout << "explicit ctor: " << Num << endl; }
+	~FStruct9()
+	{
+		cout << "dtor: " << Num << endl;
+	}
+
+	shared_ptr<FStruct9> GetPtr()
+	{
+		return shared_from_this();
+	}
+};
+
+void Test9()
+{
+	vector<shared_ptr<FStruct9>> ints;
+	vector<weak_ptr<FStruct9>> weakInts;
+	for (int32 i = 0; i < 10; i++)
+	{
+		ints.push_back(shared_ptr<FStruct9>(new FStruct9(i)));
+		weakInts.push_back(ints.back());
+	}
+
+	shared_ptr<FStruct9> p;
+	shared_ptr<FStruct9> p2(new FStruct9(100));
+	weak_ptr<FStruct9> wp(p2);
+	auto wpp = wp.lock();
+	cout << "wp: " << (wp.expired() ? "expired " : "available ") << wpp.use_count() << endl;
+	p = p2->GetPtr();
+	p2 = nullptr;
+	p = nullptr;
+	cout << "p: " << (p == nullptr ? "empty" : "not empty") << ", p2: " << (p2 == nullptr ? "empty" : "not empty") << endl;
+
+	ints.clear();
+	weakInts.clear();
 }
 
 int main()
 {
 	cout << "***************************************" << endl;
-	Test7();
+	char info[128];
+	memset(info, 0, 128);
+	//this_thread::get_id()._To_text(fss);
+	stringstream ss;
+	auto id = this_thread::get_id();
+	snprintf(info, 127, "%d", stoi(ss.str()));
+	cout << info << " | " << this_thread::get_id() << endl;
+	Test9();
 	cout << "***************************************" << endl;
 
-	while (1)
-	{
-		this_thread::sleep_for(chrono::seconds(10));
-		;
-	}
+	int key;
+	scanf_s("%d", &key);
 
     return 0;
 }

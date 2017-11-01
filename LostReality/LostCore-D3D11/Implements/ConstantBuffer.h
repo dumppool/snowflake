@@ -15,14 +15,14 @@ namespace D3D11
 	Constant buffer
 	*/
 
-	class FConstantBuffer : public LostCore::IConstantBuffer
+	class FConstantBuffer : public LostCore::IConstantBuffer, public enable_shared_from_this<FConstantBuffer>
 	{
 	public:
 		FConstantBuffer();
 		virtual ~FConstantBuffer() override;
 
 		virtual bool Initialize(int32 byteWidth, bool dynamic) override;
-		virtual void UpdateBuffer(const FBufFast& buf) override;
+		virtual void UpdateBuffer(const FBuf& buf) override;
 		virtual void Commit() override;
 
 		virtual void SetShaderSlot(int32 slot) override;
@@ -33,15 +33,12 @@ namespace D3D11
 
 		void Bind();
 
-		int32 GetByteWidth() const
-		{
-			return ByteWidth;
-		}
+		int32 GetByteWidth() const;
+		TRefCountPtr<ID3D11Buffer> GetBufferRHI();
+		bool IsValid() const;
 
-		TRefCountPtr<ID3D11Buffer> GetBufferRHI()
-		{
-			return Buffer;
-		}
+	private:
+		void ExecUpdateBuffer(const FBuf& buf);
 
 	private:
 		int32		ByteWidth;
@@ -50,4 +47,7 @@ namespace D3D11
 		int32		ShaderSlot;
 		int32		ShaderFlags;
 	};
+
+	typedef shared_ptr<FConstantBuffer> FConstantBufferPtr;
+	typedef weak_ptr<FConstantBuffer> FConstantBufferWeakPtr;
 }

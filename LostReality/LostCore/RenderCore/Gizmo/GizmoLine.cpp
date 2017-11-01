@@ -17,7 +17,7 @@ using namespace std;
 using namespace LostCore;
 
 LostCore::FSegmentTool::FSegmentTool()
-	: bConstructed(false), Material(nullptr), Primitive(nullptr), bDepthTest(true)
+	: bConstructed(false), Primitive(nullptr), bDepthTest(true)
 {
 	ResetData();
 }
@@ -33,76 +33,37 @@ void LostCore::FSegmentTool::ResetData()
 	Data.clear();
 }
 
-bool LostCore::FSegmentTool::ConstructPrimitive(const void* buf, uint32 bytes)
+bool LostCore::FSegmentTool::ConstructPrimitive(const FBuf& buf)
 {
 	if (bConstructed)
 	{
 		return bConstructed;
 	}
 
-	auto rc = FGlobalHandler::Get()->GetRenderContext();
-	if (rc == nullptr)
-	{
-		return false;
-	}
+	bConstructed = true;
+	assert(Primitive == nullptr);
 
-	assert(Material == nullptr && Primitive == nullptr);
-
-	//bConstructed = SSuccess == D3D11::WrappedCreateMaterial(&Material);
-	bConstructed = SSuccess == D3D11::WrappedCreateConstantBuffer(&ConstantBuffer);
-	bConstructed &= SSuccess == D3D11::WrappedCreatePrimitiveGroup(&Primitive);
-
-	assert(bConstructed);
+	D3D11::WrappedCreateConstantBuffer(ConstantBuffer);
+	D3D11::WrappedCreatePrimitiveGroup(Primitive);
 
 	// TODO: ÅäÖÃ
 	//Material->SetDepthStencilState(bDepthTest ? K_DEPTH_STENCIL_Z_WRITE : K_DEPTH_STENCIL_ALWAYS);
 	Primitive->SetTopology(LostCore::EPrimitiveTopology::LineList);
 
-	bConstructed &= ConstantBuffer->Initialize(sizeof(World), false);
-	if (bConstructed)
-	{
-		ConstantBuffer->SetShaderSlot(SHADER_SLOT_MATRICES);
-		ConstantBuffer->SetShaderFlags(SHADER_FLAG_VS);
-	}
+	//bConstructed &= ConstantBuffer->Initialize(sizeof(World), false);
+	ConstantBuffer->SetShaderSlot(SHADER_SLOT_MATRICES);
+	ConstantBuffer->SetShaderFlags(SHADER_FLAG_VS);
 
-	//bConstructed &= Material->Initialize(rc, "default_xyzrgb.json");
-	bConstructed &= Primitive->ConstructVB(buf, bytes, GetAlignedSize(sizeof(FSegmentVertex), 16), false);
-	if (bConstructed)
-	{
-		Primitive->SetVertexElement(VERTEX_COLOR);
-	}
+	Primitive->SetVertexElement(VERTEX_COLOR);
+	Primitive->ConstructVB(buf, GetAlignedSize(sizeof(FSegmentVertex), 16), false);
 
-	assert(bConstructed);
-	return bConstructed;
+	return true;
 }
 
 void LostCore::FSegmentTool::DestroyPrimitive()
 {
-	if (!bConstructed)
-	{
-		return;
-	}
-
-	assert(Material != nullptr && Primitive != nullptr);
-
-	if (ConstantBuffer != nullptr)
-	{
-		D3D11::WrappedDestroyConstantBuffer(forward<IConstantBuffer*>(ConstantBuffer));
-		ConstantBuffer = nullptr;
-	}
-	
-	if (Material != nullptr)
-	{
-		D3D11::WrappedDestroyMaterial(forward<IMaterial*>(Material));
-		Material = nullptr;
-	}
-	
-	if (Primitive != nullptr)
-	{
-		D3D11::WrappedDestroyPrimitiveGroup(forward<IPrimitiveGroup*>(Primitive));
-		Primitive = nullptr;
-	}
-
+	ConstantBuffer = nullptr;
+	Primitive = nullptr;
 	bConstructed = false;
 }
 
@@ -116,30 +77,25 @@ void LostCore::FSegmentTool::Commit()
 	auto rc = FGlobalHandler::Get()->GetRenderContext();
 	auto sec = FGlobalHandler::Get()->GetFrameTime();
 
-	vector<uint8> buf(Data.size() * sizeof(FSegmentVertex));
-	memcpy(&buf[0], &Data[0], buf.size());
+	FBuf buf(Data.size() * sizeof(FSegmentVertex));
+	memcpy(buf.data(), Data.data(), buf.size());
 
 	if (bConstructed)
 	{
-		Primitive->UpdateVB(&buf[0], buf.size());
+		Primitive->UpdateVB(buf);
 	}
 	else
 	{
-		ConstructPrimitive(&buf[0], buf.size());
+		ConstructPrimitive(buf);
 	}
 
 	if (ConstantBuffer != nullptr)
 	{
-		FBufFast buf;
+		FBuf buf;
 		World.GetBuffer(buf);
 		ConstantBuffer->UpdateBuffer(buf);
 		ConstantBuffer->Commit();
 	}
-
-	//if (Material != nullptr)
-	//{
-	//	Material->Bind(rc);
-	//}
 
 	if (Primitive != nullptr)
 	{
@@ -161,8 +117,4 @@ void LostCore::FSegmentTool::SetWorldMatrix(const FFloat4x4 & mat)
 void LostCore::FSegmentTool::EnableDepthTest(bool enable)
 {
 	bDepthTest = enable;
-	if (Material != nullptr)
-	{
-		Material->SetDepthStencilState(bDepthTest ? K_DEPTH_STENCIL_Z_WRITE : K_DEPTH_STENCIL_ALWAYS);
-	}
 }

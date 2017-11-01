@@ -59,6 +59,7 @@ void LostCore::FStackCounterConsole::FinishCounting()
 	auto maxNumLines = int32(panelHeight / textHeight);
 	FStackCounterManager::Get()->Finish();
 
+	//return;
 	static FStackCounterRequest SCounter("FStackCounterConsole::FinishCounting");
 	FScopedStackCounterRequest scopedCounter(SCounter);
 

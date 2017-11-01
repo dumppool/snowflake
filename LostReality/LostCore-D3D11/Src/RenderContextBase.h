@@ -56,12 +56,12 @@ namespace D3D11 {
 
 	extern EReturnCode CreatePrimitiveVertex(
 		const TRefCountPtr<ID3D11Device>& device, 
-		const void* buf, uint32 bytes, bool bDynamic, 
+		const FBuf& buf, bool bDynamic,
 		TRefCountPtr<ID3D11Buffer>& vb);
 
 	extern EReturnCode CreatePrimitiveIndex(
 		const TRefCountPtr<ID3D11Device>& device, 
-		const void* buf, uint32 bytes, bool bDynamic, 
+		const FBuf& buf, bool bDynamic,
 		TRefCountPtr<ID3D11Buffer>& ib);
 
 	extern EReturnCode CreateMesh_Rect(

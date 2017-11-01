@@ -24,12 +24,12 @@ namespace LostCore
 		FColor128 PointLitColor;
 		FFloat3 PointLitPosition;
 
-		void GetBuffer(FBufFast& buf) const
+		void GetBuffer(FBuf& buf) const
 		{
 			FGlobalParameter result(*this);
 			result.ViewProject.Transpose();
-			buf.reserve(GetAlignedSize(sizeof(result), 16));
-			memcpy(buf.data(), &result, buf.capacity());
+			buf.resize(GetAlignedSize(sizeof(result), 16));
+			memcpy(buf.data(), &result, buf.size());
 		}
 	};
 
@@ -37,12 +37,12 @@ namespace LostCore
 	{
 		FFloat4x4 Matrix;
 
-		void GetBuffer(FBufFast& buf) const
+		void GetBuffer(FBuf& buf) const
 		{
 			FSingleMatrixParameter result(*this);
 			result.Matrix.Transpose();
-			buf.reserve(GetAlignedSize(sizeof(result), 16));
-			memcpy(buf.data(), &result, buf.capacity());
+			buf.resize(GetAlignedSize(sizeof(result), 16));
+			memcpy(buf.data(), &result, buf.size());
 		}
 	};
 
@@ -51,13 +51,13 @@ namespace LostCore
 		FFloat4x4 World;
 		array<FFloat4x4, MAX_BONES_PER_BATCH> Bones;
 
-		void GetBuffer(FBufFast& buf) const
+		void GetBuffer(FBuf& buf) const
 		{
 			FSkinnedParameter result(*this);
 			result.World.Transpose();
 			for_each(result.Bones.begin(), result.Bones.end(), [](LostCore::FFloat4x4& mat) {mat.Transpose(); });
-			buf.reserve(GetAlignedSize(sizeof(result), 16));
-			memcpy(buf.data(), &result, buf.capacity());
+			buf.resize(GetAlignedSize(sizeof(result), 16));
+			memcpy(buf.data(), &result, buf.size());
 		}
 	};
 
@@ -86,10 +86,10 @@ namespace LostCore
 		{
 		}
 
-		void GetBuffer(FBufFast& buf) const
+		void GetBuffer(FBuf& buf) const
 		{
-			buf.reserve(GetAlignedSize(sizeof(FRectParameter), 16));
-			memcpy(buf.data(), this, buf.capacity());
+			buf.resize(GetAlignedSize(sizeof(FRectParameter), 16));
+			memcpy(buf.data(), this, buf.size());
 		}
 	};
 
@@ -101,10 +101,10 @@ namespace LostCore
 			: Color(0x0)
 		{}
 
-		void GetBuffer(FBufFast& buf) const
+		void GetBuffer(FBuf& buf) const
 		{
-			buf.reserve(GetAlignedSize(sizeof(FCustomParameter), 16));
-			memcpy(buf.data(), this, buf.capacity());
+			buf.resize(GetAlignedSize(sizeof(FCustomParameter), 16));
+			memcpy(buf.data(), this, buf.size());
 		}
 	};
 }
