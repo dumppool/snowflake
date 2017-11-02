@@ -17,6 +17,15 @@ D3D11::FConstantBuffer::FConstantBuffer()
 	, ShaderFlags(0)
 	, Buffer(nullptr)
 {
+	Fence.store(1);
+}
+
+D3D11::FConstantBuffer::FConstantBuffer(const FConstantBuffer & rhs)
+{
+}
+
+D3D11::FConstantBuffer::FConstantBuffer(const FConstantBuffer && rval)
+{
 }
 
 D3D11::FConstantBuffer::~FConstantBuffer()
@@ -56,15 +65,12 @@ void D3D11::FConstantBuffer::UpdateBuffer(const FBuf& buf)
 {
 	if (FRenderContext::Get()->InRenderThread())
 	{
-		ExecUpdateBuffer(buf);
+		ExecUpdateBuffer(this, buf);
 	}
 	else
 	{
-		auto p = shared_from_this();
-		FRenderContext::Get()->PushCommand([=]()
-		{
-			p->ExecUpdateBuffer(buf);
-		});
+		FRenderContext::Get()->PushCommand(FContextCommand(
+			this, bind(&ExecUpdateBuffer, placeholders::_1, buf)));
 	}
 }
 
@@ -144,22 +150,37 @@ bool D3D11::FConstantBuffer::IsValid() const
 	return Buffer.IsValid();
 }
 
-void D3D11::FConstantBuffer::ExecUpdateBuffer(const FBuf & buf)
+void D3D11::FConstantBuffer::ExecCommit(void * p)
+{
+	assert(FRenderContext::Get()->InRenderThread());
+	auto pthis = (FConstantBuffer*)p;
+	FRenderContext::Get()->CommitBuffer(pthis);
+}
+
+void D3D11::FConstantBuffer::ExecUpdateBuffer(void* p, const FBuf & buf)
 {
 	assert(FRenderContext::Get()->InRenderThread());
 	const char* head = "FConstantBuffer::ExecUpdateBuffer";
 	auto cxt = FRenderContext::GetDeviceContext(head);
+	auto pthis = (FConstantBuffer*)p;
 
 	auto sz = buf.size();
-	if (this->ByteWidth != LostCore::GetAlignedSize(sz, 16) && !this->Initialize(sz, false))
+	if (pthis->ByteWidth != LostCore::GetAlignedSize(sz, 16) && !pthis->Initialize(sz, false))
 	{
 		return;
 	}
 
-	cxt->UpdateSubresource(this->Buffer.GetReference(), 0, nullptr, buf.data(), 0, 0);
+	cxt->UpdateSubresource(pthis->Buffer.GetReference(), 0, nullptr, buf.data(), 0, 0);
 }
 
 void D3D11::FConstantBuffer::Commit()
 {
-	FRenderContext::Get()->CommitBuffer(shared_from_this());
+	if (FRenderContext::Get()->InRenderThread())
+	{
+		ExecCommit(this);
+	}
+	else
+	{
+		FRenderContext::Get()->PushCommand(FContextCommand(this, &ExecCommit));
+	}
 }

@@ -26,14 +26,14 @@ namespace D3D11
 		float					CharHeight;
 		int32					TexHeight;
 		float					SpaceWidth;
-		FTexture2DPtr			FontTexture;
+		FTexture2D*				FontTexture;
 		std::set<WCHAR>			Chars;
 		std::set<LostCore::FCharDesc> CharDesc;
 
 		FGdiFontProperty();
 	};
 
-	class FGdiFont : public LostCore::IFont, public enable_shared_from_this<FGdiFont>
+	class FGdiFont : public LostCore::IFont
 	{
 	public:
 		FGdiFont();
@@ -46,17 +46,19 @@ namespace D3D11
 
 		void Destroy();
 
-		FTexture2DPtr GetTexture()
+		FTexture2D* GetTexture()
 		{
 			return Property.FontTexture;
 		}
 
 	private:
-		bool ExecInitialize(const LostCore::FFontConfig& config, const wstring& chars);
-		void ExecUpdateRes();
-
-	private:
 		FGdiFontProperty Property;
 		wstring PendingCharacters;
+
+		atomic<uint8> Fence;
+
+	private:
+		static bool ExecInitialize(void * p, const LostCore::FFontConfig& config, const wstring& chars);
+		static void ExecUpdateRes(void * p);
 	};
 }

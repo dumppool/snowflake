@@ -15,7 +15,7 @@ namespace LostCore
 	class FCommandQueue
 	{
 	public:
-		FORCEINLINE explicit FCommandQueue(bool threadSafe = false);
+		FORCEINLINE explicit FCommandQueue(bool threadSafe = true);
 		FORCEINLINE ~FCommandQueue();
 
 		FORCEINLINE uint32 GetQueueNums() const;
@@ -23,6 +23,9 @@ namespace LostCore
 
 		FORCEINLINE void Push(const TCmd& cmd);
 		FORCEINLINE bool Pop(TCmd& cmd);
+
+		FORCEINLINE FCommandQueue<TCmd>& operator=(const FCommandQueue<TCmd>& rhs);
+		FORCEINLINE FCommandQueue<TCmd>& operator=(int32 val);
 
 	private:
 		FORCEINLINE bool IsThreadSafe() const;
@@ -45,6 +48,36 @@ namespace LostCore
 	FCommandQueue<TCmd>::~FCommandQueue()
 	{
 		SAFE_DELETE(Mutex);
+	}
+	template <typename TCmd>
+	FCommandQueue<TCmd>& FCommandQueue<TCmd>::operator=(const FCommandQueue<TCmd>& rhs)
+	{
+		if (Mutex != nullptr)
+		{
+			if (Mutex->try_lock())
+			{
+				Mutex->unlock();
+			}
+			else
+			{
+				throw exception("Assignment during locking.");
+			}
+		}
+
+		Lock();
+		Commands = rhs.Commands;
+		Unlock();
+		return *this;
+	}
+
+	template<typename TCmd>
+	FCommandQueue<TCmd>& FCommandQueue<TCmd>::operator=(int32 val)
+	{
+		Lock();
+		assert(val == 0);
+		Commands.swap(queue<TCmd>());
+		Unlock();
+		return *this;
 	}
 
 	template <typename TCmd>

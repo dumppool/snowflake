@@ -49,7 +49,4 @@ namespace LostCore
 		//virtual bool IsWritable() const = 0;
 		//virtual bool IsReadable() const = 0;
 	};
-
-	typedef shared_ptr<ITexture> ITexturePtr;
-	typedef weak_ptr<ITexture> ITextureWeakPtr;
 }

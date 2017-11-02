@@ -11,9 +11,9 @@ namespace D3D11
 {
 	struct FRenderObject
 	{
-		FPrimitiveGroupPtr PrimitiveGroup;
-		vector<FConstantBufferPtr> ConstantBuffers;
-		vector<FTexture2DPtr> ShaderResources;
+		FPrimitiveGroup* PrimitiveGroup;
+		vector<FConstantBuffer*> ConstantBuffers;
+		vector<FTexture2D*> ShaderResources;
 
 		FRenderObject();
 

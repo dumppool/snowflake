@@ -11,7 +11,7 @@
 
 namespace D3D11
 {
-	class FTexture2D : public LostCore::ITexture, public enable_shared_from_this<FTexture2D>
+	class FTexture2D : public LostCore::ITexture
 	{
 	public:
 		FTexture2D();
@@ -73,8 +73,9 @@ namespace D3D11
 
 		int32 ShaderResourceSlot;
 		int32 RenderTargetSlot;
+
+	private:
+		static void ExecCommitShaderResource(void* p);
 	};
 
-	typedef shared_ptr<FTexture2D> FTexture2DPtr;
-	typedef weak_ptr<FTexture2D> FTexture2DWeakPtr;
 }

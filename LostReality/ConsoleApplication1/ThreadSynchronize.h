@@ -61,39 +61,75 @@ private:
 	LARGE_INTEGER TimeStamp;
 };
 
-class FSyncProducer : public LostCore::ITickTask
-{
-	LostCore::FTickThread* Thread;
-	LostCore::TSynchronizer<int32> Data;
-	LostCore::FCommandQueue<function<void()>> Cmds;
 
+class FSyncGuest : public LostCore::ITickTask
+{
 public:
-	FSyncProducer();
-	~FSyncProducer();
+	class FCmd
+	{
+	public:
+		typedef function<void(void*)> FBody;
+
+		FCmd() {}
+		FCmd(void* p, const FBody& body)
+			: Ptr(p), Body(body)
+		{
+		}
+
+		void Exec()
+		{
+			Body(Ptr);
+		}
+
+	private:
+		void* Ptr;
+		FBody Body;
+	};
+	//typedef function<void()> FCmd;
+
+	static FSyncGuest*& Get()
+	{
+		static FSyncGuest* SPtr = nullptr;
+		return SPtr;
+	}
+
+	FSyncGuest();
+	~FSyncGuest();
 
 	double GetData(int32* data);
 	void PushMsg(string& buf);
+	void PushCommand(const FCmd& cmd);
+	void FinishCommand();
 
 	// Inherited via ITickTask
 	virtual bool Initialize() override;
 	virtual void Tick() override;
 	virtual void Destroy() override;
+
+private:
+	LostCore::FTickThread* Thread;
+	LostCore::TSynchronizer<int32> Data;
+	LostCore::TSynchronizer<LostCore::FCommandQueue<FCmd>> Cmds;
 };
 
-class FSyncConsumer : public LostCore::ITickTask
+class FObj11;
+class FSyncHost : public LostCore::ITickTask
 {
 	LostCore::FTickThread* Thread;
-	FSyncProducer* Producer;
+	FSyncGuest* Guest;
 	vector<string> Messages;
+	vector<FObj11*> Pending;
 
 public:
-	FSyncConsumer();
-	~FSyncConsumer();
+
+	FSyncHost();
+	~FSyncHost();
 
 	// Inherited via ITickTask
 	virtual bool Initialize() override;
 	virtual void Tick() override;
 	virtual void Destroy() override;
+
 };
 
 class FSyncSample
@@ -101,4 +137,27 @@ class FSyncSample
 public:
 	explicit FSyncSample(int32 sec);
 	~FSyncSample();
+};
+class FObj11
+{
+public:
+
+	class FObjSlowInitialize
+	{
+	public:
+		FObjSlowInitialize();
+	};
+
+
+	FObj11();
+
+	void DoSth(const string& sth);
+
+private:
+	FObjSlowInitialize SlowInit;
+	int32 Mem;
+
+private:
+	friend void ExecDoSth(void* p, const string& sth);
+	friend void ExecDummy(void* p);
 };

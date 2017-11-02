@@ -61,6 +61,5 @@ namespace LostCore
 		virtual void SetViewProjectMatrix(const FFloat4x4& vp) = 0;
 		virtual void FirstCommit() = 0;
 		virtual void FinishCommit() = 0;
-		virtual void PushCommand(const FCmd& cmd) = 0;
 	};
 }

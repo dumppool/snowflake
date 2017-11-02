@@ -3,6 +3,7 @@
 
 #include "stdafx.h"
 #include "ThreadSynchronize.h"
+#include "CommandBinding.h"
 
 struct _A
 {
@@ -202,21 +203,25 @@ void Test9()
 	weakInts.clear();
 }
 
+void TestSync()
+{
+	//FCommandBindingSample sample;
+	FSyncSample sample(100);
+}
+
+void TestBinding()
+{
+	FCommandBindingSample sample;
+}
+
 int main()
 {
 	cout << "***************************************" << endl;
-	char info[128];
-	memset(info, 0, 128);
-	//this_thread::get_id()._To_text(fss);
-	stringstream ss;
-	auto id = this_thread::get_id();
-	snprintf(info, 127, "%d", stoi(ss.str()));
-	cout << info << " | " << this_thread::get_id() << endl;
-	Test9();
+	TestSync();
+	//TestBinding();
 	cout << "***************************************" << endl;
 
-	int key;
-	scanf_s("%d", &key);
+	system("pause");
 
     return 0;
 }

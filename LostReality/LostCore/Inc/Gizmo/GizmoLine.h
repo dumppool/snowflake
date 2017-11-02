@@ -44,8 +44,8 @@ namespace LostCore
 
 		bool bConstructed;
 		uint32 CurrentPrimitiveBytes;
-		IPrimitiveGroupPtr Primitive;
-		IConstantBufferPtr ConstantBuffer;
+		IPrimitiveGroup* Primitive;
+		IConstantBuffer* ConstantBuffer;
 		bool bDepthTest;
 
 		bool ConstructPrimitive(const FBuf& buf);

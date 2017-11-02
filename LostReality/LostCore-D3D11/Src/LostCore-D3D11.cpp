@@ -11,6 +11,8 @@
 #include "Implements/ConstantBuffer.h"
 #include "Implements/PrimitiveGroup.h"
 #include "Implements/Material.h"
+#include "Implements/GdiFont.h"
+
 
 using namespace D3D11;
 using namespace LostCore;
@@ -57,15 +59,27 @@ EReturnCode D3D11::DestroyRenderContext(LostCore::IRenderContext * context)
 	return SSuccess;
 }
 
-EReturnCode D3D11::CreatePrimitiveGroup(IPrimitiveGroupPtr& pgPtr)
+EReturnCode D3D11::CreatePrimitiveGroup(IPrimitiveGroup** pg)
 {
-	pgPtr = IPrimitiveGroupPtr(new FPrimitiveGroup);
+	*pg = (new FPrimitiveGroup);
 	return SSuccess;
 }
 
-EReturnCode D3D11::CreateConstantBuffer(IConstantBufferPtr& cbPtr)
+EReturnCode D3D11::DestroyPrimitiveGroup(IPrimitiveGroup* pg)
 {
-	cbPtr = IConstantBufferPtr(new FConstantBuffer);
+	FRenderContext::Get()->DeallocPrimitiveGroup(pg);
+	return SSuccess;
+}
+
+EReturnCode D3D11::CreateConstantBuffer(IConstantBuffer** cb)
+{
+	*cb = (new FConstantBuffer);
+	return SSuccess;
+}
+
+EReturnCode D3D11::DestroyConstantBuffer(IConstantBuffer* cb)
+{
+	FRenderContext::Get()->DeallocConstantBuffer(cb);
 	return SSuccess;
 }
 
@@ -98,10 +112,14 @@ EReturnCode D3D11::DestroyMaterial(LostCore::IMaterial * material)
 }
 */
 
-#include "Implements/GdiFont.h"
-
-EReturnCode D3D11::CreateGdiFont(IFontPtr& fontPtr)
+EReturnCode D3D11::CreateGdiFont(LostCore::IFont** font)
 {
-	fontPtr = IFontPtr(new FGdiFont);
+	*font = (new FGdiFont);
+	return SSuccess;
+}
+
+EReturnCode D3D11::DestroyGdiFont(LostCore::IFont* font)
+{
+	FRenderContext::Get()->DeallocGdiFont(font);
 	return SSuccess;
 }

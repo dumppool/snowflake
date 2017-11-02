@@ -7,10 +7,12 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="ThreadSynchronize.h" />
+    <ClInclude Include="CommandBinding.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ConsoleApplication1.cpp" />
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="ThreadSynchronize.cpp" />
+    <ClCompile Include="CommandBinding.cpp" />
   </ItemGroup>
 </Project>

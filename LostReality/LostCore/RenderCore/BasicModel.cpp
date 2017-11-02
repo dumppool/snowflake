@@ -116,7 +116,7 @@ void LostCore::FBasicModel::CommitModel()
 	}
 }
 
-bool LostCore::FBasicModel::ConfigPrimitive(const string& url, IPrimitiveGroupPtr& pg, FMeshData& pgdata)
+bool LostCore::FBasicModel::ConfigPrimitive(const string& url, IPrimitiveGroup*& pg, FMeshData& pgdata)
 {
 	const char* head = "FBasicModel::ConfigPrimitive";
 	auto rc = FGlobalHandler::Get()->GetRenderContext();
@@ -137,8 +137,8 @@ bool LostCore::FBasicModel::ConfigPrimitive(const string& url, IPrimitiveGroupPt
 	ValidateBoundingBox();
 
 	// 根据渲染数据创建索引/定点缓存.
-	D3D11::WrappedCreatePrimitiveGroup(pg);
-	pg->SetVertexElement(pgdata.VertexFlags);
+	D3D11::WrappedCreatePrimitiveGroup(&pg);
+	(pg)->SetVertexElement(pgdata.VertexFlags);
 
 	if (pgdata.IndexCount > 0)
 	{
@@ -155,8 +155,8 @@ bool LostCore::FBasicModel::ConfigPrimitive(const string& url, IPrimitiveGroupPt
 bool LostCore::FBasicModel::ConfigMaterial(const string& url)
 {
 	auto rc = FGlobalHandler::Get()->GetRenderContext();
-	D3D11::WrappedCreateConstantBuffer(MatricesBuffer);
-	D3D11::WrappedCreateConstantBuffer(CustomBuffer);
+	D3D11::WrappedCreateConstantBuffer(&MatricesBuffer);
+	D3D11::WrappedCreateConstantBuffer(&CustomBuffer);
 	CustomBuffer->SetShaderSlot(SHADER_SLOT_CUSTOM);
 	CustomBuffer->SetShaderFlags(SHADER_FLAG_VS | SHADER_FLAG_PS);
 	return true;
@@ -243,7 +243,7 @@ void LostCore::FBasicModel::CommitGizmos()
 	SegmentRenderer.Commit();
 }
 
-IPrimitiveGroupPtr LostCore::FBasicModel::GetPrimitive()
+IPrimitiveGroup* LostCore::FBasicModel::GetPrimitive()
 {
 	return Primitive;
 }
@@ -253,12 +253,12 @@ IMaterial * LostCore::FBasicModel::GetMaterial()
 	return Material;
 }
 
-IConstantBufferPtr LostCore::FBasicModel::GetMatricesBuffer()
+IConstantBuffer* LostCore::FBasicModel::GetMatricesBuffer()
 {
 	return MatricesBuffer;
 }
 
-IConstantBufferPtr LostCore::FBasicModel::GetCustomBuffer()
+IConstantBuffer* LostCore::FBasicModel::GetCustomBuffer()
 {
 	return CustomBuffer;
 }
@@ -340,9 +340,23 @@ void LostCore::FBasicModel::ValidateBoundingBox()
 
 void LostCore::FBasicModel::Destroy()
 {
-	Primitive = nullptr;
-	MatricesBuffer = nullptr;
-	CustomBuffer = nullptr;
+	if (Primitive != nullptr)
+	{
+		D3D11::WrappedDestroyPrimitiveGroup(forward<IPrimitiveGroup*>(Primitive));
+		Primitive = nullptr;
+	}
+
+	if (MatricesBuffer != nullptr)
+	{
+		D3D11::WrappedDestroyConstantBuffer(forward<IConstantBuffer*>(MatricesBuffer));
+		MatricesBuffer = nullptr;
+	}
+	
+	if (CustomBuffer != nullptr)
+	{
+		D3D11::WrappedDestroyConstantBuffer(forward<IConstantBuffer*>(MatricesBuffer));
+		CustomBuffer = nullptr;
+	}
 }
 
 LostCore::FStaticModel::FStaticModel() : FBasicModel()
@@ -559,7 +573,7 @@ void LostCore::FSkeletalModel::UpdateConstant()
 	}
 }
 
-bool LostCore::FSkeletalModel::ConfigPrimitive(const string& url, IPrimitiveGroupPtr& pg, FMeshData& pgdata)
+bool LostCore::FSkeletalModel::ConfigPrimitive(const string& url, IPrimitiveGroup*& pg, FMeshData& pgdata)
 {
 	if (FBasicModel::ConfigPrimitive(url, pg, pgdata))
 	{

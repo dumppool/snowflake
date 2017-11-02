@@ -17,8 +17,9 @@ using namespace Gdiplus;
 ::ReleaseDC(NULL, hFont);\
 return false; }
 
-D3D11::FGdiFont::FGdiFont()
+D3D11::FGdiFont::FGdiFont() : Fence(1)
 {
+	Fence.load();
 }
 
 D3D11::FGdiFont::~FGdiFont()
@@ -30,17 +31,13 @@ void D3D11::FGdiFont::Initialize(const LostCore::FFontConfig & config, const wst
 {
 	if (FRenderContext::Get()->InRenderThread())
 	{
-		auto ret = ExecInitialize(config, chars);
+		auto ret = ExecInitialize(this, config, chars);
 		assert(ret);
 	}
 	else
 	{
-		auto p = shared_from_this();
-		FRenderContext::Get()->PushCommand([=]()
-		{
-			auto ret = p->ExecInitialize(config, chars);
-			assert(ret);
-		});
+		FRenderContext::Get()->PushCommand(FContextCommand(
+			this, bind(&ExecInitialize, placeholders::_1, config, chars)));
 	}
 }
 
@@ -65,15 +62,11 @@ void D3D11::FGdiFont::UpdateRes()
 {
 	if (FRenderContext::Get()->InRenderThread())
 	{
-		ExecUpdateRes();
+		ExecUpdateRes(this);
 	}
 	else
 	{
-		auto p = shared_from_this();
-		FRenderContext::Get()->PushCommand([=]()
-		{
-			p->ExecUpdateRes();
-		});
+		FRenderContext::Get()->PushCommand(FContextCommand(this, &ExecUpdateRes));
 	}
 }
 
@@ -82,44 +75,44 @@ void D3D11::FGdiFont::Destroy()
 	Property.FontTexture = nullptr;
 }
 
-bool D3D11::FGdiFont::ExecInitialize(const LostCore::FFontConfig & config, const wstring& chars)
+bool D3D11::FGdiFont::ExecInitialize(void * p, const LostCore::FFontConfig & config, const wstring& chars)
 {
 	const char* head = "FGdiFont::ExecInitialize";
-
+	auto pthis = (FGdiFont*)p;
 	std::set<WCHAR> inputChars;
 	inputChars.insert(chars.begin(), chars.end());
-	inputChars.insert(Property.Chars.begin(), Property.Chars.end());
-	bool bDirt = Property.Chars != inputChars;
+	inputChars.insert(pthis->Property.Chars.begin(), pthis->Property.Chars.end());
+	bool bDirt = pthis->Property.Chars != inputChars;
 
-	if (Property.Config == config && !bDirt)
+	if (pthis->Property.Config == config && !bDirt)
 	{
 		return true;
 	}
 
-	Property.Config = config;
-	Property.CharDesc.clear();
-	Property.Chars.clear();
+	pthis->Property.Config = config;
+	pthis->Property.CharDesc.clear();
+	pthis->Property.Chars.clear();
 
 	std::vector<WCHAR> vecChars(inputChars.begin(), inputChars.end());
 
-	Property.FontTexture = FTexture2DPtr(new FTexture2D);
+	pthis->Property.FontTexture = (new FTexture2D);
 
-	auto hint = Property.Config.bAntiAliased ? TextRenderingHintAntiAliasGridFit : TextRenderingHintSingleBitPerPixelGridFit;
+	auto hint = pthis->Property.Config.bAntiAliased ? TextRenderingHintAntiAliasGridFit : TextRenderingHintSingleBitPerPixelGridFit;
 	hint = TextRenderingHintClearTypeGridFit;
 
 	LOGFONTW lf;
-	wcscpy_s(lf.lfFaceName, Property.Config.FontName.c_str());
-	lf.lfHeight = (int32)-Property.Config.Height;
+	wcscpy_s(lf.lfFaceName, pthis->Property.Config.FontName.c_str());
+	lf.lfHeight = (int32)-pthis->Property.Config.Height;
 	lf.lfWidth = 0;
-	lf.lfWeight = Property.Config.Weight;
-	lf.lfItalic = Property.Config.bItalic;
-	lf.lfUnderline = Property.Config.bUnderline;
+	lf.lfWeight = pthis->Property.Config.Weight;
+	lf.lfItalic = pthis->Property.Config.bItalic;
+	lf.lfUnderline = pthis->Property.Config.bUnderline;
 	lf.lfStrikeOut = 0;
-	lf.lfCharSet = Property.Config.CharSet;
-	lf.lfOutPrecision = Property.Config.OutPrecision;
-	lf.lfClipPrecision = Property.Config.ClipPrecision;
-	lf.lfQuality = Property.Config.Quality;
-	lf.lfPitchAndFamily = Property.Config.PitchAndFamily;
+	lf.lfCharSet = pthis->Property.Config.CharSet;
+	lf.lfOutPrecision = pthis->Property.Config.OutPrecision;
+	lf.lfClipPrecision = pthis->Property.Config.ClipPrecision;
+	lf.lfQuality = pthis->Property.Config.Quality;
+	lf.lfPitchAndFamily = pthis->Property.Config.PitchAndFamily;
 
 	ULONG_PTR token = NULL;
 	GdiplusStartupInput startupInput(NULL, TRUE, TRUE);
@@ -139,7 +132,7 @@ bool D3D11::FGdiFont::ExecInitialize(const LostCore::FFontConfig & config, const
 		RETURN_FALSE;
 	}
 
-	int32 size = (int32)(Property.Config.Height) * vecChars.size();
+	int32 size = (int32)(pthis->Property.Config.Height) * vecChars.size();
 	Bitmap bmp(size, size, PixelFormat32bppARGB);
 	if (Gdiplus::Ok != (ret = bmp.GetLastStatus()))
 	{
@@ -160,7 +153,7 @@ bool D3D11::FGdiFont::ExecInitialize(const LostCore::FFontConfig & config, const
 		RETURN_FALSE;
 	}
 
-	Property.CharHeight = font.GetHeight(&graphics);
+	pthis->Property.CharHeight = font.GetHeight(&graphics);
 
 	RectF rect;
 	if (Gdiplus::Ok != (ret = graphics.MeasureString(vecChars.data(), vecChars.size(), &font, PointF(0, 0), &rect)))
@@ -170,9 +163,9 @@ bool D3D11::FGdiFont::ExecInitialize(const LostCore::FFontConfig & config, const
 	}
 
 	int32 numRows = (int32)(rect.Width / STexWidth) + 1;
-	Property.TexHeight = (int32)(numRows * Property.CharHeight) + 1;
+	pthis->Property.TexHeight = (int32)(numRows * pthis->Property.CharHeight) + 1;
 
-	int32 tsz = (int32)Property.Config.Height * 2;
+	int32 tsz = (int32)pthis->Property.Config.Height * 2;
 	Bitmap bmp2(tsz, tsz, PixelFormat32bppARGB);
 	if (Gdiplus::Ok != (ret = bmp2.GetLastStatus()))
 	{
@@ -193,7 +186,7 @@ bool D3D11::FGdiFont::ExecInitialize(const LostCore::FFontConfig & config, const
 		RETURN_FALSE;
 	}
 
-	Bitmap bmp3(STexWidth, Property.TexHeight, PixelFormat32bppARGB);
+	Bitmap bmp3(STexWidth, pthis->Property.TexHeight, PixelFormat32bppARGB);
 	if (Gdiplus::Ok != (ret = bmp3.GetLastStatus()))
 	{
 		LVERR(head, "Bitmap::GetLastStatus failed: %d", ret);
@@ -290,13 +283,13 @@ bool D3D11::FGdiFont::ExecInitialize(const LostCore::FFontConfig & config, const
 		if (currX + charWidth >= STexWidth)
 		{
 			currX = 0;
-			currY += (int32)(Property.CharHeight) + 1;
+			currY += (int32)(pthis->Property.CharHeight) + 1;
 		}
 
-		Property.Chars.insert(wc);
-		Property.CharDesc.insert(LostCore::FCharDesc(wc, currX, currY, charWidth, (int32)Property.CharHeight));
+		pthis->Property.Chars.insert(wc);
+		pthis->Property.CharDesc.insert(LostCore::FCharDesc(wc, currX, currY, charWidth, (int32)pthis->Property.CharHeight));
 
-		int32 height = (int32)(Property.CharHeight) + 1;
+		int32 height = (int32)(pthis->Property.CharHeight) + 1;
 		if (Gdiplus::Ok != (ret = graphics3.DrawImage(&bmp2, currX, currY, minX, 0, charWidth, height, UnitPixel)))
 		{
 			LVERR(head, "Graphics::DrawImage failed: %d", ret);
@@ -313,16 +306,16 @@ bool D3D11::FGdiFont::ExecInitialize(const LostCore::FFontConfig & config, const
 		RETURN_FALSE;
 	}
 
-	Property.SpaceWidth = rect.Width;
+	pthis->Property.SpaceWidth = rect.Width;
 
 	BitmapData bmpData;
-	if (Gdiplus::Ok != (ret = bmp3.LockBits(&Rect(0, 0, STexWidth, Property.TexHeight), ImageLockModeRead, PixelFormat32bppARGB, &bmpData)))
+	if (Gdiplus::Ok != (ret = bmp3.LockBits(&Rect(0, 0, STexWidth, pthis->Property.TexHeight), ImageLockModeRead, PixelFormat32bppARGB, &bmpData)))
 	{
 		LVERR(head, "Bitmap::LockBits failed: %d", ret);
 		RETURN_FALSE;
 	}
 
-	Property.FontTexture->Construct(STexWidth, Property.TexHeight, DXGI_FORMAT_B8G8R8A8_UNORM, false, false, true, false, bmpData.Scan0, STexWidth * 4);
+	pthis->Property.FontTexture->Construct(STexWidth, pthis->Property.TexHeight, DXGI_FORMAT_B8G8R8A8_UNORM, false, false, true, false, bmpData.Scan0, STexWidth * 4);
 
 	bmp3.UnlockBits(&bmpData);
 
@@ -330,13 +323,14 @@ bool D3D11::FGdiFont::ExecInitialize(const LostCore::FFontConfig & config, const
 	return true;
 }
 
-void D3D11::FGdiFont::ExecUpdateRes()
+void D3D11::FGdiFont::ExecUpdateRes(void * p)
 {
 	assert(FRenderContext::Get()->InRenderThread());
-	if (!PendingCharacters.empty())
+	auto pthis = (FGdiFont*)p;
+	if (!pthis->PendingCharacters.empty())
 	{
-		Initialize(Property.Config, PendingCharacters);
-		PendingCharacters.clear();
+		pthis->Initialize(pthis->Property.Config, pthis->PendingCharacters);
+		pthis->PendingCharacters.clear();
 	}
 }
 

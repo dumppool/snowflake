@@ -1,8 +1,8 @@
 /*
-* file PrimitiveGroup.h
+* file PrimitiveGroupRequest.h
 *
 * author luoxw
-* date 2017/02/10
+* date 2017/11/01
 *
 *
 */
@@ -11,10 +11,12 @@
 
 namespace D3D11
 {
-	class FPrimitiveGroup : public LostCore::IPrimitiveGroup, public enable_shared_from_this<FPrimitiveGroup>
+	class FPrimitiveGroup : public LostCore::IPrimitiveGroup
 	{
 	public:
 		FPrimitiveGroup();
+		FPrimitiveGroup(const FPrimitiveGroup& rhs);
+		FPrimitiveGroup(const FPrimitiveGroup&& ref);
 		virtual ~FPrimitiveGroup() override;
 
 		// Í¨¹ý IPrimitiveGroup ¼Ì³Ð
@@ -23,19 +25,15 @@ namespace D3D11
 		virtual uint32 GetVertexElement() const override;
 		virtual void SetRenderOrder(ERenderOrder ro) override;
 		virtual ERenderOrder GetRenderOrder() const override;
-		virtual void ConstructVB(const FBuf& buf, uint32 stride, bool bDynamic) override;
-		virtual void ConstructIB(const FBuf& buf, uint32 stride, bool bDynamic) override;
+		virtual void ConstructVB(const FBuf& buf, uint32 stride, bool dynamic) override;
+		virtual void ConstructIB(const FBuf& buf, uint32 stride, bool dynamic) override;
 		virtual void SetTopology(LostCore::EPrimitiveTopology topo) override;
 		virtual void UpdateVB(const FBuf& buf) override;
 
 		void Draw();
 
 	private:
-		void ExecConstructVB(const FBuf& buf, uint32 stride, bool bDynamic);
-		void ExecConstructIB(const FBuf& buf, uint32 stride, bool bDynamic);
-		void ExecUpdateVB(const FBuf& buf);
-
-	private:
+		atomic<uint8> Fence;
 		uint32 VertexElement;
 
 		TRefCountPtr<ID3D11Buffer>			VertexBuffer;
@@ -54,8 +52,11 @@ namespace D3D11
 
 		ERenderOrder RenderOrder;
 		D3D11_PRIMITIVE_TOPOLOGY Topology;
-	};
 
-	typedef shared_ptr<FPrimitiveGroup> FPrimitiveGroupPtr;
-	typedef weak_ptr<FPrimitiveGroup> FPrimitiveGroupWeakPtr;
+	private:
+		static void ExecCommit(void* p);
+		static void ExecConstructVB(void* p, const FBuf& buf, uint32 stride, bool bDynamic);
+		static void ExecConstructIB(void* p, const FBuf& buf, uint32 stride, bool bDynamic);
+		static void ExecUpdateVB(void* p, const FBuf& buf);
+	};
 }

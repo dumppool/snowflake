@@ -132,7 +132,7 @@ namespace LostCore
 
 		virtual void Update();
 		virtual void Commit();
-		void SetTexture(ITexturePtr tex);
+		void SetTexture(ITexture* tex);
 		void ConstructPrimitive(const FBuf& buf, int32 stride);
 		void HasGeometry(bool val);
 
@@ -153,13 +153,13 @@ namespace LostCore
 		// 次序：深度从前到后，绘制时需从后到前。
 		vector<FRect*> Children;
 
-		IPrimitiveGroupPtr RectPrimitive;
+		IPrimitiveGroup* RectPrimitive;
 		bool bConstructed;
 		bool bHasGeometry;
 		bool bAutoUpdateWidth;
 		bool bAutoUpdateHeight;
-		ITexturePtr RectTexture;
-		IConstantBufferPtr RectBuffer;
+		ITexture* RectTexture;
+		IConstantBuffer* RectBuffer;
 	};
 
 	class FBasicGUI

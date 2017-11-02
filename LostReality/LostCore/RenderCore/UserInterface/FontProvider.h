@@ -30,10 +30,10 @@ namespace LostCore
 		void Destroy();
 		void UpdateRes();
 
-		IFontPtr GetGdiFont();
+		IFont* GetGdiFont();
 
 	private:
-		IFontPtr GdiFont;
+		IFont* GdiFont;
 	};
 }
 

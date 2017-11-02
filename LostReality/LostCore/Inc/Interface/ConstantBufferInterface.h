@@ -25,7 +25,4 @@ namespace LostCore
 		virtual void SetShaderFlags(int32 flags) = 0;
 		virtual int32 GetShaderFlags() const = 0;
 	};
-
-	typedef shared_ptr<IConstantBuffer> IConstantBufferPtr;
-	typedef weak_ptr<IConstantBuffer> IConstantBufferWeakPtr;
 }

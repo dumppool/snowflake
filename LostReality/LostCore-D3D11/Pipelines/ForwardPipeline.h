@@ -24,10 +24,9 @@ namespace D3D11
 		virtual void Initialize() override;
 		virtual void Destroy() override;
 		virtual EPipeline GetEnum() const override;
-		virtual void CommitPrimitiveGroup(const FPrimitiveGroupPtr& pg) override;
-		virtual void CommitBuffer(const FConstantBufferPtr& buf) override;
-		virtual void CommitShaderResource(const FTexture2DPtr& tex) override;
-		virtual void FinishCommit() override;
+		virtual void CommitPrimitiveGroup(FPrimitiveGroup* pg) override;
+		virtual void CommitBuffer(FConstantBuffer* buf) override;
+		virtual void CommitShaderResource(FTexture2D* tex) override;
 		virtual void BeginFrame() override;
 		virtual void RenderFrame() override;
 		virtual void EndFrame() override;
@@ -37,6 +36,6 @@ namespace D3D11
 		FRenderObject Committing;
 
 		typedef map<ERenderOrder, vector<FRenderObject>, FRenderOrderComparison> FMap;
-		LostCore::TSynchronizer<FMap> RenderObjects;
+		FMap RenderObjects;
 	};
 }

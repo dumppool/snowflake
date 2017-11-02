@@ -134,10 +134,10 @@ namespace LostCore
 	struct FCharacterTexturePair
 	{
 		FCharDesc Desc;
-		ITexturePtr Texture;
+		ITexture* Texture;
 
-		FCharacterTexturePair(const FCharDesc& desc, const ITexturePtr& tex) : Desc(desc), Texture(tex) {}
-		FCharacterTexturePair() {}
+		FCharacterTexturePair(const FCharDesc& desc, ITexture* tex) : Desc(desc), Texture(tex) {}
+		FCharacterTexturePair():Texture(nullptr) {}
 	};
 
 	class IFont
@@ -149,7 +149,4 @@ namespace LostCore
 		virtual FFontConfig GetConfig() const = 0;
 		virtual void UpdateRes() = 0;
 	};
-
-	typedef shared_ptr<IFont>  IFontPtr;
-	typedef weak_ptr<IFont> IFontWeakPtr;
 }

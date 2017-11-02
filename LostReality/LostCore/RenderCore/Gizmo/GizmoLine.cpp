@@ -40,11 +40,10 @@ bool LostCore::FSegmentTool::ConstructPrimitive(const FBuf& buf)
 		return bConstructed;
 	}
 
-	bConstructed = true;
 	assert(Primitive == nullptr);
 
-	D3D11::WrappedCreateConstantBuffer(ConstantBuffer);
-	D3D11::WrappedCreatePrimitiveGroup(Primitive);
+	D3D11::WrappedCreateConstantBuffer(&ConstantBuffer);
+	D3D11::WrappedCreatePrimitiveGroup(&Primitive);
 
 	// TODO: ÅäÖÃ
 	//Material->SetDepthStencilState(bDepthTest ? K_DEPTH_STENCIL_Z_WRITE : K_DEPTH_STENCIL_ALWAYS);
@@ -57,13 +56,24 @@ bool LostCore::FSegmentTool::ConstructPrimitive(const FBuf& buf)
 	Primitive->SetVertexElement(VERTEX_COLOR);
 	Primitive->ConstructVB(buf, GetAlignedSize(sizeof(FSegmentVertex), 16), false);
 
+	bConstructed = true;
 	return true;
 }
 
 void LostCore::FSegmentTool::DestroyPrimitive()
 {
-	ConstantBuffer = nullptr;
-	Primitive = nullptr;
+	if (ConstantBuffer != nullptr)
+	{
+		D3D11::WrappedDestroyConstantBuffer(forward<IConstantBuffer*>(ConstantBuffer));
+		ConstantBuffer = nullptr;
+	}
+
+	if (Primitive != nullptr)
+	{
+		D3D11::WrappedDestroyPrimitiveGroup(forward<IPrimitiveGroup*>(Primitive));
+		Primitive = nullptr;
+	}
+
 	bConstructed = false;
 }
 

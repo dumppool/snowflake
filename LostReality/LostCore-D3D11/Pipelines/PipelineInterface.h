@@ -25,10 +25,9 @@ namespace D3D11
 
 		virtual EPipeline GetEnum() const = 0;
 
-		virtual void CommitPrimitiveGroup(const FPrimitiveGroupPtr& pg) = 0;
-		virtual void CommitBuffer(const FConstantBufferPtr& buf) = 0;
-		virtual void CommitShaderResource(const FTexture2DPtr& tex) = 0;
-		virtual void FinishCommit() = 0;
+		virtual void CommitPrimitiveGroup(FPrimitiveGroup* pg) = 0;
+		virtual void CommitBuffer(FConstantBuffer* buf) = 0;
+		virtual void CommitShaderResource(FTexture2D* tex) = 0;
 
 		virtual void BeginFrame() = 0;
 		virtual void RenderFrame() = 0;

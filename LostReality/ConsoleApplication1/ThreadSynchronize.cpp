@@ -3,6 +3,8 @@
 
 using namespace LostCore;
 
+static const int32 SFlushNum = 1000;
+
 FThreadSynchronizerSample::FThreadSynchronizerSample()
 	: Seq(1)
 {
@@ -93,100 +95,143 @@ bool FCountPrimeNumsTask::IsThreadPrivate()
 static set<int32> SIntSet0;
 static set<int32> SIntSet1;
 
-FSyncProducer::FSyncProducer()
+FSyncGuest::FSyncGuest()
 	: Thread(new FTickThread(this, "SyncProducer"))
 	, Data(1)
-	, Cmds(true)
+	, Cmds(1)
 {
 }
 
-FSyncProducer::~FSyncProducer()
+FSyncGuest::~FSyncGuest()
 {
 	SAFE_DELETE(Thread);
 }
 
-double FSyncProducer::GetData(int32 * data)
+double FSyncGuest::GetData(int32 * data)
 {
 	return Data.SyncRead(data);
 }
 
-void FSyncProducer::PushMsg(string& buf)
+void FSyncGuest::PushMsg(string& buf)
 {
-	Cmds.Push([=]() {
-		cout << buf.data() << endl;
-	});
+	//Cmds.Push([=]() {
+	//	cout << buf.data() << endl;
+	//});
 }
 
-bool FSyncProducer::Initialize()
+void FSyncGuest::PushCommand(const FCmd & cmd)
+{
+	Cmds.Ref().Push(cmd);
+}
+
+void FSyncGuest::FinishCommand()
+{
+	auto sec = Cmds.SyncCommit();
+	cout << "SyncCommit waited for " << sec*1000 << " ms" << endl;
+}
+
+bool FSyncGuest::Initialize()
 {
 	cout << "FSyncProducer::Initialize" << endl;
 	return true;
 }
 
-void FSyncProducer::Tick()
+void FSyncGuest::Tick()
 {
 	//auto r = rand();
 	//Data.Ref() = r;
 	//auto past = Data.SyncCommit();
 	//SIntSet0.insert(r);
 	//cout << "Write data: " << past * 1000 << "ms, " << r << endl;
-	function<void()> cmd;
-	while (Cmds.Pop(cmd))
+	FCommandQueue<FCmd> cmds;
+	auto sec = Cmds.SyncRead(&cmds);
+	cout << "SyncRead waited for " << sec * 1000 << " ms" << endl;
+
+	auto ts = FPerformanceCounter::GetTimeStamp();
+	FCmd cmd;
+	while (cmds.Pop(cmd))
 	{
-		cmd();
+		cmd.Exec();
 	}
+	cout << "FSyncGuest::Tick cost ms " << FPerformanceCounter::GetSeconds(ts) * 1000 << endl;
 }
 
-void FSyncProducer::Destroy()
+void FSyncGuest::Destroy()
 {
 	cout << "FSyncProducer::Destroy" << endl;
 }
 
-FSyncConsumer::FSyncConsumer()
+FSyncHost::FSyncHost()
 	: Thread(new FTickThread(this, "FSyncConsumer"))
-	, Producer(new FSyncProducer)
+	, Guest(new FSyncGuest)
 {
+	FSyncGuest::Get() = Guest;
 }
 
-FSyncConsumer::~FSyncConsumer()
+FSyncHost::~FSyncHost()
 {
+	FSyncGuest::Get() = nullptr;
 	SAFE_DELETE(Thread);
-	SAFE_DELETE(Producer);
+	SAFE_DELETE(Guest);
 }
 
-bool FSyncConsumer::Initialize()
+bool FSyncHost::Initialize()
 {
 	cout << "FSyncConsumer::Initialize" << endl;
 	Messages.push_back("Hello world.");
 	Messages.push_back("Commit message in consumer thread.");
 	Messages.push_back("When commit, messages will be captured before pushed into producer's command queue.");
 	Messages.push_back("In producer thread, command will be popped and output one by one.");
+
+	for (int32 i = 0; i < SFlushNum; i++)
+	{
+		Pending.push_back(new FObj11);
+	}
+	
 	return true;
 }
 
-void FSyncConsumer::Tick()
+void FSyncHost::Tick()
 {
 	//int32 val;
-	//auto past = Producer->GetData(&val);
+	//auto past = Guest->GetData(&val);
 	//SIntSet1.insert(val);
 	//cout << "Get data: " << past*1000 << "ms, " << val << endl;
-	if (Messages.empty())
-		return;
+
+	// 顺序一致性测试
+	//if (Messages.empty())
+	//	return;
 
 
-	Producer->PushMsg(Messages[0]);
-	Messages.erase(Messages.begin());
+	//Guest->PushMsg(Messages[0]);
+	//Messages.erase(Messages.begin());
+
+	// 对象初始化完整性测试
+	auto ts = FPerformanceCounter::GetTimeStamp();
+	for (int32 i = 0; i < SFlushNum; i++)
+	{
+		Pending[i]->DoSth(string("haha ").append(to_string(i)));
+	}
+	cout << endl;
+	cout << "FSyncHost::Tick cost ms " << FPerformanceCounter::GetSeconds(ts) * 1000 << endl;
+	Guest->FinishCommand();
+
 }
 
-void FSyncConsumer::Destroy()
+void FSyncHost::Destroy()
 {
+	for (auto item : Pending)
+	{
+		delete (FObj11*)item;
+	}
+	Pending.clear();
 	cout << "FSyncConsumer::Destroy" << endl;
 }
 
 FSyncSample::FSyncSample(int32 sec)
 {
 	FProcessUnique::StaticInitialize();
-	FSyncConsumer consumer;
+	FSyncHost consumer;
 
 	this_thread::sleep_for(chrono::seconds(sec));
 	cout << "Time's UP" << endl;
@@ -195,4 +240,42 @@ FSyncSample::FSyncSample(int32 sec)
 FSyncSample::~FSyncSample()
 {
 	FProcessUnique::StaticDestroy();
+}
+
+//FSyncGuest::FCmd::FHandler FObj11::Obj11Handler = [](void* p, const FSyncGuest::FCmd::FBody& body) {body((FObj11*)p); };
+
+FObj11::FObj11()
+	: Mem(1)
+	, SlowInit()
+{
+	Mem = 999;
+}
+
+void FObj11::DoSth(const string& sth)
+{
+	if (FSyncGuest::Get() != nullptr)
+	{
+		FSyncGuest::Get()->PushCommand(FSyncGuest::FCmd(
+			(void*)this,
+			//bind(&ExecDoSth, placeholders::_1, sth)
+			&ExecDummy
+		));
+	}
+}
+
+FObj11::FObjSlowInitialize::FObjSlowInitialize()
+{
+	this_thread::sleep_for(chrono::milliseconds(1));
+}
+
+void ExecDoSth(void * p, const string & sth)
+{
+	auto pthis = (FObj11*)p;
+	assert(pthis->Mem == 999);
+	//cout << sth << endl;
+}
+
+void ExecDummy(void* p)
+{
+
 }

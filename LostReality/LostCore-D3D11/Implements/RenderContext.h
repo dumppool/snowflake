@@ -21,10 +21,30 @@ namespace D3D11
 {
 	class IPipeline;
 
+	class FContextCommand
+	{
+	public:
+		typedef function<void(void*)> FBody;
+
+		FContextCommand() {}
+		FContextCommand(void* p, const FBody& body)
+			: Ptr(p), Body(body)
+		{
+		}
+
+		void Exec()
+		{
+			Body(Ptr);
+		}
+
+	private:
+		void* Ptr;
+		FBody Body;
+	};
+
 	class FRenderContext : public LostCore::IRenderContext
 	{
 	public:
-		typedef function<void()> FCmd;
 
 		FORCEINLINE static FRenderContext*& Get()
 		{
@@ -88,7 +108,6 @@ namespace D3D11
 		virtual void SetViewProjectMatrix(const LostCore::FFloat4x4 & vp) override;
 		virtual void FirstCommit() override;
 		virtual void FinishCommit() override;
-		virtual void PushCommand(const FCmd& cmd) override;
 
 	private:
 		void ExecInitializeDevice(LostCore::EContextID id, HWND wnd, bool bWindowed, int32 width, int32 height);
@@ -96,8 +115,6 @@ namespace D3D11
 		void BeginFrame();
 		void RenderFrame();
 		void EndFrame();
-
-		void PushInitialCommand(const FCmd& cmd);
 
 	public:
 		FORCEINLINE TRefCountPtr<ID3D11Device> GetDevice()
@@ -125,12 +142,18 @@ namespace D3D11
 			_mm_free(p);
 		}
 
-		void CommitPrimitiveGroup(const FPrimitiveGroupPtr& pg);
-		void CommitBuffer(const FConstantBufferPtr& buf);
-		void CommitShaderResource(const FTexture2DPtr& srv);
+		void CommitPrimitiveGroup(FPrimitiveGroup* pg);
+		void CommitBuffer(FConstantBuffer* buf);
+		void CommitShaderResource(FTexture2D* srv);
 
 		thread::id GetThreadId() const;
 		bool InRenderThread() const;
+
+		void PushCommand(const FContextCommand& cmd);
+		void DeallocPrimitiveGroup(LostCore::IPrimitiveGroup* pg);
+		void DeallocConstantBuffer(LostCore::IConstantBuffer* cb);
+		void DeallocGdiFont(LostCore::IFont* font);
+		void FlushDeallocating();
 
 	private:
 		void ReportLiveObjects();
@@ -143,17 +166,21 @@ namespace D3D11
 		TRefCountPtr<ID3D11Device>				Device;
 		TRefCountPtr<ID3D11DeviceContext>		Context;
 		TRefCountPtr<IDXGISwapChain>			SwapChain;
-		FTexture2DPtr							RenderTarget;
-		FTexture2DPtr							DepthStencil;
+		FTexture2D*								RenderTarget;
+		FTexture2D*								DepthStencil;
 		D3D11_VIEWPORT							Viewport;
 		LostCore::FGlobalParameter				Param;
-		FConstantBufferPtr						GlobalConstantBuffer;
+		FConstantBuffer*						GlobalConstantBuffer;
 
 		IPipeline*								ActivedPipeline;
 		map<EPipeline, IPipeline*>				Pipelines;
 
-		LostCore::FCommandQueue<FCmd>			InitialCommands;
-		LostCore::FCommandQueue<FCmd>			Commands;
+		vector<LostCore::IPrimitiveGroup*>		DeallocatingPrimitiveGroups;
+		vector<LostCore::IConstantBuffer*>		DeallocatingConstantBuffers;
+		vector<LostCore::IFont*>				DeallocatingFonts;
+
+		function<void()>						Initialization;
+		LostCore::TSynchronizer<LostCore::FCommandQueue<FContextCommand>> Commands;
 		LostCore::FTickThread*					Thread;
 
 		//FGdiFont* Font;

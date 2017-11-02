@@ -25,7 +25,7 @@ LostCore::FFontProvider::~FFontProvider()
 
 void LostCore::FFontProvider::Initialize()
 {
-	WrappedCreateGdiFont(GdiFont);
+	WrappedCreateGdiFont(&GdiFont);
 
 	int32 curr = 32, last = 127;
 	wstring initialString;
@@ -49,7 +49,11 @@ void LostCore::FFontProvider::Initialize()
 
 void LostCore::FFontProvider::Destroy()
 {
-	GdiFont = nullptr;
+	if (GdiFont != nullptr)
+	{
+		D3D11::WrappedDestroyGdiFont(forward<IFont*>(GdiFont));
+		GdiFont = nullptr;
+	}
 }
 
 void LostCore::FFontProvider::UpdateRes()
@@ -60,7 +64,7 @@ void LostCore::FFontProvider::UpdateRes()
 	}
 }
 
-IFontPtr LostCore::FFontProvider::GetGdiFont()
+IFont* LostCore::FFontProvider::GetGdiFont()
 {
 	return GdiFont;
 }

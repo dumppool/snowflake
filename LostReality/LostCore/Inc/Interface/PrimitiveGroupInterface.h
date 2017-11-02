@@ -46,7 +46,4 @@ namespace LostCore
 		// 调用UpdateVB会释放IndexBuffer
 		virtual void UpdateVB(const FBuf& buf) = 0;
 	};
-
-	typedef shared_ptr<IPrimitiveGroup> IPrimitiveGroupPtr;
-	typedef weak_ptr<IPrimitiveGroup> IPrimitiveGroupWeakPtr;
 }

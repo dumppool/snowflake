@@ -37,7 +37,14 @@ D3D11::FTexture2D::~FTexture2D()
 
 void D3D11::FTexture2D::CommitShaderResource()
 {
-	FRenderContext::Get()->CommitShaderResource(shared_from_this());
+	if (FRenderContext::Get()->InRenderThread())
+	{
+		ExecCommitShaderResource(this);
+	}
+	else
+	{
+		FRenderContext::Get()->PushCommand(FContextCommand(this, &ExecCommitShaderResource));
+	}
 }
 
 int32 D3D11::FTexture2D::GetWidth() const
@@ -242,4 +249,10 @@ bool D3D11::FTexture2D::IsWritable() const
 bool D3D11::FTexture2D::IsReadable() const
 {
 	return false;
+}
+
+void D3D11::FTexture2D::ExecCommitShaderResource(void * p)
+{
+	assert(FRenderContext::Get()->InRenderThread());
+	FRenderContext::Get()->CommitShaderResource((FTexture2D*)p);
 }

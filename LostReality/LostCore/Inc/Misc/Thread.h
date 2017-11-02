@@ -492,6 +492,9 @@ namespace LostCore
 			*obj = Objects[ReadIndex];
 		}
 
+		// 重置
+		Objects[ReadIndex] = 0;
+
 		// 更新读索引,通知可能已经阻塞的线程.
 		ReadIndex = (ReadIndex + 1) % Objects.size();
 		bWaitingForRead = false;

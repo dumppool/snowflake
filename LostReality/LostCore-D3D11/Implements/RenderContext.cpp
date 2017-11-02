@@ -29,8 +29,8 @@ D3D11::FRenderContext::FRenderContext()
 	, GlobalConstantBuffer(new FConstantBuffer)
 	, ActivedPipeline(nullptr)
 	, Thread(new FTickThread(this, "RenderContext"))
-	, InitialCommands(true)
 	, Commands(true)
+	, Initialization(nullptr)
 {
 }
 
@@ -46,10 +46,10 @@ bool D3D11::FRenderContext::Initialize()
 
 void D3D11::FRenderContext::Tick()
 {
-	FCmd cmd;
-	while (InitialCommands.Pop(cmd))
+	if (Initialization != nullptr)
 	{
-		cmd();
+		Initialization();
+		Initialization = nullptr;
 	}
 
 	if (!Device.IsValid() || !Context.IsValid() || !SwapChain.IsValid() || ActivedPipeline == nullptr)
@@ -57,14 +57,20 @@ void D3D11::FRenderContext::Tick()
 		return;
 	}
 
-	while (Commands.Pop(cmd))
+	FCommandQueue<FContextCommand> cmds(false);
+	Commands.SyncRead(&cmds);
+
+	FContextCommand cmd;
+	while (cmds.Pop(cmd))
 	{
-		cmd();
+		cmd.Exec();
 	}
 
 	BeginFrame();
 	RenderFrame();
 	EndFrame();
+
+	FlushDeallocating();
 }
 
 void D3D11::FRenderContext::Destroy()
@@ -72,9 +78,9 @@ void D3D11::FRenderContext::Destroy()
 	DestroyPipelines();
 	DestroyStateObjects();
 
-	RenderTarget = nullptr;
-	DepthStencil = nullptr;
-	GlobalConstantBuffer = nullptr;
+	SAFE_DELETE(RenderTarget);
+	SAFE_DELETE(DepthStencil);
+	SAFE_DELETE(GlobalConstantBuffer);
 
 	SwapChain = nullptr;
 	Context = nullptr;
@@ -85,10 +91,10 @@ void D3D11::FRenderContext::Destroy()
 
 void D3D11::FRenderContext::InitializeDevice(LostCore::EContextID id, HWND wnd, bool bWindowed, int32 width, int32 height)
 {
-	PushInitialCommand([=]()
+	Initialization = [=]()
 	{
 		ExecInitializeDevice(id, wnd, bWindowed, width, height);
-	});
+	};
 }
 
 void D3D11::FRenderContext::SetViewProjectMatrix(const FFloat4x4 & vp)
@@ -106,15 +112,12 @@ void D3D11::FRenderContext::FirstCommit()
 
 void D3D11::FRenderContext::FinishCommit()
 {
-	if (ActivedPipeline != nullptr)
-	{
-		ActivedPipeline->FinishCommit();
-	}
+	Commands.SyncCommit();
 }
 
-void D3D11::FRenderContext::PushCommand(const FCmd & cmd)
+void D3D11::FRenderContext::PushCommand(const FContextCommand & cmd)
 {
-	Commands.Push(cmd);
+	Commands.Ref().Push(cmd);
 }
 
 void D3D11::FRenderContext::ExecInitializeDevice(LostCore::EContextID id, HWND wnd, bool bWindowed, int32 width, int32 height)
@@ -132,14 +135,14 @@ void D3D11::FRenderContext::ExecInitializeDevice(LostCore::EContextID id, HWND w
 
 	assert(RenderTarget == nullptr);
 	{
-		RenderTarget = FTexture2DPtr(new FTexture2D);
+		RenderTarget = (new FTexture2D);
 		//RenderTarget->Construct(this, width, height, SSwapChainTextureFormat, false, true, true, false);
 		RenderTarget->ConstructFromSwapChain(SwapChain);
 	}
 
 	assert(DepthStencil == nullptr);
 	{
-		DepthStencil = FTexture2DPtr(new FTexture2D);
+		DepthStencil = (new FTexture2D);
 		DepthStencil->Construct(width, height, SDepthStencilFormat, true, false, false, false, nullptr, 0);
 	}
 
@@ -188,24 +191,19 @@ void D3D11::FRenderContext::EndFrame()
 	SwapChain->Present(0, 0);
 }
 
-void D3D11::FRenderContext::PushInitialCommand(const FCmd & cmd)
-{
-	InitialCommands.Push(cmd);
-}
-
-void D3D11::FRenderContext::CommitPrimitiveGroup(const FPrimitiveGroupPtr& pg)
+void D3D11::FRenderContext::CommitPrimitiveGroup(FPrimitiveGroup* pg)
 {
 	assert(ActivedPipeline != nullptr);
 	ActivedPipeline->CommitPrimitiveGroup(pg);
 }
 
-void D3D11::FRenderContext::CommitBuffer(const FConstantBufferPtr& buf)
+void D3D11::FRenderContext::CommitBuffer(FConstantBuffer* buf)
 {
 	assert(ActivedPipeline != nullptr);
 	ActivedPipeline->CommitBuffer(buf);
 }
 
-void D3D11::FRenderContext::CommitShaderResource(const FTexture2DPtr& srv)
+void D3D11::FRenderContext::CommitShaderResource(FTexture2D* srv)
 {
 	assert(ActivedPipeline != nullptr);
 	ActivedPipeline->CommitShaderResource(srv);
@@ -219,6 +217,42 @@ thread::id D3D11::FRenderContext::GetThreadId() const
 bool D3D11::FRenderContext::InRenderThread() const
 {
 	return this_thread::get_id() == GetThreadId();
+}
+
+void D3D11::FRenderContext::DeallocPrimitiveGroup(LostCore::IPrimitiveGroup * pg)
+{
+	DeallocatingPrimitiveGroups.push_back(pg);
+}
+
+void D3D11::FRenderContext::DeallocConstantBuffer(LostCore::IConstantBuffer * cb)
+{
+	DeallocatingConstantBuffers.push_back(cb);
+}
+
+void D3D11::FRenderContext::DeallocGdiFont(LostCore::IFont * font)
+{
+	DeallocatingFonts.push_back(font);
+}
+
+void D3D11::FRenderContext::FlushDeallocating()
+{
+	for (auto item : DeallocatingPrimitiveGroups)
+	{
+		SAFE_DELETE(item);
+	}
+	DeallocatingPrimitiveGroups.clear();
+
+	for (auto item : DeallocatingConstantBuffers)
+	{
+		SAFE_DELETE(item);
+	}
+	DeallocatingConstantBuffers.clear();
+
+	for (auto item : DeallocatingFonts)
+	{
+		SAFE_DELETE(item);
+	}
+	DeallocatingFonts.clear();
 }
 
 void D3D11::FRenderContext::ReportLiveObjects()

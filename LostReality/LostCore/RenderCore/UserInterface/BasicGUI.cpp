@@ -199,8 +199,18 @@ void LostCore::FRect::ClearChildren(bool dealloc)
 
 void LostCore::FRect::Destroy()
 {
-	RectPrimitive = nullptr;
-	RectBuffer = nullptr;
+	if (RectPrimitive != nullptr)
+	{
+		D3D11::WrappedDestroyPrimitiveGroup(forward<IPrimitiveGroup*>(RectPrimitive));
+		RectPrimitive = nullptr;
+	}
+	
+	if (RectBuffer != nullptr)
+	{
+		D3D11::WrappedDestroyConstantBuffer(forward<IConstantBuffer*>(RectBuffer));
+		RectBuffer = nullptr;
+	}
+
 	bConstructed = false;
 	ClearChildren(true);
 }
@@ -247,7 +257,7 @@ void LostCore::FRect::Commit()
 	}
 }
 
-void LostCore::FRect::SetTexture(ITexturePtr tex)
+void LostCore::FRect::SetTexture(ITexture* tex)
 {
 	RectTexture = tex;
 }
@@ -260,7 +270,7 @@ void LostCore::FRect::ConstructPrimitive(const FBuf& buf, int32 stride)
 	}
 
 	bConstructed = true;
-	WrappedCreatePrimitiveGroup(RectPrimitive);
+	WrappedCreatePrimitiveGroup(&RectPrimitive);
 	RectPrimitive->SetVertexElement(FRectVertex::GetVertexElement());
 	RectPrimitive->SetRenderOrder(ERenderOrder::UI);
 	RectPrimitive->SetTopology(EPrimitiveTopology::TriangleList);
@@ -275,7 +285,7 @@ void LostCore::FRect::ConstructPrimitive(const FBuf& buf, int32 stride)
 
 	RectPrimitive->ConstructIB(*FRectVertex::GetDefaultIndices(), sizeof(int16), false);
 
-	WrappedCreateConstantBuffer(RectBuffer);
+	WrappedCreateConstantBuffer(&RectBuffer);
 	RectBuffer->SetShaderSlot(SHADER_SLOT_MATRICES);
 	RectBuffer->SetShaderFlags(SHADER_FLAG_VS);
 }
