@@ -14,9 +14,11 @@ namespace D3D11
 		FPrimitiveGroup* PrimitiveGroup;
 		vector<FConstantBuffer*> ConstantBuffers;
 		vector<FTexture2D*> ShaderResources;
+		vector<FInstancingData*> InstancingDatas;
 
 		FRenderObject();
 
 		void Reset();
+		uint32 GetVertexFlags() const;
 	};
 }

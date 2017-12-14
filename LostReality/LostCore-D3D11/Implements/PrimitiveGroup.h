@@ -11,7 +11,7 @@
 
 namespace D3D11
 {
-	class FPrimitiveGroup : public LostCore::IPrimitiveGroup
+	class FPrimitiveGroup : public LostCore::IPrimitive
 	{
 	public:
 		FPrimitiveGroup();
@@ -19,33 +19,30 @@ namespace D3D11
 		FPrimitiveGroup(const FPrimitiveGroup&& ref);
 		virtual ~FPrimitiveGroup() override;
 
-		// 通过 IPrimitiveGroup 继承
+		// 通过 IPrimitive继承
 		virtual void Commit() override;
 		virtual void SetVertexElement(uint32 flags) override;
-		virtual uint32 GetVertexElement() const override;
+		virtual uint32 GetFlags() const override;
 		virtual void SetRenderOrder(ERenderOrder ro) override;
 		virtual ERenderOrder GetRenderOrder() const override;
-		virtual void ConstructVB(const FBuf& buf, uint32 stride, bool dynamic) override;
+		virtual void ConstructVB(const void* buf, uint32 sz, uint32 stride, bool dynamic) override;
 		virtual void ConstructIB(const FBuf& buf, uint32 stride, bool dynamic) override;
 		virtual void SetTopology(LostCore::EPrimitiveTopology topo) override;
-		virtual void UpdateVB(const FBuf& buf) override;
+		virtual void UpdateVB(const void* buf, uint32 sz, uint32 stride) override;
 
-		void Draw();
+		void Draw(const vector<FInstancingData*>& batch);
+
+		TRefCountPtr<ID3D11Buffer> GetVertexBuffer();
 
 	private:
-		atomic<uint8> Fence;
-		uint32 VertexElement;
+		uint32 Flags;
 
 		TRefCountPtr<ID3D11Buffer>			VertexBuffer;
-		uint32 VertexBufferSlot;
-		uint32 VertexBufferNum;
-		uint32 VertexStride;
-		uint32 VertexBufferOffset;
-		uint32 VertexCount;
+		uint32 Stride;
+		uint32 Count;
 		bool bIsVBDynamic;
 
 		TRefCountPtr<ID3D11Buffer>			IndexBuffer;
-		uint32 IndexBufferOffset;
 		uint32 IndexCount;
 		DXGI_FORMAT IndexFormat;
 		bool bIsIBDynamic;
@@ -57,6 +54,6 @@ namespace D3D11
 		static void ExecCommit(void* p);
 		static void ExecConstructVB(void* p, const FBuf& buf, uint32 stride, bool bDynamic);
 		static void ExecConstructIB(void* p, const FBuf& buf, uint32 stride, bool bDynamic);
-		static void ExecUpdateVB(void* p, const FBuf& buf);
+		static void ExecUpdateVB(void* p, const FBuf& buf, uint32 stride);
 	};
 }

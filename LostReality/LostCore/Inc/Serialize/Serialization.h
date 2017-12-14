@@ -345,7 +345,7 @@ namespace LostCore
 	// vector<uint8>本质上只是一块buffer,否则会用到string.
 	FORCEINLINE FBinaryIO& operator<<(FBinaryIO& stream, const std::vector<uint8>& data)
 	{
-		uint32 sz = data.capacity();
+		uint32 sz = data.size();
 		stream << sz;
 		if (sz > 0)
 		{
@@ -361,7 +361,7 @@ namespace LostCore
 		stream >> sz;
 		if (sz > 0)
 		{
-			data.reserve(sz);
+			data.resize(sz);
 			Deserialize(stream, data.data(), sz);
 		}
 

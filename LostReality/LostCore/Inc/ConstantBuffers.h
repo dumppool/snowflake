@@ -29,7 +29,7 @@ namespace LostCore
 			FGlobalParameter result(*this);
 			result.ViewProject.Transpose();
 			buf.resize(GetAlignedSize(sizeof(result), 16));
-			memcpy(buf.data(), &result, buf.size());
+			memcpy(buf.data(), &result, sizeof(result));
 		}
 	};
 
@@ -42,7 +42,7 @@ namespace LostCore
 			FSingleMatrixParameter result(*this);
 			result.Matrix.Transpose();
 			buf.resize(GetAlignedSize(sizeof(result), 16));
-			memcpy(buf.data(), &result, buf.size());
+			memcpy(buf.data(), &result, sizeof(result));
 		}
 	};
 
@@ -57,39 +57,62 @@ namespace LostCore
 			result.World.Transpose();
 			for_each(result.Bones.begin(), result.Bones.end(), [](LostCore::FFloat4x4& mat) {mat.Transpose(); });
 			buf.resize(GetAlignedSize(sizeof(result), 16));
-			memcpy(buf.data(), &result, buf.size());
+			memcpy(buf.data(), &result, sizeof(result));
 		}
 	};
 
 	struct FRectParameter
 	{
+		// 相对父面板的位置，单位，像素
+		FFloat2 Offset;
+
 		// 大小尺寸，像素
 		FFloat2 Size;
 
-		// 相对父面板的位置，单位，像素
-		FFloat2 Origin;
-
 		// 相对父面板的缩放，(0.f, 1.f]
-		float Scale;
+		FFloat2 Scale;
 
-		FRectParameter(const FFloat2& size, const FFloat2 origin, float scale)
+		FRectParameter(const FFloat2 offset, const FFloat2& size, const FFloat2& scale)
 			: Size(size)
-			, Origin(origin)
+			, Offset(offset)
 			, Scale(scale)
 		{
 		}
 
 		FRectParameter()
 			: Size(0.f, 0.f)
-			, Origin(0.f, 0.f)
-			, Scale(1.f) 
+			, Offset(0.f, 0.f)
+			, Scale(1.f, 1.f) 
 		{
 		}
 
 		void GetBuffer(FBuf& buf) const
 		{
 			buf.resize(GetAlignedSize(sizeof(FRectParameter), 16));
-			memcpy(buf.data(), this, buf.size());
+			memcpy(buf.data(), this, sizeof(FRectParameter));
+		}
+	};
+
+	struct FTextileParameter
+	{
+		FFloat2 Offset;
+		FFloat2 Scale;
+
+		FTextileParameter(const FFloat2& offset, const FFloat2& scale)
+			: Offset(offset)
+			, Scale(scale)
+		{
+		}
+
+		FTextileParameter()
+			: Offset(0.0f, 0.0f)
+			, Scale(1.0f, 1.0f)
+		{}
+
+		void GetBuffer(FBuf& buf) const 
+		{
+			buf.resize(GetAlignedSize(sizeof(FTextileParameter), 16));
+			memcpy(buf.data(), this, sizeof(FTextileParameter));
 		}
 	};
 
@@ -104,7 +127,7 @@ namespace LostCore
 		void GetBuffer(FBuf& buf) const
 		{
 			buf.resize(GetAlignedSize(sizeof(FCustomParameter), 16));
-			memcpy(buf.data(), this, buf.size());
+			memcpy(buf.data(), this, sizeof(FCustomParameter));
 		}
 	};
 }

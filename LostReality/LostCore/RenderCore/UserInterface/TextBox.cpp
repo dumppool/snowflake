@@ -30,7 +30,7 @@ void LostCore::FTextBox::Update()
 	float offset = 0.0f;
 	for (auto item : Children)
 	{
-		item->SetOriginLocal(FFloat2(offset, 0.0f));
+		item->SetOffsetLocal(FFloat2(offset, 0.0f));
 		offset += item->GetSize().X + Space;
 	}
 
@@ -43,46 +43,31 @@ void LostCore::FTextBox::SetText(const wstring & text)
 	//FScopedStackCounterRequest req(SCounter);
 
 	content = text;
-	return;
 
-	ClearChildren(true);
+	ClearChildren([](FRect* child) {FFontProvider::Get()->DeallocTile((FFontTile*)child); });
 
-	array<FRectVertex, 4> vertices;
-	memcpy(vertices.data(), FRectVertex::GetDefaultVertices(FColor128(0xffffff00)), 4 * sizeof(FRectVertex));
-
-	auto font = FFontProvider::Get()->GetGdiFont();
-	assert(font != nullptr);
 	float width = 0.0f;
+	auto config = FFontProvider::Get()->GetConfig();
+	auto texDesc = FFontProvider::Get()->GetTextureDescription();
+	if (!texDesc.IsValid())
+	{
+		FFontProvider::Get()->GetCharacter('1');
+		return;
+	}
+
 	for (auto it = content.begin(); it != content.end(); it++)
 	{
-		auto desc = font->GetCharacter(*it);
-		auto ptex = desc.Texture;
-		if (ptex == nullptr)
+		auto charDesc = FFontProvider::Get()->GetCharacter(*it);
+		if (!charDesc.IsValid())
 		{
 			continue;
 		}
 
-		const auto& charDesc = desc.Desc;
 		width += charDesc.Width;
-		const auto texSize = FFloat2(ptex->GetWidth(), ptex->GetHeight());
-		const auto charSize = FFloat2(charDesc.Width / texSize.X, charDesc.Height / texSize.Y);
-		const auto topLeft = FFloat2(charDesc.X / texSize.X, charDesc.Y / texSize.Y);
-		FRect* child = nullptr;
-		child = new FRect;
-		child->HasGeometry(true);
-		vertices[0].TexCoord = topLeft;
-		vertices[1].TexCoord = topLeft + FFloat2(charSize.X, 0.0f);
-		vertices[2].TexCoord = topLeft + FFloat2(0.0f, charSize.Y);
-		vertices[3].TexCoord = topLeft + charSize;
-
-		FBuf buf;
-		buf.resize(4 * sizeof(FRectVertex));
-		memcpy(buf.data(), vertices.data(), buf.size());
-		child->ConstructPrimitive(buf, sizeof(FRectVertex));
-		child->SetTexture(ptex);
-		child->SetSize(FFloat2(charDesc.Width, charDesc.Height));
+		auto child = FFontProvider::Get()->AllocTile();
+		child->SetCharacter(*it);
 		AddChild(child);
 	}
 
-	SetSize(FFloat2(width, font->GetConfig().Height));
+	SetSize(FFloat2(width, config.Height));
 }

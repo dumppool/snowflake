@@ -166,6 +166,7 @@
     <ClInclude Include="Inc\Interface\ConstantBufferInterface.h" />
     <ClInclude Include="Inc\Interface\Drawable.h" />
     <ClInclude Include="Inc\Interface\FontInterface.h" />
+    <ClInclude Include="Inc\Interface\InstancingDataInterface.h" />
     <ClInclude Include="Inc\Interface\MaterialInterface.h" />
     <ClInclude Include="Inc\Interface\PrimitiveGroupInterface.h" />
     <ClInclude Include="Inc\Interface\RenderContextInterface.h" />
@@ -191,6 +192,7 @@
     <ClInclude Include="Inc\Misc\Counters.h" />
     <ClInclude Include="Inc\Misc\Exceptions.h" />
     <ClInclude Include="Inc\Misc\Export.h" />
+    <ClInclude Include="Inc\Misc\IDAllocator.h" />
     <ClInclude Include="Inc\Misc\Includs.h" />
     <ClInclude Include="Inc\Misc\Log.h" />
     <ClInclude Include="Inc\Misc\Macros.h" />
@@ -208,6 +210,7 @@
     <ClInclude Include="RenderCore\Light\PointLight.h" />
     <ClInclude Include="RenderCore\Light\SpotLight.h" />
     <ClInclude Include="RenderCore\UserInterface\FontProvider.h" />
+    <ClInclude Include="RenderCore\UserInterface\FontTile.h" />
     <ClInclude Include="RenderCore\UserInterface\ListBox.h" />
     <ClInclude Include="RenderCore\UserInterface\TextBox.h" />
     <ClInclude Include="stdafx.h" />
@@ -228,6 +231,7 @@
     <ClCompile Include="RenderCore\Skeleton\Animation.cpp" />
     <ClCompile Include="RenderCore\UserInterface\BasicGUI.cpp" />
     <ClCompile Include="RenderCore\UserInterface\FontProvider.cpp" />
+    <ClCompile Include="RenderCore\UserInterface\FontTile.cpp" />
     <ClCompile Include="RenderCore\UserInterface\ListBox.cpp" />
     <ClCompile Include="RenderCore\UserInterface\TextBox.cpp" />
     <ClCompile Include="Src\FBXEditor.cpp" />

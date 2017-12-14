@@ -152,6 +152,7 @@
     <ClInclude Include="Buffers\VertexDef.h" />
     <ClInclude Include="Implements\ConstantBuffer.h" />
     <ClInclude Include="Implements\GdiFont.h" />
+    <ClInclude Include="Implements\InstancingData.h" />
     <ClInclude Include="Implements\Material.h" />
     <ClInclude Include="Implements\PrimitiveGroup.h" />
     <ClInclude Include="Implements\RenderContext.h" />
@@ -187,6 +188,7 @@
     </ClCompile>
     <ClCompile Include="Implements\ConstantBuffer.cpp" />
     <ClCompile Include="Implements\GdiFont.cpp" />
+    <ClCompile Include="Implements\InstancingData.cpp" />
     <ClCompile Include="Implements\Material.cpp" />
     <ClCompile Include="Implements\PrimitiveGroup.cpp" />
     <ClCompile Include="Implements\RenderContext.cpp" />

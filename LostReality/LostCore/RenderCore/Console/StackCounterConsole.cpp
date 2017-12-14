@@ -33,7 +33,7 @@ void LostCore::FStackCounterConsole::Initialize(FRect* parent)
 	auto parentSize = parent->GetSize();
 
 	Panel0 = new FListBox;
-	Panel0->SetOriginLocal(FFloat2(0.0f, 0.0f));
+	Panel0->SetOffsetLocal(FFloat2(0.0f, 0.0f));
 	Panel0->SetAlignment(FListBox::EAlignment::Horizontal);
 	Panel0->SetSpace(10);
 	parent->AddChild(Panel0);
@@ -53,10 +53,6 @@ void LostCore::FStackCounterConsole::Initialize(FRect* parent)
 
 void LostCore::FStackCounterConsole::FinishCounting()
 {
-	auto font = FFontProvider::Get()->GetGdiFont();
-	float textHeight = font->GetConfig().Height;
-	float panelHeight = Panel1->GetSize().Y;
-	auto maxNumLines = int32(panelHeight / textHeight);
 	FStackCounterManager::Get()->Finish();
 
 	//return;

@@ -33,7 +33,7 @@ void LostCore::FSegmentTool::ResetData()
 	Data.clear();
 }
 
-bool LostCore::FSegmentTool::ConstructPrimitive(const FBuf& buf)
+bool LostCore::FSegmentTool::ConstructPrimitive(const void* buf, uint32 sz)
 {
 	if (bConstructed)
 	{
@@ -54,7 +54,7 @@ bool LostCore::FSegmentTool::ConstructPrimitive(const FBuf& buf)
 	ConstantBuffer->SetShaderFlags(SHADER_FLAG_VS);
 
 	Primitive->SetVertexElement(VERTEX_COLOR);
-	Primitive->ConstructVB(buf, GetAlignedSize(sizeof(FSegmentVertex), 16), false);
+	Primitive->ConstructVB(buf, sz, GetAlignedSize(sizeof(FSegmentVertex), 16), false);
 
 	bConstructed = true;
 	return true;
@@ -70,7 +70,7 @@ void LostCore::FSegmentTool::DestroyPrimitive()
 
 	if (Primitive != nullptr)
 	{
-		D3D11::WrappedDestroyPrimitiveGroup(forward<IPrimitiveGroup*>(Primitive));
+		D3D11::WrappedDestroyPrimitiveGroup(forward<IPrimitive*>(Primitive));
 		Primitive = nullptr;
 	}
 
@@ -87,16 +87,15 @@ void LostCore::FSegmentTool::Commit()
 	auto rc = FGlobalHandler::Get()->GetRenderContext();
 	auto sec = FGlobalHandler::Get()->GetFrameTime();
 
-	FBuf buf(Data.size() * sizeof(FSegmentVertex));
-	memcpy(buf.data(), Data.data(), buf.size());
+	uint32 sz = Data.size() * sizeof(FSegmentVertex);
 
 	if (bConstructed)
 	{
-		Primitive->UpdateVB(buf);
+		Primitive->UpdateVB(Data.data(), sz, sizeof(FSegmentVertex));
 	}
 	else
 	{
-		ConstructPrimitive(buf);
+		ConstructPrimitive(Data.data(), sz);
 	}
 
 	if (ConstantBuffer != nullptr)

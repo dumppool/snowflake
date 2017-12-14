@@ -12,7 +12,7 @@
 
 namespace LostCore
 {
-	class IPrimitiveGroup;
+	class IPrimitive;
 	class IMaterial;
 	class FBasicModel;
 	class FBasicCamera;

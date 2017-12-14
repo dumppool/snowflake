@@ -19,14 +19,18 @@
 #define NAME_VERTEX_COLOR			"VERTEX_COLOR"
 #define NAME_VERTEX_SKIN			"VERTEX_SKIN"
 #define NAME_VERTEX_TEXCOORD1		"VERTEX_TEXCOORD1"
+#define NAME_VERTEX_COORDINATE3D	"VERTEX_COORDINATE3D"
 #define NAME_VERTEX_COORDINATE2D	"VERTEX_COORDINATE2D"
+#define NAME_INSTANCE_TRANSFORM3D	"INSTANCE_TRANSFORM3D"
+#define NAME_INSTANCE_TRANSFORM2D	"INSTANCE_TRANSFORM2D"
+#define NAME_INSTANCE_TEXTILE		"INSTANCE_TEXTILE"
 
 namespace D3D11
 {
 	enum class ELightingMode : uint8
 	{
 		UnLit = 0,
-		Phone,
+		Phong,
 	};
 
 	enum class EShaderID : uint8
@@ -48,8 +52,9 @@ namespace D3D11
 
 		FShaderKey();
 
-		bool operator==(const FShaderKey& rhs) const;
+		//bool operator==(const FShaderKey& rhs) const;
 		bool operator<(const FShaderKey& rhs) const;
+		string ToString() const;
 	};
 
 	FORCEINLINE LostCore::FBinaryIO& operator<<(LostCore::FBinaryIO& stream, const FShaderKey& data)
@@ -67,7 +72,7 @@ namespace D3D11
 	struct FShaderKeyBlobs
 	{
 		FShaderKey Key;
-		map<EShaderID, vector<uint8>> Blobs;
+		map<EShaderID, FBuf> Blobs;
 
 		FShaderKeyBlobs();
 		explicit FShaderKeyBlobs(const FShaderKey& key);
@@ -107,8 +112,6 @@ namespace D3D11
 			PS = nullptr;
 			IL = nullptr;
 		}
-
-		void Bind();
 	};
 
 	class FShaderManager
@@ -130,11 +133,14 @@ namespace D3D11
 		void Destroy();
 
 		FShaderObject* GetShader(const FShaderKey& key);
+		void Bind(const FShaderKey& key);
 
 	private:
 		set<FShaderKeyBlobs>::const_iterator Compile(const FShaderKey& key);
 		set<FShaderKeyBlobs>::const_iterator GetBlobs(const FShaderKey& key);
 		FShaderObject* CreateShaderObject(set<FShaderKeyBlobs>::const_iterator blobIt);
+
+		TRefCountPtr<ID3D11InputLayout> CreateInputLayout(const FBuf& vsBlob, const FShaderKey& key);
 
 		set<FShaderKeyBlobs> KeyBlobs;
 		map<FShaderKey, FShaderObject*> ShaderMap;

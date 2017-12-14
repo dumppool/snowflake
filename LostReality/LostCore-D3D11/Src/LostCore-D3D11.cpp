@@ -59,15 +59,27 @@ EReturnCode D3D11::DestroyRenderContext(LostCore::IRenderContext * context)
 	return SSuccess;
 }
 
-EReturnCode D3D11::CreatePrimitiveGroup(IPrimitiveGroup** pg)
+EReturnCode D3D11::CreatePrimitiveGroup(IPrimitive** pg)
 {
 	*pg = (new FPrimitiveGroup);
 	return SSuccess;
 }
 
-EReturnCode D3D11::DestroyPrimitiveGroup(IPrimitiveGroup* pg)
+EReturnCode D3D11::DestroyPrimitiveGroup(IPrimitive* pg)
 {
 	FRenderContext::Get()->DeallocPrimitiveGroup(pg);
+	return SSuccess;
+}
+
+EReturnCode D3D11::CreateInstancingData(IInstancingData** data)
+{
+	*data = new FInstancingData;
+	return SSuccess;
+}
+
+EReturnCode D3D11::DestroyInstancingData(IInstancingData* data)
+{
+	FRenderContext::Get()->DeallocInstancingData(data);
 	return SSuccess;
 }
 

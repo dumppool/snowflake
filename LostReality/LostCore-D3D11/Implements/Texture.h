@@ -11,18 +11,18 @@
 
 namespace D3D11
 {
-	class FTexture2D : public LostCore::ITexture
+	class FTexture2D
 	{
 	public:
 		FTexture2D();
-		virtual ~FTexture2D() override;
+		~FTexture2D();
 
-		virtual void CommitShaderResource() override;
-		virtual int32 GetWidth() const override;
-		virtual int32 GetHeight() const override;
+		void CommitShaderResource();
+		int32 GetWidth() const;
+		int32 GetHeight() const;
 
-		virtual void SetShaderResourceSlot(int32 slot) override;
-		virtual void SetRenderTargetSlot(int32 slot) override;
+		void SetShaderResourceSlot(int32 slot);
+		void SetRenderTargetSlot(int32 slot);
 
 	public:
 

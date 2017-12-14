@@ -23,10 +23,10 @@ namespace LostCore
 		TriangleStrip,
 	};
 
-	class IPrimitiveGroup
+	class IPrimitive
 	{
 	public:
-		virtual ~IPrimitiveGroup() {}
+		virtual ~IPrimitive() {}
 
 		virtual void Commit() = 0;
 
@@ -34,9 +34,9 @@ namespace LostCore
 		virtual ERenderOrder GetRenderOrder() const = 0;
 
 		virtual void SetVertexElement(uint32 flags) = 0;
-		virtual uint32 GetVertexElement() const = 0;
+		virtual uint32 GetFlags() const = 0;
 
-		virtual void ConstructVB(const FBuf& buf, uint32 stride, bool bDynamic) = 0;
+		virtual void ConstructVB(const void* buf, uint32 sz, uint32 stride, bool bDynamic) = 0;
 		virtual void ConstructIB(const FBuf& buf, uint32 stride, bool bDynamic) = 0;
 		virtual void SetTopology(EPrimitiveTopology topo) = 0;
 
@@ -44,6 +44,6 @@ namespace LostCore
 		// vertex stride不可以改变.
 		// 如果bytes大于VertexCount*VertexStride，UpdateVB内会重新创建VB.
 		// 调用UpdateVB会释放IndexBuffer
-		virtual void UpdateVB(const FBuf& buf) = 0;
+		virtual void UpdateVB(const void* buf, uint32 sz, uint32 stride) = 0;
 	};
 }

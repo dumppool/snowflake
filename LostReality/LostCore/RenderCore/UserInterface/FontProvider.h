@@ -10,11 +10,12 @@
 #pragma once
 
 #include "Interface/FontInterface.h"
+#include "FontTile.h"
 
 namespace LostCore
 {
 	// FBasicGUI负责这个单例的初始化和释放.
-	class FFontProvider
+	class FFontProvider : public IFontClient, public FFontTile::IListener
 	{
 	public:
 		static FFontProvider* Get()
@@ -23,17 +24,45 @@ namespace LostCore
 			return &Inst;
 		}
 
-		FFontProvider() : GdiFont(nullptr) {}
+		FFontProvider();
 		~FFontProvider();
 
 		void Initialize();
 		void Destroy();
-		void UpdateRes();
+		FFontConfig GetConfig() const;
+		FFontTextureDescription GetTextureDescription();
+		FCharacterDescription GetCharacter(WCHAR c);
+		void OnFinishCommit();
 
-		IFont* GetGdiFont();
+		FFontTile* AllocTile();
+		void DeallocTile(FFontTile* tile);
+
+		virtual void OnFontUpdated(const FFontTextureDescription& td, const set<FCharacterDescription>& cd) override;
+		virtual void OnFontTileCommitted(const FRectParameter&, const FCharacterDescription&) override;
 
 	private:
+		void ConstructPrimitive();
+
+	private:
+		FFontConfig Config;
 		IFont* GdiFont;
+
+		// Upload props
+		wstring RequestCharacters;
+		vector<FRectParameter> RenderRects;
+		vector<FTextileParameter> RenderTextiles;
+		wstring RenderCharacters;
+
+		// Download props & mutex
+		array<FFontTextureDescription, 2> TextureDescArray;
+		array<set<FCharacterDescription>, 2> CharacterDescArray;
+		mutex Mutex;
+
+		// Instancing props
+		IPrimitive* Primitive;
+		vector<IInstancingData*> TransformData;
+		vector<IInstancingData*> TextileData;
+		static const int32 SNumPerBatch = 100;
 	};
 }
 

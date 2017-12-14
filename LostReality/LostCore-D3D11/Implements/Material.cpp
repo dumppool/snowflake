@@ -79,10 +79,10 @@ bool D3D11::FMaterial::Initialize(LostCore::IRenderContext * rc, const char * pa
 	return InitializeShader(rc, path);
 }
 
-void D3D11::FMaterial::UpdateTexture(LostCore::IRenderContext * rc, LostCore::ITexture * tex, int32 slot)
-{
-	Textures[slot] = (FTexture2D*)tex; 
-}
+//void D3D11::FMaterial::UpdateTexture(LostCore::IRenderContext * rc, LostCore::ITextureSet * tex, int32 slot)
+//{
+//	Textures[slot] = (FTexture2D*)tex; 
+//}
 
 void D3D11::FMaterial::SetDepthStencilState(const char * name)
 {

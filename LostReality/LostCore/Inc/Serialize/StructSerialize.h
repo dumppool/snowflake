@@ -273,6 +273,8 @@ namespace LostCore
 		stream >> data.VertexMagic;
 		assert(data.VertexMagic == MAGIC_VERTEX && "vertex data is corrupt");
 
+		data.VertexFlags |= VERTEX_COORDINATE3D;
+
 		return stream;
 	}
 

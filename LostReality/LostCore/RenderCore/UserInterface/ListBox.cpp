@@ -27,12 +27,12 @@ void LostCore::FListBox::Update()
 	{
 		if (Alignment == EAlignment::Vertical)
 		{
-			item->SetOriginLocal(FFloat2(0.0f, offset));
+			item->SetOffsetLocal(FFloat2(0.0f, offset));
 			offset += item->GetSize().Y + Space;
 		}
 		else
 		{
-			item->SetOriginLocal(FFloat2(offset, 0.0f));
+			item->SetOffsetLocal(FFloat2(offset, 0.0f));
 			offset += item->GetSize().X + Space;
 		}
 	}

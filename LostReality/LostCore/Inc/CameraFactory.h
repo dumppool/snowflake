@@ -14,6 +14,7 @@ namespace LostCore
 	class FCameraFactory
 	{
 	public:
+		static FBasicCamera* NewCameraDefault();
 		static FBasicCamera* NewCamera(const FJson & config);
 	};
 }

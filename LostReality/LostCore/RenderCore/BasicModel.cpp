@@ -116,7 +116,7 @@ void LostCore::FBasicModel::CommitModel()
 	}
 }
 
-bool LostCore::FBasicModel::ConfigPrimitive(const string& url, IPrimitiveGroup*& pg, FMeshData& pgdata)
+bool LostCore::FBasicModel::ConfigPrimitive(const string& url, IPrimitive*& pg, FMeshData& pgdata)
 {
 	const char* head = "FBasicModel::ConfigPrimitive";
 	auto rc = FGlobalHandler::Get()->GetRenderContext();
@@ -147,7 +147,7 @@ bool LostCore::FBasicModel::ConfigPrimitive(const string& url, IPrimitiveGroup*&
 	}
 
 	uint32 vbStride = GetAlignedSize(GetVertexDetails(pgdata.VertexFlags).Stride, 16);
-	pg->ConstructVB(pgdata.Vertices, vbStride, false);
+	pg->ConstructVB(pgdata.Vertices.data(), pgdata.Vertices.size(), vbStride, false);
 
 	return pg != nullptr;
 }
@@ -243,7 +243,7 @@ void LostCore::FBasicModel::CommitGizmos()
 	SegmentRenderer.Commit();
 }
 
-IPrimitiveGroup* LostCore::FBasicModel::GetPrimitive()
+IPrimitive* LostCore::FBasicModel::GetPrimitive()
 {
 	return Primitive;
 }
@@ -342,7 +342,7 @@ void LostCore::FBasicModel::Destroy()
 {
 	if (Primitive != nullptr)
 	{
-		D3D11::WrappedDestroyPrimitiveGroup(forward<IPrimitiveGroup*>(Primitive));
+		D3D11::WrappedDestroyPrimitiveGroup(forward<IPrimitive*>(Primitive));
 		Primitive = nullptr;
 	}
 
@@ -573,7 +573,7 @@ void LostCore::FSkeletalModel::UpdateConstant()
 	}
 }
 
-bool LostCore::FSkeletalModel::ConfigPrimitive(const string& url, IPrimitiveGroup*& pg, FMeshData& pgdata)
+bool LostCore::FSkeletalModel::ConfigPrimitive(const string& url, IPrimitive*& pg, FMeshData& pgdata)
 {
 	if (FBasicModel::ConfigPrimitive(url, pg, pgdata))
 	{

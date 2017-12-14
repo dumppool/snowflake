@@ -347,10 +347,10 @@ EReturnCode D3D11::CreateRenderTargetView(
 	return SSuccess;
 }
 
-EReturnCode D3D11::CreatePrimitiveVertex(
+extern EReturnCode D3D11::ConstructBuffer(
 	const TRefCountPtr<ID3D11Device>& device, 
-	const FBuf& buf, bool bDynamic,
-	TRefCountPtr<ID3D11Buffer>& vb)
+	const void* buf, uint32 sz, bool bDynamic, uint32 bind,
+	TRefCountPtr<ID3D11Buffer>& output)
 {
 	const CHAR* head = "D3D11::CreatePrimitiveVertex";
 	
@@ -360,16 +360,16 @@ EReturnCode D3D11::CreatePrimitiveVertex(
 		return SErrorInvalidParameters;
 	}
 
-	if (buf.empty())
+	if (sz == 0)
 	{
 		LVERR(head, "Invalid input buf");
 		return SErrorInvalidParameters;
 	}
 
 	// Vertex Buffer
-	D3D11_BUFFER_DESC desc{ buf.size(), bDynamic ? D3D11_USAGE_DYNAMIC : D3D11_USAGE_DEFAULT, D3D11_BIND_VERTEX_BUFFER, bDynamic?D3D11_CPU_ACCESS_WRITE:0, 0, 0 };
-	D3D11_SUBRESOURCE_DATA data{ buf.data(), 0, 0 };
-	HRESULT hr = device->CreateBuffer(&desc, &data, vb.GetInitReference());
+	D3D11_BUFFER_DESC desc{ sz, bDynamic ? D3D11_USAGE_DYNAMIC : D3D11_USAGE_DEFAULT, bind, bDynamic?D3D11_CPU_ACCESS_WRITE:0, 0, 0 };
+	D3D11_SUBRESOURCE_DATA data{ buf, 0, 0 };
+	HRESULT hr = device->CreateBuffer(&desc, &data, output.GetInitReference());
 	if (FAILED(hr))
 	{
 		LVERR(head, "Failed to create vertex buffer: 0x%x(%d)", hr, hr);

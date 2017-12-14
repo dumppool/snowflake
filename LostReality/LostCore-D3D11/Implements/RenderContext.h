@@ -13,6 +13,7 @@
 //#include "ConstantBuffer.h"
 
 #include "ConstantBuffer.h"
+#include "InstancingData.h"
 #include "PrimitiveGroup.h"
 #include "Texture.h"
 #include "GdiFont.h"
@@ -21,6 +22,12 @@ namespace D3D11
 {
 	class IPipeline;
 
+	class IUpdate
+	{
+	public:
+		virtual void Update() = 0;
+	};
+
 	class FContextCommand
 	{
 	public:
@@ -28,17 +35,27 @@ namespace D3D11
 
 		FContextCommand() {}
 		FContextCommand(void* p, const FBody& body)
-			: Ptr(p), Body(body)
+			: This(p), Body(body)
 		{
 		}
 
 		void Exec()
 		{
-			Body(Ptr);
+			Body(This);
+		}
+
+		bool operator<(const FContextCommand& rhs) const
+		{
+			return This < rhs.This;
+		}
+
+		bool operator==(const FContextCommand& rhs) const
+		{
+			return This == rhs.This;
 		}
 
 	private:
-		void* Ptr;
+		void* This;
 		FBody Body;
 	};
 
@@ -145,15 +162,20 @@ namespace D3D11
 		void CommitPrimitiveGroup(FPrimitiveGroup* pg);
 		void CommitBuffer(FConstantBuffer* buf);
 		void CommitShaderResource(FTexture2D* srv);
+		void CommitInstancingData(FInstancingData* buf);
 
 		thread::id GetThreadId() const;
 		bool InRenderThread() const;
 
 		void PushCommand(const FContextCommand& cmd);
-		void DeallocPrimitiveGroup(LostCore::IPrimitiveGroup* pg);
+		void DeallocPrimitiveGroup(LostCore::IPrimitive* pg);
+		void DeallocInstancingData(LostCore::IInstancingData* data);
 		void DeallocConstantBuffer(LostCore::IConstantBuffer* cb);
 		void DeallocGdiFont(LostCore::IFont* font);
 		void FlushDeallocating();
+
+		void AddUpdateCommand(const FContextCommand& obj);
+		void RemoveUpdateCommand(const FContextCommand& obj);
 
 	private:
 		void ReportLiveObjects();
@@ -172,14 +194,17 @@ namespace D3D11
 		LostCore::FGlobalParameter				Param;
 		FConstantBuffer*						GlobalConstantBuffer;
 
+		vector<FContextCommand>					UpdateGroup;
+
 		IPipeline*								ActivedPipeline;
 		map<EPipeline, IPipeline*>				Pipelines;
 
-		vector<LostCore::IPrimitiveGroup*>		DeallocatingPrimitiveGroups;
+		vector<LostCore::IPrimitive*>			DeallocatingPrimitiveGroups;
+		vector<LostCore::IInstancingData*>		DeallocatingInstancingDatas;
 		vector<LostCore::IConstantBuffer*>		DeallocatingConstantBuffers;
 		vector<LostCore::IFont*>				DeallocatingFonts;
 
-		function<void()>						Initialization;
+		function<void()>						Initializer;
 		LostCore::TSynchronizer<LostCore::FCommandQueue<FContextCommand>> Commands;
 		LostCore::FTickThread*					Thread;
 

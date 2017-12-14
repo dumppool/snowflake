@@ -59,6 +59,9 @@
     <ClInclude Include="Implements\RenderContext.h">
       <Filter>Implements</Filter>
     </ClInclude>
+    <ClInclude Include="Implements\InstancingData.h">
+      <Filter>Implements</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
@@ -112,6 +115,9 @@
       <Filter>Implements</Filter>
     </ClCompile>
     <ClCompile Include="Implements\RenderContext.cpp">
+      <Filter>Implements</Filter>
+    </ClCompile>
+    <ClCompile Include="Implements\InstancingData.cpp">
       <Filter>Implements</Filter>
     </ClCompile>
   </ItemGroup>

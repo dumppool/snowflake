@@ -71,8 +71,10 @@ namespace D3D11 {
 	EXPORT_WRAP_1_DCL(SetProcessUnique, void*);
 	EXPORT_WRAP_1_DCL(CreateRenderContext, LostCore::IRenderContext**);
 	EXPORT_WRAP_1_DCL(DestroyRenderContext, LostCore::IRenderContext*);
-	EXPORT_WRAP_1_DCL(CreatePrimitiveGroup, LostCore::IPrimitiveGroup**);
-	EXPORT_WRAP_1_DCL(DestroyPrimitiveGroup, LostCore::IPrimitiveGroup*);
+	EXPORT_WRAP_1_DCL(CreatePrimitiveGroup, LostCore::IPrimitive**);
+	EXPORT_WRAP_1_DCL(DestroyPrimitiveGroup, LostCore::IPrimitive*);
+	EXPORT_WRAP_1_DCL(CreateInstancingData, LostCore::IInstancingData**);
+	EXPORT_WRAP_1_DCL(DestroyInstancingData, LostCore::IInstancingData*);
 	EXPORT_WRAP_1_DCL(CreateConstantBuffer, LostCore::IConstantBuffer**);
 	EXPORT_WRAP_1_DCL(DestroyConstantBuffer, LostCore::IConstantBuffer*);
 	//EXPORT_WRAP_1_DCL(CreateMaterial, LostCore::IMaterial**);

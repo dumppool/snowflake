@@ -54,10 +54,10 @@ namespace D3D11 {
 		const TRefCountPtr<ID3D11Texture2D>& tex,
 		TRefCountPtr<ID3D11RenderTargetView>& ppRTV);
 
-	extern EReturnCode CreatePrimitiveVertex(
+	extern EReturnCode ConstructBuffer(
 		const TRefCountPtr<ID3D11Device>& device, 
-		const FBuf& buf, bool bDynamic,
-		TRefCountPtr<ID3D11Buffer>& vb);
+		const void* buf, uint32 sz, bool bDynamic, uint32 bind,
+		TRefCountPtr<ID3D11Buffer>& output);
 
 	extern EReturnCode CreatePrimitiveIndex(
 		const TRefCountPtr<ID3D11Device>& device, 

@@ -12,7 +12,7 @@
 
 namespace LostCore
 {
-	class IPrimitiveGroup;
+	class IPrimitive;
 	class IMaterial;
 
 	struct FSegmentVertex
@@ -44,11 +44,11 @@ namespace LostCore
 
 		bool bConstructed;
 		uint32 CurrentPrimitiveBytes;
-		IPrimitiveGroup* Primitive;
+		IPrimitive* Primitive;
 		IConstantBuffer* ConstantBuffer;
 		bool bDepthTest;
 
-		bool ConstructPrimitive(const FBuf& buf);
+		bool ConstructPrimitive(const void* buf, uint32 sz);
 		void DestroyPrimitive();
 
 	public:

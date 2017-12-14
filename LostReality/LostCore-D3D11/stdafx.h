@@ -18,7 +18,7 @@
 #define MODULE_WARN_PREFIX "lostcore-d3d11-warn"
 #define MODULE_ERR_PREFIX "lostcore-d3d11-error"
 #define MODULE_DEBUG_PREFIX "lostcore-d3d11-debug"
-#include "LostCore.h"
+#include "LostCoreIncludes.h"
 
 #include "Inc/LostCore-D3D11.h"
 

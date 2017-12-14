@@ -25,55 +25,80 @@ namespace LostCore
 		}
 	};
 
-	FORCEINLINE FVertexDetails GetVertexDetails(uint32 flags)
+	FORCEINLINE FVertexDetails GetVertexDetails(uint32 flags, bool vertexOnly = true)
 	{
 		int32 offset = 0;
 		string name("");
-		if (HAS_FLAGS(VERTEX_COORDINATE2D, flags))
+		int32 bit32 = sizeof(float);
+		if (vertexOnly)
 		{
-			offset += sizeof(float) * 2;
-			name.append("xy");
+			if (HAS_FLAGS(VERTEX_COORDINATE2D, flags))
+			{
+				offset += bit32 * 2;
+				name.append("xy");
+			}
+			else
+			if (HAS_FLAGS(VERTEX_COORDINATE3D, flags))
+			{
+				offset += bit32 * 3;
+				name.append("xyz");
+			}
+
+			if (HAS_FLAGS(VERTEX_TEXCOORD0, flags))
+			{
+				offset += bit32 * 2;
+				name.append("_uv0");
+			}
+
+			if (HAS_FLAGS(VERTEX_TEXCOORD1, flags))
+			{
+				offset += bit32 * 2;
+				name.append("_uv1");
+			}
+
+			if (HAS_FLAGS(VERTEX_NORMAL, flags))
+			{
+				offset += bit32 * 3;
+				name.append("_n");
+			}
+
+			if (HAS_FLAGS(VERTEX_TANGENT, flags))
+			{
+				offset += bit32 * 6;
+				name.append("_tb");
+			}
+
+			if (HAS_FLAGS(VERTEX_COLOR, flags))
+			{
+				offset += bit32 * 4;
+				name.append("_color");
+			}
+
+			if (HAS_FLAGS(VERTEX_SKIN, flags))
+			{
+				offset += bit32 * 8;
+				name.append("_skinned");
+			}
 		}
 		else
 		{
-			offset += sizeof(float) * 3;
-			name.append("xyz");
-		}
+			if (HAS_FLAGS(INSTANCE_TRANSFORM2D, flags))
+			{
+				offset += bit32 * 2 * 3;
+				name.append("_instancing2D");
+			}
+			else
+			if (HAS_FLAGS(INSTANCE_TRANSFORM3D, flags))
+			{
+				offset += bit32 * 4 * 4;
+				name.append("_instancing3D");
+			}
 
-		if (HAS_FLAGS(VERTEX_TEXCOORD0, flags))
-		{
-			offset += sizeof(float) * 2;
-			name.append("_uv0");
-		}
-
-		if (HAS_FLAGS(VERTEX_TEXCOORD1, flags))
-		{
-			offset += sizeof(float) * 2;
-			name.append("_uv1");
-		}
-
-		if (HAS_FLAGS(VERTEX_NORMAL, flags))
-		{
-			offset += sizeof(float) * 3;
-			name.append("_n");
-		}
-
-		if (HAS_FLAGS(VERTEX_TANGENT, flags))
-		{
-			offset += sizeof(float) * 6;
-			name.append("_tb");
-		}
-
-		if (HAS_FLAGS(VERTEX_COLOR, flags))
-		{
-			offset += sizeof(float) * 4;
-			name.append("_color");
-		}
-
-		if (HAS_FLAGS(VERTEX_SKIN, flags))
-		{
-			offset += sizeof(float) * 8;
-			name.append("_skinned");
+			if (HAS_FLAGS(INSTANCE_TEXTILE, flags))
+			{
+				offset += bit32 * 2 * 2;
+				name.append("_textile");
+			}
 		}
 
 		return FVertexDetails(name, offset);

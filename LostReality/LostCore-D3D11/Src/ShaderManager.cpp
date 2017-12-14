@@ -53,6 +53,30 @@ FShaderObject * D3D11::FShaderManager::GetShader(const FShaderKey & key)
 	return CreateShaderObject(GetBlobs(key));
 }
 
+void D3D11::FShaderManager::Bind(const FShaderKey & key)
+{
+	const char* head = "FShaderManager::Bind";
+	auto cxt = FRenderContext::GetDeviceContext(head);
+
+	auto obj = GetShader(key);
+	if (obj == nullptr)
+	{
+		LVERR(head, "GetShader(%s) failed.", key.ToString().c_str());
+		return;
+	}
+
+	if (obj->VS.IsValid() && obj->IL.IsValid())
+	{
+		cxt->VSSetShader(obj->VS.GetReference(), nullptr, 0);
+		cxt->IASetInputLayout(obj->IL.GetReference());
+	}
+
+	if (obj->PS.IsValid())
+	{
+		cxt->PSSetShader(obj->PS.GetReference(), nullptr, 0);
+	}
+}
+
 void D3D11::FShaderManager::Save()
 {
 	// 新数据覆盖旧数据是有必要的，另外还要防止Save在销毁后的调用导致空数据覆盖有价值的数据.
@@ -113,7 +137,7 @@ set<FShaderKeyBlobs>::const_iterator D3D11::FShaderManager::Compile(const FShade
 	flag1 |= D3DCOMPILE_DEBUG;
 #endif
 
-	static vector<string> temp(10);
+	static vector<string> temp(20);
 	static vector<D3D_SHADER_MACRO> SConstMacros;
 	if (SConstMacros.size() == 0)
 	{
@@ -123,8 +147,12 @@ set<FShaderKeyBlobs>::const_iterator D3D11::FShaderManager::Compile(const FShade
 		SConstMacros.push_back({ NAME_VERTEX_COLOR, (temp[3] = to_string(VERTEX_COLOR)).c_str() });
 		SConstMacros.push_back({ NAME_VERTEX_SKIN, (temp[4] = to_string(VERTEX_SKIN)).c_str() });
 		SConstMacros.push_back({ NAME_VERTEX_TEXCOORD1, (temp[5] = to_string(VERTEX_TEXCOORD1)).c_str() });
-		SConstMacros.push_back({ NAME_VERTEX_COORDINATE2D, (temp[6] = to_string(VERTEX_COORDINATE2D)).c_str() });
-		SConstMacros.push_back({ NAME_MAX_BONES, (temp[7] = to_string(MAX_BONES_PER_BATCH)).c_str() });
+		SConstMacros.push_back({ NAME_VERTEX_COORDINATE3D, (temp[6] = to_string(VERTEX_COORDINATE3D)).c_str() });
+		SConstMacros.push_back({ NAME_VERTEX_COORDINATE2D, (temp[7] = to_string(VERTEX_COORDINATE2D)).c_str() });
+		SConstMacros.push_back({ NAME_MAX_BONES, (temp[8] = to_string(MAX_BONES_PER_BATCH)).c_str() });
+		SConstMacros.push_back({ NAME_INSTANCE_TRANSFORM3D, (temp[9] = to_string(INSTANCE_TRANSFORM3D)).c_str() });
+		SConstMacros.push_back({ NAME_INSTANCE_TRANSFORM2D, (temp[10] = to_string(INSTANCE_TRANSFORM2D)).c_str() });
+		SConstMacros.push_back({ NAME_INSTANCE_TEXTILE, (temp[11] = to_string(INSTANCE_TEXTILE)).c_str() });
 	}
 
 	vector<D3D_SHADER_MACRO> macros;
@@ -192,10 +220,6 @@ FShaderObject* D3D11::FShaderManager::CreateShaderObject(set<FShaderKeyBlobs>::c
 {
 	const char* head = "FShaderManager::CreateShaderObject";
 	TRefCountPtr<ID3D11Device> device = FRenderContext::GetDevice(head);
-	if (!device.IsValid())
-	{
-		return nullptr;
-	}
 
 	if (blobIt == KeyBlobs.end())
 	{
@@ -205,24 +229,22 @@ FShaderObject* D3D11::FShaderManager::CreateShaderObject(set<FShaderKeyBlobs>::c
 	auto shaderObj = new FShaderObject;
 
 	auto& vsBlob = blobIt->Blobs.find(EShaderID::Vertex)->second;
-	if (FAILED(device->CreateVertexShader(vsBlob.data(), vsBlob.capacity(), nullptr, shaderObj->VS.GetInitReference())))
+	if (FAILED(device->CreateVertexShader(vsBlob.data(), vsBlob.size(), nullptr, shaderObj->VS.GetInitReference())))
 	{
 		LVERR(head, "Failed to create verter shader with %s", blobIt->ToString().c_str());
 		SAFE_DELETE(shaderObj);
 		return nullptr;
 	}
 
-	auto inputLayoutDesc = FInputElementDescMap::Get()->GetDesc(blobIt->Key.VertexElement);
-	if (FAILED(device->CreateInputLayout(inputLayoutDesc.data(), inputLayoutDesc.size(), 
-		vsBlob.data(), vsBlob.capacity(), shaderObj->IL.GetInitReference())))
+	shaderObj->IL = CreateInputLayout(vsBlob, blobIt->Key);
+	if (!shaderObj->IL.IsValid())
 	{
 		LVERR(head, "Failed to create input layout with %s", blobIt->ToString().c_str());
-		SAFE_DELETE(shaderObj);
 		return nullptr;
 	}
 
 	auto& psBlob = blobIt->Blobs.find(EShaderID::Pixel)->second;
-	if (FAILED(device->CreatePixelShader(psBlob.data(), psBlob.capacity(), nullptr, shaderObj->PS.GetInitReference())))
+	if (FAILED(device->CreatePixelShader(psBlob.data(), psBlob.size(), nullptr, shaderObj->PS.GetInitReference())))
 	{
 		LVERR(head, "Failed to create pixel shader with %s", blobIt->ToString().c_str());
 		SAFE_DELETE(shaderObj);
@@ -233,6 +255,23 @@ FShaderObject* D3D11::FShaderManager::CreateShaderObject(set<FShaderKeyBlobs>::c
 	return shaderObj;
 }
 
+TRefCountPtr<ID3D11InputLayout> D3D11::FShaderManager::CreateInputLayout(const FBuf& vsBlob, const FShaderKey & key)
+{
+	const char* head = "FShaderManager::CreateInputLayout";
+	TRefCountPtr<ID3D11Device> device = FRenderContext::GetDevice(head);
+	auto desc = FInputElementDescMap::Get()->GetDesc(key.VertexElement);
+
+	TRefCountPtr<ID3D11InputLayout> result;
+	device->CreateInputLayout(
+		desc.data(),
+		desc.size(), 
+		vsBlob.data(),
+		vsBlob.size(),
+		result.GetInitReference());
+
+	return result;
+}
+
 D3D11::FShaderKey::FShaderKey()
 	: LitMode(ELightingMode::UnLit)
 	, VertexElement(0)
@@ -240,13 +279,13 @@ D3D11::FShaderKey::FShaderKey()
 	, CodeVersion(0) // TODO: Should be read from shader code.
 {}
 
-bool D3D11::FShaderKey::operator==(const FShaderKey& rhs) const
-{
-	return LitMode == rhs.LitMode &&
-		VertexElement == rhs.VertexElement &&
-		CustomBufferVersion == rhs.CustomBufferVersion &&
-		CodeVersion == rhs.CodeVersion;
-}
+//bool D3D11::FShaderKey::operator==(const FShaderKey& rhs) const
+//{
+//	return LitMode == rhs.LitMode &&
+//		VertexElement == rhs.VertexElement &&
+//		CustomBufferVersion == rhs.CustomBufferVersion &&
+//		CodeVersion == rhs.CodeVersion;
+//}
 
 bool D3D11::FShaderKey::operator<(const FShaderKey& rhs) const
 {
@@ -277,6 +316,20 @@ bool D3D11::FShaderKey::operator<(const FShaderKey& rhs) const
 	}
 
 	return false;
+}
+
+string D3D11::FShaderKey::ToString() const
+{
+	char result[128];
+	memset(result, 0, 128);
+	snprintf(result, 127,
+		"lit%d-ve%d-buf%d-ver%d",
+		(uint8)LitMode,
+		VertexElement,
+		CustomBufferVersion, 
+		CodeVersion);
+
+	return result;
 }
 
 D3D11::FShaderKeyBlobs::FShaderKeyBlobs() : FShaderKeyBlobs(FShaderKey())
@@ -317,31 +370,5 @@ string D3D11::FShaderKeyBlobs::ToString() const
 		shaderInfo.append(info);
 	}
 
-	char result[128];
-	memset(result, 0, 128);
-	snprintf(result, 127, "lit%d-ve%d-buf%d-code%d-%s", (uint8)Key.LitMode, 
-		Key.VertexElement, Key.CustomBufferVersion, Key.CodeVersion, shaderInfo.c_str());
-
-	return result;
-}
-
-void D3D11::FShaderObject::Bind()
-{
-	const char* head = "FShaderObject::Bind";
-	auto cxt = FRenderContext::GetDeviceContext(head);
-	if (!cxt.IsValid())
-	{
-		return;
-	}
-
-	if (VS.IsValid() && IL.IsValid())
-	{
-		cxt->VSSetShader(VS.GetReference(), nullptr, 0);
-		cxt->IASetInputLayout(IL.GetReference());
-	}
-
-	if (PS.IsValid())
-	{
-		cxt->PSSetShader(PS.GetReference(), nullptr, 0);
-	}
+	return Key.ToString().append(shaderInfo);
 }

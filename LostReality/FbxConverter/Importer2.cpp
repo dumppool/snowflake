@@ -314,7 +314,7 @@ void FTempMesh::ExtractVertex()
 
 	MeshData.Name = GetProperName(Mesh->GetName());
 
-	MeshData.VertexFlags = 0;
+	MeshData.VertexFlags = VERTEX_COORDINATE3D;
 	if (IsSkeletal())
 	{
 		MeshData.VertexFlags |= VERTEX_SKIN;

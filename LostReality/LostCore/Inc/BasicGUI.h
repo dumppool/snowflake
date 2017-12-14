@@ -15,44 +15,32 @@
 namespace LostCore
 {
 	class IFont;
-	class IPrimitiveGroup;
+	class IPrimitive;
 	class IMaterial;
-	class ITexture;
 
 	__declspec(align(16)) struct FRectVertex 
 	{
-		static FBuf* GetDefaultVertices(const FColor128& col)
+		static uint32 GetDefaultSize()
 		{
-			static const FRectVertex vertices[] =
+			return sizeof(FRectVertex) * 4;
+		}
+
+		static const void* GetDefaultVertices(const FColor128& col)
+		{
+			static FRectVertex SVertices[] =
 			{
-				{ FFloat2(0.f, 0.f),	FFloat2(0.f, 0.f), col },		// top left
-				{ FFloat2(1.f, 0.f),	FFloat2(1.f, 0.f), col },		// top right
-				{ FFloat2(0.f, 1.f),	FFloat2(0.f, 1.f), col },		// bottom left
-				{ FFloat2(1.f, 1.f),	FFloat2(1.f, 1.f), col },		// bottom right
+				{ FFloat2(0.f, 0.f),	FFloat2(0.f, 0.f), FColor128(0xffffffff) },		// top left
+				{ FFloat2(1.f, 0.f),	FFloat2(1.f, 0.f), FColor128(0xffffffff) },		// top right
+				{ FFloat2(0.f, 1.f),	FFloat2(0.f, 1.f), FColor128(0xffffffff) },		// bottom left
+				{ FFloat2(1.f, 1.f),	FFloat2(1.f, 1.f), FColor128(0xffffffff) },		// bottom right
 			};
 
-			static FBuf SVertices;
-			if (SVertices.empty())
+			for (int32 index = 0; index < ARRAYSIZE(SVertices); index++)
 			{
-				const FRectVertex vertices[] =
-				{
-					{ FFloat2(0.f, 0.f),	FFloat2(0.f, 0.f), col },		// top left
-					{ FFloat2(1.f, 0.f),	FFloat2(1.f, 0.f), col },		// top right
-					{ FFloat2(0.f, 1.f),	FFloat2(0.f, 1.f), col },		// bottom left
-					{ FFloat2(1.f, 1.f),	FFloat2(1.f, 1.f), col },		// bottom right
-				};
-
-				int32 offset = 0;
-				int32 pitch = sizeof(FRectVertex);
-				SVertices.resize(4 * pitch);
-				for (int32 index = 0; index < 4; index++)
-				{
-					memcpy(SVertices.data() + offset, vertices + offset, pitch);
-					offset += pitch;
-				}
+				SVertices[index].Color = col;
 			}
 
-			return &SVertices;
+			return SVertices;
 		}
 
 		static uint32 GetVertexElement()
@@ -75,22 +63,22 @@ namespace LostCore
 
 		FFloat2 XY;
 		FFloat2 TexCoord; 
-		FColor128 RGB; 
+		FColor128 Color; 
 	};
 
 	class FRect
 	{
 	public:
 		FRect();
-		~FRect();
+		virtual ~FRect();
 
 		FRect* GetRoot();
 
-		void SetOriginLocal(const FFloat2& origin);
-		FFloat2 GetOriginGlobal() const;
+		void SetOffsetLocal(const FFloat2& origin);
+		FFloat2 GetOffsetGlobal() const;
 
-		void SetScaleLocal(float val);
-		float GetScaleGlobal() const;
+		void SetScaleLocal(const FFloat2& val);
+		FFloat2 GetScaleGlobal() const;
 
 		void SetSize(const FFloat2& size);
 		FFloat2 GetSize() const;
@@ -128,15 +116,17 @@ namespace LostCore
 		virtual void DelChild(FRect* child);
 
 		void Detach();
-		void ClearChildren(bool dealloc = false);
+		void ClearChildren(const function<void(FRect*)>& deallocator);
 
 		virtual void Update();
 		virtual void Commit();
-		void SetTexture(ITexture* tex);
+		//void SetTexture(ITextureSet* tex);
 		void ConstructPrimitive(const FBuf& buf, int32 stride);
 		void HasGeometry(bool val);
 
 	protected:
+		virtual void UpdateAndCommitRectBuffer();
+
 		bool HitTestPrivate(const FFloat2& ppos, FRect** result) const;
 		void GetLocalPosition(const FFloat2& ppos, FFloat2& cpos) const;
 		void CommitPrivate();
@@ -153,12 +143,12 @@ namespace LostCore
 		// 次序：深度从前到后，绘制时需从后到前。
 		vector<FRect*> Children;
 
-		IPrimitiveGroup* RectPrimitive;
+		IPrimitive* RectPrimitive;
 		bool bConstructed;
 		bool bHasGeometry;
 		bool bAutoUpdateWidth;
 		bool bAutoUpdateHeight;
-		ITexture* RectTexture;
+		//ITextureSet* RectTexture;
 		IConstantBuffer* RectBuffer;
 	};
 

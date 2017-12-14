@@ -46,8 +46,6 @@ namespace D3D11
 		int32		ShaderSlot;
 		int32		ShaderFlags;
 
-		atomic<uint8> Fence;
-
 	private:
 		static void ExecUpdateBuffer(void* p, const FBuf& buf);
 		static void ExecCommit(void* p);

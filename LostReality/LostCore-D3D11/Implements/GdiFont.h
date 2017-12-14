@@ -14,9 +14,6 @@
 namespace D3D11
 {
 	static const int32 STexWidth = 1024;
-	//static const WCHAR SStartChar = '!';
-	//static const WCHAR SEndChar = 127;
-	//static const int32 SNumChars = int32(SEndChar - SStartChar);
 
 	class FGdiFontProperty
 	{
@@ -24,11 +21,10 @@ namespace D3D11
 		LostCore::FFontConfig	Config;
 
 		float					CharHeight;
-		int32					TexHeight;
-		float					SpaceWidth;
 		FTexture2D*				FontTexture;
-		std::set<WCHAR>			Chars;
-		std::set<LostCore::FCharDesc> CharDesc;
+		std::set<WCHAR>			Characters;
+		std::set<LostCore::FCharacterDescription>	CharacterDescriptions;
+		LostCore::FFontTextureDescription			TextureDescription;
 
 		FGdiFontProperty();
 	};
@@ -39,26 +35,28 @@ namespace D3D11
 		FGdiFont();
 		virtual ~FGdiFont() override;
 
-		virtual void Initialize(const LostCore::FFontConfig& config, const wstring& chars) override;
-		virtual LostCore::FCharacterTexturePair GetCharacter(WCHAR c) override;
-		virtual LostCore::FFontConfig GetConfig() const override;
-		virtual void UpdateRes() override;
+		virtual void SetConfig(const LostCore::FFontConfig& config) override;
+		virtual void RequestCharacters(const wstring characters) override;
+		virtual void AddClient(LostCore::IFontClient* client) override;
+		virtual void RemoveClient(LostCore::IFontClient* client) override;
+		virtual void CommitShaderResource() override;
 
+		FTexture2D* GetTexture();
+
+	private:
+		bool Reload();
 		void Destroy();
 
-		FTexture2D* GetTexture()
-		{
-			return Property.FontTexture;
-		}
+		static void ExecUpdate(void* p);
+		static void ExecCommitShaderResource(void* p);
 
 	private:
 		FGdiFontProperty Property;
+
+		LostCore::FFontConfig* PendingConfig;
 		wstring PendingCharacters;
+		mutex Mutex;
 
-		atomic<uint8> Fence;
-
-	private:
-		static bool ExecInitialize(void * p, const LostCore::FFontConfig& config, const wstring& chars);
-		static void ExecUpdateRes(void * p);
+		vector<LostCore::IFontClient*> Clients;
 	};
 }

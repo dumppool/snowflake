@@ -17,6 +17,8 @@ namespace LostCore
 	class TVec2NonVectorized
 	{
 	public:
+		typedef T Type;
+
 		T X;
 		T Y;
 

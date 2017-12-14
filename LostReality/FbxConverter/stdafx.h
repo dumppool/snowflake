@@ -5,6 +5,7 @@
 #define MODULE_MSG_PREFIX "converter-log"
 #define MODULE_WARN_PREFIX "converter-warn"
 #define MODULE_ERR_PREFIX "converter-error"
+#define MODULE_DEBUG_PREFIX "converter-debug"
 #include "LostCoreIncludes.h"
 
 #define _CRT_SECURE_NO_WARNINGS

@@ -85,6 +85,12 @@ void D3D11::FForwardPipeline::CommitShaderResource(FTexture2D* tex)
 	Committing.ShaderResources.push_back(tex);
 }
 
+void D3D11::FForwardPipeline::CommitInstancingData(FInstancingData* buf)
+{
+	assert(buf != nullptr);
+	Committing.InstancingDatas.push_back(buf);
+}
+
 void D3D11::FForwardPipeline::BeginFrame()
 {
 	Committing.Reset();
@@ -149,15 +155,11 @@ void D3D11::FForwardPipeline::RenderFrame()
 		for (auto& obj : objs.second)
 		{
 			auto pg = obj.PrimitiveGroup;
-			if (pg == nullptr)
-			{
-				continue;
-			}
 
 			FShaderKey key;
-			key.LitMode = ELightingMode::Phone;
-			key.VertexElement = pg->GetVertexElement();
-			FShaderManager::Get()->GetShader(key)->Bind();
+			key.LitMode = ELightingMode::Phong;
+			key.VertexElement = obj.GetVertexFlags();
+			FShaderManager::Get()->Bind(key);
 
 			for (auto buf : obj.ConstantBuffers)
 			{
@@ -169,7 +171,7 @@ void D3D11::FForwardPipeline::RenderFrame()
 				tex->BindShaderResource(cxt);
 			}
 
-			pg->Draw();
+			pg->Draw(obj.InstancingDatas);
 		}
 
 		objs.second.clear();

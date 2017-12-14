@@ -21,7 +21,7 @@ namespace D3D11
 		// Í¨¹ý IMaterial ¼Ì³Ð
 		virtual void Bind(LostCore::IRenderContext * rc) override;
 		virtual bool Initialize(LostCore::IRenderContext * rc, const char* path) override;
-		virtual void UpdateTexture(LostCore::IRenderContext* rc, LostCore::ITexture* tex, int32 slot);
+		//virtual void UpdateTexture(LostCore::IRenderContext* rc, LostCore::ITextureSet* tex, int32 slot);
 		virtual void SetDepthStencilState(const char* name) override;
 
 		bool InitializeShader(LostCore::IRenderContext * rc, const char* path);

@@ -62,7 +62,7 @@ namespace LostCore
 		}
 	};
 
-	class FCharDesc
+	class FCharacterDescription
 	{
 	public:
 		WCHAR Char;
@@ -71,16 +71,16 @@ namespace LostCore
 		int32 Width;
 		int32 Height;
 
-		FCharDesc() : FCharDesc(0)
+		FCharacterDescription() : FCharacterDescription(0)
 		{
 		}
 
-		explicit FCharDesc(WCHAR wc)
-			: FCharDesc(wc, 0, 0, 0, 0)
+		explicit FCharacterDescription(WCHAR wc)
+			: FCharacterDescription(wc, 0, 0, 0, 0)
 		{
 		}
 
-		FCharDesc(WCHAR wc, int32 x, int32 y, int32 w, int32 h)
+		FCharacterDescription(WCHAR wc, int32 x, int32 y, int32 w, int32 h)
 			: Char(wc), X(x), Y(y), Width(w), Height(h)
 		{
 		}
@@ -90,63 +90,44 @@ namespace LostCore
 			return (Width > 0 && Height > 0);
 		}
 
-		bool operator==(const FCharDesc& rhs) const
-		{
-			return Char == rhs.Char;
-		}
-
-		bool operator!=(const FCharDesc& rhs) const
-		{
-			return Char != rhs.Char;
-		}
-
-		bool operator<(const FCharDesc& rhs) const
+		bool operator<(const FCharacterDescription& rhs) const
 		{
 			return Char < rhs.Char;
 		}
+	};
 
-		bool operator<=(const FCharDesc& rhs) const
-		{
-			return Char <= rhs.Char;
-		}
+	class FFontTextureDescription
+	{
+	public:
+		int32 TextureWidth;
+		int32 TextureHeight;
+		int32 SpaceWidth;
 
-		bool operator>(const FCharDesc& rhs) const
+		FFontTextureDescription() :TextureWidth(0), TextureHeight(0), SpaceWidth(0) {}
+		bool IsValid() const { return TextureWidth > 0; }
+		void Swap(FFontTextureDescription& rhs)
 		{
-			return Char > rhs.Char;
-		}
-
-		bool operator >=(const FCharDesc& rhs) const
-		{
-			return Char >= rhs.Char;
-		}
-
-		bool operator==(WCHAR c) const
-		{
-			return Char == c;
-		}
-
-		bool operator!=(WCHAR c) const
-		{
-			return Char != c;
+			FFontTextureDescription tmp(*this);
+			memcpy(this, &rhs, sizeof(tmp));
+			memcpy(&rhs, &tmp, sizeof(tmp));
 		}
 	};
 
-	struct FCharacterTexturePair
+	class IFontClient
 	{
-		FCharDesc Desc;
-		ITexture* Texture;
-
-		FCharacterTexturePair(const FCharDesc& desc, ITexture* tex) : Desc(desc), Texture(tex) {}
-		FCharacterTexturePair():Texture(nullptr) {}
+	public:
+		virtual void OnFontUpdated(const FFontTextureDescription& textureDescription,
+			const set<FCharacterDescription>& characterDescriptions) = 0;
 	};
 
 	class IFont
 	{
 	public:
 		virtual ~IFont() {}
-		virtual void Initialize(const LostCore::FFontConfig& config, const wstring& chars) = 0;
-		virtual FCharacterTexturePair GetCharacter(WCHAR c) = 0;
-		virtual FFontConfig GetConfig() const = 0;
-		virtual void UpdateRes() = 0;
+		virtual void SetConfig(const LostCore::FFontConfig& config) = 0;
+		virtual void RequestCharacters(const wstring characters) = 0;
+		virtual void AddClient(IFontClient* client) = 0;
+		virtual void RemoveClient(IFontClient* client) = 0;
+		virtual void CommitShaderResource() = 0;
 	};
 }

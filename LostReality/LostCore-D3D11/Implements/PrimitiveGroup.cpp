@@ -15,21 +15,13 @@ using namespace LostCore;
 D3D11::FPrimitiveGroup::FPrimitiveGroup()
 	: VertexBuffer(nullptr)
 	, IndexBuffer(nullptr)
-	, VertexBufferSlot(0)
-	, VertexBufferNum(0)
-	, VertexStride(0)
-	, VertexBufferOffset(0)
-	, VertexCount(0)
+	, Stride(0)
+	, Count(0)
 	, IndexFormat(DXGI_FORMAT_UNKNOWN)
-	, IndexBufferOffset(0)
 	, IndexCount(0)
 	, Topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST)
 	, RenderOrder(ERenderOrder::Opacity)
-	, Fence(1)
 {
-	Fence.store(1);
-
-	assert(VertexBuffer.GetReference() == nullptr);
 }
 
 D3D11::FPrimitiveGroup::FPrimitiveGroup(const FPrimitiveGroup & rhs)
@@ -61,12 +53,12 @@ void D3D11::FPrimitiveGroup::Commit()
 
 void D3D11::FPrimitiveGroup::SetVertexElement(uint32 flags)
 {
-	VertexElement = flags;
+	Flags = flags;
 }
 
-uint32 D3D11::FPrimitiveGroup::GetVertexElement() const
+uint32 D3D11::FPrimitiveGroup::GetFlags() const
 {
-	return VertexElement;
+	return Flags;
 }
 
 void D3D11::FPrimitiveGroup::SetRenderOrder(ERenderOrder ro)
@@ -79,17 +71,20 @@ ERenderOrder D3D11::FPrimitiveGroup::GetRenderOrder() const
 	return RenderOrder;
 }
 
-void D3D11::FPrimitiveGroup::ConstructVB(const FBuf& buf, uint32 stride, bool dynamic)
+void D3D11::FPrimitiveGroup::ConstructVB(const void* buf, uint32 sz, uint32 stride, bool dynamic)
 {
 	assert(this->VertexBuffer.GetReference() == nullptr);
+
+	FBuf dst(sz);
+	memcpy(dst.data(), buf, sz);
 	if (FRenderContext::Get()->InRenderThread())
 	{
-		ExecConstructVB(this, buf, stride, dynamic);
+		ExecConstructVB(this, dst, stride, dynamic);
 	}
 	else
 	{
 		FRenderContext::Get()->PushCommand(FContextCommand(
-			this, bind(&ExecConstructVB, placeholders::_1, buf, stride, dynamic)));
+			this, bind(&ExecConstructVB, placeholders::_1, dst, stride, dynamic)));
 	}
 }
 
@@ -124,21 +119,24 @@ void D3D11::FPrimitiveGroup::SetTopology(EPrimitiveTopology topo)
 	}
 }
 
-void D3D11::FPrimitiveGroup::UpdateVB(const FBuf& buf)
+void D3D11::FPrimitiveGroup::UpdateVB(const void* buf, uint32 sz, uint32 stride)
 {
+	FBuf dst(sz);
+	memcpy(dst.data(), buf, sz);
 	if (FRenderContext::Get()->InRenderThread())
 	{
-		ExecUpdateVB(this, buf);
+		ExecUpdateVB(this, dst, stride);
 	}
 	else
 	{
 		FRenderContext::Get()->PushCommand(FContextCommand(
-			this, bind(&ExecUpdateVB, placeholders::_1, buf)));
+			this, bind(&ExecUpdateVB, placeholders::_1, dst, stride)));
 	}
 }
 
-void D3D11::FPrimitiveGroup::Draw()
+void D3D11::FPrimitiveGroup::Draw(const vector<FInstancingData*>& batch)
 {
+	assert(FRenderContext::Get()->InRenderThread());
 	const char* head = "D3D11::FPrimitiveGroup::Draw";
 	TRefCountPtr<ID3D11DeviceContext> cxt = FRenderContext::GetDeviceContext(head);
 	if (!cxt.IsValid())
@@ -146,19 +144,57 @@ void D3D11::FPrimitiveGroup::Draw()
 		return;
 	}
 
-	auto buf = VertexBuffer.GetReference();
-	cxt->IASetVertexBuffers(VertexBufferSlot, VertexBufferNum, &buf, &VertexStride, &VertexBufferOffset);
-	cxt->IASetIndexBuffer(IndexBuffer.GetReference(), IndexFormat, IndexBufferOffset);
+	uint32 instanceCount = 0;
+
+	vector<ID3D11Buffer*> vbs;
+	vector<uint32> strides, offsets;
+	vbs.push_back(VertexBuffer.GetReference());
+	strides.push_back(Stride);
+	offsets.push_back(0);
+	for (auto& buf : batch)
+	{
+		if (instanceCount == 0)
+		{
+			instanceCount = buf->GetNumInstances();
+		}
+
+		assert(instanceCount == buf->GetNumInstances());
+		vbs.push_back(buf->GetBuffer());
+		strides.push_back(buf->GetStride());
+		offsets.push_back(0);
+	}
+
+	cxt->IASetVertexBuffers(0, vbs.size(), vbs.data(), strides.data(), offsets.data());
+	cxt->IASetIndexBuffer(IndexBuffer.GetReference(), IndexFormat, 0);
 	cxt->IASetPrimitiveTopology(Topology);
 
-	if (IndexBuffer.IsValid())
+	if (batch.empty())
 	{
-		cxt->DrawIndexed(IndexCount, 0, 0);
+		if (IndexBuffer.IsValid())
+		{
+			cxt->DrawIndexed(IndexCount, 0, 0);
+		}
+		else
+		{
+			cxt->Draw(Count, 0);
+		}
 	}
 	else
 	{
-		cxt->Draw(VertexCount, 0);
+		if (IndexBuffer.IsValid())
+		{
+			cxt->DrawIndexedInstanced(IndexCount, instanceCount, 0, 0, 0);
+		}
+		else
+		{
+			cxt->DrawInstanced(Count, instanceCount, 0, 0);
+		}
 	}
+}
+
+TRefCountPtr<ID3D11Buffer> D3D11::FPrimitiveGroup::GetVertexBuffer()
+{
+	return VertexBuffer;
 }
 
 void D3D11::FPrimitiveGroup::ExecCommit(void * p)
@@ -167,22 +203,26 @@ void D3D11::FPrimitiveGroup::ExecCommit(void * p)
 	FRenderContext::Get()->CommitPrimitiveGroup((FPrimitiveGroup*)p);
 }
 
-void D3D11::FPrimitiveGroup::ExecConstructVB(void* p, const FBuf & buf, uint32 stride, bool bDynamic)
+void D3D11::FPrimitiveGroup::ExecConstructVB(void* p, const FBuf& buf, uint32 stride, bool bDynamic)
 {
 	assert(FRenderContext::Get()->InRenderThread());
 	const char* head = "FPrimitiveGroup::ExecConstructVB";
 	TRefCountPtr<ID3D11Device> device = FRenderContext::GetDevice(head);
 	auto pthis = (FPrimitiveGroup*)p;
-	pthis->VertexStride = stride;
-	pthis->VertexBufferSlot = 0;
-	pthis->VertexBufferNum = 1;
-	pthis->VertexBufferOffset = 0;
-	pthis->VertexCount = buf.size() / stride;
+	pthis->Stride = stride;
+	if (stride != 0)
+	{
+		pthis->Count = buf.size() / stride;
+	}
+	else
+	{
+		pthis->Count = 0;
+	}
+
 	pthis->bIsVBDynamic = bDynamic;
 	auto pvb = pthis->VertexBuffer.GetReference();
-	auto v = pthis->Fence.load();
 	assert(pthis->VertexBuffer.GetReference() == nullptr);
-	CreatePrimitiveVertex(device.GetReference(), buf, pthis->bIsVBDynamic, pthis->VertexBuffer);
+	ConstructBuffer(device.GetReference(), buf.data(), buf.size(), pthis->bIsVBDynamic, D3D11_BIND_VERTEX_BUFFER, pthis->VertexBuffer);
 }
 
 void D3D11::FPrimitiveGroup::ExecConstructIB(void* p, const FBuf & buf, uint32 stride, bool bDynamic)
@@ -204,13 +244,12 @@ void D3D11::FPrimitiveGroup::ExecConstructIB(void* p, const FBuf & buf, uint32 s
 		break;
 	}
 
-	pthis->IndexBufferOffset = 0;
 	pthis->IndexCount = buf.size() / stride;
 	pthis->bIsIBDynamic = bDynamic;
 	CreatePrimitiveIndex(device.GetReference(), buf, pthis->bIsIBDynamic, pthis->IndexBuffer);
 }
 
-void D3D11::FPrimitiveGroup::ExecUpdateVB(void* p, const FBuf & buf)
+void D3D11::FPrimitiveGroup::ExecUpdateVB(void* p, const FBuf& buf, uint32 stride)
 {
 	assert(FRenderContext::Get()->InRenderThread());
 	const char* head = "FPrimitiveGroup::ExecUpdateVB";
@@ -220,27 +259,32 @@ void D3D11::FPrimitiveGroup::ExecUpdateVB(void* p, const FBuf & buf)
 	// 强制释放IndexBuffer
 	pthis->IndexBuffer = nullptr;
 
-	//assert(bIsVBDynamic);
-
 	// 更新的bytes大于vertex buffer，重新创建
-	if (buf.size() > (pthis->VertexCount * pthis->VertexStride))
+	if (!pthis->VertexBuffer.IsValid() || buf.size() > (pthis->Count * pthis->Stride))
 	{
 		pthis->VertexBuffer = nullptr;
-		TRefCountPtr<ID3D11Device> device = FRenderContext::GetDevice(head);
-		pthis->VertexCount = buf.size() / pthis->VertexStride;
-		auto result = CreatePrimitiveVertex(device.GetReference(), buf, pthis->bIsVBDynamic, pthis->VertexBuffer);
-		assert(SSuccess == result);
+		ExecConstructVB(pthis, buf, stride, true);
 	}
 	else
 	{
-		pthis->VertexCount = buf.size() / pthis->VertexStride;
-		D3D11_BOX destRegion;
-		destRegion.left = 0;
-		destRegion.right = buf.size();
-		destRegion.top = 0;
-		destRegion.bottom = 1;
-		destRegion.front = 0;
-		destRegion.back = 1;
-		cxt->UpdateSubresource(pthis->VertexBuffer.GetReference(), 0, &destRegion, buf.data(), 0, 0);
+		if (pthis->bIsVBDynamic)
+		{
+			D3D11_MAPPED_SUBRESOURCE mapped;
+			cxt->Map(pthis->VertexBuffer.GetReference(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+			memcpy(mapped.pData, buf.data(), buf.size());
+			cxt->Unmap(pthis->VertexBuffer.GetReference(), 0);
+		}
+		else
+		{
+			pthis->Count = buf.size() / pthis->Stride;
+			D3D11_BOX destRegion;
+			destRegion.left = 0;
+			destRegion.right = buf.size();
+			destRegion.top = 0;
+			destRegion.bottom = 1;
+			destRegion.front = 0;
+			destRegion.back = 1;
+			cxt->UpdateSubresource(pthis->VertexBuffer.GetReference(), 0, &destRegion, buf.data(), 0, 0);
+		}
 	}
 }

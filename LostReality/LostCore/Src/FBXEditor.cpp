@@ -381,6 +381,11 @@ void FFBXEditor::LoadScene(const string & url)
 	Scene->Load(url);
 
 	Camera = Scene->GetCamera();
+	if (Camera == nullptr)
+	{
+		Camera = FCameraFactory::NewCameraDefault();
+	}
+
 	Camera->Init(ScreenWidth, ScreenHeight);
 }
 
@@ -507,9 +512,8 @@ void FFBXEditor::Tick()
 			GUI->Tick();
 		}
 
+		FFontProvider::Get()->OnFinishCommit();
 		RC->FinishCommit();
-
-		FFontProvider::Get()->UpdateRes();
 
 		if (Console != nullptr)
 		{

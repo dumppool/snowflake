@@ -16,7 +16,7 @@
 
 namespace LostCore
 {
-	class IPrimitiveGroup;
+	class IPrimitive;
 	class IMaterial;
 	class IResourceLoader;
 
@@ -42,7 +42,7 @@ namespace LostCore
 		const string& GetUrl() const;
 
 		FAABoundingBox* GetBoundingBox();
-		IPrimitiveGroup* GetPrimitive();
+		IPrimitive* GetPrimitive();
 		IMaterial* GetMaterial();
 		IConstantBuffer* GetMatricesBuffer();
 		IConstantBuffer* GetCustomBuffer();
@@ -52,7 +52,7 @@ namespace LostCore
 		bool RayTest(const FRay& ray, FRay::FT& dist);
 
 	protected:
-		virtual bool ConfigPrimitive(const string& url, IPrimitiveGroup*& pg, FMeshData& pgdata);
+		virtual bool ConfigPrimitive(const string& url, IPrimitive*& pg, FMeshData& pgdata);
 		virtual bool ConfigMaterial(const string& url);
 
 		virtual void UpdateConstant();
@@ -68,7 +68,7 @@ namespace LostCore
 		void Destroy();
 
 		string Url;
-		IPrimitiveGroup* Primitive;
+		IPrimitive* Primitive;
 		IMaterial* Material;
 		IConstantBuffer* MatricesBuffer;
 		FMeshData PrimitiveData;
@@ -124,7 +124,7 @@ namespace LostCore
 		virtual void UpdateConstant() override;
 		//virtual void RayTest() = 0;
 
-		virtual bool ConfigPrimitive(const string& url, IPrimitiveGroup*& pg, FMeshData& pgdata) override;
+		virtual bool ConfigPrimitive(const string& url, IPrimitive*& pg, FMeshData& pgdata) override;
 		virtual bool ConfigMaterial(const string& url) override;
 
 		virtual void CommitGizmos();

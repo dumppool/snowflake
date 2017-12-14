@@ -17,7 +17,6 @@ D3D11::FConstantBuffer::FConstantBuffer()
 	, ShaderFlags(0)
 	, Buffer(nullptr)
 {
-	Fence.store(1);
 }
 
 D3D11::FConstantBuffer::FConstantBuffer(const FConstantBuffer & rhs)

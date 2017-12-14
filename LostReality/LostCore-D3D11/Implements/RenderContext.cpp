@@ -30,7 +30,7 @@ D3D11::FRenderContext::FRenderContext()
 	, ActivedPipeline(nullptr)
 	, Thread(new FTickThread(this, "RenderContext"))
 	, Commands(true)
-	, Initialization(nullptr)
+	, Initializer(nullptr)
 {
 }
 
@@ -46,10 +46,10 @@ bool D3D11::FRenderContext::Initialize()
 
 void D3D11::FRenderContext::Tick()
 {
-	if (Initialization != nullptr)
+	if (Initializer != nullptr)
 	{
-		Initialization();
-		Initialization = nullptr;
+		Initializer();
+		Initializer = nullptr;
 	}
 
 	if (!Device.IsValid() || !Context.IsValid() || !SwapChain.IsValid() || ActivedPipeline == nullptr)
@@ -69,6 +69,11 @@ void D3D11::FRenderContext::Tick()
 	BeginFrame();
 	RenderFrame();
 	EndFrame();
+
+	for (auto& item : UpdateGroup)
+	{
+		item.Exec();
+	}
 
 	FlushDeallocating();
 }
@@ -91,7 +96,7 @@ void D3D11::FRenderContext::Destroy()
 
 void D3D11::FRenderContext::InitializeDevice(LostCore::EContextID id, HWND wnd, bool bWindowed, int32 width, int32 height)
 {
-	Initialization = [=]()
+	Initializer = [=]()
 	{
 		ExecInitializeDevice(id, wnd, bWindowed, width, height);
 	};
@@ -209,6 +214,12 @@ void D3D11::FRenderContext::CommitShaderResource(FTexture2D* srv)
 	ActivedPipeline->CommitShaderResource(srv);
 }
 
+void D3D11::FRenderContext::CommitInstancingData(FInstancingData* buf)
+{
+	assert(ActivedPipeline != nullptr);
+	ActivedPipeline->CommitInstancingData(buf);
+}
+
 thread::id D3D11::FRenderContext::GetThreadId() const
 {
 	return Thread->GetId();
@@ -219,19 +230,60 @@ bool D3D11::FRenderContext::InRenderThread() const
 	return this_thread::get_id() == GetThreadId();
 }
 
-void D3D11::FRenderContext::DeallocPrimitiveGroup(LostCore::IPrimitiveGroup * pg)
+void D3D11::FRenderContext::DeallocPrimitiveGroup(LostCore::IPrimitive* pg)
 {
-	DeallocatingPrimitiveGroups.push_back(pg);
+	if (InRenderThread())
+	{
+		DeallocatingPrimitiveGroups.push_back(pg);
+	}
+	else
+	{
+		PushCommand(FContextCommand(this, [=](void* p) {
+			((FRenderContext*)p)->DeallocatingPrimitiveGroups.push_back(pg);
+		}));
+	}
+}
+
+void D3D11::FRenderContext::DeallocInstancingData(LostCore::IInstancingData* data)
+{
+	if (InRenderThread())
+	{
+		DeallocatingInstancingDatas.push_back(data);
+	}
+	else
+	{
+		PushCommand(FContextCommand(this, [=](void* p) {
+			((FRenderContext*)p)->DeallocatingInstancingDatas.push_back(data);
+		}));
+	}
 }
 
 void D3D11::FRenderContext::DeallocConstantBuffer(LostCore::IConstantBuffer * cb)
 {
-	DeallocatingConstantBuffers.push_back(cb);
+	if (InRenderThread())
+	{
+		DeallocatingConstantBuffers.push_back(cb);
+	}
+	else
+	{
+		PushCommand(FContextCommand(this, [=](void* p) {
+			((FRenderContext*)p)->DeallocatingConstantBuffers.push_back(cb);
+		}));
+	}
 }
 
 void D3D11::FRenderContext::DeallocGdiFont(LostCore::IFont * font)
 {
-	DeallocatingFonts.push_back(font);
+	if (InRenderThread())
+	{
+		DeallocatingFonts.push_back(font);
+	}
+	else
+	{
+		PushCommand(FContextCommand(this, [=](void* p) {
+			((FRenderContext*)p)->DeallocatingFonts.push_back(font);
+		}));
+	}
 }
 
 void D3D11::FRenderContext::FlushDeallocating()
@@ -253,6 +305,29 @@ void D3D11::FRenderContext::FlushDeallocating()
 		SAFE_DELETE(item);
 	}
 	DeallocatingFonts.clear();
+}
+
+void D3D11::FRenderContext::AddUpdateCommand(const FContextCommand & obj)
+{
+	if (InRenderThread())
+	{
+		UpdateGroup.push_back(obj);
+	}
+	else
+	{
+		PushCommand(FContextCommand(nullptr, [=](void*) {
+			UpdateGroup.push_back(obj);
+		}));
+	}
+}
+
+void D3D11::FRenderContext::RemoveUpdateCommand(const FContextCommand & obj)
+{
+	auto it = find(UpdateGroup.begin(), UpdateGroup.end(), obj);
+	if (it != UpdateGroup.end())
+	{
+		UpdateGroup.erase(it);
+	}
 }
 
 void D3D11::FRenderContext::ReportLiveObjects()

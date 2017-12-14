@@ -23,7 +23,6 @@ LostCore::FRect::FRect()
 	, Parent(nullptr)
 	, RectPrimitive(nullptr)
 	, bConstructed(false)
-	, RectTexture(nullptr)
 	, RectBuffer(nullptr)
 	, bHasGeometry(false)
 	, bAutoUpdateWidth(true)
@@ -47,29 +46,29 @@ FRect * LostCore::FRect::GetRoot()
 	return root;
 }
 
-void LostCore::FRect::SetOriginLocal(const FFloat2 & origin)
+void LostCore::FRect::SetOffsetLocal(const FFloat2 & origin)
 {
-	Param.Origin = origin;
+	Param.Offset = origin;
 }
 
-FFloat2 LostCore::FRect::GetOriginGlobal() const
+FFloat2 LostCore::FRect::GetOffsetGlobal() const
 {
 	if (Parent == nullptr)
 	{
-		return Param.Origin;
+		return Param.Offset;
 	}
 	else
 	{
-		return Parent->GetOriginGlobal() + Param.Origin;
+		return Parent->GetOffsetGlobal() + Param.Offset;
 	}
 }
 
-void LostCore::FRect::SetScaleLocal(float val)
+void LostCore::FRect::SetScaleLocal(const FFloat2& val)
 {
 	Param.Scale = val;
 }
 
-float LostCore::FRect::GetScaleGlobal() const
+LostCore::FFloat2 LostCore::FRect::GetScaleGlobal() const
 {
 	if (Parent == nullptr)
 	{
@@ -184,13 +183,13 @@ void LostCore::FRect::Detach()
 	}
 }
 
-void LostCore::FRect::ClearChildren(bool dealloc)
+void LostCore::FRect::ClearChildren(const function<void(FRect*)>& deallocator)
 {
-	if (dealloc)
+	if (deallocator != nullptr)
 	{
 		for (auto item : Children)
 		{
-			SAFE_DELETE(item);
+			deallocator(item);
 		}
 	}
 
@@ -201,7 +200,7 @@ void LostCore::FRect::Destroy()
 {
 	if (RectPrimitive != nullptr)
 	{
-		D3D11::WrappedDestroyPrimitiveGroup(forward<IPrimitiveGroup*>(RectPrimitive));
+		D3D11::WrappedDestroyPrimitiveGroup(forward<IPrimitive*>(RectPrimitive));
 		RectPrimitive = nullptr;
 	}
 	
@@ -212,7 +211,7 @@ void LostCore::FRect::Destroy()
 	}
 
 	bConstructed = false;
-	ClearChildren(true);
+	ClearChildren([](FRect* child) {SAFE_DELETE(child); });
 }
 
 void LostCore::FRect::Update()
@@ -257,42 +256,54 @@ void LostCore::FRect::Commit()
 	}
 }
 
-void LostCore::FRect::SetTexture(ITexture* tex)
-{
-	RectTexture = tex;
-}
+//void LostCore::FRect::SetTexture(ITextureSet* tex)
+//{
+//	RectTexture = tex;
+//}
 
 void LostCore::FRect::ConstructPrimitive(const FBuf& buf, int32 stride)
 {
-	if (!bHasGeometry)
+	if (RectPrimitive != nullptr)
 	{
 		return;
 	}
 
-	bConstructed = true;
 	WrappedCreatePrimitiveGroup(&RectPrimitive);
 	RectPrimitive->SetVertexElement(FRectVertex::GetVertexElement());
 	RectPrimitive->SetRenderOrder(ERenderOrder::UI);
 	RectPrimitive->SetTopology(EPrimitiveTopology::TriangleList);
 	if (buf.empty())
 	{
-		RectPrimitive->ConstructVB(*FRectVertex::GetDefaultVertices(FColor128(~0)), sizeof(FRectVertex), false);
+		RectPrimitive->ConstructVB(FRectVertex::GetDefaultVertices(FColor128(~0)),
+			FRectVertex::GetDefaultSize(), sizeof(FRectVertex), false);
 	}
 	else
 	{
-		RectPrimitive->ConstructVB(buf, stride, false);
+		RectPrimitive->ConstructVB(buf.data(), buf.size(), stride, false);
 	}
 
 	RectPrimitive->ConstructIB(*FRectVertex::GetDefaultIndices(), sizeof(int16), false);
-
-	WrappedCreateConstantBuffer(&RectBuffer);
-	RectBuffer->SetShaderSlot(SHADER_SLOT_MATRICES);
-	RectBuffer->SetShaderFlags(SHADER_FLAG_VS);
 }
 
 void LostCore::FRect::HasGeometry(bool val)
 {
 	bHasGeometry = val;
+}
+
+void LostCore::FRect::UpdateAndCommitRectBuffer()
+{
+	if (RectBuffer == nullptr)
+	{
+		WrappedCreateConstantBuffer(&RectBuffer);
+		RectBuffer->SetShaderSlot(SHADER_SLOT_MATRICES);
+		RectBuffer->SetShaderFlags(SHADER_FLAG_VS);
+	}
+
+	FRectParameter param(GetOffsetGlobal(), GetSize(), GetScaleGlobal());
+	FBuf buf;
+	param.GetBuffer(buf);
+	RectBuffer->UpdateBuffer(buf);
+	RectBuffer->Commit();
 }
 
 bool LostCore::FRect::HitTestPrivate(const FFloat2 & ppos, FRect** result) const
@@ -304,7 +315,7 @@ bool LostCore::FRect::HitTestPrivate(const FFloat2 & ppos, FRect** result) const
 
 void LostCore::FRect::GetLocalPosition(const FFloat2 & ppos, FFloat2 & cpos) const
 {
-	cpos = (ppos - Param.Origin);
+	cpos = (ppos - Param.Offset);
 	cpos *= Param.Scale;
 }
 
@@ -317,23 +328,11 @@ void LostCore::FRect::CommitPrivate()
 
 	if (!bConstructed)
 	{
-		FBuf buf;
-		ConstructPrimitive(buf, 0);
+		ConstructPrimitive(FBuf(), 0);
+		bConstructed = true;
 	}
 
-	if (RectBuffer != nullptr)
-	{
-		FRectParameter param(GetSize(), GetOriginGlobal(), GetScaleGlobal());
-		FBuf buf;
-		param.GetBuffer(buf);
-		RectBuffer->UpdateBuffer(buf);
-		RectBuffer->Commit();
-	}
-
-	if (RectTexture != nullptr)
-	{
-		RectTexture->CommitShaderResource();
-	}
+	UpdateAndCommitRectBuffer();
 
 	if (RectPrimitive != nullptr)
 	{
@@ -362,9 +361,9 @@ void LostCore::FBasicGUI::Tick()
 bool LostCore::FBasicGUI::Initialize(const FFloat2& size)
 {
 	Root = new FRect;
-	Root->SetOriginLocal(FFloat2(0.f, 0.f));
+	Root->SetOffsetLocal(FFloat2(0.f, 0.f));
 	Root->SetSize(size);
-	Root->SetScaleLocal(1.f);
+	Root->SetScaleLocal(FFloat2(1.f, 1.f));
 	return true;
 }
 
