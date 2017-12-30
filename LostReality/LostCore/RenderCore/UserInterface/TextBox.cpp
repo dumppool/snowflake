@@ -21,6 +21,11 @@ LostCore::FTextBox::FTextBox()
 {
 }
 
+LostCore::FTextBox::~FTextBox()
+{
+	ClearChildren([](FRect* child) {FFontProvider::Get()->DeallocTile((FFontTile*)child); });
+}
+
 void LostCore::FTextBox::Update()
 {
 	//static FStackCounterRequest SCounter("FTextBox::Commit");
@@ -70,4 +75,9 @@ void LostCore::FTextBox::SetText(const wstring & text)
 	}
 
 	SetSize(FFloat2(width, config.Height));
+}
+
+void LostCore::FTextBox::SetText(const string& text)
+{
+	SetText(UTF8ToWide(text));
 }

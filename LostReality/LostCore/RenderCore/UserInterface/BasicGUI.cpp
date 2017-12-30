@@ -175,6 +175,22 @@ void LostCore::FRect::DelChild(FRect * child)
 	}
 }
 
+void LostCore::FRect::PopChild(const function<void(FRect*)>& dealloc)
+{
+	if (Children.empty())
+	{
+		return;
+	}
+
+	if (dealloc != nullptr)
+	{
+		auto child = Children.back();
+		dealloc(child);
+	}
+
+	Children.pop_back();
+}
+
 void LostCore::FRect::Detach()
 {
 	if (Parent != nullptr)
@@ -183,21 +199,40 @@ void LostCore::FRect::Detach()
 	}
 }
 
-void LostCore::FRect::ClearChildren(const function<void(FRect*)>& deallocator)
+void LostCore::FRect::ClearChildren(const function<void(FRect*)>& dealloc)
 {
-	if (deallocator != nullptr)
+	if (dealloc != nullptr)
 	{
 		for (auto item : Children)
 		{
-			deallocator(item);
+			dealloc(item);
 		}
 	}
 
 	Children.clear();
 }
 
+int32 LostCore::FRect::NumChildren() const
+{
+	return Children.size();
+}
+
+FRect* LostCore::FRect::GetChild(int32 index)
+{
+	if (index < Children.size())
+	{
+		return Children[index];
+	}
+	else
+	{
+		return nullptr;
+	}
+}
+
 void LostCore::FRect::Destroy()
 {
+	ClearChildren([](FRect* child) {SAFE_DELETE(child); });
+
 	if (RectPrimitive != nullptr)
 	{
 		D3D11::WrappedDestroyPrimitiveGroup(forward<IPrimitive*>(RectPrimitive));
@@ -211,7 +246,6 @@ void LostCore::FRect::Destroy()
 	}
 
 	bConstructed = false;
-	ClearChildren([](FRect* child) {SAFE_DELETE(child); });
 }
 
 void LostCore::FRect::Update()
@@ -292,6 +326,11 @@ void LostCore::FRect::HasGeometry(bool val)
 
 void LostCore::FRect::UpdateAndCommitRectBuffer()
 {
+	if (!bHasGeometry)
+	{
+		return;
+	}
+
 	if (RectBuffer == nullptr)
 	{
 		WrappedCreateConstantBuffer(&RectBuffer);

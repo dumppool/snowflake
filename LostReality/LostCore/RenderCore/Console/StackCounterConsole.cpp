@@ -107,7 +107,6 @@ void LostCore::FStackCounterConsole::FinishCounting()
 
 void LostCore::FStackCounterConsole::FinishDisplay()
 {
-
 	for (auto item : OnlineText)
 	{
 		item->Detach();
@@ -143,7 +142,6 @@ void LostCore::FStackCounterConsole::Destroy()
 {
 	for (auto item : OnlineText)
 	{
-		item->Detach();
 		SAFE_DELETE(item);
 	}
 
@@ -156,12 +154,7 @@ void LostCore::FStackCounterConsole::Destroy()
 
 	OfflineText.clear();
 
-	Panel0->Detach();
-	SAFE_DELETE(Panel0);
-
-	Panel1->Detach();
-	SAFE_DELETE(Panel1);
-
-	Panel2->Detach();
 	SAFE_DELETE(Panel2);
+	SAFE_DELETE(Panel1);
+	SAFE_DELETE(Panel0);
 }
