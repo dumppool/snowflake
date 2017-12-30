@@ -11,8 +11,7 @@
 
 namespace LostCore
 {
-	class FListBox;
-	class FTextBox;
+	class FTextSheet;
 
 	class FStackCounterConsole
 	{
@@ -29,15 +28,7 @@ namespace LostCore
 		void Record();
 
 	private:
-		FTextBox* AllocTextBox();
-
-		FListBox* Panel0;
-		FListBox* Panel1;
-		FListBox* Panel2;
-
-		vector<FTextBox*> OnlineText;
-		vector<FTextBox*> OfflineText;
-
+		FTextSheet* Sheet;
 		bool bRecordNext;
 	};
 }

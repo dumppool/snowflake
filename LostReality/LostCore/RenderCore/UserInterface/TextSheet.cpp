@@ -40,6 +40,7 @@ void LostCore::FTextSheet::Initialize()
 
 	ColumnList = new FListBox;
 	ColumnList->SetAlignment(FListBox::EAlignment::Horizontal);
+	ColumnList->SetSpace(10);
 	MainList->AddChild(ColumnList);
 }
 
@@ -71,6 +72,11 @@ void LostCore::FTextSheet::AddRow(const vector<string>& row)
 	}
 
 	Rows.push_back(row);
+}
+
+void LostCore::FTextSheet::AddRows(const vector<vector<string>>& rows)
+{
+	Rows.insert(Rows.end(), rows.begin(), rows.end());
 }
 
 void LostCore::FTextSheet::PrepareRows(int32 numRowsWanted)
@@ -129,7 +135,7 @@ void LostCore::FTextSheet::Update()
 		}
 
 		// 为每个Column准备足够数量的控件,或回收多余的部分
-		const auto numRowsWanted = Rows.size() + Header.empty() ? 0 : 1;
+		const auto numRowsWanted = Rows.size() + (Header.empty() ? 0 : 1);
 		PrepareRows(numRowsWanted);
 
 		// 填充文本内容
@@ -160,4 +166,6 @@ void LostCore::FTextSheet::Update()
 
 		Rows.clear();
 	}
+
+	FRect::Update();
 }

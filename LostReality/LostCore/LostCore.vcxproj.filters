@@ -197,6 +197,9 @@
     <ClInclude Include="Inc\Misc\IDAllocator.h">
       <Filter>Inc\Misc</Filter>
     </ClInclude>
+    <ClInclude Include="RenderCore\UserInterface\TextSheet.h">
+      <Filter>RenderCore\UserInterface</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp" />
@@ -261,6 +264,9 @@
       <Filter>RenderCore\Light</Filter>
     </ClCompile>
     <ClCompile Include="RenderCore\UserInterface\FontTile.cpp">
+      <Filter>RenderCore\UserInterface</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderCore\UserInterface\TextSheet.cpp">
       <Filter>RenderCore\UserInterface</Filter>
     </ClCompile>
   </ItemGroup>

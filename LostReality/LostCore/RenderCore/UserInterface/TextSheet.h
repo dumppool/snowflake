@@ -30,6 +30,7 @@ namespace LostCore
 		void SetCaption(const string& caption);
 		void SetHeader(const vector<string>& header);
 		void AddRow(const vector<string>& row);
+		void AddRows(const vector<vector<string>>& rows);
 
 	private:
 		void PrepareRows(int32 numRowsWanted);

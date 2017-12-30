@@ -49,6 +49,7 @@ namespace LostCore
 	{
 		SAFE_DELETE(Mutex);
 	}
+
 	template <typename TCmd>
 	FCommandQueue<TCmd>& FCommandQueue<TCmd>::operator=(const FCommandQueue<TCmd>& rhs)
 	{

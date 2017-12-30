@@ -106,17 +106,20 @@ namespace LostCore
 		// FullName:  lostvr::FRect::AddChild
 		// Access:    public 
 		// Parameter: FRect* child 子面板，为空或者父面板不为空无法成功添加
-		virtual void AddChild(FRect* child);
+		void AddChild(FRect* child);
 
 		//************************************
 		// Method:    DelChild 删除子面板
 		// FullName:  lostvr::FRect::DelChild
 		// Access:    public 
 		// Parameter: FRect* child 子面板，为空或者父面板不为this无法成功删除
-		virtual void DelChild(FRect* child);
+		void DelChild(FRect* child);
+		void PopChild(const function<void(FRect*)>& dealloc);
 
 		void Detach();
-		void ClearChildren(const function<void(FRect*)>& deallocator);
+		void ClearChildren(const function<void(FRect*)>& dealloc);
+		int32 NumChildren() const;
+		FRect* GetChild(int32 index);
 
 		virtual void Update();
 		virtual void Commit();

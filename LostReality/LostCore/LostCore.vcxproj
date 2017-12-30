@@ -213,6 +213,7 @@
     <ClInclude Include="RenderCore\UserInterface\FontTile.h" />
     <ClInclude Include="RenderCore\UserInterface\ListBox.h" />
     <ClInclude Include="RenderCore\UserInterface\TextBox.h" />
+    <ClInclude Include="RenderCore\UserInterface\TextSheet.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
@@ -234,6 +235,7 @@
     <ClCompile Include="RenderCore\UserInterface\FontTile.cpp" />
     <ClCompile Include="RenderCore\UserInterface\ListBox.cpp" />
     <ClCompile Include="RenderCore\UserInterface\TextBox.cpp" />
+    <ClCompile Include="RenderCore\UserInterface\TextSheet.cpp" />
     <ClCompile Include="Src\FBXEditor.cpp" />
     <ClCompile Include="Src\GlobalHandler.cpp" />
     <ClCompile Include="Src\LostCore.cpp" />

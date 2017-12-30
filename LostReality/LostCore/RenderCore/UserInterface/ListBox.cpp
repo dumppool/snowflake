@@ -21,6 +21,9 @@ LostCore::FListBox::FListBox()
 
 void LostCore::FListBox::Update()
 {
+	static FStackCounterRequest SCounter("FListBox::Update");
+	FScopedStackCounterRequest scopedCounter(SCounter);
+
 	FRect::Update();
 	float offset = 0.0f;
 	for (auto item : Children)

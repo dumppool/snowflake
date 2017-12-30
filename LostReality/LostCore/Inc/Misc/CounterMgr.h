@@ -40,6 +40,7 @@ namespace LostCore
 	struct FStackCounter
 	{
 		static const int32 SMaxNameLen = 20;
+		static vector<string> GetDescHeader();
 
 		string Name;
 		int32 RequestId;
@@ -63,7 +64,7 @@ namespace LostCore
 		FORCEINLINE int32 GetDepth() const;
 		FORCEINLINE void GetChildCounters(vector<FStackCounter*>& counters) const;
 		FORCEINLINE void GetVisibleChildCounters(vector<FStackCounter*>& counters) const;
-		FORCEINLINE array<string, 2> GetDescs(const string& indent) const;
+		FORCEINLINE vector<string> GetDescs(const string& indent) const;
 
 		FORCEINLINE bool IsLeaf() const;
 		FORCEINLINE void MergeLeaves();
@@ -78,7 +79,7 @@ namespace LostCore
 		// Frame data.
 		FStackCounter* Current;
 		FStackCounter Root;
-		vector<array<string, 2>> Statics;
+		vector<vector<string>> Statics;
 
 	public:
 		static const int32 SMaxID = (1 << 20);
@@ -99,7 +100,7 @@ namespace LostCore
 
 		FORCEINLINE void Finish();
 		FORCEINLINE void RecycleCounters();
-		FORCEINLINE vector<array<string, 2>> GetDisplayContent() const;
+		FORCEINLINE vector<vector<string>> GetDisplayContent() const;
 	};
 
 	FStackCounterRequest::FStackCounterRequest(const string& name)
@@ -186,17 +187,34 @@ namespace LostCore
 		}
 	}
 
-	array<string, 2> FStackCounter::GetDescs(const string & indent) const
+	FORCEINLINE vector<string> FStackCounter::GetDescHeader()
 	{
-		string head(indent);
-		head.append(string(4*(GetDepth()-1), '.')).append(Name);
+		static vector<string> result;
+		if (result.empty())
+		{
+			result.push_back("Name");
+			result.push_back("Count");
+			result.push_back("Percentage");
+			result.push_back("Milliseconds");
+			result.push_back("Depth");
+		}
 
-		char info[128];
-		memset(info, 0, 128);
+		return result;
+	}
+
+	vector<string> FStackCounter::GetDescs(const string & indent) const
+	{
+		string name(indent);
+		name.append(string(4 * (GetDepth() - 1), '.')).append(Name);
 		float percentage = Past * 100 / (ParentCounter != nullptr ? ParentCounter->Past : Past);
-		snprintf(info, 127, "%d, %0.2fPercent, %0.2fMS, %d", Count, percentage, Past*1000, Depth);
 
-		return array<string, 2>({ head, info });
+		vector<string> result;
+		result.push_back(name);
+		result.push_back(to_string(Count));
+		result.push_back(to_string(percentage));
+		result.push_back(to_string(Past * 1000));
+		result.push_back(to_string(Depth));
+		return result;
 	}
 
 	bool FStackCounter::IsLeaf() const
@@ -276,7 +294,7 @@ namespace LostCore
 		}
 	}
 
-	vector<array<string,2>> FStackCounterManager::GetDisplayContent() const
+	vector<vector<string>> FStackCounterManager::GetDisplayContent() const
 	{
 		return Statics;
 	}
