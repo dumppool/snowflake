@@ -22,8 +22,8 @@ namespace D3D11
 
 		float					CharHeight;
 		FTexture2D*				FontTexture;
-		std::set<WCHAR>			Characters;
-		std::set<LostCore::FCharacterDescription>	CharacterDescriptions;
+		set<WCHAR>			Characters;
+		set<LostCore::FCharacterDescription>	CharacterDescriptions;
 		LostCore::FFontTextureDescription			TextureDescription;
 
 		FGdiFontProperty();

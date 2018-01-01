@@ -188,7 +188,8 @@ bool D3D11::FTexture2D::ConstructFromSwapChain(const TRefCountPtr<IDXGISwapChain
 	const char* head = "D3D11::FTexture2D::ConstructFromSwapChain";
 
 	BindFlags = D3D11_BIND_RENDER_TARGET;
-	assert(SUCCEEDED(swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)Texture.GetInitReference())));
+	auto succeeded = SUCCEEDED(swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)Texture.GetInitReference()));
+	assert(succeeded);
 
 	D3D11_TEXTURE2D_DESC desc;
 	Texture->GetDesc(&desc);
@@ -196,7 +197,7 @@ bool D3D11::FTexture2D::ConstructFromSwapChain(const TRefCountPtr<IDXGISwapChain
 	Height = desc.Height;
 
 	TRefCountPtr<ID3D11Device> device;
-	auto succeeded = SUCCEEDED(swapChain->GetDevice(__uuidof(ID3D11Device), (void**)device.GetInitReference()));
+	succeeded = SUCCEEDED(swapChain->GetDevice(__uuidof(ID3D11Device), (void**)device.GetInitReference()));
 	assert(succeeded);
 
 	CD3D11_RENDER_TARGET_VIEW_DESC cdesc(Texture.GetReference(), D3D11_RTV_DIMENSION_TEXTURE2D);

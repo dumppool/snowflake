@@ -393,8 +393,17 @@ void LostCore::FBasicGUI::Tick()
 	static FStackCounterRequest SCounter("FBasicGUI::Tick");
 	FScopedStackCounterRequest scopedCounter(SCounter);
 
-	Root->Update();
-	Root->Commit();
+	{
+		static FStackCounterRequest SUpdateCounter("Update");
+		FScopedStackCounterRequest scopedUpdateCounter(SUpdateCounter);
+		Root->Update();
+	}
+
+	{
+		static FStackCounterRequest SCommitCounter("Commit");
+		FScopedStackCounterRequest scopedCommitCounter(SCommitCounter);
+		Root->Commit();
+	}
 }
 
 bool LostCore::FBasicGUI::Initialize(const FFloat2& size)

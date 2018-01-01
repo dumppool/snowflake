@@ -4,7 +4,7 @@
 * author luoxw
 * date 2017/10/19
 *
-* 1. 实现tls的单例.
+* 1. 线程本地单例模板.
 * 2. Inc下的代码是可以被其他模块包含的,为了使单例可以跨模块.
 */
 
@@ -13,17 +13,13 @@
 namespace LostCore
 {
 
-	// T的例子,要避免SClassIndex重复确实不怎么舒服,但是不能使用编译时计数的话只能如此.
-	//class T : public FTlsSingletonTemplate<T>
-	//{
-	//public:
-	//	static const int32 SClassIndex = x;
-	//}
-	template <typename T>
-	class FTlsSingletonTemplate
+	template <typename T, int32 ClassIndex>
+	class FTlsSingleton
 	{
 	public:
-		static FORCEINLINE T* Get()
+		static const int32 SClassIndex = ClassIndex;
+
+		static T* Get()
 		{
 			auto t = FProcessUnique::Get()->GetCurrentThread();
 			auto p = t->GetSingleton(T::SClassIndex);

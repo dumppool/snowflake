@@ -104,6 +104,9 @@ void LostCore::FTextSheet::PrepareRows(int32 numRowsWanted)
 
 void LostCore::FTextSheet::Update()
 {
+	static FStackCounterRequest SCounter("FTextSheet::Update");
+	FScopedStackCounterRequest scopedCounter(SCounter);
+
 	if (CaptionBox != nullptr)
 	{
 		CaptionBox->SetText(Caption);
@@ -141,6 +144,8 @@ void LostCore::FTextSheet::Update()
 		// 填充文本内容
 		for (int32 row = 0; row < numRowsWanted; ++row)
 		{
+			static FStackCounterRequest SSubCounter(CH("填充统计数据"));
+			FScopedStackCounterRequest scopedSubCounter(SSubCounter);
 			for (int32 col = 0; col < numColumnsWanted; ++col)
 			{
 				auto ctrl = dynamic_cast<FTextBox*>(ColumnCtrls[col]->GetChild(row));

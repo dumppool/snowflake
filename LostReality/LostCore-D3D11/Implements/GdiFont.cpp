@@ -279,6 +279,14 @@ bool D3D11::FGdiFont::Reload()
 	{
 		WCHAR wc = *it;
 
+		// 跳过不绘制的字符
+		if (wc == ' ')
+		{
+			Property.Characters.insert(wc);
+			Property.CharacterDescriptions.insert(FCharacterDescription(wc));
+			continue;
+		}
+
 		if (Gdiplus::Ok != (ret = graphics2.Clear(Color(0, 255, 255, 255))))
 		{
 			LVERR(head, "graphics2::Clear failed: %d", ret);
@@ -341,7 +349,7 @@ bool D3D11::FGdiFont::Reload()
 		}
 
 		Property.Characters.insert(wc);
-		Property.CharacterDescriptions.insert(LostCore::FCharacterDescription(wc, currX, currY, charWidth, (int32)Property.CharHeight));
+		Property.CharacterDescriptions.insert(FCharacterDescription(wc, currX, currY, charWidth, (int32)Property.CharHeight));
 
 		int32 height = (int32)(Property.CharHeight) + 1;
 		if (Gdiplus::Ok != (ret = graphics3.DrawImage(&bmp2, currX, currY, minX, 0, charWidth, height, UnitPixel)))
@@ -360,7 +368,9 @@ bool D3D11::FGdiFont::Reload()
 		RETURN_FALSE;
 	}
 
+	// 如果字符串里有空格
 	td.SpaceWidth = rect.Width;
+	Property.CharacterDescriptions.insert(FCharacterDescription(space, 0, 0, rect.Width, (int32)Property.CharHeight));
 
 	BitmapData bmpData;
 	if (Gdiplus::Ok != (ret = bmp3.LockBits(&Rect(0, 0, td.TextureWidth, 

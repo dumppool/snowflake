@@ -70,7 +70,7 @@ namespace LostCore
 		FORCEINLINE void MergeLeaves();
 	};
 
-	class FStackCounterManager : public FTlsSingletonTemplate<FStackCounterManager>
+	class FStackCounterManager : public FTlsSingleton<FStackCounterManager, 1>
 	{
 
 		int32 LastAllocatedID;
@@ -79,13 +79,12 @@ namespace LostCore
 		// Frame data.
 		FStackCounter* Current;
 		FStackCounter Root;
-		vector<vector<string>> Statics;
+		vector<vector<string>> Statistics;
 
 	public:
 		static const int32 SMaxID = (1 << 20);
 		static const int32 SRoot = 0;
 		static const int32 SOthers = 1;
-		static const int32 SClassIndex = 1;
 
 		FORCEINLINE FStackCounterManager();
 
@@ -205,7 +204,7 @@ namespace LostCore
 	vector<string> FStackCounter::GetDescs(const string & indent) const
 	{
 		string name(indent);
-		name.append(string(4 * (GetDepth() - 1), '.')).append(Name);
+		name.append(string(4 * (GetDepth() - 1), ' ')).append(Name);
 		float percentage = Past * 100 / (ParentCounter != nullptr ? ParentCounter->Past : Past);
 
 		vector<string> result;
@@ -296,7 +295,7 @@ namespace LostCore
 
 	vector<vector<string>> FStackCounterManager::GetDisplayContent() const
 	{
-		return Statics;
+		return Statistics;
 	}
 
 	void FStackCounterManager::Start(const FStackCounterRequest& request)
@@ -349,13 +348,13 @@ namespace LostCore
 		Root.Stop();
 		Root.MergeLeaves();
 
-		Statics.clear();
+		Statistics.clear();
 		vector<FStackCounter*> counters;
 		Root.GetVisibleChildCounters(counters);
 
 		for (auto item : counters)
 		{
-			Statics.push_back(item->GetDescs(">> "));
+			Statistics.push_back(item->GetDescs(">> "));
 		}
 
 		RecycleCounters();

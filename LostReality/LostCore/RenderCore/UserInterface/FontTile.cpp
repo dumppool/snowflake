@@ -27,6 +27,8 @@ LostCore::FFontTile::~FFontTile()
 
 void LostCore::FFontTile::Update()
 {
+	static FStackCounterRequest SCounter("FFontTile::Update");
+	//FScopedStackCounterRequest scopedCounter(SCounter);
 }
 
 void LostCore::FFontTile::Commit()

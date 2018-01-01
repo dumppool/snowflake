@@ -58,7 +58,12 @@ void D3D11::FRenderContext::Tick()
 	}
 
 	FCommandQueue<FContextCommand> cmds(false);
-	Commands.SyncRead(&cmds);
+
+	{
+		static FStackCounterRequest SCounter("Sync reading");
+		FScopedStackCounterRequest scopedCounter(SCounter);
+		Commands.SyncRead(&cmds);
+	}
 
 	FContextCommand cmd;
 	while (cmds.Pop(cmd))
@@ -117,6 +122,8 @@ void D3D11::FRenderContext::FirstCommit()
 
 void D3D11::FRenderContext::FinishCommit()
 {
+	static FStackCounterRequest SCounter("Sync committing");
+	FScopedStackCounterRequest scopedCounter(SCounter);
 	Commands.SyncCommit();
 }
 

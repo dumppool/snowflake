@@ -458,10 +458,10 @@ namespace LostCore
 			ReadIndex = 0;
 		}
 
-		// 更新写索引,通知可能已经阻塞的线程.
+		// 更新写索引.
 		WriteIndex = (WriteIndex + 1) % Objects.size();
 
-		// 如果写索引指向不可写入,等待其他线程同步读取后通知,确保写索引总是可写入.		
+		// 如果写索引指向不可写入,等待其他线程读取.		
 		if (ReadIndex == WriteIndex)
 		{
 			bWaitingForRead = true;
@@ -480,7 +480,7 @@ namespace LostCore
 	{
 		LARGE_INTEGER timeStamp = FPerformanceCounter::GetTimeStamp();
 
-		// 如果读索引指向不可读取,等待别的线程同步提交后通知.
+		// 如果读索引指向不可读取,等待别的线程提交.
 		while (ReadIndex == -1 || (ReadIndex == WriteIndex && !bWaitingForRead))
 		{
 			this_thread::yield();

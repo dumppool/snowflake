@@ -41,11 +41,11 @@ void LostCore::FFontProvider::Initialize()
 	});
 
 	Config.FontName = L"Consolas";
-	Config.Height = 13;
+	Config.Height = 12;
 	Config.bAntiAliased = false;
 	Config.bUnderline = false;
 	Config.bItalic = false;
-	Config.Weight = 0;
+	Config.Weight = 400;
 	Config.Quality = NONANTIALIASED_QUALITY;
 	Config.CharSet = DEFAULT_CHARSET;
 	GdiFont->AddClient(this);

@@ -49,3 +49,4 @@
 
 #define HAS_FLAGS(flags, srcFlags) ((flags&srcFlags)==flags)
 
+#define CH(s) u8##s
