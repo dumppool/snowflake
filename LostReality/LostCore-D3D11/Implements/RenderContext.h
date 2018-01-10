@@ -121,6 +121,8 @@ namespace D3D11
 		virtual bool Initialize() override;
 		virtual void Tick() override;
 		virtual void Destroy() override;
+		virtual bool IsThreadPrivate() const override;
+		virtual bool IsLoop() const override;
 		virtual void InitializeDevice(LostCore::EContextID id, HWND wnd, bool bWindowed, int32 width, int32 height) override;
 		virtual void SetViewProjectMatrix(const LostCore::FFloat4x4 & vp) override;
 		virtual void FirstCommit() override;
@@ -206,8 +208,8 @@ namespace D3D11
 
 		function<void()>						Initializer;
 		LostCore::TSynchronizer<LostCore::FCommandQueue<FContextCommand>> Commands;
-		LostCore::FTickThread*					Thread;
+		LostCore::FThread*						Thread;
 
-		//FGdiFont* Font;
+		atomic<bool>							bIsThreadRunning;
 	};
 }

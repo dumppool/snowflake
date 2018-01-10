@@ -8,14 +8,17 @@
 */
 
 #include "stdafx.h"
-#include "RenderCore/Console/StackCounterConsole.h"
+//#include "RenderCore/Console/StackCounterConsole.h"
+//#include "RenderCore/Console/MemoryCounterConsole.h"
+#include "RenderCore/Console/ConsoleInterface.h"
 #include "RenderCore/UserInterface/FontProvider.h"
+#include "RenderCore/TickGroup.h"
 
 #include "LostCore-D3D11.h"
 using namespace D3D11;
 using namespace LostCore;
 
-class FFBXEditor : public ITickTask
+class FFBXEditor : public ITask
 {
 	typedef function<void()> FCmd;
 
@@ -27,6 +30,8 @@ public:
 	virtual bool Initialize() override;
 	virtual void Tick() override;
 	virtual void Destroy() override;
+	virtual bool IsThreadPrivate() const override;
+	virtual bool IsLoop() const override;
 
 	// 启动editor.
 	void InitializeWindow(HWND wnd, bool windowed, int32 width, int32 height);
@@ -97,10 +102,8 @@ private:
 	int32 ScreenWidth;
 	int32 ScreenHeight;
 
-	FBasicGUI* GUI;
-	FStackCounterConsole* Console;
-
-	FTickThread* Thread;
+	FThread* Thread;
+	atomic<bool> bIsThreadRunning;
 
 	static const char * const SConverterExe;
 	static const char * const SConverterOutput;
@@ -118,8 +121,6 @@ FFBXEditor::FFBXEditor()
 	, CurrSelectedModel(nullptr)
 	, CurrHoveredModel(nullptr)
 	, GizmoOp(nullptr)
-	, GUI(nullptr)
-	, Console(nullptr)
 	, Thread(nullptr)
 {
 	InitializeEnvironment();
@@ -128,11 +129,7 @@ FFBXEditor::FFBXEditor()
 
 FFBXEditor::~FFBXEditor()
 {
-	Destroy();
-
-	assert(RC == nullptr);
-	assert(Camera == nullptr);
-	assert(Scene == nullptr);
+	Shutdown();
 }
 
 void FFBXEditor::InitializeScene()
@@ -141,7 +138,10 @@ void FFBXEditor::InitializeScene()
 
 void FFBXEditor::Shutdown()
 {
-	SAFE_DELETE(Thread);
+	if (bIsThreadRunning)
+	{
+		SAFE_DELETE(Thread);
+	}
 }
 
 void FFBXEditor::PushCommand(const FCmd & cmd)
@@ -481,6 +481,9 @@ void FFBXEditor::Tick()
 		cmd();
 	}
 
+	FTickGroup::Get()->Tick();
+	IConsole::RefreshConsole();
+
 	if (RC != nullptr)
 	{
 		FlushNotifies();
@@ -502,23 +505,10 @@ void FFBXEditor::Tick()
 			GizmoOp->Tick();
 		}
 
-		if (Console != nullptr)
-		{
-			Console->FinishCounting();
-		}
-
-		if (GUI != nullptr)
-		{
-			GUI->Tick();
-		}
+		FGUI::Get()->Tick();
 
 		FFontProvider::Get()->OnFinishCommit();
 		RC->FinishCommit();
-
-		if (Console != nullptr)
-		{
-			Console->FinishDisplay();
-		}
 	}
 }
 
@@ -527,8 +517,7 @@ void FFBXEditor::Destroy()
 	FGlobalHandler::Get()->SetMoveCameraCallback(nullptr);
 	FGlobalHandler::Get()->SetRotateCameraCallback(nullptr);
 
-	SAFE_DELETE(Console);
-	SAFE_DELETE(GUI);
+	FGUI::StaticDestroy();
 
 	FFontProvider::Get()->Destroy();
 
@@ -539,9 +528,23 @@ void FFBXEditor::Destroy()
 
 	SAFE_DELETE(Scene);
 	SAFE_DELETE(Camera);
-	SAFE_DELETE(RC);
 
 	FGlobalHandler::Get()->SetRenderContextPP(nullptr);
+
+	// 停止渲染线程
+	SAFE_DELETE(RC);
+
+	bIsThreadRunning = false;
+}
+
+bool FFBXEditor::IsThreadPrivate() const
+{
+	return false;
+}
+
+bool FFBXEditor::IsLoop() const
+{
+	return true;
 }
 
 void FFBXEditor::InitializeEnvironment()
@@ -719,16 +722,46 @@ void FFBXEditor::InitializeCallback()
 		Shutdown();
 	});
 
-	// TODO: FGlobalHandler应该是进程全局唯一单例，而FStackCounterManager是线程本地单例
 	FGlobalHandler::Get()->SetRecordProfileCallback([=]
 	()
 	{
 		this->PushCommand([=]()
 		{
-			if (Console != nullptr)
-			{
-				Console->Record();
-			}
+			IConsole::RecordConsole();
+		});
+	});
+
+	FGlobalHandler::Get()->SetGetConsoleNamesCallback([=]
+	(FStrArr names, int32 sz, int32* index)
+	{
+		//auto consoleNames = IConsole::GetConsoleNames();
+		//*count = consoleNames.size();
+		//for (int32 i = 0; i < (*count); ++i)
+		//{
+		//	auto l = strlen(consoleNames[i].c_str()) + 1;
+		//	auto p = names[i];
+		//	memset(p, 0, l);
+		//	strcpy_s(p, l, consoleNames[i].c_str());
+		//	//names[i] = p;
+		//}
+
+		auto consoleNames = IConsole::GetConsoleNames();
+		auto wanted = *index;
+		*index = consoleNames.size() - 1 - wanted;
+		if ((*index) >= 0)
+		{
+			auto l = strlen(consoleNames[wanted].c_str()) + 1;
+			strncpy_s(names, l, consoleNames[wanted].c_str(), sz);
+		}
+	});
+
+	FGlobalHandler::Get()->SetDisplayConsoleCallback([=]
+	(const char* name)
+	{
+		string arg(name);
+		this->PushCommand([=]() 
+		{
+			IConsole::DisplayConsole(arg);
 		});
 	});
 }
@@ -740,6 +773,7 @@ void FFBXEditor::InitializeWindow(HWND wnd, bool windowed, int32 width, int32 he
 		return;
 	}
 
+	// 启动渲染线程
 	auto ret = WrappedCreateRenderContext(&RC);
 	RC->InitializeDevice(EContextID::D3D11_DXGI0, wnd, windowed, width, height);
 	FFontProvider::Get()->Initialize();
@@ -753,14 +787,11 @@ void FFBXEditor::InitializeWindow(HWND wnd, bool windowed, int32 width, int32 he
 		Log(ELogFlag::LogError, "failed to load gizmo config: %s", "axis.json");
 	}
 
+	FGUI::StaticInitialize();
+	FGUI::Get()->Initialize(FFloat2(width, height));
 
-	GUI = new FBasicGUI;
-	GUI->Initialize(FFloat2(width, height));
-
-	Console = new FStackCounterConsole;
-	Console->Initialize(GUI->GetRoot());
-
-	Thread = new FTickThread(this, "EDitorTick");
+	Thread = new FThread(this, "EDitorTick");
+	bIsThreadRunning = true;
 }
 
 void FFBXEditor::FlushNotifies()

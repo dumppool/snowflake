@@ -218,7 +218,7 @@ namespace LostCore
 			}
 			else if (WrapMode == EWrap::Wrap)
 			{
-				validIndex = InCircle(index, numKeys);
+				validIndex = InCycle(index, numKeys);
 			}
 			else
 			{
@@ -233,7 +233,7 @@ namespace LostCore
 			}
 			else if (WrapMode == EWrap::Wrap)
 			{
-				validIndex = InCircle(index, numKeys);
+				validIndex = InCycle(index, numKeys);
 			}
 			else
 			{

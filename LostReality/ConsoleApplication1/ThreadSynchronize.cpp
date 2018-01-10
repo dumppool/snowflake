@@ -9,7 +9,7 @@ FThreadSynchronizerSample::FThreadSynchronizerSample()
 	: Seq(1)
 {
 	FProcessUnique::StaticInitialize();
-	EntryThread = new FTickThread(this, "FThreadSynchronizerSample");
+	EntryThread = new FThread(this, "FThreadSynchronizerSample");
 }
 
 FThreadSynchronizerSample::~FThreadSynchronizerSample()
@@ -96,7 +96,7 @@ static set<int32> SIntSet0;
 static set<int32> SIntSet1;
 
 FSyncGuest::FSyncGuest()
-	: Thread(new FTickThread(this, "SyncProducer"))
+	: Thread(new FThread(this, "SyncProducer"))
 	, Data(1)
 	, Cmds(1)
 {
@@ -162,7 +162,7 @@ void FSyncGuest::Destroy()
 }
 
 FSyncHost::FSyncHost()
-	: Thread(new FTickThread(this, "FSyncConsumer"))
+	: Thread(new FThread(this, "FSyncConsumer"))
 	, Guest(new FSyncGuest)
 {
 	FSyncGuest::Get() = Guest;

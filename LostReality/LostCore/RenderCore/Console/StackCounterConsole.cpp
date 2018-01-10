@@ -14,9 +14,13 @@
 
 using namespace LostCore;
 
+static FStackCounterConsole SObj;
+
 LostCore::FStackCounterConsole::FStackCounterConsole()
-	: Sheet(nullptr)
+	: bInitialized(false)
+	, Sheet(nullptr)
 	, bRecordNext(false)
+	, ActivePageName(IConsole::SInvalid)
 {
 }
 
@@ -25,17 +29,31 @@ LostCore::FStackCounterConsole::~FStackCounterConsole()
 	Destroy();
 }
 
+std::vector<std::string> LostCore::FStackCounterConsole::GetPageNames() const
+{
+	return FStackCounterCollector::Get()->GetStackNames();
+}
+
 void LostCore::FStackCounterConsole::Initialize(FRect* parent)
 {
-	auto parentSize = parent->GetSize();
+	ActivePageName = IConsole::SInvalid;
 	Sheet = new FTextSheet;
 	Sheet->Initialize();
 	parent->AddChild(Sheet);
+	bInitialized = true;
 }
 
-void LostCore::FStackCounterConsole::FinishCounting()
+void LostCore::FStackCounterConsole::Refresh()
 {
-	FStackCounterManager::Get()->Finish();
+	if (!EnsureInitialized())
+	{
+		return;
+	}
+
+	if (ActivePageName == IConsole::SInvalid)
+	{
+		return;
+	}
 
 	static FStackCounterRequest SCounter("FStackCounterConsole::FinishCounting");
 	FScopedStackCounterRequest scopedCounter(SCounter);
@@ -47,8 +65,7 @@ void LostCore::FStackCounterConsole::FinishCounting()
 	string caption = string("Thread: ").append(FProcessUnique::Get()->GetCurrentThread()->GetName());
 	caption.append(head);
 
-
-	auto content = FStackCounterManager::Get()->GetDisplayContent();
+	auto content = FStackCounterCollector::Get()->GetStackInfo(ActivePageName);
 	auto header = FStackCounter::GetDescHeader();
 	Sheet->SetCaption(caption);
 	Sheet->SetHeader(header);
@@ -83,15 +100,47 @@ void LostCore::FStackCounterConsole::FinishCounting()
 	}
 }
 
-void LostCore::FStackCounterConsole::FinishDisplay()
-{
-}
-
 void LostCore::FStackCounterConsole::Record()
 {
+	if (!EnsureInitialized())
+	{
+		return;
+	}
 	bRecordNext = true;
+}
+
+void LostCore::FStackCounterConsole::DisplayPage(const string& name)
+{
+	if (!EnsureInitialized())
+	{
+		return;
+	}
+
+	auto names = GetPageNames();
+	if (find(names.begin(), names.end(), name) == names.end())
+	{
+		ActivePageName = IConsole::SInvalid;
+	}
+	else
+	{
+		ActivePageName = name;
+	}
 }
 
 void LostCore::FStackCounterConsole::Destroy()
 {
+	bInitialized = false;
+	Sheet->Detach();
+	SAFE_DELETE(Sheet);
 }
+
+bool LostCore::FStackCounterConsole::EnsureInitialized()
+{
+	if (!bInitialized && FGUI::Get())
+	{
+		Initialize(FGUI::Get()->GetRoot());
+	}
+
+	return bInitialized;
+}
+

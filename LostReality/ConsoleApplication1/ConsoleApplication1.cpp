@@ -2,7 +2,7 @@
 //
 
 #include "stdafx.h"
-#include "ThreadSynchronize.h"
+//#include "ThreadSynchronize.h"
 #include "CommandBinding.h"
 
 struct _A
@@ -132,14 +132,6 @@ void Test5()
 	func();
 }
 
-// Frame condition thread
-void Test7()
-{
-	{
-		FSyncSample sample(10);
-	}
-}
-
 void Test8()
 {
 	uint8 curr = 32, last = 127;
@@ -206,7 +198,7 @@ void Test9()
 void TestSync()
 {
 	//FCommandBindingSample sample;
-	FSyncSample sample(100);
+	//FSyncSample sample(100);
 }
 
 void TestBinding()
@@ -214,11 +206,142 @@ void TestBinding()
 	FCommandBindingSample sample;
 }
 
+void OutputInt32(int32& var)
+{
+	cout << var << endl;
+}
+
+void TestMemoryOrder()
+{
+}
+
+// Stl set
+void Test10()
+{
+	set<int32> set0({ 0, 1, 2, 3 }), set1({ 0, 1, 2, 3 });
+	array<int32, 4> arr0 = { 0,1,2,2 };
+	set0.insert(arr0.begin(), arr0.end());
+	cout << (set0==set1?"true":"false")<< endl;
+}
+
+class F11BaseA
+{
+public:
+	virtual string GetName() { return "BaseA"; }
+};
+
+class F11BaseB
+{
+public:
+	virtual string GetName() { return "BaseB"; }
+};
+
+class F11Class : public F11BaseA, public F11BaseB
+{
+};
+
+// ¶à¼Ì³Ðcast
+void Test11()
+{
+	F11Class* p = new F11Class;
+	cout << ((F11BaseA*)p)->GetName() << endl;
+	cout << ((F11BaseB*)p)->GetName() << endl;
+}
+
+struct FObj12
+{
+	int32 Mem;
+	FObj12(){}
+	~FObj12()
+	{
+		Mem = -999;
+	}
+	explicit FObj12(int32 val) :Mem(val) {}
+	FObj12(const FObj12& rhs)
+	{
+		Mem = rhs.Mem;
+		cout << "FObj12(const FObj12& rhs)" << endl;
+	}
+
+	FObj12(FObj12&& rhs)
+	{
+		Mem = rhs.Mem;
+		cout << "FObj12(const FObj12&& rhs)" << endl;
+	}
+
+	void Output()
+	{
+		cout << Mem << endl;
+	}
+};
+
+void RefObj12(FObj12& a)
+{
+	a.Output();
+}
+
+void ValueObj12(FObj12 a)
+{
+	a.Output();
+}
+
+void PointObj12(FObj12* a)
+{
+	a->Output();
+}
+
+// bind
+void Test12()
+{
+	function<void()> func = nullptr;
+	{
+		FObj12 s0(123);
+		func = bind(&ValueObj12, s0);
+	}
+	func();
+
+	{
+		FObj12 s0(456);
+		func = bind(&RefObj12, forward<FObj12>(s0));
+	}
+	func();
+
+	{
+		FObj12 s0(789);
+		func = bind(&PointObj12, &s0);
+	}
+	func();
+}
+
+#
+class F13
+{
+public:
+	void * operator new(uint32 sz)
+	{
+		cout << "F13 operator new: " << sz << endl;
+		return malloc(sz);
+	}
+
+	void operator delete(void* p)
+	{
+		cout << "F13 operator delete: " << sizeof(F13) << endl;
+		free(p);
+	}
+
+private:
+	int32 Mem0;
+	double Mem1;
+};
+
 int main()
 {
 	cout << "***************************************" << endl;
-	TestSync();
+	//TestSync();
 	//TestBinding();
+	//Test12();
+	auto p = new F13;
+	delete p;
 	cout << "***************************************" << endl;
 
 	system("pause");

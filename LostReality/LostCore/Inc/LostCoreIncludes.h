@@ -20,9 +20,10 @@
 #include "Misc/Log.h"
 #include "Misc/CommandQueue.h"
 #include "Misc/Tls.h"
-#include "Misc/Counters.h"
+#include "Misc/PerformanceCounters.h"
 #include "Misc/Thread.h"
-#include "Misc/CounterMgr.h"
+#include "Misc/MemoryCounters.h"
+#include "Misc/StackCounters.h"
 
 #include "VertexTypes.h"
 
@@ -63,7 +64,6 @@ using FJson = nlohmann::json;
 
 #include "BasicCamera.h"
 #include "BasicModel.h"
-#include "BasicGUI.h"
 #include "BasicScene.h"
 #include "ModelFactory.h"
 #include "CameraFactory.h"

@@ -302,6 +302,42 @@ EReturnCode LostCore::FGlobalHandler::RecordProfile()
 	}
 }
 
+EReturnCode LostCore::FGlobalHandler::DeallocateStringArray(FStrArr str, int32 count)
+{
+	//for (int32 i = 0; i < count; ++i)
+	//{
+	//	delete str[i];
+	//}
+
+	return SSuccess;
+}
+
+EReturnCode LostCore::FGlobalHandler::GetConsoleNames(FStrArr names, int32 sz, int32* count)
+{
+	if (GetConsoleNamesCallback != nullptr)
+	{
+		GetConsoleNamesCallback(names, sz, count);
+		return SSuccess;
+	}
+	else
+	{
+		return SErrorNotImplemented;
+	}
+}
+
+EReturnCode LostCore::FGlobalHandler::DisplayConsole(const char* name)
+{
+	if (DisplayConsoleCallback != nullptr)
+	{
+		DisplayConsoleCallback(name);
+		return SSuccess;
+	}
+	else
+	{
+		return SErrorNotImplemented;
+	}
+}
+
 void LostCore::FGlobalHandler::SetRenderContextPP(IRenderContext ** rc)
 {
 	RenderContextPP = rc;
@@ -407,6 +443,16 @@ void LostCore::FGlobalHandler::SetRecordProfileCallback(Callback_V callback)
 	RecordProfileCallback = callback;
 }
 
+void LostCore::FGlobalHandler::SetGetConsoleNamesCallback(Callback_SAI callback)
+{
+	GetConsoleNamesCallback = callback;
+}
+
+void LostCore::FGlobalHandler::SetDisplayConsoleCallback(Callback_S callback)
+{
+	DisplayConsoleCallback = callback;
+}
+
 void LostCore::FGlobalHandler::UpdateFlagAndName(EUpdateFlag flag, const string & name)
 {
 	if (UpdateFlagAndNameFunc != nullptr)
@@ -459,5 +505,8 @@ EXPORT_WRAP_2_DEF(OnDragging, int32, int32);
 EXPORT_WRAP_0_DEF(OnEndDrag);
 EXPORT_WRAP_2_DEF(AssetOperate, int32, const char*);
 EXPORT_WRAP_0_DEF(RecordProfile);
+EXPORT_WRAP_2_DEF(DeallocateStringArray, FStrArr, int32);
+EXPORT_WRAP_3_DEF(GetConsoleNames, FStrArr, int32, int32*);
+EXPORT_WRAP_1_DEF(DisplayConsole, const char*);
 
 #undef EXPORTER_PTR

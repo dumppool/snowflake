@@ -28,15 +28,19 @@ D3D11::FRenderContext::FRenderContext()
 	, DepthStencil(nullptr)
 	, GlobalConstantBuffer(new FConstantBuffer)
 	, ActivedPipeline(nullptr)
-	, Thread(new FTickThread(this, "RenderContext"))
 	, Commands(true)
 	, Initializer(nullptr)
+	, bIsThreadRunning(true)
+	, Thread(new FThread(this, "Render Context"))
 {
 }
 
 D3D11::FRenderContext::~FRenderContext()
 {
-	SAFE_DELETE(Thread);
+	if (bIsThreadRunning)
+	{
+		SAFE_DELETE(Thread);
+	}
 }
 
 bool D3D11::FRenderContext::Initialize()
@@ -97,6 +101,18 @@ void D3D11::FRenderContext::Destroy()
 
 	//ReportLiveObjects();
 	Device = nullptr;
+
+	bIsThreadRunning = false;
+}
+
+bool D3D11::FRenderContext::IsThreadPrivate() const
+{
+	return false;
+}
+
+bool D3D11::FRenderContext::IsLoop() const
+{
+	return true;
 }
 
 void D3D11::FRenderContext::InitializeDevice(LostCore::EContextID id, HWND wnd, bool bWindowed, int32 width, int32 height)

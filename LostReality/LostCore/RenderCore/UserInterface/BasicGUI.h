@@ -155,11 +155,19 @@ namespace LostCore
 		IConstantBuffer* RectBuffer;
 	};
 
-	class FBasicGUI
+	class FGUI
 	{
 	public:
-		FBasicGUI();
-		~FBasicGUI();
+		static void StaticInitialize();
+		static void StaticDestroy();
+		static FGUI* Get();
+
+	private:
+		static FGUI* SInstance;
+
+	public:
+		FGUI();
+		~FGUI();
 
 		bool Initialize(const FFloat2& size);
 		void Destroy();

@@ -178,7 +178,7 @@ namespace LostCore
 	}
 
 	template <typename T>
-	FORCEINLINE T InCircle(T value, T circle)
+	FORCEINLINE T InCycle(T value, T circle)
 	{
 		T result = value - ((int)(value / circle)) * circle;
 		if (value < 0)
@@ -192,7 +192,7 @@ namespace LostCore
 	template <typename T>
 	FORCEINLINE T InRange(T value, T rangeMin, T rangeMax)
 	{
-		return InCircle(value - rangeMin, rangeMax - rangeMin) + rangeMin;
+		return InCycle(value - rangeMin, rangeMax - rangeMin) + rangeMin;
 	}
 
 	FORCEINLINE uint32 GetAlignedSize(uint32 sz, uint32 alignment)

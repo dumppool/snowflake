@@ -89,7 +89,8 @@
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
             this.ViewPanelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ClearSceneToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.RecordProfileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.RecordConsoleTSMI = new System.Windows.Forms.ToolStripMenuItem();
+            this.SwitchConsoleTSMI = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripComboBox1 = new System.Windows.Forms.ToolStripComboBox();
@@ -806,7 +807,8 @@
             this.toolStripMenuItem2.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.ViewPanelToolStripMenuItem,
             this.ClearSceneToolStripMenuItem,
-            this.RecordProfileToolStripMenuItem});
+            this.RecordConsoleTSMI,
+            this.SwitchConsoleTSMI});
             this.toolStripMenuItem2.Name = "toolStripMenuItem2";
             this.toolStripMenuItem2.Size = new System.Drawing.Size(34, 24);
             this.toolStripMenuItem2.Text = "%";
@@ -823,11 +825,17 @@
             this.ClearSceneToolStripMenuItem.Size = new System.Drawing.Size(181, 26);
             this.ClearSceneToolStripMenuItem.Text = "清空场景";
             // 
-            // RecordProfileToolStripMenuItem
+            // RecordConsoleTSMI
             // 
-            this.RecordProfileToolStripMenuItem.Name = "RecordProfileToolStripMenuItem";
-            this.RecordProfileToolStripMenuItem.Size = new System.Drawing.Size(181, 26);
-            this.RecordProfileToolStripMenuItem.Text = "记录Profile";
+            this.RecordConsoleTSMI.Name = "RecordConsoleTSMI";
+            this.RecordConsoleTSMI.Size = new System.Drawing.Size(181, 26);
+            this.RecordConsoleTSMI.Text = "记录控制台";
+            // 
+            // SwitchConsoleTSMI
+            // 
+            this.SwitchConsoleTSMI.Name = "SwitchConsoleTSMI";
+            this.SwitchConsoleTSMI.Size = new System.Drawing.Size(181, 26);
+            this.SwitchConsoleTSMI.Text = "切换控制台";
             // 
             // toolStripMenuItem3
             // 
@@ -953,7 +961,8 @@
         private System.Windows.Forms.TextBox RayTestResult;
         private System.Windows.Forms.SaveFileDialog saveFileDialog1;
         private System.Windows.Forms.CheckBox DisplayAnimationListCheckBox;
-        private System.Windows.Forms.ToolStripMenuItem RecordProfileToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem RecordConsoleTSMI;
+        private System.Windows.Forms.ToolStripMenuItem SwitchConsoleTSMI;
     }
 }
 

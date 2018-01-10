@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include "Inc/BasicGUI.h"
+#include "BasicGUI.h"
 
 namespace LostCore
 {

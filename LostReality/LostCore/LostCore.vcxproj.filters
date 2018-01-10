@@ -41,9 +41,6 @@
     <ClInclude Include="Inc\File\DirectoryHelper.h">
       <Filter>Inc\File</Filter>
     </ClInclude>
-    <ClInclude Include="Inc\BasicGUI.h">
-      <Filter>Inc</Filter>
-    </ClInclude>
     <ClInclude Include="Inc\Animation.h">
       <Filter>Inc</Filter>
     </ClInclude>
@@ -116,9 +113,6 @@
     <ClInclude Include="Inc\Misc\Pointers.h">
       <Filter>Inc\Misc</Filter>
     </ClInclude>
-    <ClInclude Include="Inc\Misc\Counters.h">
-      <Filter>Inc\Misc</Filter>
-    </ClInclude>
     <ClInclude Include="Inc\Interface\Drawable.h">
       <Filter>Inc\Interface</Filter>
     </ClInclude>
@@ -179,13 +173,7 @@
     <ClInclude Include="RenderCore\Light\SpotLight.h">
       <Filter>RenderCore\Light</Filter>
     </ClInclude>
-    <ClInclude Include="Inc\Misc\CounterMgr.h">
-      <Filter>Inc\Misc</Filter>
-    </ClInclude>
     <ClInclude Include="Inc\Misc\CommandQueue.h">
-      <Filter>Inc\Misc</Filter>
-    </ClInclude>
-    <ClInclude Include="Inc\Misc\Exceptions.h">
       <Filter>Inc\Misc</Filter>
     </ClInclude>
     <ClInclude Include="RenderCore\UserInterface\FontTile.h">
@@ -198,6 +186,27 @@
       <Filter>Inc\Misc</Filter>
     </ClInclude>
     <ClInclude Include="RenderCore\UserInterface\TextSheet.h">
+      <Filter>RenderCore\UserInterface</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\Misc\PerformanceCounters.h">
+      <Filter>Inc\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\Misc\MemoryCounters.h">
+      <Filter>Inc\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\Misc\StackCounters.h">
+      <Filter>Inc\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderCore\Console\MemoryCounterConsole.h">
+      <Filter>RenderCore\Console</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderCore\Console\ConsoleInterface.h">
+      <Filter>RenderCore\Console</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderCore\TickGroup.h">
+      <Filter>RenderCore</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderCore\UserInterface\BasicGUI.h">
       <Filter>RenderCore\UserInterface</Filter>
     </ClInclude>
   </ItemGroup>
@@ -268,6 +277,15 @@
     </ClCompile>
     <ClCompile Include="RenderCore\UserInterface\TextSheet.cpp">
       <Filter>RenderCore\UserInterface</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderCore\Console\MemoryCounterConsole.cpp">
+      <Filter>RenderCore\Console</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderCore\Console\ConsoleInterface.cpp">
+      <Filter>RenderCore\Console</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderCore\TickGroup.cpp">
+      <Filter>RenderCore</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

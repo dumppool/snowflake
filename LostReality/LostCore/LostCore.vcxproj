@@ -151,7 +151,6 @@
   <ItemGroup>
     <ClInclude Include="Inc\Animation.h" />
     <ClInclude Include="Inc\BasicCamera.h" />
-    <ClInclude Include="Inc\BasicGUI.h" />
     <ClInclude Include="Inc\BasicInterface.h" />
     <ClInclude Include="Inc\BasicModel.h" />
     <ClInclude Include="Inc\BasicScene.h" />
@@ -188,15 +187,15 @@
     <ClInclude Include="Inc\Math\Vector4.h" />
     <ClInclude Include="Inc\Misc\CommandQueue.h" />
     <ClInclude Include="Inc\Misc\Constants.h" />
-    <ClInclude Include="Inc\Misc\CounterMgr.h" />
-    <ClInclude Include="Inc\Misc\Counters.h" />
-    <ClInclude Include="Inc\Misc\Exceptions.h" />
     <ClInclude Include="Inc\Misc\Export.h" />
     <ClInclude Include="Inc\Misc\IDAllocator.h" />
     <ClInclude Include="Inc\Misc\Includs.h" />
     <ClInclude Include="Inc\Misc\Log.h" />
     <ClInclude Include="Inc\Misc\Macros.h" />
+    <ClInclude Include="Inc\Misc\MemoryCounters.h" />
+    <ClInclude Include="Inc\Misc\PerformanceCounters.h" />
     <ClInclude Include="Inc\Misc\Pointers.h" />
+    <ClInclude Include="Inc\Misc\StackCounters.h" />
     <ClInclude Include="Inc\Misc\StringUtils.h" />
     <ClInclude Include="Inc\Misc\Thread.h" />
     <ClInclude Include="Inc\Misc\Tls.h" />
@@ -205,10 +204,14 @@
     <ClInclude Include="Inc\Serialize\Serialization.h" />
     <ClInclude Include="Inc\Serialize\StructSerialize.h" />
     <ClInclude Include="Inc\VertexTypes.h" />
+    <ClInclude Include="RenderCore\Console\ConsoleInterface.h" />
+    <ClInclude Include="RenderCore\Console\MemoryCounterConsole.h" />
     <ClInclude Include="RenderCore\Console\StackCounterConsole.h" />
     <ClInclude Include="RenderCore\Light\DirectionalLight.h" />
     <ClInclude Include="RenderCore\Light\PointLight.h" />
     <ClInclude Include="RenderCore\Light\SpotLight.h" />
+    <ClInclude Include="RenderCore\TickGroup.h" />
+    <ClInclude Include="RenderCore\UserInterface\BasicGUI.h" />
     <ClInclude Include="RenderCore\UserInterface\FontProvider.h" />
     <ClInclude Include="RenderCore\UserInterface\FontTile.h" />
     <ClInclude Include="RenderCore\UserInterface\ListBox.h" />
@@ -221,6 +224,8 @@
     <ClCompile Include="RenderCore\BasicModel.cpp" />
     <ClCompile Include="RenderCore\BasicScene.cpp" />
     <ClCompile Include="RenderCore\CameraFactory.cpp" />
+    <ClCompile Include="RenderCore\Console\ConsoleInterface.cpp" />
+    <ClCompile Include="RenderCore\Console\MemoryCounterConsole.cpp" />
     <ClCompile Include="RenderCore\Console\StackCounterConsole.cpp" />
     <ClCompile Include="RenderCore\Gizmo\GizmoAxis.cpp" />
     <ClCompile Include="RenderCore\Gizmo\GizmoLine.cpp" />
@@ -230,6 +235,7 @@
     <ClCompile Include="RenderCore\Light\SpotLight.cpp" />
     <ClCompile Include="RenderCore\ModelFactory.cpp" />
     <ClCompile Include="RenderCore\Skeleton\Animation.cpp" />
+    <ClCompile Include="RenderCore\TickGroup.cpp" />
     <ClCompile Include="RenderCore\UserInterface\BasicGUI.cpp" />
     <ClCompile Include="RenderCore\UserInterface\FontProvider.cpp" />
     <ClCompile Include="RenderCore\UserInterface\FontTile.cpp" />

@@ -379,16 +379,34 @@ void LostCore::FRect::CommitPrivate()
 	}
 }
 
-LostCore::FBasicGUI::FBasicGUI()
+FGUI* FGUI::SInstance = nullptr;
+void LostCore::FGUI::StaticInitialize()
+{
+	assert(FGUI::SInstance == nullptr);
+	FGUI::SInstance = new FGUI;
+}
+
+void LostCore::FGUI::StaticDestroy()
+{
+	assert(FGUI::SInstance != nullptr);
+	SAFE_DELETE(FGUI::SInstance);
+}
+
+LostCore::FGUI* LostCore::FGUI::Get()
+{
+	return FGUI::SInstance;
+}
+
+LostCore::FGUI::FGUI()
 {
 }
 
-LostCore::FBasicGUI::~FBasicGUI()
+LostCore::FGUI::~FGUI()
 {
 	Destroy();
 }
 
-void LostCore::FBasicGUI::Tick()
+void LostCore::FGUI::Tick()
 {
 	static FStackCounterRequest SCounter("FBasicGUI::Tick");
 	FScopedStackCounterRequest scopedCounter(SCounter);
@@ -406,7 +424,7 @@ void LostCore::FBasicGUI::Tick()
 	}
 }
 
-bool LostCore::FBasicGUI::Initialize(const FFloat2& size)
+bool LostCore::FGUI::Initialize(const FFloat2& size)
 {
 	Root = new FRect;
 	Root->SetOffsetLocal(FFloat2(0.f, 0.f));
@@ -415,7 +433,7 @@ bool LostCore::FBasicGUI::Initialize(const FFloat2& size)
 	return true;
 }
 
-void LostCore::FBasicGUI::Destroy()
+void LostCore::FGUI::Destroy()
 {
 	SAFE_DELETE(Root);
 }

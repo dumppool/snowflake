@@ -54,7 +54,7 @@ public:
 	virtual void Destroy() override;
 
 private:
-	LostCore::FTickThread* EntryThread;
+	LostCore::FThread* EntryThread;
 	LostCore::TSynchronizer<vector<int>> Seq;
 	vector<FCountPrimeNumsTask*> Tasks;
 	vector<LostCore::FThread*> Workers;
@@ -107,7 +107,7 @@ public:
 	virtual void Destroy() override;
 
 private:
-	LostCore::FTickThread* Thread;
+	LostCore::FThread* Thread;
 	LostCore::TSynchronizer<int32> Data;
 	LostCore::TSynchronizer<LostCore::FCommandQueue<FCmd>> Cmds;
 };
@@ -115,7 +115,7 @@ private:
 class FObj11;
 class FSyncHost : public LostCore::ITickTask
 {
-	LostCore::FTickThread* Thread;
+	LostCore::FThread* Thread;
 	FSyncGuest* Guest;
 	vector<string> Messages;
 	vector<FObj11*> Pending;

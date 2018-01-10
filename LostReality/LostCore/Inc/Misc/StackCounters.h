@@ -1,5 +1,5 @@
 /*
-* file Counters.h
+* file StackCounters.h
 *
 * author luoxw
 * date 2017/09/15
@@ -70,16 +70,25 @@ namespace LostCore
 		FORCEINLINE void MergeLeaves();
 	};
 
-	class FStackCounterManager : public FTlsSingleton<FStackCounterManager, 1>
+	typedef vector<vector<string>> FStackInfo;
+	class FStackCounterCollector : public TProcessUniqueSingleton<FStackCounterCollector, 2>
 	{
+	public:
+		FORCEINLINE virtual void Tick() override;
 
-		int32 LastAllocatedID;
-		vector<int32> IDPool;
+		FORCEINLINE string GetName(const string& threadName) const;
+		FORCEINLINE void OnNotified(const FStackInfo& info);
 
-		// Frame data.
-		FStackCounter* Current;
-		FStackCounter Root;
-		vector<vector<string>> Statistics;
+		FORCEINLINE vector<string> GetStackNames();
+		FORCEINLINE FStackInfo GetStackInfo(const string& name);
+
+	private:
+		map<string, FStackInfo> StackInfos;
+		mutex StackInfoMutex;
+	};
+
+	class FStackCounterManager : public TTlsSingleton<FStackCounterManager, 1>
+	{
 
 	public:
 		static const int32 SMaxID = (1 << 20);
@@ -87,6 +96,9 @@ namespace LostCore
 		static const int32 SOthers = 1;
 
 		FORCEINLINE FStackCounterManager();
+		FORCEINLINE virtual ~FStackCounterManager() override;
+
+		FORCEINLINE virtual void Tick() override;
 
 		FORCEINLINE void Start(const FStackCounterRequest& request);
 		FORCEINLINE void Stop(const FStackCounterRequest& request);
@@ -99,7 +111,15 @@ namespace LostCore
 
 		FORCEINLINE void Finish();
 		FORCEINLINE void RecycleCounters();
-		FORCEINLINE vector<vector<string>> GetDisplayContent() const;
+
+	private:
+
+		int32 LastAllocatedID;
+		vector<int32> IDPool;
+
+		// Frame data.
+		FStackCounter* Current;
+		FStackCounter Root;
 	};
 
 	FStackCounterRequest::FStackCounterRequest(const string& name)
@@ -281,6 +301,16 @@ namespace LostCore
 		Current = &Root;
 	}
 
+	FStackCounterManager::~FStackCounterManager()
+	{
+
+	}
+
+	void FStackCounterManager::Tick()
+	{
+		Finish();
+	}
+
 	void FStackCounterManager::RecycleCounters()
 	{
 		assert(Current == &Root || Current == nullptr);
@@ -291,11 +321,6 @@ namespace LostCore
 		{
 			DeallocCounter(item);
 		}
-	}
-
-	vector<vector<string>> FStackCounterManager::GetDisplayContent() const
-	{
-		return Statistics;
 	}
 
 	void FStackCounterManager::Start(const FStackCounterRequest& request)
@@ -348,16 +373,66 @@ namespace LostCore
 		Root.Stop();
 		Root.MergeLeaves();
 
-		Statistics.clear();
+		vector<vector<string>> statistics;
 		vector<FStackCounter*> counters;
 		Root.GetVisibleChildCounters(counters);
 
 		for (auto item : counters)
 		{
-			Statistics.push_back(item->GetDescs(">> "));
+			statistics.push_back(item->GetDescs(">> "));
 		}
+
+		FStackCounterCollector::Get()->OnNotified(statistics);
 
 		RecycleCounters();
 		Root.Start(nullptr);
+	}
+
+	void FStackCounterCollector::Tick()
+	{
+
+	}
+
+	std::string FStackCounterCollector::GetName(const string& threadName) const
+	{
+		return threadName + " Stack";
+	}
+
+	void FStackCounterCollector::OnNotified(const FStackInfo& info)
+	{
+		lock_guard<mutex> lck(StackInfoMutex);
+		auto name = GetName(FProcessUnique::Get()->GetCurrentThread()->GetName());
+		//StackInfos[GetName(name)] = info;
+		if (StackInfos.find(name) == StackInfos.end())
+		{
+			StackInfos[name] = info;
+		}
+		else
+		{
+			StackInfos[name] = info;
+		}
+	}
+
+	std::vector<std::string> FStackCounterCollector::GetStackNames()
+{
+		vector<string> result;
+		for (auto& item : StackInfos)
+		{
+			result.push_back(item.first);
+		}
+
+		return result;
+	}
+
+	FStackInfo FStackCounterCollector::GetStackInfo(const string& name)
+	{
+		lock_guard<mutex> lck(StackInfoMutex);
+		auto it = StackInfos.find(name);
+		if (it == StackInfos.end())
+		{
+			return FStackInfo();
+		}
+
+		return it->second;
 	}
 }

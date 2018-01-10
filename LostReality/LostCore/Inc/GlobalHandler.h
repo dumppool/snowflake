@@ -16,6 +16,8 @@
 #define GET_MODULE LostCore::GetModule_LostCore
 #define EXPORT_API LOSTCORE_API
 
+typedef char* FStrArr;
+
 namespace LostCore
 {
 	static const char* SModuleName = "LostCore.dll";
@@ -113,6 +115,8 @@ namespace LostCore
 		bool forceRegenerateTangent,
 		bool generateTangentIfNotFound)> Callback_X;
 
+	typedef function<void(FStrArr, int32, int32*)> Callback_SAI;
+
 	class FGlobalHandler
 	{
 
@@ -152,6 +156,8 @@ namespace LostCore
 		Callback_V EndDragCallback;
 		Callback_IS AssetOperateCallback;
 		Callback_V RecordProfileCallback;
+		Callback_SAI GetConsoleNamesCallback;
+		Callback_S DisplayConsoleCallback;
 
 	public: // 导出函数调用.		
 		EReturnCode InitializeProcessUnique();
@@ -193,6 +199,9 @@ namespace LostCore
 		EReturnCode OnEndDrag();
 		EReturnCode AssetOperate(int32 op, const char* url);
 		EReturnCode RecordProfile();
+		EReturnCode DeallocateStringArray(FStrArr str, int32 count);
+		EReturnCode GetConsoleNames(FStrArr names, int32 sz, int32* count);
+		EReturnCode DisplayConsole(const char* name);
 
 	public: // 模块内部方法.
 		FGlobalHandler();
@@ -223,6 +232,8 @@ namespace LostCore
 		void SetEndDragCallback(Callback_V callback);
 		void SetAssetOperateCallback(Callback_IS callback);
 		void SetRecordProfileCallback(Callback_V callback);
+		void SetGetConsoleNamesCallback(Callback_SAI callback);
+		void SetDisplayConsoleCallback(Callback_S callback);
 
 		void UpdateFlagAndName(EUpdateFlag flag, const string& name);
 		void UpdateFlagAnd32Bit(EUpdateFlag flag, uint32 val);
@@ -254,3 +265,6 @@ EXPORT_WRAP_2_DCL(OnDragging, int32, int32);
 EXPORT_WRAP_0_DCL(OnEndDrag);
 EXPORT_WRAP_2_DCL(AssetOperate, int32, const char*);
 EXPORT_WRAP_0_DCL(RecordProfile);
+EXPORT_WRAP_2_DCL(DeallocateStringArray, FStrArr, int32);
+EXPORT_WRAP_3_DCL(GetConsoleNames, FStrArr, int32, int32*);
+EXPORT_WRAP_1_DCL(DisplayConsole, const char*);

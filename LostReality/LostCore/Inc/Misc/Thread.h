@@ -11,6 +11,14 @@
 namespace LostCore
 {
 	class FThread;
+	class ITickable
+	{
+	public:
+		virtual ~ITickable() {}
+		virtual void Tick() = 0;
+	};
+
+	typedef map<int32, ITickable*> FTickableObjects;
 
 	enum class ECondition : uint8
 	{
@@ -38,15 +46,18 @@ namespace LostCore
 		vector<T> Objects;
 	};
 
-	class ITickTask
+	class ITask
 	{
 	public:
+		virtual ~ITask() {}
 		virtual bool Initialize() = 0;
 		virtual void Tick() = 0;
 		virtual void Destroy() = 0;
+		virtual bool IsThreadPrivate() const = 0;
+		virtual bool IsLoop() const = 0;
 	};
 
-	class FProcessUnique : public ITickTask
+	class FProcessUnique : public ITask
 	{
 	public:
 		static FORCEINLINE FProcessUnique* Get()
@@ -54,6 +65,7 @@ namespace LostCore
 			return SInstance;
 		}
 
+		// 只有exe模块可以初始化.
 		static FORCEINLINE void StaticInitialize()
 		{
 			SInstance = new FProcessUnique;
@@ -67,6 +79,7 @@ namespace LostCore
 			SIsOriginal = false;
 		}
 
+		// dll模块只能使用SetInstance接受exe的静态实例.
 		static FORCEINLINE void SetInstance(FProcessUnique* instance)
 		{
 			SInstance = instance;
@@ -75,16 +88,21 @@ namespace LostCore
 
 	public:
 		FORCEINLINE FProcessUnique();
-		FORCEINLINE ~FProcessUnique();
-
-		FORCEINLINE void AddThread(FThread* t);
-		FORCEINLINE void RemoveThread(FThread* t);
-		FORCEINLINE FThread* GetCurrentThread();
+		FORCEINLINE virtual ~FProcessUnique() override;
 
 		// Inherited via ITickTask
 		FORCEINLINE virtual bool Initialize() override;
 		FORCEINLINE virtual void Tick() override;
 		FORCEINLINE virtual void Destroy() override;
+		FORCEINLINE virtual bool IsThreadPrivate() const override;
+		FORCEINLINE virtual bool IsLoop() const override;
+
+		FORCEINLINE void AddThread(FThread* t);
+		FORCEINLINE void RemoveThread(FThread* t);
+		FORCEINLINE FThread* GetCurrentThread();
+
+		template <typename T>
+		FORCEINLINE T* GetSingleton(int32 index);
 
 	private:
 	
@@ -94,86 +112,58 @@ namespace LostCore
 		typedef function<void()> FCmd;
 		FCommandQueue<FCmd> Commands;
 
-		FThread* EntryThread;
+		FThread* GuardThread;
+		FTickableObjects Singletons;
+		mutex SingletonsMutex;
 
 		static bool SIsOriginal;
 		static FProcessUnique* SInstance;
 
 	};
 
-	class IPayload
+	template <typename T, int32 ClassIndex>
+	class TProcessUniqueSingleton : public ITickable
 	{
 	public:
-		virtual void Execute() = 0;
-		virtual void OnFinished(double sec) = 0;
-		virtual bool IsThreadPrivate() = 0;
+		static const int32 SClassIndex = ClassIndex;
+		static T* Get()
+		{
+			return FProcessUnique::Get()->GetSingleton<T>(SClassIndex);
+		}
 	};
 
 	class FThread
 	{
-		class FPrivate : public IPayload
-		{
-		public:
-			FORCEINLINE explicit FPrivate(const function<void()>& payload);
-
-			// Inherited via IPayload
-			FORCEINLINE virtual void Execute() override;
-			FORCEINLINE virtual void OnFinished(double sec) override;
-			FORCEINLINE virtual bool IsThreadPrivate() override;
-
-		private:
-			function<void()> Payload;
-		};
-
 	public:
 		FORCEINLINE FThread();
-		FORCEINLINE FThread(IPayload* task, const string& name, uint32 affinityMask = 0xff);
-		FORCEINLINE FThread(const function<void()>& task, const string& name, uint32 affinityMask = 0xff);
+		FORCEINLINE FThread(ITask* task, const string& name, uint32 affinityMask = 0xff);
 		FORCEINLINE virtual ~FThread();
 
 		FORCEINLINE virtual thread::id GetId() const;
 		FORCEINLINE virtual string GetName() const;
 		FORCEINLINE virtual void SetTickSeconds(double sec);
 		FORCEINLINE virtual double GetTickSeconds() const;
-		FORCEINLINE virtual void* GetSingleton(int32 index);
-		FORCEINLINE virtual void AddSingleton(int32 index, void* singleton);
+		FORCEINLINE virtual ITickable* GetSingleton(int32 index);
+		FORCEINLINE virtual void AddSingleton(int32 index, ITickable* singleton);
 		FORCEINLINE virtual void SetAffinity(uint32 mask);
 		FORCEINLINE virtual uint32 GetAffinity() const;
-		FORCEINLINE virtual IPayload* GetPayload();
+		FORCEINLINE virtual ITask* GetPayload();
 
 	protected:
 		// Thread线程执行.
-		FORCEINLINE void Run();
+		FORCEINLINE virtual void Run();
 		FORCEINLINE void Destroy();
 
 	private:
-		typedef map<int32, void*> FIndexedAddress;
 
-		IPayload* Payload;
+		ITask* Task;
 		string Name;
 		bool bRunning;
-		FIndexedAddress IndexedSingletonMap;
 		double TickSeconds;
 		uint32 AffinityMask;
 
-	protected:
+		FTickableObjects IndexedSingletonMap;
 		thread Thread;
-	};
-
-	class FTickThread : public FThread
-	{
-	public:
-		FORCEINLINE FTickThread(ITickTask* task, const string& name, uint32 affinityMask = 0xff);
-		FORCEINLINE virtual ~FTickThread() override;
-
-	private:
-		// Thread线程执行.
-		FORCEINLINE void RunTick();
-
-	private:
-
-		ITickTask* Task;
-		bool bRunning;
 	};
 
 	FORCEINLINE int32 GetThreadId(thread::id id)
@@ -185,14 +175,13 @@ namespace LostCore
 
 	FProcessUnique::FProcessUnique()
 		: Commands(true)
-		, EntryThread(new FTickThread(this, "FProcessUnique"))
+		, GuardThread(new FThread(this, "Guard"))
 	{
 	}
 	
 	FProcessUnique::~FProcessUnique()
 	{
-		SAFE_DELETE(EntryThread);
-		assert(ThreadMap.empty());
+		SAFE_DELETE(GuardThread);
 	}
 	
 	void FProcessUnique::AddThread(FThread * t)
@@ -217,6 +206,26 @@ namespace LostCore
 		return ThreadMap.find(this_thread::get_id())->second;
 	}
 
+	template <typename T>
+	T* FProcessUnique::GetSingleton(int32 index)
+	{
+		auto it = Singletons.find(index);
+		if (it == Singletons.end())
+		{
+			lock_guard<mutex> lck(SingletonsMutex);
+			it = Singletons.find(index);
+			if (it == Singletons.end())
+			{
+				it = Singletons.insert(FTickableObjects::value_type(index, new T)).first;
+			}
+
+			assert(it != Singletons.end());
+			return dynamic_cast<T*>(it->second);
+		}
+
+		return dynamic_cast<T*>(it->second);
+	}
+
 	bool FProcessUnique::Initialize()
 	{
 		return true;
@@ -233,58 +242,54 @@ namespace LostCore
 
 	void FProcessUnique::Destroy()
 	{
+		// 忽略线程之间的调用关系，直接干掉线程及线程任务对象很不明智
+		for (auto& item : ThreadMap)
+		{
+			throw exception("Survivor thread found");
+			SAFE_DELETE(item.second);
+		}
+		ThreadMap.clear();
+
+		for (auto& item : Singletons)
+		{
+			SAFE_DELETE(item.second);
+		}
+		Singletons.clear();
+
+		assert(ThreadMap.empty());
 	}
 
-	FThread::FPrivate::FPrivate(const function<void()>& payload)
-		: Payload(payload)
-	{}
-
-	void FThread::FPrivate::Execute()
+	bool FProcessUnique::IsThreadPrivate() const
 	{
-		assert(Payload != nullptr);
-		Payload();
+		return false;
 	}
 
-	void FThread::FPrivate::OnFinished(double sec)
-	{
-	}
-
-	bool FThread::FPrivate::IsThreadPrivate()
+	bool FProcessUnique::IsLoop() const
 	{
 		return true;
 	}
 
 	FThread::FThread()
 		: Name("unnamed")
-		, Payload(nullptr)
+		, Task(nullptr)
 	{
 	}
 
-	FThread::FThread(IPayload * task, const string & name, uint32 affinityMask)
-		: Payload(task)
+	FThread::FThread(ITask * task, const string & name, uint32 affinityMask)
+		: Task(task)
 		, Name(name)
 		, AffinityMask(affinityMask)
+		, bRunning(true)
 	{
 		if (task != nullptr)
 		{
-			Thread = thread([&]() {Run(); });
-		}
-	}
-
-	FThread::FThread(const function<void()>& task, const string& name, uint32 affinityMask)
-		: Name(name)
-		, AffinityMask(affinityMask)
-	{
-		if (task != nullptr)
-		{
-			Payload = new FPrivate(task);
-			this_thread::yield();
 			Thread = thread([&]() {Run(); });
 		}
 	}
 
 	FThread::~FThread()
 	{
+		bRunning = false;
 		if (Thread.joinable())
 		{
 			Thread.join();
@@ -311,7 +316,7 @@ namespace LostCore
 		return TickSeconds;
 	}
 
-	void * FThread::GetSingleton(int32 index)
+	ITickable * FThread::GetSingleton(int32 index)
 	{
 		assert(this_thread::get_id() == Thread.get_id());
 		auto it = IndexedSingletonMap.find(index);
@@ -325,7 +330,7 @@ namespace LostCore
 		}
 	}
 
-	void FThread::AddSingleton(int32 index, void * singleton)
+	FORCEINLINE void FThread::AddSingleton(int32 index, ITickable* singleton)
 	{
 		assert(this_thread::get_id() == Thread.get_id());
 		assert(IndexedSingletonMap.find(index) == IndexedSingletonMap.end());
@@ -343,33 +348,49 @@ namespace LostCore
 		return AffinityMask;
 	}
 
-	IPayload * FThread::GetPayload()
+	ITask * FThread::GetPayload()
 	{
-		return Payload;
+		return Task;
 	}
 
 	void FThread::Run()
 	{
-		auto timeStamp = FPerformanceCounter::GetTimeStamp();
-
-		assert(Payload != nullptr);
+		assert(Task != nullptr);
+		// 没有sleep,this_thread::get_id为0???
 		this_thread::sleep_for(chrono::milliseconds(1));
-		SetAffinity(AffinityMask);
+
+		SetAffinity(GetAffinity());
 		FProcessUnique::Get()->AddThread(this);
-
-		Payload->Execute();
-
-		Destroy();
-
-		TickSeconds = FPerformanceCounter::GetSeconds(timeStamp);
-		Payload->OnFinished(TickSeconds);
-
-		if (Payload->IsThreadPrivate())
+		if (!Task->Initialize())
 		{
-			SAFE_DELETE(Payload);
+			Destroy();
+			return;
 		}
 
-		Payload = nullptr;
+		LARGE_INTEGER timeStamp = FPerformanceCounter::GetTimeStamp();
+
+		do
+		{
+			Task->Tick();
+			SetTickSeconds(FPerformanceCounter::GetSeconds(timeStamp));
+			timeStamp = FPerformanceCounter::GetTimeStamp();
+
+			for (auto& item : IndexedSingletonMap)
+			{
+				item.second->Tick();
+			}
+
+			this_thread::sleep_for(chrono::microseconds(10));
+		} while (Task->IsLoop() && bRunning);
+
+		Task->Destroy();
+		if (Task->IsThreadPrivate())
+		{
+			SAFE_DELETE(Task);
+		}
+
+		Task = nullptr;
+		Destroy();
 	}
 
 	void FThread::Destroy()
@@ -385,52 +406,6 @@ namespace LostCore
 
 		IndexedSingletonMap.clear();
 		FProcessUnique::Get()->RemoveThread(this);
-	}
-
-	FTickThread::FTickThread(ITickTask* task, const string& name, uint32 affinityMask)
-		: FThread(nullptr, name, affinityMask)
-		, Task(task)
-		, bRunning(true)
-	{
-		if (task != nullptr)
-		{
-			Thread = thread([&]() {RunTick(); });
-		}
-	}
-
-	FTickThread::~FTickThread()
-	{
-		bRunning = false;
-	}
-	
-	void FTickThread::RunTick()
-	{
-		assert(Task != nullptr);
-		// 没有sleep,this_thread::get_id为0???
-		this_thread::sleep_for(chrono::milliseconds(1));
-
-		SetAffinity(GetAffinity());
-		FProcessUnique::Get()->AddThread(this);
-		if (!Task->Initialize())
-		{
-			Destroy();
-			return;
-		}
-
-		LARGE_INTEGER timeStamp = FPerformanceCounter::GetTimeStamp();
-		while (bRunning)
-		{
-			SetTickSeconds(FPerformanceCounter::GetSeconds(timeStamp));
-
-			timeStamp = FPerformanceCounter::GetTimeStamp();
-			Task->Tick();
-			this_thread::sleep_for(chrono::microseconds(10));
-		}
-
-		Task->Destroy();
-		Task = nullptr;
-
-		Destroy();
 	}
 
 	template<typename T>

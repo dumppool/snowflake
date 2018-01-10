@@ -17,7 +17,7 @@ namespace LostWinForms
     public partial class Form1 : Form
     {
         // Dll import
-        public delegate void PFN_Logger(Int32 level, StringBuilder msg);
+        public delegate void PFN_Logger(int level, StringBuilder msg);
 
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public static extern void InitializeProcessUnique();
@@ -50,58 +50,73 @@ namespace LostWinForms
 
 
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern Int32 SetDisplayNormalLength(float len);
+        public static extern int SetDisplayNormalLength(float len);
 
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern Int32 MoveCamera(float x, float y, float z);
+        public static extern int MoveCamera(float x, float y, float z);
 
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern Int32 RotateCamera(float p, float y, float r);
+        public static extern int RotateCamera(float p, float y, float r);
 
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern Int32 SetAnimateRate(float rate);
+        public static extern int SetAnimateRate(float rate);
 
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern Int32 SetDisplayFlags(uint flags);
+        public static extern int SetDisplayFlags(uint flags);
 
         public delegate void PFN_UpdateFlagAndString(uint flag, StringBuilder str);
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern Int32 SetUpdateFlagAndString(PFN_UpdateFlagAndString pfn);
+        public static extern int SetUpdateFlagAndString(PFN_UpdateFlagAndString pfn);
 
         public delegate void PFN_UpdateFlagAnd32Bit(uint flag, UInt32 val);
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern Int32 SetUpdateFlagAnd32Bit(PFN_UpdateFlagAnd32Bit pfn);
+        public static extern int SetUpdateFlagAnd32Bit(PFN_UpdateFlagAnd32Bit pfn);
 
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern Int32 PlayAnimation(String anim);
+        public static extern int PlayAnimation(String anim);
 
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern Int32 ClearScene();
+        public static extern int ClearScene();
 
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern Int32 Shutdown();
+        public static extern int Shutdown();
 
         public delegate void PFN_UpdatePosAndRot(float x, float y, float z, float pitch, float yaw, float roll);
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern Int32 SetUpdatePosAndRot(PFN_UpdatePosAndRot pfn);
+        public static extern int SetUpdatePosAndRot(PFN_UpdatePosAndRot pfn);
 
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern Int32 OnHover(Int32 x, Int32 y);
+        public static extern int OnHover(int x, int y);
 
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern Int32 OnClick(Int32 x, Int32 y);
+        public static extern int OnClick(int x, int y);
 
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern Int32 OnDragging(Int32 x, Int32 y);
+        public static extern int OnDragging(int x, int y);
 
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern Int32 OnEndDrag();
+        public static extern int OnEndDrag();
 
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern Int32 AssetOperate(UInt32 flag, String url);
+        public static extern int AssetOperate(UInt32 flag, String url);
 
         [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern Int32 RecordProfile();
+        public static extern int RecordProfile();
+
+        [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="names"></param>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public static extern int GetConsoleNames(StringBuilder buf, int sz, ref int index);
+
+        [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public static extern int DeallocateStringArray(String[] names, int count);
+
+        [DllImport("LostCore.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public static extern int DisplayConsole(String name);
 
         private const uint AssetOperateLoadModel = 0;
         private const uint AssetOperateLoadAnimation = 1;
@@ -202,14 +217,16 @@ namespace LostWinForms
             ClearSceneToolStripMenuItem.Click += ClearSceneToolStripMenuItem_Click;
             DisplayAnimationListCheckBox.Click += DisplayAnimationListCheckBox_Click;
 
-            RecordProfileToolStripMenuItem.Click += RecordProfileToolStripMenuItem_Click;
+            RecordConsoleTSMI.Click += RecordProfileTSMI_Click;
+            //SwitchConsoleTSMI.Click += SwitchConsoleTSMI_Click;
+            SwitchConsoleTSMI.MouseHover += SwitchConsoleTSMI_Click;
         }
 
         private void ExternalCall(Delegate eh, params object[] args)
         {
         }
 
-        private void RecordProfileToolStripMenuItem_Click(object sender, EventArgs e)
+        private void RecordProfileTSMI_Click(object sender, EventArgs e)
         {
             RecordProfile();
         }
@@ -594,7 +611,7 @@ namespace LostWinForms
         }
 
         // 日志界面线程输出日志
-        private void LoggingActually(Int32 level, StringBuilder msg)
+        private void LoggingActually(int level, StringBuilder msg)
         {
             textBox1.Text += "\r\n" + DateTime.UtcNow.ToShortDateString() 
                 + DateTime.UtcNow.ToShortTimeString() + " " + LevelString[level] + msg;
@@ -603,7 +620,7 @@ namespace LostWinForms
         }
 
         // 输出日志回调
-        private void OnLogging(Int32 level, StringBuilder msg)
+        private void OnLogging(int level, StringBuilder msg)
         {
             textBox1.BeginInvoke(new PFN_Logger(LoggingActually), level, msg);
         }
@@ -613,10 +630,10 @@ namespace LostWinForms
         {
             if (!bInitialized)
             {
-                // 初始化tls
+                // 初始化进程守卫对象
                 InitializeProcessUnique();
 
-                // 初始化绘制窗口
+                // 初始化绘制窗口，启动编辑器线程
                 InitializeWindow(RenderPanel.Handle, true, (uint)RenderPanel.Width, (uint)RenderPanel.Height);
 
                 // 设置日志回调
@@ -679,6 +696,39 @@ namespace LostWinForms
         private void ViewPanelToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ViewPanel.Visible = true;
+        }
+        
+
+        private void SwitchConsoleTSMI_Click(object sender, EventArgs e)
+        {
+            SwitchConsoleTSMI.DropDownItems.Clear();
+            const int strSz = 128;
+            int curr = 0;
+            int left = 0;
+            Boolean stop = false;
+            while (!stop)
+            {
+                StringBuilder name = new StringBuilder(strSz);
+                left = curr;
+                GetConsoleNames(name, strSz, ref left);
+                if (left <= 0)
+                {
+                    stop = true;
+                }
+
+                if (0 <= left)
+                {
+                    ++curr;
+                    ToolStripMenuItem item = new ToolStripMenuItem(name.ToString());
+                    SwitchConsoleTSMI.DropDownItems.Add(item);
+                    item.Click += TSMI_Click;
+                }
+            }
+        }
+
+        private void TSMI_Click(object sender, EventArgs e)
+        {
+            DisplayConsole(sender.ToString());
         }
     }
 }

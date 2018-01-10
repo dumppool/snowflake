@@ -9,13 +9,15 @@
 
 #pragma once
 
-#include "Inc/BasicGUI.h"
+#include "BasicGUI.h"
 
 namespace LostCore
 {
 	class FFontTile : public FRect
 	{
 	public:
+		MEMORY_ALLOC(FFontTile);
+
 		class IListener
 		{
 		public:

@@ -14,7 +14,7 @@ namespace LostCore
 {
 
 	template <typename T, int32 ClassIndex>
-	class FTlsSingleton
+	class TTlsSingleton : public ITickable
 	{
 	public:
 		static const int32 SClassIndex = ClassIndex;
@@ -29,7 +29,7 @@ namespace LostCore
 				t->AddSingleton(T::SClassIndex, p);
 			}
 
-			return (T*)p;
+			return dynamic_cast<T*>(p);
 		}
 	};
 }
