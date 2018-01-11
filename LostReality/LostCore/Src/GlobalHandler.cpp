@@ -355,16 +355,6 @@ IRenderContext * LostCore::FGlobalHandler::GetRenderContext() const
 	}
 }
 
-void LostCore::FGlobalHandler::SetFrameTime(float sec)
-{
-	FrameTime = sec;
-}
-
-float LostCore::FGlobalHandler::GetFrameTime() const
-{
-	return FrameTime;
-}
-
 void LostCore::FGlobalHandler::SetMoveCameraCallback(Callback_FFF callback)
 {
 	MoveCameraCallback = callback;

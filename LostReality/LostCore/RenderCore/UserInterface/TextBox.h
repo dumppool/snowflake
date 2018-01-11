@@ -16,6 +16,8 @@ namespace LostCore
 	class FTextBox : public FRect
 	{
 	public:
+		MEMORY_ALLOC(FTextBox);
+
 		FTextBox();
 		virtual ~FTextBox() override;
 

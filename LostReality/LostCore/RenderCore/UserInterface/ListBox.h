@@ -16,6 +16,8 @@ namespace LostCore
 	class FListBox : public FRect
 	{
 	public:
+		MEMORY_ALLOC(FListBox);
+
 		enum class EAlignment : uint8
 		{
 			Vertical,

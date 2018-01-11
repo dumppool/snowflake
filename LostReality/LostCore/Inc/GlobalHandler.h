@@ -213,9 +213,6 @@ namespace LostCore
 		void SetRenderContextPP(IRenderContext** rc);
 		IRenderContext* GetRenderContext() const;
 
-		void SetFrameTime(float sec);
-		float GetFrameTime() const;
-
 		bool IsDisplay(uint32 flag) const;
 		void Logging(int32 level, const string& msg);
 

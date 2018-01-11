@@ -14,6 +14,8 @@ namespace D3D11
 	class FInstancingData : public LostCore::IInstancingData
 	{
 	public:
+		MEMORY_ALLOC(FInstancingData);
+
 		FInstancingData();
 		FInstancingData(const FInstancingData& rhs) = delete;
 		FInstancingData(FInstancingData&& rhs) = delete;

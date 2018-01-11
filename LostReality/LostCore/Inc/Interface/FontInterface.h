@@ -14,6 +14,8 @@ namespace LostCore
 	class FFontConfig
 	{
 	public:
+		MEMORY_ALLOC(FFontConfig);
+
 		std::wstring	FontName;
 		float			Height;
 		uint32			Weight;

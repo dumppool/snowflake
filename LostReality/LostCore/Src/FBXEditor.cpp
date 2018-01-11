@@ -473,8 +473,6 @@ void FFBXEditor::Tick()
 	auto sec = chrono::duration<float>(now - SLastStamp);
 	SLastStamp = now;
 
-	FGlobalHandler::Get()->SetFrameTime(sec.count());
-
 	FCmd cmd;
 	while (TickCommands.Pop(cmd))
 	{

@@ -152,6 +152,13 @@ void LostCore::FFontProvider::OnFinishCommit()
 		TextileData[index]->Update(RenderTextiles.data() + start, offset * sizeof(FTextileParameter), offset);
 	}
 
+	// 清除残留instancing数据造成的影响
+	for (; index < TransformData.size(); index++)
+	{
+		TransformData[index]->Update(nullptr, 0, 0);
+		TextileData[index]->Update(nullptr, 0, 0);
+	}
+
 	// Commit
 	assert(TransformData.size() == TextileData.size());
 	GdiFont->CommitShaderResource();

@@ -23,6 +23,7 @@ namespace LostCore
 		virtual ~FTextSheet() override;
 
 		virtual void Update() override;
+		virtual void Commit() override;
 
 		void Initialize();
 		void Destroy();
@@ -34,6 +35,8 @@ namespace LostCore
 
 	private:
 		void PrepareRows(int32 numRowsWanted);
+
+		bool bUpdated;
 
 		string Caption;
 		vector<string> Header;

@@ -14,6 +14,8 @@ namespace D3D11
 	class FPrimitiveGroup : public LostCore::IPrimitive
 	{
 	public:
+		MEMORY_ALLOC(FPrimitiveGroup);
+
 		FPrimitiveGroup();
 		FPrimitiveGroup(const FPrimitiveGroup& rhs);
 		FPrimitiveGroup(const FPrimitiveGroup&& ref);

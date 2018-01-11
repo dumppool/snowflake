@@ -14,6 +14,8 @@ namespace D3D11
 	class FTexture2D
 	{
 	public:
+		MEMORY_ALLOC(FTexture2D);
+
 		FTexture2D();
 		~FTexture2D();
 

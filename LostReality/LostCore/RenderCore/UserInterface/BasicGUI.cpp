@@ -145,7 +145,7 @@ bool LostCore::FRect::HitTest(const FFloat2 & ppos, FRect** result) const
 
 void LostCore::FRect::AddChild(FRect * child)
 {
-	if (child == nullptr || child->Parent != nullptr)
+	if (child == nullptr || child->Parent != nullptr || child == this)
 	{
 		assert(0);
 		return;
@@ -160,7 +160,7 @@ void LostCore::FRect::DelChild(FRect * child)
 {
 	if (child == nullptr || child->Parent != this)
 	{
-		assert(0);
+		assert("null child or invalid parent" && 0);
 		return;
 	}
 
@@ -185,6 +185,7 @@ void LostCore::FRect::PopChild(const function<void(FRect*)>& dealloc)
 	if (dealloc != nullptr)
 	{
 		auto child = Children.back();
+		child->Parent = nullptr;
 		dealloc(child);
 	}
 

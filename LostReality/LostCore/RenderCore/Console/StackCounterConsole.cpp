@@ -58,46 +58,11 @@ void LostCore::FStackCounterConsole::Refresh()
 	static FStackCounterRequest SCounter("FStackCounterConsole::FinishCounting");
 	FScopedStackCounterRequest scopedCounter(SCounter);
 
-	char head[128];
-	memset(head, 0, 128);
-	auto frameTime = FGlobalHandler::Get()->GetFrameTime();
-	snprintf(head, 127, "\t\t%.1fFPS %.2fms", 1.0f / frameTime, 1000 * frameTime);
-	string caption = string("Thread: ").append(FProcessUnique::Get()->GetCurrentThread()->GetName());
-	caption.append(head);
-
-	auto content = FStackCounterCollector::Get()->GetStackInfo(ActivePageName);
-	auto header = FStackCounter::GetDescHeader();
-	Sheet->SetCaption(caption);
+	auto info = FStackCounterCollector::Get()->GetStackInfo(ActivePageName);
+	auto header = FStackCounter::GetInfoHeader();
+	Sheet->SetCaption(info.first);
 	Sheet->SetHeader(header);
-	Sheet->AddRows(content);
-
-	if (bRecordNext)
-	{
-		ofstream stream;
-		string url("Statics-"), ext(".csv"), output;
-		FDirectoryHelper::Get()->GetSpecifiedAbsolutePath("Profile", url.append(GetNowStr(true)).append(ext), output);
-		stream.open(output);
-		stream << caption << "\n";
-
-		for (auto& item : header)
-		{
-			stream << item << ",";
-		}
-		stream << "\n";
-
-		for (auto& item : content)
-		{
-			for (auto& sub : item)
-			{
-				stream << sub << ",";
-			}
-			stream << "\n";
-		}
-		//stream << "Thread: " << FProcessUnique::Get()->GetCurrentThread()->GetName() << "\n";
-		//stream << "FrameTime: " << to_string(1000 * frameTime) << "ms, FPS: " << to_string(1 / frameTime) << "\n";
-		bRecordNext = false;
-		stream.close();
-	}
+	Sheet->AddRows(info.second);
 }
 
 void LostCore::FStackCounterConsole::Record()
@@ -106,7 +71,36 @@ void LostCore::FStackCounterConsole::Record()
 	{
 		return;
 	}
-	bRecordNext = true;
+
+	ofstream csv;
+	string url("Stack-"), ext(".csv"), output;
+	FDirectoryHelper::Get()->GetSpecifiedAbsolutePath("Profile", url.append(GetNowStr(true)).append(ext), output);
+	csv.open(output);
+
+	auto pageNames = FStackCounterCollector::Get()->GetStackNames();
+	for (auto& name : pageNames)
+	{
+		auto info = FStackCounterCollector::Get()->GetStackInfo(name);
+		csv << info.first << "\n";
+
+		auto header = FStackCounter::GetInfoHeader();
+		for (auto& item : header)
+		{
+			csv << item << ",";
+		}
+		csv << "\n";
+
+		for (auto& item : info.second)
+		{
+			for (auto& sub : item)
+			{
+				csv << sub << ",";
+			}
+			csv << "\n";
+		}
+	}
+
+	csv.close();
 }
 
 void LostCore::FStackCounterConsole::DisplayPage(const string& name)

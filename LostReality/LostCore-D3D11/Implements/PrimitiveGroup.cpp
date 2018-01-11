@@ -164,6 +164,11 @@ void D3D11::FPrimitiveGroup::Draw(const vector<FInstancingData*>& batch)
 		offsets.push_back(0);
 	}
 
+	if (!batch.empty() && instanceCount == 0)
+	{
+		return;
+	}
+
 	cxt->IASetVertexBuffers(0, vbs.size(), vbs.data(), strides.data(), offsets.data());
 	cxt->IASetIndexBuffer(IndexBuffer.GetReference(), IndexFormat, 0);
 	cxt->IASetPrimitiveTopology(Topology);

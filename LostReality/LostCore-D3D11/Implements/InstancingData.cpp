@@ -86,7 +86,10 @@ void D3D11::FInstancingData::ExecUpdate(void* p, const FBuf& buf, uint32 numInst
 	}
 
 	pthis->NumInstances = numInstances;
-	pthis->Stride = buf.size() / numInstances;
+	if (numInstances != 0)
+	{
+		pthis->Stride = buf.size() / numInstances;
+	}
 }
 
 void D3D11::FInstancingData::SetVertexElement(uint32 flags)

@@ -11,15 +11,19 @@
 
 namespace LostCore
 {
+	typedef tuple<int32, int32> FUsage;
+	typedef map<string, tuple<int32, int32>> FNameUsageMap;
 	class FMemoryCounterManager : public TProcessUniqueSingleton<FMemoryCounterManager, 1>
 	{
 	public:
 		FORCEINLINE virtual void Tick() override;
 		FORCEINLINE void Update(const string& name, int32 delta);
-		FORCEINLINE map<string, int32> GetMemoryUsage() const;
+		FORCEINLINE FNameUsageMap GetMemoryUsage() const;
+
+		static FORCEINLINE vector<string> GetInfoHeader();
 
 	private:
-		map<string, int32> MemoryUsage;
+		FNameUsageMap MemoryUsage;
 		mutex Mutex;
 	};
 
@@ -35,29 +39,43 @@ namespace LostCore
 		if (it == MemoryUsage.end())
 		{
 			assert(delta > 0);
-			it = MemoryUsage.insert(pair<string, int32>(name, delta)).first;
+			it = MemoryUsage.insert(FNameUsageMap::value_type(name, FUsage(1, delta))).first;
 		}
 		else
 		{
-			it->second += delta;
+			std::get<0>(it->second) += delta > 0 ? 1 : -1;
+			std::get<1>(it->second) += delta;
 		}
 	}
 
-	map<string, int32> FMemoryCounterManager::GetMemoryUsage() const
+	FNameUsageMap FMemoryCounterManager::GetMemoryUsage() const
 	{
 		return MemoryUsage;
+	}
+
+	vector<std::string> FMemoryCounterManager::GetInfoHeader()
+	{
+		static vector<string> header;
+		if (header.empty())
+		{
+			header.push_back("Name");
+			header.push_back("Count");
+			header.push_back("Usage");
+		}
+		
+		return header;
 	}
 
 #if ENABLE_MEMORY_COUNTER
 #define MEMORY_ALLOC(cls)\
 void* operator new(uint32 sz)\
 {\
-FMemoryCounterManager::Get()->Update(#cls, sz);\
+LostCore::FMemoryCounterManager::Get()->Update(#cls, sz);\
 return malloc(sz);\
 }\
 void operator delete(void* p)\
 {\
-FMemoryCounterManager::Get()->Update(#cls, -static_cast<int32>(sizeof(cls))); \
+LostCore::FMemoryCounterManager::Get()->Update(#cls, -static_cast<int32>(sizeof(cls))); \
 free(p);\
 }
 #else

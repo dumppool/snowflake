@@ -41,7 +41,7 @@ void LostCore::FSkeletonTree::LoadSkeleton(const FPoseTree & skelRoot, const FFl
 
 void LostCore::FSkeletonTree::UpdateWorldMatrix(const FFloat4x4 & parentWorld)
 {
-	auto sec = FGlobalHandler::Get()->GetFrameTime();
+	auto sec = FProcessUnique::Get()->GetCurrentThread()->GetFrameSec();
 	if (!CurrAnimName.empty())
 	{
 		CurrKeyTime += sec * FGlobalHandler::Get()->GetAnimateRate();

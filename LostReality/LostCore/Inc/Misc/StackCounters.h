@@ -40,7 +40,7 @@ namespace LostCore
 	struct FStackCounter
 	{
 		static const int32 SMaxNameLen = 20;
-		static vector<string> GetDescHeader();
+		static vector<string> GetInfoHeader();
 
 		string Name;
 		int32 RequestId;
@@ -70,7 +70,7 @@ namespace LostCore
 		FORCEINLINE void MergeLeaves();
 	};
 
-	typedef vector<vector<string>> FStackInfo;
+	typedef pair<string, vector<vector<string>>> FStackInfo;
 	class FStackCounterCollector : public TProcessUniqueSingleton<FStackCounterCollector, 2>
 	{
 	public:
@@ -206,7 +206,7 @@ namespace LostCore
 		}
 	}
 
-	FORCEINLINE vector<string> FStackCounter::GetDescHeader()
+	FORCEINLINE vector<string> FStackCounter::GetInfoHeader()
 	{
 		static vector<string> result;
 		if (result.empty())
@@ -382,7 +382,8 @@ namespace LostCore
 			statistics.push_back(item->GetDescs(">> "));
 		}
 
-		FStackCounterCollector::Get()->OnNotified(statistics);
+		FStackCounterCollector::Get()->OnNotified(
+			FStackInfo(FProcessUnique::Get()->GetCurrentThread()->GetFrameInfo(), statistics));
 
 		RecycleCounters();
 		Root.Start(nullptr);
@@ -401,20 +402,13 @@ namespace LostCore
 	void FStackCounterCollector::OnNotified(const FStackInfo& info)
 	{
 		lock_guard<mutex> lck(StackInfoMutex);
-		auto name = GetName(FProcessUnique::Get()->GetCurrentThread()->GetName());
-		//StackInfos[GetName(name)] = info;
-		if (StackInfos.find(name) == StackInfos.end())
-		{
-			StackInfos[name] = info;
-		}
-		else
-		{
-			StackInfos[name] = info;
-		}
+		auto t = FProcessUnique::Get()->GetCurrentThread();
+		auto name = GetName(t->GetName());
+		StackInfos[name] = info;
 	}
 
 	std::vector<std::string> FStackCounterCollector::GetStackNames()
-{
+	{
 		vector<string> result;
 		for (auto& item : StackInfos)
 		{

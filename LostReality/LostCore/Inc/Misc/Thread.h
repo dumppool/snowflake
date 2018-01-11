@@ -7,6 +7,7 @@
 */
 
 #pragma once
+#include "Math/Average.h"
 
 namespace LostCore
 {
@@ -135,19 +136,21 @@ namespace LostCore
 	class FThread
 	{
 	public:
+
 		FORCEINLINE FThread();
 		FORCEINLINE FThread(ITask* task, const string& name, uint32 affinityMask = 0xff);
 		FORCEINLINE virtual ~FThread();
 
-		FORCEINLINE virtual thread::id GetId() const;
-		FORCEINLINE virtual string GetName() const;
-		FORCEINLINE virtual void SetTickSeconds(double sec);
-		FORCEINLINE virtual double GetTickSeconds() const;
-		FORCEINLINE virtual ITickable* GetSingleton(int32 index);
-		FORCEINLINE virtual void AddSingleton(int32 index, ITickable* singleton);
-		FORCEINLINE virtual void SetAffinity(uint32 mask);
-		FORCEINLINE virtual uint32 GetAffinity() const;
-		FORCEINLINE virtual ITask* GetPayload();
+		FORCEINLINE thread::id GetId() const;
+		FORCEINLINE string GetName() const;
+		FORCEINLINE double GetFrameSec() const;
+		FORCEINLINE double GetFrameSecAvg() const;
+		FORCEINLINE ITickable* GetSingleton(int32 index);
+		FORCEINLINE void AddSingleton(int32 index, ITickable* singleton);
+		FORCEINLINE void SetAffinity(uint32 mask);
+		FORCEINLINE uint32 GetAffinity() const;
+		FORCEINLINE ITask* GetPayload();
+		FORCEINLINE string GetFrameInfo() const;
 
 	protected:
 		// Threadœﬂ≥Ã÷¥––.
@@ -159,7 +162,7 @@ namespace LostCore
 		ITask* Task;
 		string Name;
 		bool bRunning;
-		double TickSeconds;
+		TAverage<double, 30> TickSeconds;
 		uint32 AffinityMask;
 
 		FTickableObjects IndexedSingletonMap;
@@ -306,14 +309,14 @@ namespace LostCore
 		return Name;
 	}
 
-	void FThread::SetTickSeconds(double sec)
+	double FThread::GetFrameSec() const
 	{
-		TickSeconds = sec;
+		return TickSeconds.GetLast();
 	}
 
-	double FThread::GetTickSeconds() const
+	double FThread::GetFrameSecAvg() const
 	{
-		return TickSeconds;
+		return TickSeconds.GetAverage();
 	}
 
 	ITickable * FThread::GetSingleton(int32 index)
@@ -353,6 +356,16 @@ namespace LostCore
 		return Task;
 	}
 
+	string FThread::GetFrameInfo() const
+	{
+		const int32 sz = 256;
+		char buf[sz];
+		memset(buf, 0, sz);
+		auto frameTime = GetFrameSecAvg();
+		snprintf(buf, sz-1, "Thread: %s, \t\t%.1fFPS %.2fms", GetName().c_str(), 1.0f / frameTime, 1000 * frameTime);
+		return buf;
+	}
+
 	void FThread::Run()
 	{
 		assert(Task != nullptr);
@@ -372,7 +385,7 @@ namespace LostCore
 		do
 		{
 			Task->Tick();
-			SetTickSeconds(FPerformanceCounter::GetSeconds(timeStamp));
+			TickSeconds.Add(FPerformanceCounter::GetSeconds(timeStamp));
 			timeStamp = FPerformanceCounter::GetTimeStamp();
 
 			for (auto& item : IndexedSingletonMap)

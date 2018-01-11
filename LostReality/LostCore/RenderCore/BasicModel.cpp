@@ -92,9 +92,6 @@ void LostCore::FBasicModel::Tick()
 
 void LostCore::FBasicModel::CommitModel()
 {
-	auto rc = FGlobalHandler::Get()->GetRenderContext();
-	auto sec = FGlobalHandler::Get()->GetFrameTime();
-
 	if (MatricesBuffer != nullptr)
 	{
 		MatricesBuffer->Commit();
@@ -104,11 +101,6 @@ void LostCore::FBasicModel::CommitModel()
 	{
 		CustomBuffer->Commit();
 	}
-
-	//if (Material != nullptr)
-	//{
-	//	Material->Bind(rc);
-	//}
 
 	if (Primitive != nullptr)
 	{

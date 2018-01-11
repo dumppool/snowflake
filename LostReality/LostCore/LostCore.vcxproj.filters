@@ -209,6 +209,9 @@
     <ClInclude Include="RenderCore\UserInterface\BasicGUI.h">
       <Filter>RenderCore\UserInterface</Filter>
     </ClInclude>
+    <ClInclude Include="Inc\Math\Average.h">
+      <Filter>Inc\Math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp" />

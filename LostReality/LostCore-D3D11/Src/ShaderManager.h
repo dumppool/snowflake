@@ -95,6 +95,8 @@ namespace D3D11
 
 	struct FShaderObject
 	{
+		MEMORY_ALLOC(FShaderObject);
+
 		TRefCountPtr<ID3D11VertexShader> VS;
 		TRefCountPtr<ID3D11PixelShader> PS;
 		TRefCountPtr<ID3D11InputLayout> IL;

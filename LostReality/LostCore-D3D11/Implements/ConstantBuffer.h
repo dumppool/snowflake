@@ -18,6 +18,8 @@ namespace D3D11
 	class FConstantBuffer : public LostCore::IConstantBuffer
 	{
 	public:
+		MEMORY_ALLOC(FConstantBuffer);
+
 		FConstantBuffer();
 		FConstantBuffer(const FConstantBuffer& rhs);
 		FConstantBuffer(const FConstantBuffer&& rval);

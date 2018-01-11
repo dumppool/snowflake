@@ -9,6 +9,7 @@
 
 #pragma once
 
+
 #include "Misc/Includs.h"
 #include "Misc/TypeDefs.h"
 #include "Misc/Constants.h"
@@ -32,6 +33,7 @@ using FJson = nlohmann::json;
 
 #include "Serialize/Serialization.h"
 
+#include "Math/Average.h"
 #include "Math/Vector2.h"
 #include "Math/Vector3.h"
 #include "Math/Vector4.h"

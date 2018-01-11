@@ -15,7 +15,8 @@
 using namespace LostCore;
 
 LostCore::FTextSheet::FTextSheet()
-	: MainList(nullptr)
+	: bUpdated(false)
+	, MainList(nullptr)
 	, CaptionBox(nullptr)
 	, ColumnList(nullptr)
 {
@@ -170,7 +171,16 @@ void LostCore::FTextSheet::Update()
 		}
 
 		Rows.clear();
+		bUpdated = true;
+		FRect::Update();
 	}
+}
 
-	FRect::Update();
+void LostCore::FTextSheet::Commit()
+{
+	if (bUpdated)
+	{
+		bUpdated = false;
+		FRect::Commit();
+	}
 }

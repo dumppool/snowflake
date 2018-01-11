@@ -84,11 +84,7 @@ void LostCore::FSegmentTool::Commit()
 		return;
 	}
 
-	auto rc = FGlobalHandler::Get()->GetRenderContext();
-	auto sec = FGlobalHandler::Get()->GetFrameTime();
-
 	uint32 sz = Data.size() * sizeof(FSegmentVertex);
-
 	if (bConstructed)
 	{
 		Primitive->UpdateVB(Data.data(), sz, sizeof(FSegmentVertex));

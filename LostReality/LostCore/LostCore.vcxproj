@@ -173,6 +173,7 @@
     <ClInclude Include="Inc\LostCore.h" />
     <ClInclude Include="Inc\LostCoreIncludes.h" />
     <ClInclude Include="Inc\Math\AABB.h" />
+    <ClInclude Include="Inc\Math\Average.h" />
     <ClInclude Include="Inc\Math\Color.h" />
     <ClInclude Include="Inc\Math\Curves.h" />
     <ClInclude Include="Inc\Math\Intersect.h" />
