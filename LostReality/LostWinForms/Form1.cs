@@ -209,7 +209,7 @@ namespace LostWinForms
             SetUpdateFlagAndString(DelegateUpdateFlagAndString);
             DelegateUpdateFlagAnd32Bit = new PFN_UpdateFlagAnd32Bit(OnUpdateFlagAnd32Bit);
             SetUpdateFlagAnd32Bit(DelegateUpdateFlagAnd32Bit);
-            AnimListBox.SelectedIndexChanged += ListBox1_SelectedIndexChanged;
+            //AnimListBox.SelectedIndexChanged += ListBox1_SelectedIndexChanged;
 
             DelegateUpdatePosAndRot = new PFN_UpdatePosAndRot(OnUpdatePosAndRot);
             SetUpdatePosAndRot(DelegateUpdatePosAndRot);
@@ -233,7 +233,7 @@ namespace LostWinForms
 
         private void DisplayAnimationListCheckBox_Click(object sender, EventArgs e)
         {
-            AnimListBox.Visible = DisplayAnimationListCheckBox.Checked;
+            //AnimListBox.Visible = DisplayAnimationListCheckBox.Checked;
         }
 
         private void SaveSceneToolStripMenuItem_Click(object sender, EventArgs e)
@@ -335,14 +335,14 @@ namespace LostWinForms
 
         private void ListBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            PlayAnimation(AnimListBox.Items[AnimListBox.SelectedIndex].ToString());
+            //PlayAnimation(AnimListBox.Items[AnimListBox.SelectedIndex].ToString());
         }
 
         private void OnUpdateFlagAndString(uint flag, StringBuilder str)
         {
             if ((flag == UpdateAnimClear || flag == UpdateAnimAdd))
             {
-                AnimListBox.BeginInvoke(new PFN_UpdateFlagAndString(UpdateAnimList), flag, str);
+                //AnimListBox.BeginInvoke(new PFN_UpdateFlagAndString(UpdateAnimList), flag, str);
             }
             else if (flag == UpdateMonitorTargetName)
             {
@@ -372,12 +372,12 @@ namespace LostWinForms
             if (flag == UpdateAnimClear)
             {
                 // clear
-                AnimListBox.Items.Clear();
+                //AnimListBox.Items.Clear();
             }
             else if (flag == UpdateAnimAdd)
             {
                 // add
-                AnimListBox.Items.Add(anim);
+                //AnimListBox.Items.Add(anim);
             }
         }
 

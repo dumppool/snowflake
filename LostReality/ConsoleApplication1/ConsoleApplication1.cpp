@@ -5,6 +5,8 @@
 //#include "ThreadSynchronize.h"
 #include "CommandBinding.h"
 
+using namespace LostCore;
+
 struct _A
 {
 	const char* Name;
@@ -342,6 +344,7 @@ int main()
 	//Test12();
 	auto p = new F13;
 	delete p;
+
 	cout << "***************************************" << endl;
 
 	system("pause");

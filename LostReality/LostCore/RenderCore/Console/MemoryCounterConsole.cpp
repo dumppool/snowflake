@@ -108,8 +108,11 @@ void LostCore::FMemoryCounterConsole::Initialize(FRect* parent)
 void LostCore::FMemoryCounterConsole::Destroy()
 {
 	bInitialized = false;
-	Sheet->Detach();
-	SAFE_DELETE(Sheet);
+	if (Sheet != nullptr)
+	{
+		Sheet->Detach();
+		SAFE_DELETE(Sheet);
+	}
 }
 
 bool LostCore::FMemoryCounterConsole::EnsureInitialized()

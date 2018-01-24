@@ -124,8 +124,11 @@ void LostCore::FStackCounterConsole::DisplayPage(const string& name)
 void LostCore::FStackCounterConsole::Destroy()
 {
 	bInitialized = false;
-	Sheet->Detach();
-	SAFE_DELETE(Sheet);
+	if (Sheet != nullptr)
+	{
+		Sheet->Detach();
+		SAFE_DELETE(Sheet);
+	}
 }
 
 bool LostCore::FStackCounterConsole::EnsureInitialized()

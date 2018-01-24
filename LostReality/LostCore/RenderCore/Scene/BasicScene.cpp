@@ -9,7 +9,8 @@
 
 #include "stdafx.h"
 #include "BasicScene.h"
-#include "Interface/RenderContextInterface.h"
+#include "ModelFactory.h"
+#include "CameraFactory.h"
 
 using namespace LostCore;
 

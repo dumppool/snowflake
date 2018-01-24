@@ -9,6 +9,7 @@
 
 #include "stdafx.h"
 #include "BasicCamera.h"
+#include "BasicScene.h"
 
 using namespace LostCore;
 

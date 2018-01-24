@@ -11,6 +11,7 @@
 
 namespace LostCore
 {
+	class FBasicModel;
 	class FModelFactory
 	{
 	public:

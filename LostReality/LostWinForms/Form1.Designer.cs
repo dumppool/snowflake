@@ -29,8 +29,31 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.Windows.Forms.TreeNode treeNode1 = new System.Windows.Forms.TreeNode("X");
+            System.Windows.Forms.TreeNode treeNode2 = new System.Windows.Forms.TreeNode("Y");
+            System.Windows.Forms.TreeNode treeNode3 = new System.Windows.Forms.TreeNode("Z");
+            System.Windows.Forms.TreeNode treeNode4 = new System.Windows.Forms.TreeNode("位置", new System.Windows.Forms.TreeNode[] {
+            treeNode1,
+            treeNode2,
+            treeNode3});
+            System.Windows.Forms.TreeNode treeNode5 = new System.Windows.Forms.TreeNode("旋转");
+            System.Windows.Forms.TreeNode treeNode6 = new System.Windows.Forms.TreeNode("缩放");
+            System.Windows.Forms.TreeNode treeNode7 = new System.Windows.Forms.TreeNode("空间", new System.Windows.Forms.TreeNode[] {
+            treeNode4,
+            treeNode5,
+            treeNode6});
+            System.Windows.Forms.TreeNode treeNode8 = new System.Windows.Forms.TreeNode("加载动作");
+            System.Windows.Forms.TreeNode treeNode9 = new System.Windows.Forms.TreeNode("动作列表");
+            System.Windows.Forms.TreeNode treeNode10 = new System.Windows.Forms.TreeNode("动作", new System.Windows.Forms.TreeNode[] {
+            treeNode8,
+            treeNode9});
+            System.Windows.Forms.TreeNode treeNode11 = new System.Windows.Forms.TreeNode("属性", new System.Windows.Forms.TreeNode[] {
+            treeNode7,
+            treeNode10});
             this.RenderPanel = new System.Windows.Forms.Panel();
-            this.AnimListBox = new System.Windows.Forms.ListBox();
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.treeView1 = new System.Windows.Forms.TreeView();
+            this.textBox4 = new System.Windows.Forms.TextBox();
             this.ImportPanel = new System.Windows.Forms.Panel();
             this.AnimationOutputText = new System.Windows.Forms.TextBox();
             this.textBox3 = new System.Windows.Forms.TextBox();
@@ -97,6 +120,7 @@
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.RenderPanel.SuspendLayout();
+            this.panel1.SuspendLayout();
             this.ImportPanel.SuspendLayout();
             this.ViewPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.AnimateRateSlider)).BeginInit();
@@ -114,7 +138,7 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.RenderPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
-            this.RenderPanel.Controls.Add(this.AnimListBox);
+            this.RenderPanel.Controls.Add(this.panel1);
             this.RenderPanel.Controls.Add(this.ImportPanel);
             this.RenderPanel.Controls.Add(this.ViewPanel);
             this.RenderPanel.Location = new System.Drawing.Point(-1, 74);
@@ -124,16 +148,53 @@
             this.RenderPanel.TabIndex = 0;
             this.RenderPanel.PreviewKeyDown += new System.Windows.Forms.PreviewKeyDownEventHandler(this.Panel1_PreviewKeyDown);
             // 
-            // AnimListBox
+            // panel1
             // 
-            this.AnimListBox.FormattingEnabled = true;
-            this.AnimListBox.ItemHeight = 15;
-            this.AnimListBox.Location = new System.Drawing.Point(77, 75);
-            this.AnimListBox.Margin = new System.Windows.Forms.Padding(4);
-            this.AnimListBox.Name = "AnimListBox";
-            this.AnimListBox.Size = new System.Drawing.Size(159, 274);
-            this.AnimListBox.TabIndex = 7;
-            this.AnimListBox.Visible = false;
+            this.panel1.Controls.Add(this.treeView1);
+            this.panel1.Controls.Add(this.textBox4);
+            this.panel1.Location = new System.Drawing.Point(64, 21);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(200, 412);
+            this.panel1.TabIndex = 7;
+            this.panel1.Visible = false;
+            // 
+            // treeView1
+            // 
+            this.treeView1.Location = new System.Drawing.Point(17, 54);
+            this.treeView1.Name = "treeView1";
+            treeNode1.Name = "Node7";
+            treeNode1.Text = "X";
+            treeNode2.Name = "Node8";
+            treeNode2.Text = "Y";
+            treeNode3.Name = "Node9";
+            treeNode3.Text = "Z";
+            treeNode4.Name = "Node3";
+            treeNode4.Text = "位置";
+            treeNode5.Name = "Node4";
+            treeNode5.Text = "旋转";
+            treeNode6.Name = "Node5";
+            treeNode6.Text = "缩放";
+            treeNode7.Name = "Node1";
+            treeNode7.Text = "空间";
+            treeNode8.Name = "Node6";
+            treeNode8.Text = "加载动作";
+            treeNode9.Name = "Node10";
+            treeNode9.Text = "动作列表";
+            treeNode10.Name = "Node2";
+            treeNode10.Text = "动作";
+            treeNode11.Name = "Node0";
+            treeNode11.Text = "属性";
+            this.treeView1.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
+            treeNode11});
+            this.treeView1.Size = new System.Drawing.Size(166, 342);
+            this.treeView1.TabIndex = 1;
+            // 
+            // textBox4
+            // 
+            this.textBox4.Location = new System.Drawing.Point(17, 4);
+            this.textBox4.Name = "textBox4";
+            this.textBox4.Size = new System.Drawing.Size(166, 25);
+            this.textBox4.TabIndex = 0;
             // 
             // ImportPanel
             // 
@@ -816,25 +877,25 @@
             // ViewPanelToolStripMenuItem
             // 
             this.ViewPanelToolStripMenuItem.Name = "ViewPanelToolStripMenuItem";
-            this.ViewPanelToolStripMenuItem.Size = new System.Drawing.Size(181, 26);
+            this.ViewPanelToolStripMenuItem.Size = new System.Drawing.Size(159, 26);
             this.ViewPanelToolStripMenuItem.Text = "显示选项";
             // 
             // ClearSceneToolStripMenuItem
             // 
             this.ClearSceneToolStripMenuItem.Name = "ClearSceneToolStripMenuItem";
-            this.ClearSceneToolStripMenuItem.Size = new System.Drawing.Size(181, 26);
+            this.ClearSceneToolStripMenuItem.Size = new System.Drawing.Size(159, 26);
             this.ClearSceneToolStripMenuItem.Text = "清空场景";
             // 
             // RecordConsoleTSMI
             // 
             this.RecordConsoleTSMI.Name = "RecordConsoleTSMI";
-            this.RecordConsoleTSMI.Size = new System.Drawing.Size(181, 26);
+            this.RecordConsoleTSMI.Size = new System.Drawing.Size(159, 26);
             this.RecordConsoleTSMI.Text = "记录控制台";
             // 
             // SwitchConsoleTSMI
             // 
             this.SwitchConsoleTSMI.Name = "SwitchConsoleTSMI";
-            this.SwitchConsoleTSMI.Size = new System.Drawing.Size(181, 26);
+            this.SwitchConsoleTSMI.Size = new System.Drawing.Size(159, 26);
             this.SwitchConsoleTSMI.Text = "切换控制台";
             // 
             // toolStripMenuItem3
@@ -875,6 +936,8 @@
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Form1_Closed);
             this.Load += new System.EventHandler(this.Form1_Load);
             this.RenderPanel.ResumeLayout(false);
+            this.panel1.ResumeLayout(false);
+            this.panel1.PerformLayout();
             this.ImportPanel.ResumeLayout(false);
             this.ImportPanel.PerformLayout();
             this.ViewPanel.ResumeLayout(false);
@@ -934,7 +997,6 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem3;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem4;
         private System.Windows.Forms.ToolStripComboBox toolStripComboBox1;
-        private System.Windows.Forms.ListBox AnimListBox;
         private System.Windows.Forms.ToolStripMenuItem LoadModelToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem LoadAnimationToolStripMenuItem;
         private System.Windows.Forms.TextBox AnimationOutputText;
@@ -963,6 +1025,9 @@
         private System.Windows.Forms.CheckBox DisplayAnimationListCheckBox;
         private System.Windows.Forms.ToolStripMenuItem RecordConsoleTSMI;
         private System.Windows.Forms.ToolStripMenuItem SwitchConsoleTSMI;
+        private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.TreeView treeView1;
+        private System.Windows.Forms.TextBox textBox4;
     }
 }
 

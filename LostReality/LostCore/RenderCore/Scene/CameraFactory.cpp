@@ -8,6 +8,8 @@
 */
 
 #include "stdafx.h"
+#include "CameraFactory.h"
+#include "BasicCamera.h"
 using namespace LostCore;
 
 LostCore::FBasicCamera* LostCore::FCameraFactory::NewCameraDefault()

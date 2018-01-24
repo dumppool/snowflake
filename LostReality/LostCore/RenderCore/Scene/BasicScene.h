@@ -11,6 +11,7 @@
 
 #include "BasicInterface.h"
 #include "BasicModel.h"
+#include "BasicCamera.h"
 
 namespace LostCore
 {

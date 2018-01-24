@@ -7,9 +7,6 @@
     <ClInclude Include="Inc\LostCore.h">
       <Filter>Inc</Filter>
     </ClInclude>
-    <ClInclude Include="Inc\BasicScene.h">
-      <Filter>Inc</Filter>
-    </ClInclude>
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Inc\Math\Matrix.h">
       <Filter>Inc\Math</Filter>
@@ -29,23 +26,11 @@
     <ClInclude Include="Inc\Math\Vector4.h">
       <Filter>Inc\Math</Filter>
     </ClInclude>
-    <ClInclude Include="Inc\BasicCamera.h">
-      <Filter>Inc</Filter>
-    </ClInclude>
-    <ClInclude Include="Inc\BasicInterface.h">
-      <Filter>Inc</Filter>
-    </ClInclude>
     <ClInclude Include="Inc\File\json.hpp">
       <Filter>Inc\File</Filter>
     </ClInclude>
     <ClInclude Include="Inc\File\DirectoryHelper.h">
       <Filter>Inc\File</Filter>
-    </ClInclude>
-    <ClInclude Include="Inc\Animation.h">
-      <Filter>Inc</Filter>
-    </ClInclude>
-    <ClInclude Include="Inc\BasicModel.h">
-      <Filter>Inc</Filter>
     </ClInclude>
     <ClInclude Include="Inc\VertexTypes.h">
       <Filter>Inc</Filter>
@@ -62,20 +47,11 @@
     <ClInclude Include="Inc\Math\Color.h">
       <Filter>Inc\Math</Filter>
     </ClInclude>
-    <ClInclude Include="Inc\Gizmo\GizmoAxis.h">
-      <Filter>Inc\Gizmo</Filter>
-    </ClInclude>
-    <ClInclude Include="Inc\Gizmo\GizmoLine.h">
-      <Filter>Inc\Gizmo</Filter>
-    </ClInclude>
     <ClInclude Include="Inc\GlobalHandler.h">
       <Filter>Inc</Filter>
     </ClInclude>
     <ClInclude Include="Inc\Math\Curves.h">
       <Filter>Inc\Math</Filter>
-    </ClInclude>
-    <ClInclude Include="Inc\ModelFactory.h">
-      <Filter>Inc</Filter>
     </ClInclude>
     <ClInclude Include="Inc\Math\AABB.h">
       <Filter>Inc\Math</Filter>
@@ -88,9 +64,6 @@
     </ClInclude>
     <ClInclude Include="Inc\Math\Plane.h">
       <Filter>Inc\Math</Filter>
-    </ClInclude>
-    <ClInclude Include="Inc\Gizmo\GizmoOperator.h">
-      <Filter>Inc\Gizmo</Filter>
     </ClInclude>
     <ClInclude Include="Inc\Misc\Includs.h">
       <Filter>Inc\Misc</Filter>
@@ -142,9 +115,6 @@
     </ClInclude>
     <ClInclude Include="Inc\Interface\ConstantBufferInterface.h">
       <Filter>Inc\Interface</Filter>
-    </ClInclude>
-    <ClInclude Include="Inc\CameraFactory.h">
-      <Filter>Inc</Filter>
     </ClInclude>
     <ClInclude Include="RenderCore\UserInterface\FontProvider.h">
       <Filter>RenderCore\UserInterface</Filter>
@@ -212,23 +182,44 @@
     <ClInclude Include="Inc\Math\Average.h">
       <Filter>Inc\Math</Filter>
     </ClInclude>
+    <ClInclude Include="RenderCore\Gizmo\GizmoAxis.h">
+      <Filter>RenderCore\Gizmo</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderCore\Gizmo\GizmoLine.h">
+      <Filter>RenderCore\Gizmo</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderCore\Gizmo\GizmoOperator.h">
+      <Filter>RenderCore\Gizmo</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderCore\Scene\BasicCamera.h">
+      <Filter>RenderCore\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderCore\Scene\BasicInterface.h">
+      <Filter>RenderCore\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderCore\Scene\BasicModel.h">
+      <Filter>RenderCore\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderCore\Scene\BasicScene.h">
+      <Filter>RenderCore\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderCore\Scene\CameraFactory.h">
+      <Filter>RenderCore\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderCore\Scene\ModelFactory.h">
+      <Filter>RenderCore\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderCore\Skeleton\Animation.h">
+      <Filter>RenderCore\Skeleton</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="Src\LostCore.cpp">
       <Filter>Src</Filter>
     </ClCompile>
-    <ClCompile Include="RenderCore\BasicScene.cpp">
-      <Filter>RenderCore</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderCore\BasicCamera.cpp">
-      <Filter>RenderCore</Filter>
-    </ClCompile>
     <ClCompile Include="RenderCore\Skeleton\Animation.cpp">
       <Filter>RenderCore\Skeleton</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderCore\BasicModel.cpp">
-      <Filter>RenderCore</Filter>
     </ClCompile>
     <ClCompile Include="RenderCore\Gizmo\GizmoAxis.cpp">
       <Filter>RenderCore\Gizmo</Filter>
@@ -242,14 +233,8 @@
     <ClCompile Include="Src\GlobalHandler.cpp">
       <Filter>Src</Filter>
     </ClCompile>
-    <ClCompile Include="RenderCore\ModelFactory.cpp">
-      <Filter>RenderCore</Filter>
-    </ClCompile>
     <ClCompile Include="RenderCore\Gizmo\GizmoOperator.cpp">
       <Filter>RenderCore\Gizmo</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderCore\CameraFactory.cpp">
-      <Filter>RenderCore</Filter>
     </ClCompile>
     <ClCompile Include="RenderCore\UserInterface\BasicGUI.cpp">
       <Filter>RenderCore\UserInterface</Filter>
@@ -290,6 +275,21 @@
     <ClCompile Include="RenderCore\TickGroup.cpp">
       <Filter>RenderCore</Filter>
     </ClCompile>
+    <ClCompile Include="RenderCore\Scene\BasicCamera.cpp">
+      <Filter>RenderCore\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderCore\Scene\BasicModel.cpp">
+      <Filter>RenderCore\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderCore\Scene\BasicScene.cpp">
+      <Filter>RenderCore\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderCore\Scene\CameraFactory.cpp">
+      <Filter>RenderCore\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderCore\Scene\ModelFactory.cpp">
+      <Filter>RenderCore\Scene</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="RenderCore">
@@ -316,9 +316,6 @@
     <Filter Include="RenderCore\Gizmo">
       <UniqueIdentifier>{c4913501-0a70-4738-8692-211cee22174e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Inc\Gizmo">
-      <UniqueIdentifier>{ac821ada-0fa1-45a5-b8a9-a6506cb2350b}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Inc\Misc">
       <UniqueIdentifier>{f2cce9f6-5dc0-4e25-9292-388aaabee156}</UniqueIdentifier>
     </Filter>
@@ -333,6 +330,9 @@
     </Filter>
     <Filter Include="RenderCore\Light">
       <UniqueIdentifier>{7d9510d6-461c-455a-a0e0-38ffb316efa1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RenderCore\Scene">
+      <UniqueIdentifier>{45179736-a64c-4574-a1b1-0a922bc9fc2f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

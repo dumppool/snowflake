@@ -13,6 +13,12 @@
 #include "RenderCore/Console/ConsoleInterface.h"
 #include "RenderCore/UserInterface/FontProvider.h"
 #include "RenderCore/TickGroup.h"
+#include "RenderCore/Scene/BasicCamera.h"
+#include "RenderCore/Scene/CameraFactory.h"
+#include "RenderCore/Scene/BasicScene.h"
+#include "RenderCore/Scene/ModelFactory.h"
+#include "RenderCore/Gizmo/GizmoOperator.h"
+#include "RenderCore/Skeleton/Animation.h"
 
 #include "LostCore-D3D11.h"
 using namespace D3D11;

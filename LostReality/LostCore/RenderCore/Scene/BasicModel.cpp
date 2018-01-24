@@ -9,6 +9,7 @@
 
 #include "stdafx.h"
 #include "BasicModel.h"
+#include "BasicScene.h"
 #include "Interface/PrimitiveGroupInterface.h"
 
 using namespace LostCore;

@@ -11,6 +11,7 @@
 
 namespace LostCore
 {
+	class FBasicCamera;
 	class FCameraFactory
 	{
 	public:

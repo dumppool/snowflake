@@ -105,33 +105,35 @@ namespace LostCore
 
 		FORCEINLINE TMatrixNonVectorized<T>& SetRotate(const FQuat& q)
 		{
-			T xx = q.X * q.X * 2.0;
-			T xy = q.X * q.Y * 2.0;
-			T xz = q.X * q.Z * 2.0;
+			T one = static_cast<T>(1.0);
+			T two = static_cast<T>(2.0);
+			T xx = q.X * q.X * two;
+			T xy = q.X * q.Y * two;
+			T xz = q.X * q.Z * two;
 
-			T yy = q.Y * q.Y * 2.0;
-			T yz = q.Y * q.Z * 2.0;
+			T yy = q.Y * q.Y * two;
+			T yz = q.Y * q.Z * two;
 
-			T zz = q.Z * q.Z * 2.0;
+			T zz = q.Z * q.Z * two;
 
-			T wx = q.W * q.X * 2.0;
-			T wy = q.W * q.Y * 2.0;
-			T wz = q.W * q.Z * 2.0;
+			T wx = q.W * q.X * two;
+			T wy = q.W * q.Y * two;
+			T wz = q.W * q.Z * two;
 
-			M[0][0] = (1.0 - (yy + zz));
+			M[0][0] = (one - (yy + zz));
 			M[0][1] = (xy + wz);
 			M[0][2] = (xz - wy);
 
 			M[1][0] = (xy - wz);
-			M[1][1] = (1.0 - (xx + zz));
+			M[1][1] = (one - (xx + zz));
 			M[1][2] = (yz + wx);
 
 			M[2][0] = (xz + wy);
 			M[2][1] = (yz - wx);
-			M[2][2] = (1.0 - (xx + yy));
+			M[2][2] = (one - (xx + yy));
 
-			M[0][3] = M[1][3] = M[2][3] = M[3][0] = M[3][1] = M[3][2] = 0.0;
-			M[3][3] = 1.0;
+			M[0][3] = M[1][3] = M[2][3] = M[3][0] = M[3][1] = M[3][2] = static_cast<T>(0.0);
+			M[3][3] = one;
 			return *this;
 		}
 
@@ -253,7 +255,7 @@ namespace LostCore
 			M[2][3] = -m.M[2][0] * a4 + m.M[2][1] * a2 - m.M[2][3] * a0;
 			M[3][3] = +m.M[2][0] * a3 - m.M[2][1] * a1 + m.M[2][2] * a0;
 
-			T rcp = 1.0 / det;
+			T rcp = static_cast<T>(1.0) / det;
 			for (int32 row = 0; row < 4; ++row)
 			{
 				for (int32 col = 0; col < 4; ++col)
@@ -481,6 +483,14 @@ namespace LostCore
 		FORCEINLINE TVec3NonVectorized<T> GetOrigin() const
 		{
 			return TVec3NonVectorized<T>(M[3][0], M[3][1], M[3][2]);
+		}
+
+		FORCEINLINE TMatrixNonVectorized<T>& Scale(const TVec3NonVectorized<T>& val)
+		{
+			M[0][0] *= val.X; M[0][1] *= val.X; M[0][2] *= val.X;
+			M[1][0] *= val.Y; M[1][1] *= val.Y; M[1][2] *= val.Y;
+			M[2][0] *= val.Z; M[2][1] *= val.Z; M[2][2] *= val.Z;
+			return *this;
 		}
 
 		FORCEINLINE bool operator==(const TMatrixNonVectorized<T>& rhs) const

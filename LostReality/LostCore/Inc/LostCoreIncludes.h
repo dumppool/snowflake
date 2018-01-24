@@ -61,11 +61,3 @@ using FJson = nlohmann::json;
 #include "Interface/RenderContextInterface.h"
 
 #include "Serialize/StructSerialize.h"
-
-#include "Gizmo/GizmoOperator.h"
-
-#include "BasicCamera.h"
-#include "BasicModel.h"
-#include "BasicScene.h"
-#include "ModelFactory.h"
-#include "CameraFactory.h"

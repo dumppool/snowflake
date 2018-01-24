@@ -10,9 +10,9 @@
 #pragma once
 
 #include "BasicInterface.h"
-#include "Animation.h"
-#include "Gizmo/GizmoAxis.h"
-#include "Gizmo/GizmoLine.h"
+#include "RenderCore/Gizmo/GizmoAxis.h"
+#include "RenderCore/Gizmo/GizmoLine.h"
+#include "RenderCore/Skeleton/Animation.h"
 
 namespace LostCore
 {

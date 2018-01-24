@@ -63,7 +63,6 @@ namespace LostCore
 			bool operator==(const FComp& rhs) const;
 		};
 
-
 		vector<FFloat4x4> PlacerLocals;
 		vector<FBasicModel*> PlacerProxies;
 		vector<FFloat4x4> RotatorLocals;

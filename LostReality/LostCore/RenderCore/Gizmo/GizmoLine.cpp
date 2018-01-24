@@ -8,7 +8,7 @@
 */
 
 #include "stdafx.h"
-#include "Gizmo/GizmoLine.h"
+#include "GizmoLine.h"
 
 #include "LostCore-D3D11.h"
 using namespace D3D11;
@@ -53,7 +53,7 @@ bool LostCore::FSegmentTool::ConstructPrimitive(const void* buf, uint32 sz)
 	ConstantBuffer->SetShaderSlot(SHADER_SLOT_MATRICES);
 	ConstantBuffer->SetShaderFlags(SHADER_FLAG_VS);
 
-	Primitive->SetVertexElement(VERTEX_COLOR);
+	Primitive->SetVertexElement(VERTEX_COORDINATE3D|VERTEX_COLOR);
 	Primitive->ConstructVB(buf, sz, GetAlignedSize(sizeof(FSegmentVertex), 16), false);
 
 	bConstructed = true;

@@ -1,4 +1,17 @@
+/*
+* file GizmoOperator.cpp
+*
+* author luoxw
+* date 2017/09/12
+*
+*
+*/
+
 #include "stdafx.h"
+#include "GizmoOperator.h"
+#include "RenderCore/Scene/ModelFactory.h"
+#include "RenderCore/Scene/BasicModel.h"
+#include "RenderCore/Scene/BasicCamera.h"
 
 LostCore::FGizmoOperator::FGizmoOperator() 
 	: Target(nullptr)
@@ -35,13 +48,14 @@ bool LostCore::FGizmoOperator::Config(const FJson & config)
 		{
 			FComp comp;
 			FFloat4x4 w;
+			const FFloat3 scale(3.0f, 3.0f, 3.0f);
 
 			// PlacerX
 			comp.Id = EOp::PlacerX;
 			comp.Model = model;
 			comp.Model->EnableDepthTest(false);
 			comp.Model->SetColor(FColor128(0xffff0000));
-			comp.Local = w.SetRotate(FFloat3(0.0f, 90.0f, 0.0f));
+			comp.Local = w.SetRotate(FFloat3(0.0f, 90.0f, 0.0f)).Scale(scale);
 			comp.Plane = FPlane(FFloat3(0.0f, 1.0f, 0.0f), 0.0f);
 			Components.push_back(comp);
 
@@ -50,7 +64,7 @@ bool LostCore::FGizmoOperator::Config(const FJson & config)
 			comp.Model = FModelFactory::NewModel(config[K_PLACER]);
 			comp.Model->EnableDepthTest(false);
 			comp.Model->SetColor(FColor128(0xff00ff00));
-			comp.Local = w.SetRotate(FFloat3(90.0f, 0.0f, 0.0f));
+			comp.Local = w.SetRotate(FFloat3(90.0f, 0.0f, 0.0f)).Scale(scale);
 			comp.Plane = FPlane(FFloat3(0.0f, 0.0f, 1.0f), 0.0f);
 			Components.push_back(comp);
 
@@ -59,7 +73,7 @@ bool LostCore::FGizmoOperator::Config(const FJson & config)
 			comp.Model = FModelFactory::NewModel(config[K_PLACER]);
 			comp.Model->EnableDepthTest(false);
 			comp.Model->SetColor(FColor128(0xff0000ff));
-			comp.Local = w.SetRotate(FFloat3(0.0f, 0.0f, 0.0f));
+			comp.Local = w.SetRotate(FFloat3(0.0f, 0.0f, 0.0f)).Scale(scale);
 			comp.Plane = FPlane(FFloat3(1.0f, 0.0f, 0.0f), 0.0f);
 			Components.push_back(comp);
 

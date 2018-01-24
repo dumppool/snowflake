@@ -9,9 +9,6 @@
 
 #pragma once
 
-#include "BasicInterface.h"
-//#include "FontInterface.h"
-
 namespace LostCore
 {
 	class IFont;

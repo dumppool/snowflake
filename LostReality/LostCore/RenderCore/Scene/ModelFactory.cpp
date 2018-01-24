@@ -9,6 +9,7 @@
 
 #include "stdafx.h"
 #include "ModelFactory.h"
+#include "BasicModel.h"
 
 using namespace LostCore;
 
